@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mercatomaster.com/schemas/events/memory.created/1.json",
+  "title": "memory.created",
+  "description": "Canon v1.1 §7.2 — vlasnik: memory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "occurred_at",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "pattern": "^EVT-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "event_type": {
+      "const": "memory.created"
+    },
+    "event_version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "persona_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^P-\\d{5}$"
+    },
+    "trace_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "causation_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^EVT-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "memory_id",
+        "memory_type",
+        "salience",
+        "provenance"
+      ],
+      "properties": {
+        "memory_id": {
+          "type": "string"
+        },
+        "memory_type": {
+          "enum": [
+            "working",
+            "episodic",
+            "semantic",
+            "procedural",
+            "social",
+            "content"
+          ]
+        },
+        "salience": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "provenance": {
+          "enum": [
+            "observed",
+            "user_provided",
+            "generated",
+            "inferred"
+          ]
+        }
+      }
+    }
+  }
+}

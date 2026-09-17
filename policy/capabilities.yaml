@@ -1,0 +1,116 @@
+# Katalog capability-ja i mapa ActionType -> required_capabilities
+# Canon v1.1 §6.4, §9.4, §3.11
+#
+# Planner predlaže. Policy odlučuje. Approval potvrđuje.
+# Action Gateway jedini izvršava.
+
+version: 1
+canon: "1.1"
+
+capabilities:
+
+  content.publish_approved:
+    description: "Objava sopstvenog sadržaja na kanalu persone"
+    min_trust_level: L1
+    requires_approval_class: A2
+    requires_disclosure_label: true
+
+  social.read_public:
+    description: "Čitanje javnog sadržaja na platformi kroz zvanični API"
+    min_trust_level: L0
+    requires_approval_class: null
+    requires_disclosure_label: false
+
+  social.reply_inbound:
+    description: "Odgovor na komentar ili poruku koju je korisnik prvi poslao"
+    min_trust_level: L2
+    requires_approval_class: null
+    requires_disclosure_label: true
+
+  email.reply_inbound:
+    description: "Odgovor na dolazni email"
+    min_trust_level: L2
+    requires_approval_class: null
+    requires_disclosure_label: false
+
+  email.outbound_approved:
+    description: "Odlazni email uz odobrenje; prvi po adresatu traži A1"
+    min_trust_level: L2
+    requires_approval_class: A1
+    requires_disclosure_label: false
+
+  web.read_public:
+    description: "Čitanje javnog weba pregledačem"
+    min_trust_level: L0
+    requires_approval_class: null
+    requires_disclosure_label: false
+    # Canon §6.4, §12.6 — sva četiri parametra su obavezna u izvršnom ugovoru
+    required_constraints:
+      robots_respected: true
+      user_agent_declared: "MercatoMasterBot/1.0 (+https://mercatomaster.com/bot; bot@mercatomaster.com)"
+      rate_per_host_qps: 1.0
+      conditional_get: true
+
+  browser.form_submit_approved:
+    description: "Slanje forme na sopstvenom ili odobrenom sistemu"
+    min_trust_level: L2
+    requires_approval_class: A3
+    requires_disclosure_label: false
+
+# Canon §3.11 (A-08) — ukinuti capability-ji.
+# Nemaju kanal na kom se izvršavaju: Instagram i Facebook nemaju endpoint,
+# X ih je premestio u Enterprise, LinkedIn Messages i Invitations su
+# partnerski, TikTok nema scope. Vraćaju se tek ADR-om koji imenuje kanal.
+retired_capabilities:
+  social.first_dm:  # canon-lint: allow
+    retired_in: "1.1"
+    reason: "Nema sankcionisanog puta ni na jednoj platformi (Aneks A §2)"
+  email.first_outbound:
+    retired_in: "1.1"
+    reason: "Zamenjeno sa email.outbound_approved + A1 odobrenje po adresatu"
+
+# ActionType -> potrebni capability-ji (Canon §6.4)
+action_types:
+  channel.post.create:      [content.publish_approved]
+  channel.comment.create:   [social.reply_inbound]
+  channel.comment.moderate: [social.reply_inbound]
+  channel.read.public:      [social.read_public]
+  mail.send:                [email.outbound_approved]
+  mail.reply:               [email.reply_inbound]
+  browser.page.read:        [web.read_public]
+  browser.form.submit:      [browser.form_submit_approved]
+  content.draft:            []
+  memory.consolidate:       []
+
+# Canon §9.4 — tvrde zabrane.
+# Nisu DENY pravila koja se mogu isključiti, nego sistemsko ograničenje
+# ugrađeno u gateway. Pokušaj iz planner-a otvara SEV1 incident.
+hard_prohibitions:
+  - id: IDENTITY_IMPERSONATION
+    description: "Predstavljanje persone kao stvarne osobe ili preuzimanje tuđeg identiteta"
+  - id: DISCLOSURE_CONCEALMENT
+    description: "Skrivanje AI prirode persone radi sticanja poverenja"
+  - id: GOVERNMENT_IDENTIFIERS
+    description: "Korišćenje državnih identifikatora ili lažnih dokumenata"
+  - id: PLATFORM_EVASION
+    description: "Zaobilaženje CAPTCHA, anti-bot mehanizama ili ban-a"
+    covers: [captcha_bypass, anti_bot_evasion, ban_evasion]
+  - id: BULK_UNSOLICITED
+    description: "Masovne neželjene poruke"
+  - id: SENSITIVE_DATA_SOLICITATION
+    description: "Traženje osetljivih ličnih podataka od stvarnih korisnika"
+  - id: REAL_PERSON_LIKENESS
+    description: "Lica stvarnih osoba u generisanim vizuelima"
+
+# Canon §9.3 — pilot rate limiti po personi po danu.
+# Ukupnih 40 je tvrdi plafon koji se primenjuje PRVI; pojedinačni limiti
+# određuju samo raspodelu unutar njega.
+rate_limits_per_persona_day:
+  total_actions: 40
+  public_posts: 3
+  comment_replies: 12
+  inbound_replies: 20
+  outbound_email: 5
+  web_reads: 60
+  browser_writes: 6
+  x_posts: 2

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mercatomaster.com/schemas/events/cost.recorded/1.json",
+  "title": "cost.recorded",
+  "description": "Canon v1.1 §7.2 — vlasnik: observability",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "occurred_at",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "pattern": "^EVT-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "event_type": {
+      "const": "cost.recorded"
+    },
+    "event_version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "persona_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^P-\\d{5}$"
+    },
+    "trace_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "causation_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^EVT-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bucket",
+        "amount_eur_cents",
+        "source_currency"
+      ],
+      "properties": {
+        "bucket": {
+          "enum": [
+            "llm",
+            "embeddings",
+            "media_generation",
+            "browser_minutes",
+            "storage",
+            "egress",
+            "x_api_credits",
+            "third_party_api"
+          ]
+        },
+        "amount_eur_cents": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source_currency": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3
+        }
+      }
+    }
+  }
+}

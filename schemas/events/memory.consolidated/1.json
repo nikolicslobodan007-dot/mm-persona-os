@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mercatomaster.com/schemas/events/memory.consolidated/1.json",
+  "title": "memory.consolidated",
+  "description": "Canon v1.1 §7.2 — vlasnik: memory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "occurred_at",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "pattern": "^EVT-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "event_type": {
+      "const": "memory.consolidated"
+    },
+    "event_version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "persona_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^P-\\d{5}$"
+    },
+    "trace_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "run_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "causation_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^EVT-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "job"
+      ],
+      "properties": {
+        "job": {
+          "type": "string"
+        },
+        "items_in": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "items_out": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

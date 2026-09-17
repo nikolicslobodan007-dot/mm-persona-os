@@ -1,0 +1,163 @@
+# Produkcijsko okruženje — jedan Hetzner Cloud VM (CX23 na startu, CX43 kasnije).
+# Razlike u odnosu na docker-compose.yml:
+#   - nema bind mount-a koda; kod je u image-u
+#   - gunicorn umesto runserver
+#   - Postgres/Redis/MinIO su vezani na 127.0.0.1, ne na 0.0.0.0
+#   - Caddy terminira TLS i jedini sluša na javnim portovima
+#   - restart: unless-stopped na svemu
+#
+# Pokretanje:  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+
+services:
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # Samo lokalno. Spolja se dolazi isključivo kroz SSH tunel.
+    ports: ["127.0.0.1:5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # Memorijske vrednosti dolaze iz .env.prod jer zavise od veličine mašine.
+    # Tabela u deploy/README.md §8 daje vrednosti po tipu servera.
+    # Posle rescale-a se menja .env.prod i radi `up -d postgres` — bez izmene koda.
+    command: >
+      postgres
+      -c shared_buffers=${PG_SHARED_BUFFERS:-512MB}
+      -c effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE:-1536MB}
+      -c maintenance_work_mem=${PG_MAINTENANCE_WORK_MEM:-256MB}
+      -c work_mem=${PG_WORK_MEM:-8MB}
+      -c max_connections=${PG_MAX_CONNECTIONS:-50}
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c wal_compression=on
+      -c max_wal_size=2GB
+      -c checkpoint_completion_target=0.9
+      -c log_min_duration_statement=500
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy noeviction
+    ports: ["127.0.0.1:6379:6379"]
+    volumes: ["redisdata:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports: ["127.0.0.1:9000:9000", "127.0.0.1:9001:9001"]
+    volumes: ["miniodata:/data"]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application
+               --bind 0.0.0.0:8000
+               --workers 3
+               --timeout 60
+               --access-logfile - --error-logfile -"
+    env_file: [.env.prod]
+    volumes:
+      - static:/app/staticfiles
+      - media:/app/media
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  beat:
+    build: .
+    restart: unless-stopped
+    # Canon §11.1 — beat na 30 s.
+    command: celery -A config.celery beat --loglevel=INFO
+    env_file: [.env.prod]
+    depends_on:
+      redis: {condition: service_healthy}
+      web: {condition: service_started}
+
+  worker_core:
+    build: .
+    restart: unless-stopped
+    # Canon §11.3 — domen bira queue, prioritet je atribut poruke.
+    command: >
+      celery -A config.celery worker --loglevel=INFO
+      -Q control,approval,persona.interactive,persona.scheduled,memory,maintenance
+      --concurrency=2 --max-tasks-per-child=200
+    env_file: [.env.prod]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  worker_browser:
+    build: .
+    restart: unless-stopped
+    # Canon §12.2 — jedinica je browser kontekst, najviše 4 po worker procesu.
+    # Chromium curi memoriju kroz duge sesije; max-tasks-per-child je nizak namerno.
+    # Računaj ~600 MB po kontekstu. Na 4 GB mašini drži 1, na 16 GB ide 4.
+    command: >
+      celery -A config.celery worker --loglevel=INFO
+      -Q browser --concurrency=${BROWSER_CONCURRENCY:-1} --max-tasks-per-child=25
+    env_file: [.env.prod]
+    shm_size: "1gb"           # bez ovoga Chromium puca na /dev/shm
+    volumes: ["browserprofiles:/app/browser_profiles"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  worker_channel:
+    build: .
+    restart: unless-stopped
+    command: >
+      celery -A config.celery worker --loglevel=INFO
+      -Q channel,mail,media --concurrency=2 --max-tasks-per-child=200
+    env_file: [.env.prod]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - static:/srv/static:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on: [web]
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+  browserprofiles:
+  static:
+  media:
+  caddydata:
+  caddyconfig:

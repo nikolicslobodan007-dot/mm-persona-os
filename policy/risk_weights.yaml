@@ -1,0 +1,91 @@
+# Težine za risk_score — Canon v1.1 §9.2
+#
+#   risk_score = clamp(0, 100,
+#       action_base_risk + audience_risk + novelty_risk + volume_risk
+#     + content_risk + platform_risk + identity_risk - trust_credit )
+#
+# Sve komponente su CELI BROJEVI. risk_score je int 0-100, nikada decimala.
+# Verzionisano zajedno sa pravilima; policy_version se upisuje u PolicyDecision.
+
+version: 1
+canon: "1.1"
+policy_version: "2026-09-16.01"
+
+action_base_risk:
+  channel.read.public: 0
+  browser.page.read: 0
+  content.draft: 0
+  memory.consolidate: 0
+  channel.comment.moderate: 5
+  mail.reply: 10
+  channel.comment.create: 15
+  channel.post.create: 20
+  browser.form.submit: 25
+  mail.send: 30
+
+audience_risk:
+  internal: 0
+  own_followers: 5
+  public: 15
+  named_individual: 25
+
+novelty_risk:
+  routine: 0          # obrazac viđen >20 puta
+  familiar: 5         # 5-20 puta
+  new: 15             # prvi put za ovu personu
+  first_on_channel: 20
+
+volume_risk:
+  # udeo dnevnog plafona potrošen pre ove akcije
+  under_50_pct: 0
+  under_80_pct: 5
+  under_100_pct: 12
+  at_cap: 30
+
+content_risk:
+  neutral: 0
+  opinion: 5
+  claim_with_figures: 10    # tvrdnja sa brojevima traži izvor
+  names_third_party: 15
+  regulated_topic: 25       # zdravlje, finansije, pravo
+
+platform_risk:
+  SANDBOX: 0
+  WEBSITE: 0
+  NEWSLETTER: 5
+  EMAIL: 10
+  LINKEDIN: 10
+  FACEBOOK: 12
+  INSTAGRAM: 12
+  X: 15
+
+identity_risk:
+  disclosure_set: 0
+  disclosure_not_required: 0
+  disclosure_unverified: 20
+  disclosure_missing: 60      # praktično garantuje REQUIRE_APPROVAL ili DENY
+
+# Kredit koji persona stiče radom bez incidenata. Oduzima se od zbira.
+trust_credit:
+  L0: 0
+  L1: 5
+  L2: 12
+  L3: 0    # rezervisan, ne može se dodeliti (Canon §3.11)
+  L4: 0    # rezervisan
+
+# Canon §3.6 — granice klasa. Ne menjati bez ADR-a.
+risk_bands:
+  LOW:      [0, 24]
+  MEDIUM:   [25, 49]
+  HIGH:     [50, 74]
+  CRITICAL: [75, 100]
+
+# Canon §9.5 — jedan CRITICAL prekršaj obara capability na L0;
+# prekršaj iz hard_prohibitions dodatno suspenduje personu.
+auto_downgrade:
+  on_critical_violation:
+    capability_to: L0
+  on_hard_prohibition:
+    capability_to: L0
+    persona_status: SUSPENDED
+    open_incident: SEV1

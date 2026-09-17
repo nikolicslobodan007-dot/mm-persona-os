@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mercatomaster.com/schemas/events/approval.requested/1.json",
+  "title": "approval.requested",
+  "description": "Canon v1.1 §7.2 — vlasnik: policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "occurred_at",
+    "trace_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "pattern": "^EVT-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "event_type": {
+      "const": "approval.requested"
+    },
+    "event_version": {
+      "const": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "persona_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^P-\\d{5}$"
+    },
+    "trace_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "causation_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^EVT-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approval_id",
+        "approval_class",
+        "expires_at",
+        "payload_hash"
+      ],
+      "properties": {
+        "approval_id": {
+          "type": "string"
+        },
+        "approval_class": {
+          "enum": [
+            "A1",
+            "A2",
+            "A3",
+            "A4"
+          ]
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload_hash": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

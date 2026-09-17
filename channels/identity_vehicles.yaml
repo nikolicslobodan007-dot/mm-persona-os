@@ -1,0 +1,89 @@
+# Dozvoljeni parovi (channel_type, identity_vehicle)
+# Canon v1.1 §3.14 i §17.1 · Aneks A §3
+#
+# Ovo NIJE preporuka nego uslov pristupa. Kombinacija koja ovde ne postoji
+# ne može se upisati u ChannelAccount (DB constraint).
+#
+# Rok ponovne provere: 15.12.2026 (Aneks A §10)
+
+version: 1
+canon: "1.1"
+verified_on: "2026-09-15"
+reverify_by: "2026-12-15"
+
+channels:
+
+  WEBSITE:
+    vehicles: [OWNED_SITE]
+    disclosure_required: false
+    note: "Sopstvena infrastruktura. Bez ograničenja platforme."
+
+  NEWSLETTER:
+    vehicles: [NEWSLETTER]
+    disclosure_required: false
+    note: "Vidi Canon §12.8 za sending_domain pravila."
+
+  EMAIL:
+    vehicles: [NEWSLETTER]
+    disclosure_required: false
+    note: "ChannelType.EMAIL — zaseban model za email ne postoji (Canon §3.15)."
+
+  LINKEDIN:
+    vehicles: [PAGE]
+    forbidden_vehicles: [PROFILE]
+    disclosure_required: false
+    requires_named_human_admin: true
+    note: >
+      Lični profil je ZABRANJEN i uz otvoreno označavanje. Developer
+      dokumentacija: "No Fake/Headless Accounts". Korisnički ugovor 8.2
+      zabranjuje profil "for anyone other than yourself (a real person)".
+      Jedina dozvoljena forma je Page sa imenovanim super-adminom.
+    api: "Community Management API"
+    access: "Standard tier traži app review; Development tier 500 poziva/dan"
+
+  FACEBOOK:
+    vehicles: [PAGE]
+    forbidden_vehicles: [PROFILE]
+    disclosure_required: true
+    note: "Lični profili nisu podržani za objavljivanje kroz API."
+
+  INSTAGRAM:
+    vehicles: [PROFILE]
+    disclosure_required: true
+    account_subtype: "professional (Business ili Creator)"
+    disclosure_label: "AI generated profile"
+    note: >
+      Bez profilne oznake Instagram ograničava doseg profilima koji
+      prikazuju AI osobu. Oznaka uvedena 05/2026, preimenovana 31.08.2026.
+
+  X:
+    vehicles: [PROFILE]
+    disclosure_required: false
+    disclosure_required_if: "persona se poziva na stvarnu osobu ili brend"
+    note: >
+      Pay-per-use od 06.02.2026. Objava 0,015 USD, 0,20 USD sa linkom.
+      Developer policy zabranjuje identičan ili bitno sličan sadržaj
+      preko više naloga — repetition guard je uslov pristupa, ne stil.
+
+  TIKTOK:
+    vehicles: []
+    in_scope: false
+    disclosure_required: true
+    note: >
+      VAN OPSEGA (Canon §16.2, A-10). Zabranjeni nalozi vođeni "in bulk"
+      bez obzira na označavanje; nema scope za interakciju; nema čitanje
+      za komercijalne korisnike. Adapter se ne piše.
+
+  YOUTUBE:
+    vehicles: []
+    in_scope: false
+    disclosure_required: true
+    note: >
+      VAN OPSEGA (Canon §16.2, A-10). Developer politika zabranjuje
+      automatizovanje objave, komentara i lajkova bez izričitog pristanka
+      korisnika za tu radnju. Adapter se ne piše.
+
+  SANDBOX:
+    vehicles: [SANDBOX]
+    disclosure_required: false
+    note: "Interna test platforma. Pilot faza SIMULATION."

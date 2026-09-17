@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push: {branches: [main]}
+  pull_request:
+
+jobs:
+  canon:
+    name: Canon lint i testovi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+
+      - name: Instalacija
+        run: pip install pyyaml jsonschema pytest ruff
+
+      # Canon §20 tačka 7 — ime van Canon-a ne stiže do main grane.
+      - name: Canon lint
+        run: python tools/canon_lint.py
+
+      - name: Testovi
+        run: python -m pytest
+
+      - name: Ruff
+        run: ruff check common tools tests || true

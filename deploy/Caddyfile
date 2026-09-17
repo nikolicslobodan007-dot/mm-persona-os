@@ -1,0 +1,33 @@
+# Caddy sam pribavlja i obnavlja Let's Encrypt sertifikat za {$DOMAIN}.
+# Uslov: A zapis za {$DOMAIN} pokazuje na IP servera PRE prvog pokretanja.
+
+{$DOMAIN} {
+
+	encode zstd gzip
+
+	# Statika ide direktno s diska, ne kroz gunicorn.
+	handle_path /static/* {
+		root * /srv/static
+		file_server
+	}
+
+	handle {
+		reverse_proxy web:8000 {
+			header_up X-Forwarded-Proto {scheme}
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
