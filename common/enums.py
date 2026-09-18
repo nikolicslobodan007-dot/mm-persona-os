@@ -66,7 +66,7 @@ class CanonEnum(StrEnum):
 
 
 class PersonaStatus(CanonEnum):
-    """Canon §3.1. Ukinuto: `pilot_active` (→ RuntimeEnvironment), `retired` (→ ARCHIVED)."""  # canon-lint: allow
+    """Canon §3.1. Ukinuto: pilotski status → RuntimeEnvironment, `retired` → ARCHIVED."""
 
     DRAFT = "DRAFT"
     READY = "READY"
@@ -298,6 +298,13 @@ ASSIGNABLE_TRUST_LEVELS: frozenset[TrustLevel] = frozenset(
     {TrustLevel.L0, TrustLevel.L1, TrustLevel.L2}
 )
 
+#: Isti skup, ali UREĐEN. Django `makemigrations` upisuje sadržaj liste u
+#: migraciju; frozenset ima nedeterministički redosled, pa bi svaki `check`
+#: prijavljivao lažnu izmenu ograničenja. Ograničenja koriste ovu torku.
+ASSIGNABLE_TRUST_LEVEL_VALUES: tuple[str, ...] = tuple(
+    sorted(t.value for t in ASSIGNABLE_TRUST_LEVELS)
+)
+
 
 # ---------------------------------------------------------------- §3.12–3.13
 
@@ -391,6 +398,11 @@ class ChannelType(CanonEnum):
 #: izričit ljudski pristanak po radnji.
 OUT_OF_SCOPE_CHANNELS: frozenset[ChannelType] = frozenset(
     {ChannelType.TIKTOK, ChannelType.YOUTUBE}
+)
+
+#: Uređena varijanta za DB ograničenja — vidi ASSIGNABLE_TRUST_LEVEL_VALUES.
+OUT_OF_SCOPE_CHANNEL_VALUES: tuple[str, ...] = tuple(
+    sorted(c.value for c in OUT_OF_SCOPE_CHANNELS)
 )
 
 
@@ -584,3 +596,338 @@ class QueueName(CanonEnum):
     MEDIA = "media"
     MAINTENANCE = "maintenance"
     DEAD_LETTER = "dead_letter"
+
+
+# ============================================================================
+# Radni enum-i (F1) — NISU iz Canon §3
+# ============================================================================
+#
+# Canon §3 normira 24 enum-a; sve iznad ove linije je taj katalog. Ispod su
+# vrednosti koje Canon ne pominje, a šema ih traži kao `CharField` sa
+# nabrajanjem u koloni „Pravilo / relacija" (npr. `open/selected/rejected/used`).
+#
+# Žive ovde, a ne u modelima, iz jednog razloga: Canon §20 tačka 3 kaže da
+# enum van `common/enums.py` ne postoji, i `tools/canon_lint.py` to sprovodi.
+# Alternativa — `TextChoices` u svakom app-u — vratila bi tačno onu raspršenost
+# imena koju Canon uklanja.
+#
+# Pravilo za buduće izmene: vrednost odavde koja uđe u ugovor, u event payload
+# ili u policy DSL prestaje da bude radna i seli se gore, kroz ADR.
+
+
+class ScopeKind(CanonEnum):
+    """Domet pravila ili događaja (šema §15, §14)."""
+
+    GLOBAL = "global"
+    CHANNEL = "channel"
+    PERSONA = "persona"
+    ACTION = "action"
+    COHORT = "cohort"
+    CAPABILITY = "capability"
+    ACCOUNT = "account"
+
+
+class AssetKind(CanonEnum):
+    """Vrsta medijskog fajla (šema §8).
+
+    `FACE_REFERENCE` postoji da bi Canon §9.4 tačka 7 imala šta da čuva:
+    referentno lice je SINTETIČKO i nikada ne sme poticati od stvarne osobe.
+    """
+
+    AVATAR = "AVATAR"
+    FACE_REFERENCE = "FACE_REFERENCE"
+    PHOTO = "PHOTO"
+    VIDEO = "VIDEO"
+    AUDIO = "AUDIO"
+    DOCUMENT = "DOCUMENT"
+    THUMBNAIL = "THUMBNAIL"
+
+
+class AssetRole(CanonEnum):
+    """Uloga asset-a unutar jednog komada sadržaja (šema §12)."""
+
+    COVER = "cover"
+    INLINE = "inline"
+    GALLERY = "gallery"
+    VIDEO = "video"
+    AUDIO = "audio"
+
+
+class ActorKind(CanonEnum):
+    """Vrsta učesnika u društvenom grafu (šema §11)."""
+
+    PERSONA = "PERSONA"
+    REAL_CONTACT = "REAL_CONTACT"
+    ORGANIZATION = "ORGANIZATION"
+    PUBLIC_ENTITY = "PUBLIC_ENTITY"
+
+
+class RelationshipType(CanonEnum):
+    """Vrsta odnosa. `FOLLOW` kao akcija ne postoji (Canon §9.3)."""
+
+    FOLLOWS = "FOLLOWS"
+    KNOWS = "KNOWS"
+    COLLABORATES = "COLLABORATES"
+    CUSTOMER = "CUSTOMER"
+    PROSPECT = "PROSPECT"
+    COLLEAGUE = "COLLEAGUE"
+    FRIENDLY = "FRIENDLY"
+    BLOCKED = "BLOCKED"
+
+
+class RelationshipStatus(CanonEnum):
+    ACTIVE = "active"
+    MUTED = "muted"
+    BLOCKED = "blocked"
+    ENDED = "ended"
+
+
+class MemoryVisibility(CanonEnum):
+    """Canon §10.2 traži persona-scoped pretragu; ovo je dodatni filter."""
+
+    PRIVATE = "PRIVATE"
+    PERSONA_SHARED = "PERSONA_SHARED"
+    TEAM_SHARED = "TEAM_SHARED"
+    SYSTEM = "SYSTEM"
+
+
+class MemoryRelation(CanonEnum):
+    """Vrsta veze između dve memorije (Canon §10.4)."""
+
+    RELATED = "related"
+    SUPPORTS = "supports"
+    CONTRADICTS = "contradicts"
+    DERIVED = "derived"
+    SUPERSEDES = "supersedes"
+
+
+class ContentStatus(CanonEnum):
+    """Životni ciklus komada sadržaja (šema §12)."""
+
+    DRAFT = "DRAFT"
+    IN_REVIEW = "IN_REVIEW"
+    APPROVED = "APPROVED"
+    SCHEDULED = "SCHEDULED"
+    PUBLISHED = "PUBLISHED"
+    REJECTED = "REJECTED"
+    ARCHIVED = "ARCHIVED"
+    FAILED = "FAILED"
+
+
+class ContentFormat(CanonEnum):
+    """Oblik sadržaja, nezavisan od kanala (šema §12)."""
+
+    POST = "post"
+    ARTICLE = "article"
+    NEWSLETTER = "newsletter"
+    COMMENT = "comment"
+    REPLY = "reply"
+    VIDEO_SCRIPT = "video_script"
+    THREAD = "thread"
+
+
+class IdeaStatus(CanonEnum):
+    OPEN = "open"
+    SELECTED = "selected"
+    REJECTED = "rejected"
+    USED = "used"
+
+
+class PublicationStatus(CanonEnum):
+    """Podskup ContentStatus-a koji ima smisla po kanalu (šema §12)."""
+
+    SCHEDULED = "SCHEDULED"
+    PUBLISHING = "PUBLISHING"
+    PUBLISHED = "PUBLISHED"
+    FAILED = "FAILED"
+    RETRACTED = "RETRACTED"
+
+
+class MailDirection(CanonEnum):
+    INBOUND = "in"
+    OUTBOUND = "out"
+
+
+class RunStatus(CanonEnum):
+    """Stanje jednog buđenja persone (Canon §6.1)."""
+
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    ABORTED = "ABORTED"
+    FAILED = "FAILED"
+
+
+class PlanStatus(CanonEnum):
+    DRAFT = "DRAFT"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    SUPERSEDED = "SUPERSEDED"
+    ABANDONED = "ABANDONED"
+    EXPIRED = "EXPIRED"
+
+
+class StepType(CanonEnum):
+    THINK = "think"
+    RETRIEVE = "retrieve"
+    CREATE = "create"
+    ACTION = "action"
+    WAIT = "wait"
+    REVIEW = "review"
+
+
+class StepStatus(CanonEnum):
+    PENDING = "PENDING"
+    READY = "READY"
+    RUNNING = "RUNNING"
+    DONE = "DONE"
+    SKIPPED = "SKIPPED"
+    FAILED = "FAILED"
+
+
+class AccountStatus(CanonEnum):
+    """Stanje `ChannelAccount`-a i `BrowserProfile`-a."""
+
+    PENDING = "pending"
+    ACTIVE = "active"
+    PAUSED = "paused"
+    QUARANTINED = "quarantined"
+    REVOKED = "revoked"
+
+
+class SessionType(CanonEnum):
+    """Vrsta runtime sesije (šema §16). Nije `AgentRun` — vidi Canon §1."""
+
+    BROWSER = "browser"
+    MAIL = "mail"
+    LLM = "llm"
+    TOOL = "tool"
+
+
+class SessionStatus(CanonEnum):
+    OPEN = "OPEN"
+    CLOSED = "CLOSED"
+    EXPIRED = "EXPIRED"
+    ABORTED = "ABORTED"
+
+
+class ReconcileStatus(CanonEnum):
+    """Canon §12.3 — `UNKNOWN_EFFECT` ide ovde, nikada u retry."""
+
+    PENDING = "PENDING"
+    IN_PROGRESS = "IN_PROGRESS"
+    RESOLVED_EFFECT_PRESENT = "RESOLVED_EFFECT_PRESENT"
+    RESOLVED_NO_EFFECT = "RESOLVED_NO_EFFECT"
+    UNRESOLVED = "UNRESOLVED"
+
+
+class IncidentStatus(CanonEnum):
+    OPEN = "OPEN"
+    ACKNOWLEDGED = "ACKNOWLEDGED"
+    MITIGATED = "MITIGATED"
+    CLOSED = "CLOSED"
+
+
+class SourceKind(CanonEnum):
+    """Poreklo memorije ili znanja (Canon §10.4 — ključevi `SOURCE_CONFIDENCE`)."""
+
+    SYSTEM_OBSERVATION = "system_observation"
+    FIRST_PARTY_USER_INPUT = "first_party_user_input"
+    PUBLIC_WEB_SOURCE = "public_web_source"
+    LLM_INFERENCE = "llm_inference"
+    SYNTHETIC_WORLD_EVENT = "synthetic_world_event"
+
+
+class LLMPurpose(CanonEnum):
+    """Zašto je model pozvan — osnova za rutiranje i za budžet (Canon §13.2)."""
+
+    PLANNING = "planning"
+    CONTENT_DRAFT = "content_draft"
+    REPLY = "reply"
+    SUMMARISE = "summarise"
+    CLASSIFY = "classify"
+    EMBED = "embed"
+    EVALUATE = "evaluate"
+
+
+__all__ += [
+    "ScopeKind",
+    "AssetKind",
+    "AssetRole",
+    "ActorKind",
+    "RelationshipType",
+    "RelationshipStatus",
+    "MemoryVisibility",
+    "MemoryRelation",
+    "ContentStatus",
+    "ContentFormat",
+    "IdeaStatus",
+    "PublicationStatus",
+    "MailDirection",
+    "RunStatus",
+    "PlanStatus",
+    "StepType",
+    "StepStatus",
+    "AccountStatus",
+    "SessionType",
+    "SessionStatus",
+    "ReconcileStatus",
+    "IncidentStatus",
+    "SourceKind",
+    "LLMPurpose",
+    "DISCLOSURE_ALWAYS_REQUIRED",
+    "TERMINAL_ACTION_STATUSES",
+    "ASSIGNABLE_TRUST_LEVELS",
+    "ASSIGNABLE_TRUST_LEVEL_VALUES",
+    "OUT_OF_SCOPE_CHANNELS",
+    "OUT_OF_SCOPE_CHANNEL_VALUES",
+    "DISCLOSURE_OK",
+    "MEMORY_HALF_LIFE_DAYS",
+    "MEMORY_LAMBDA",
+    "SOURCE_CONFIDENCE",
+    "APPROVAL_TTL_MINUTES",
+    "APPROVAL_EXPIRY_EFFECT",
+    "APPROVAL_DECIDERS",
+    "WAKE_PRIORITY_VALUE",
+    "ERROR_HTTP_STATUS",
+    "OUTCOME_REASON_CODE",
+    "PILOT_DAILY_LIMITS",
+    "COST_GOVERNOR_THRESHOLDS",
+    "MAX_ATTEMPTS_BY_KIND",
+]
+
+
+# Canon §10.3 — λ = ln2 / half_life_days. Izračunato, ne prepisano, da
+# tabela i formula ne mogu da se raziđu.
+import math as _math  # noqa: E402
+
+MEMORY_LAMBDA: dict[MemoryType, float] = {
+    k: (0.0 if v is None else _math.log(2) / v)
+    for k, v in MEMORY_HALF_LIFE_DAYS.items()
+}
+
+#: Canon §9.3 — pilot limiti. Ukupno je TVRDI plafon i primenjuje se prvi.
+PILOT_DAILY_LIMITS: dict[str, int] = {
+    "public_posts": 3,
+    "comment_replies": 12,
+    "inbound_replies": 20,
+    "outbound_email": 5,
+    "web_reads": 60,
+    "browser_writes": 6,
+    "x_posts": 2,
+    "total_actions": 40,
+}
+
+#: Canon §13.3 — prag dnevnog budžeta → reakcija.
+COST_GOVERNOR_THRESHOLDS: tuple[tuple[int, str], ...] = (
+    (70, "WARN"),
+    (85, "STOP_NONESSENTIAL_MEDIA"),
+    (100, "ECONOMY_MODE"),
+    (120, "PAUSE_PERSONA_AND_SEV2"),
+)
+
+#: Canon §12.4 — retry po vrsti akcije. Policy evaluacija se ne ponavlja.
+MAX_ATTEMPTS_BY_KIND: dict[str, int] = {
+    "read": 3,
+    "write": 2,
+    "policy": 1,
+}

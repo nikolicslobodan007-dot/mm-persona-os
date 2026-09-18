@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import pathlib
 import re
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import pytest
 import yaml
@@ -20,7 +20,6 @@ from common.events import (
     EVENT_OWNERS,
     EVENT_TYPES,
     RETIRED_EVENT_TYPES,
-    RUN_ID_OPTIONAL,
     EventEnvelope,
 )
 
@@ -37,7 +36,9 @@ class TestPublicIds:
         assert I.persona_public_id(37) == "P-00037"
         assert I.persona_public_id(99999) == "P-99999"
 
-    @pytest.mark.parametrize("bad", ["P-001", "P001", "P0001", "P-1", "p-00001"])  # canon-lint: allow
+    @pytest.mark.parametrize(
+        "bad", ["P-001", "P001", "P0001", "P-1", "p-00001"]  # canon-lint: allow
+    )
     def test_kratki_oblici_su_odbijeni(self, bad):
         """Canon §2.2 — Faza 13 koristi trocifreni oblik, to je errata §19."""
         with pytest.raises(ValueError):
@@ -67,8 +68,8 @@ class TestPublicIds:
 
     def test_ulid_je_sortabilan_po_vremenu(self):
         """Ceo razlog izbora ULID-a nad UUID-om (Canon §2.2)."""
-        t1 = datetime(2026, 9, 16, 8, 0, 0, tzinfo=timezone.utc)
-        t2 = datetime(2026, 9, 16, 9, 0, 0, tzinfo=timezone.utc)
+        t1 = datetime(2026, 9, 16, 8, 0, 0, tzinfo=UTC)
+        t2 = datetime(2026, 9, 16, 9, 0, 0, tzinfo=UTC)
         assert I.new_ulid(t1) < I.new_ulid(t2)
 
     def test_ulid_nema_dvosmislene_znakove(self):
