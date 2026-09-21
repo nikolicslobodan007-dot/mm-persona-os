@@ -160,11 +160,14 @@ def _cost_cents(route: LLMRoute, tin: int, tout: int) -> int:
 
 def generate(purpose: E.LLMPurpose, system: str, prompt: str, *, persona=None, run=None,
              context_pack=None, brief: dict | None = None,
-             now: datetime | None = None) -> Generation:
-    """`brief` je strukturisan ulaz za lokalni šablon (tema, ugao, jezik…)."""
+             now: datetime | None = None, only: LLMRoute | None = None) -> Generation:
+    """`brief` je strukturisan ulaz za lokalni šablon (tema, ugao, jezik…).
+
+    `only` — samo ta ruta, bez prelaska na sledeću (za merenje, ADR-0011).
+    """
     now = now or timezone.now()
     fallbacks: list[str] = []
-    for route in routes(purpose):
+    for route in ([only] if only is not None else routes(purpose)):
         t0 = time.monotonic()
         external = route.provider != LOCAL_PROVIDER
         if external:
@@ -190,7 +193,7 @@ def generate(purpose: E.LLMPurpose, system: str, prompt: str, *, persona=None, r
                       t0, finish=finish, tin=tin, tout=tout, cents=cents, external=external)
         return Generation(text.strip(), route.provider, route.model_key, rec, tin, tout, cents,
                           fallbacks)
-    raise LLMError("NO_ROUTE", "; ".join(fallbacks))  # pragma: no cover — local uvek postoji
+    raise LLMError("NO_ROUTE", "; ".join(fallbacks))
 
 
 def _record(route, purpose, system, prompt, text, persona, run, pack, now, t0, *,

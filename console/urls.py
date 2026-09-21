@@ -11,6 +11,8 @@ urlpatterns = [
     path("approvals/<str:approval_id>/decide", views.approval_decide,
          name="console-approval-decide"),
     path("personas/<str:public_id>", views.persona, name="console-persona"),
+    path("personas/<str:public_id>/status", views.persona_status,
+         name="console-persona-status"),
     path("content", views.content, name="console-content"),
     path("actions/<str:action_id>", views.action, name="console-action"),
     path("costs", views.costs, name="console-costs"),

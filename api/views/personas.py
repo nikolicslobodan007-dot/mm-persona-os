@@ -16,9 +16,11 @@ from __future__ import annotations
 from django.db import transaction
 from django.db.models import F
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework import serializers
 
 from api import audit
-from api.base import PERSONA_WRITERS, PersonaOSView, ok
+from api.base import PERSONA_WRITERS, PersonaOSView, ok, roles_of
+from api.context import current
 from api.errors import ApiError
 from api.idempotency import idempotent
 from api.pagination import paginate_desc
@@ -196,3 +198,29 @@ class PersonaSnapshotView(PersonaOSView):
     def get(self, request, public_id: str):
         p = _get_persona(public_id)
         return ok(snapshot_out(p), headers={"ETag": etag_for(p.version)})
+
+
+class StatusIn(serializers.Serializer):
+    to = serializers.ChoiceField(choices=E.PersonaStatus.values())
+    reason = serializers.CharField(max_length=2000)
+
+
+class PersonaStatusView(PersonaOSView):
+    """POST /api/v1/personas/{public_id}/status — ADR-0011, tabela prelaza iz Canon §3.1."""
+
+    @extend_schema(operation_id="personas_status_change", request=StatusIn,
+                   responses={200: dict})
+    @idempotent
+    def post(self, request, public_id: str):
+        from apps.personas import lifecycle
+
+        p = _get_persona(public_id)
+        data = StatusIn(data=request.data)
+        data.is_valid(raise_exception=True)
+        try:
+            p = lifecycle.change_status(p, E.PersonaStatus(data.validated_data["to"]),
+                                        actor=current().principal, roles=roles_of(request.user),
+                                        reason=data.validated_data["reason"])
+        except lifecycle.LifecycleError as e:
+            raise ApiError(E.ErrorCode(e.code), str(e)) from e
+        return ok(persona_out(p), headers={"ETag": etag_for(p.version)})

@@ -24,6 +24,7 @@ from apps.content.models import ContentItem
 from apps.memory.models import MemoryItem
 from apps.observability.models import CostLedger
 from apps.orchestration.models import Action, AgentRun
+from apps.personas import lifecycle
 from apps.personas.models import Persona
 from apps.policy import service as policy
 from apps.policy.models import ApprovalRequest, KillSwitch, PolicyIncident
@@ -220,9 +221,13 @@ def persona(request, public_id: str):
     state = BehaviourState.objects.filter(persona=p).first()
     ctx = _nav(request) | {
         "p": p, "state": state,
-        "state_rows": [(f, getattr(state, f)) for f in (
+        "state_rows": [(f, getattr(state, f), _state_max(state, f)) for f in (
             "energy", "stress", "focus", "curiosity_now", "social_appetite",
             "content_pressure", "attention_remaining")] if state else [],
+        "next_wake": state.next_wake_at if state and state.next_wake_at
+        and state.next_wake_at.year > 2000 else None,
+        "targets": lifecycle.allowed_targets(p, _roles(request.user)),
+        "wakeable": p.status in {s.value for s in E.WAKEABLE_BY_SCHEDULER},
         "trust": sorted(policy.trust_map(p).items()),
         "runs": AgentRun.objects.filter(persona=p).order_by("-started_at")[:25],
         "items": ContentItem.objects.filter(persona=p).order_by("-created_at")[:15],
@@ -233,6 +238,38 @@ def persona(request, public_id: str):
         "accounts": p.channel_accounts.all().order_by("channel_type"),
     }
     return render(request, "console/persona.html", ctx)
+
+
+def _state_max(state, field):
+    if field == "attention_remaining":
+        from apps.behaviour.service import DEFAULT_ATTENTION_DAILY
+
+        return (state.state_ext or {}).get("attention_daily", str(DEFAULT_ATTENTION_DAILY))
+    return 1
+
+
+def _roles(user) -> set:
+    roles = set(roles_of(user))
+    if user.is_superuser:
+        roles.add(E.Role.SYSTEM_ADMIN)
+    return roles
+
+
+@console_view
+@require_POST
+def persona_status(request, public_id: str):
+    p = Persona.objects.filter(public_id=public_id).first()
+    if p is None:
+        raise Http404
+    try:
+        to = E.PersonaStatus(request.POST.get("to", ""))
+        p = lifecycle.change_status(p, to, actor=principal_of(request.user),
+                                    roles=_roles(request.user),
+                                    reason=request.POST.get("reason", ""))
+        messages.success(request, f"{p.public_id} je sada {p.status}.")
+    except (lifecycle.LifecycleError, ValueError) as e:
+        messages.error(request, str(e))
+    return redirect(f"/console/personas/{public_id}")
 
 
 # ---------------------------------------------------------------- sadržaj i akcije

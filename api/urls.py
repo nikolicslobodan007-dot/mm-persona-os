@@ -18,7 +18,12 @@ from api.views.memory import (
 )
 from api.views.ops import AuditListView
 from api.views.orchestration import ActionDetailView, ActionPolicyTraceView, RunDetailView
-from api.views.personas import PersonaDetailView, PersonaListView, PersonaSnapshotView
+from api.views.personas import (
+    PersonaDetailView,
+    PersonaListView,
+    PersonaSnapshotView,
+    PersonaStatusView,
+)
 from api.views.policy import (
     ActionProposeView,
     ApprovalDecisionView,
@@ -43,6 +48,8 @@ urlpatterns = [
     path("personas/<str:public_id>/snapshot", PersonaSnapshotView.as_view(),
          name="persona-snapshot"),
     path("personas/<str:public_id>/wake", PersonaWakeView.as_view(), name="persona-wake"),
+    path("personas/<str:public_id>/status", PersonaStatusView.as_view(),
+         name="persona-status"),  # ADR-0011
     path("personas/<str:public_id>/behaviour/tick", BehaviourTickView.as_view(),
          name="persona-behaviour-tick"),
     path("ops/personas/<str:public_id>/timeline", PersonaTimelineView.as_view(),

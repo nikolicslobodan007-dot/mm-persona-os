@@ -34,6 +34,8 @@ docker run --rm \
 find "$BACKUP_DIR" -name 'pg-*.dump'      -mtime "+${KEEP_DAYS}" -delete
 find "$BACKUP_DIR" -name 'minio-*.tar.gz' -mtime "+${KEEP_DAYS}" -delete
 
+ln -sfn "pg-${STAMP}.dump" "${BACKUP_DIR}/pg-latest.dump"
+
 echo "[$(date -Is)] gotovo — $(du -sh "$BACKUP_DIR" | cut -f1) ukupno"
 
 # Provera da dump nije prazan ljuska — pg_dump vraća 0 i za praznu bazu.

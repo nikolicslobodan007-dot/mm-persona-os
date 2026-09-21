@@ -1,4 +1,4 @@
-{% extends "console/base.html" %}{% load console_tags %}
+{% extends "console/base.html" %}{% load console_tags l10n %}
 {% block title %}{{ p.display_name }}{% endblock %}
 {% block content %}
 <div class="row"><h1>{{ p.display_name }} <span class="muted">{{ p.public_id }}</span></h1><span class="spacer"></span>
@@ -6,11 +6,23 @@
   <span class="pill">{{ p.primary_locale }} · {{ p.timezone }}</span></div>
 <div class="grid">
   <div class="card"><h2>Stanje sada</h2>
-    {% if state %}<table>{% for name, v in state_rows %}<tr><td class="small">{{ name }}</td>
-      <td class="w55"><meter min="0" max="1" value="{{ v }}"></meter></td>
+    {% if state %}<table>{% for name, v, mx in state_rows %}<tr><td class="small">{{ name }}</td>
+      <td class="w55"><meter min="0" max="{{ mx|unlocalize }}" value="{{ v|unlocalize }}"></meter></td>
       <td class="mono small">{{ v }}</td></tr>{% endfor %}</table>
-      <div class="sub">Sledeće buđenje: {{ state.next_wake_at|date:"d.m. H:i"|default:"—" }}</div>
+      <div class="sub">Sledeće buđenje: {% if not wakeable %}ne budi se sama dok je {{ p.status }}{% elif next_wake %}{{ next_wake|date:"d.m. H:i" }}{% else %}uskoro{% endif %}</div>
     {% else %}<p class="sub">Nema stanja.</p>{% endif %}</div>
+  <div class="card"><h2>Status</h2>
+    <p class="sub">Trenutno <span class="pill {{ p.status|status_tone }}">{{ p.status }}</span> u okruženju {{ p.runtime_environment }}.
+    {% if p.status == "READY" %}Scheduler je ne budi dok ne postane ACTIVE.{% endif %}</p>
+    {% for t in targets %}
+    <form method="post" action="/console/personas/{{ p.public_id }}/status" class="row mt8"
+          data-confirm="{{ p.status }} → {{ t.value }}?">{% csrf_token %}
+      <input type="hidden" name="to" value="{{ t.value }}">
+      <input type="text" name="reason" class="grow" placeholder="Razlog (obavezno)" required>
+      <button class="{% if t.value == 'ACTIVE' %}primary{% elif t.value == 'ARCHIVED' or t.value == 'SUSPENDED' %}danger{% endif %}">→ {{ t.value }}</button>
+    </form>
+    {% empty %}<p class="sub">Tvoja uloga nema dozvoljen prelaz iz ovog statusa.</p>{% endfor %}
+  </div>
   <div class="card"><h2>Poverenje po sposobnosti</h2>
     <table>{% for cap, lv in trust %}<tr><td class="mono small">{{ cap }}</td><td><span class="pill">{{ lv }}</span></td></tr>
     {% empty %}<tr><td class="sub">Sve na L0.</td></tr>{% endfor %}</table>

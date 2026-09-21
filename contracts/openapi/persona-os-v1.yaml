@@ -742,6 +742,35 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/personas/{public_id}/status:
+    post:
+      operationId: personas_status_change
+      description: POST /api/v1/personas/{public_id}/status — ADR-0011, tabela prelaza
+        iz Canon §3.1.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - personas
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/personas/{public_id}/trust/change:
     post:
       operationId: personas_trust_change
@@ -1406,6 +1435,18 @@ components:
         * `public_web_source` - public_web_source
         * `llm_inference` - llm_inference
         * `synthetic_world_event` - synthetic_world_event
+    StatusInRequest:
+      type: object
+      properties:
+        to:
+          $ref: '#/components/schemas/ToEnum'
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+      - reason
+      - to
     SupersedeInRequest:
       type: object
       properties:
@@ -1439,6 +1480,24 @@ components:
           allOf:
           - $ref: '#/components/schemas/ReasonEnum'
           default: MANUAL
+    ToEnum:
+      enum:
+      - DRAFT
+      - READY
+      - ACTIVE
+      - PAUSED
+      - DEGRADED
+      - SUSPENDED
+      - ARCHIVED
+      type: string
+      description: |-
+        * `DRAFT` - DRAFT
+        * `READY` - READY
+        * `ACTIVE` - ACTIVE
+        * `PAUSED` - PAUSED
+        * `DEGRADED` - DEGRADED
+        * `SUSPENDED` - SUSPENDED
+        * `ARCHIVED` - ARCHIVED
     TrustInRequest:
       type: object
       properties:
