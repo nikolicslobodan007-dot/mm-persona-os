@@ -16,7 +16,7 @@ DUMP="${BACKUP_DIR}/${1:-pg-latest.dump}"
 NAME="restore-check-$$"
 
 [[ -s "$DUMP" ]] || { echo "Nema kopije: $DUMP" >&2; exit 1; }
-echo "[$(date -Is)] proba povratka: $(readlink -f "$DUMP") ($(du -h "$DUMP" | cut -f1))"
+echo "[$(date -Is)] proba povratka: $(readlink -f "$DUMP") ($(du -hL "$DUMP" | cut -f1))"
 
 cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
 trap cleanup EXIT

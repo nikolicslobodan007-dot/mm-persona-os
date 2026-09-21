@@ -26,7 +26,7 @@ POSTGRES_DB="$(env_get POSTGRES_DB)"
 
 echo "[$(date -Is)] start"
 
-docker compose -f docker-compose.prod.yml exec -T postgres \
+docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T postgres \
   pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom \
   > "${BACKUP_DIR}/pg-${STAMP}.dump"
 

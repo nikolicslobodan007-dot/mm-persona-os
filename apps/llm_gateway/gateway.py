@@ -118,12 +118,17 @@ def _call_external(route: LLMRoute, system: str, prompt: str) -> tuple[str, int,
     if route.provider == "anthropic":
         base = getattr(settings, "LLM_BASE_URLS", {}).get("anthropic",
                                                           "https://api.anthropic.com")
+        # Claude 5 generacija: `temperature`/`top_p` → 400, a razmišljanje je
+        # uključeno ako se ne isključi. Za kratke objave ga isključujemo (brže,
+        # jeftinije); ruta može da ga uključi sa quota_json {"thinking": "adaptive"}.
+        body = {"model": route.model_key, "max_tokens": max_out, "system": system,
+                "messages": [{"role": "user", "content": prompt}]}
+        thinking = (route.quota_json or {}).get("thinking", "disabled")
+        if thinking in ("disabled", "adaptive"):
+            body["thinking"] = {"type": thinking}
         data = _post_json(f"{base}/v1/messages",
                           {"x-api-key": key, "anthropic-version": "2023-06-01"},
-                          {"model": route.model_key, "max_tokens": max_out,
-                           "temperature": float(route.temperature), "system": system,
-                           "messages": [{"role": "user", "content": prompt}]},
-                          route.timeout_seconds)
+                          body, route.timeout_seconds)
         text = "".join(b.get("text", "") for b in data.get("content", [])
                        if b.get("type") == "text")
         u = data.get("usage") or {}

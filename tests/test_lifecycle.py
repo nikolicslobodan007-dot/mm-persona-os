@@ -117,3 +117,36 @@ def test_content_eval_runs_locally(mila):
     from apps.content.models import ContentItem
 
     assert not ContentItem.objects.exists()
+
+
+def test_llm_route_and_eval_with_fake_claude(mila, monkeypatch):
+    from apps.llm_gateway import gateway
+    from apps.llm_gateway.models import LLMRoute
+
+    out = io.StringIO()
+    call_command("llm_route", "add", provider="anthropic", model="claude-sonnet-5",
+                 in_usd="2", out_usd="10", stdout=out)
+    r = LLMRoute.objects.get(provider="anthropic")
+    assert not r.is_enabled and r.data_training_allowed
+    assert (r.input_price_micro_eur_per_1k, r.output_price_micro_eur_per_1k) == (1720, 8600)
+    sent = []
+
+    def fake(url, headers, body, timeout):
+        sent.append(body)
+        return {"content": [{"type": "text", "text": f"Tekst o temi {len(sent)} — čista šljiva."}],
+                "usage": {"input_tokens": 900, "output_tokens": 120}, "stop_reason": "end_turn"}
+
+    monkeypatch.setattr(gateway, "_post_json", fake)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    out = io.StringIO()
+    call_command("content_eval", persona="P-00001", topics="A;B", include_disabled=True,
+                 stdout=out)
+    assert "LLM_EXTERNAL_DISABLED" in out.getvalue() and not sent  # bez dozvole nema poziva
+    out = io.StringIO()
+    call_command("content_eval", persona="P-00001", topics="A;B", include_disabled=True,
+                 allow_external=True, stdout=out)
+    assert "anthropic/claude-sonnet-5  2/2" in out.getvalue()
+    assert "temperature" not in sent[0] and sent[0]["thinking"] == {"type": "disabled"}
+    call_command("llm_route", "enable", provider="anthropic", model="claude-sonnet-5",
+                 stdout=io.StringIO())
+    assert LLMRoute.objects.get(provider="anthropic").is_enabled

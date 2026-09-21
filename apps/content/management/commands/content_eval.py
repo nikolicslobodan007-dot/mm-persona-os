@@ -56,13 +56,31 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--persona", default="P-00001")
         parser.add_argument("--topics", default="")
+        parser.add_argument("--include-disabled", action="store_true",
+                            help="meri i isključene rute (nova ruta je isključena)")
+        parser.add_argument("--allow-external", action="store_true",
+                            help="samo za ovo merenje dozvoli spoljni poziv, "
+                                 "i kad je LLM_EXTERNAL_ENABLED=false")
 
-    def handle(self, *args, persona, topics, **opts):
+    def handle(self, *args, persona, topics, include_disabled, allow_external, **opts):
+        from django.test.utils import override_settings
+
+        with override_settings(**({"LLM_EXTERNAL_ENABLED": True} if allow_external else {})):
+            self._run(persona, topics, include_disabled)
+
+    def _run(self, persona, topics, include_disabled):
         p = Persona.objects.filter(public_id=persona).first()
         if p is None:
             raise CommandError(f"Persona {persona} ne postoji.")
         topic_list = [t.strip() for t in topics.split(";") if t.strip()] or list(DEFAULT_TOPICS)
         routes = gateway.routes(E.LLMPurpose.CONTENT_DRAFT)
+        if include_disabled:
+            from apps.llm_gateway.models import LLMRoute
+
+            extra = list(LLMRoute.objects.filter(purpose=E.LLMPurpose.CONTENT_DRAFT.value,
+                                                 is_enabled=False)
+                         .exclude(provider=gateway.LOCAL_PROVIDER).order_by("priority"))
+            routes = extra + routes
         with bind(actor_id="service:content-eval"):
             run = operator_run(p, timezone.now())
             run.summary_json = {"task": "content_eval", "topics": len(topic_list)}
@@ -73,8 +91,10 @@ class Command(BaseCommand):
             for route in routes:
                 rows.append(self._measure(p, run, route, topic_list, packs))
         self.stdout.write(self._table(rows))
+        ext = len(routes) - 1
         self.stdout.write(f"\nRun: {run.public_id} · tema: {len(topic_list)} · "
-                          f"spoljni modeli {'uključeni' if routes[:-1] else 'nisu dodati'}.")
+                          f"spoljnih ruta mereno: {ext}"
+                          + ("" if ext else " (dodaj: manage.py llm_route add …)") + ".")
 
     def _measure(self, p, run, route, topics, packs) -> dict:
         texts, errors, ms, cents = [], [], [], 0
@@ -92,7 +112,7 @@ class Command(BaseCommand):
                 texts.append(g.text)
                 cents += g.amount_eur_cents
             except gateway.LLMError as e:
-                errors.append(e.code)
+                errors.append(e.detail.rsplit(":", 1)[-1] if e.code == "NO_ROUTE" else e.code)
             ms.append(int((time.monotonic() - t0) * 1000))
         letters = "".join(texts)
         lat, cyr = len(_LAT.findall(letters)), len(_CYR.findall(letters))
