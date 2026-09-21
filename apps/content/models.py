@@ -116,6 +116,12 @@ class ContentItem(UUIDModel):
     citations = JSON_LIST(help_text="Canon §10.4 — izvori tvrdnji, radi provere.")
     version = models.PositiveIntegerField(default=1)
     scheduled_for = models.DateTimeField(null=True, blank=True)
+    # F7 (ADR-0009): koje buđenje je napravilo nacrt i zašto je stao.
+    run = models.ForeignKey(
+        "orchestration.AgentRun", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="content_items",
+    )
+    status_reason = models.CharField(max_length=80, blank=True)
 
     class Meta:
         db_table = "content_item"

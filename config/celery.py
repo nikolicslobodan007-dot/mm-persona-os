@@ -28,6 +28,7 @@ app.conf.task_routes = {
     "policy.expire_approvals": {"queue": QueueName.APPROVAL.value},
     # runtime.execute se šalje eksplicitno na queue posla (browser/mail/channel).
     "runtime.dispatch_due": {"queue": QueueName.CONTROL.value},
+    "content.draft_for_run": {"queue": QueueName.PERSONA_SCHEDULED.value},
     "runtime.reap_leases": {"queue": QueueName.MAINTENANCE.value},
     "runtime.reconcile": {"queue": QueueName.MAINTENANCE.value},
 }

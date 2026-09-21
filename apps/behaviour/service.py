@@ -198,7 +198,9 @@ def _persist(persona, state, d: engine.Decision, reason, seed, now, wake_key, ev
         )
         PlanStep.objects.create(
             plan=plan, sequence=1, step_type=_STEP_TYPE[d.kind].value,
-            description=f"Interna aktivnost '{d.kind.value}' — bez spoljnog efekta (F3).",
+            description=("Nacrt objave; objava ide kroz policy i odobrenje (F7)."
+                         if d.kind == E.ActivityKind.POST else
+                         f"Interna aktivnost '{d.kind.value}' — bez spoljnog efekta."),
             status=E.StepStatus.DONE,
             input_json={"activity": d.kind.value},
             output_json={"attention_cost": E.ACTIVITY_ATTENTION_COST[d.kind]},
@@ -206,6 +208,13 @@ def _persist(persona, state, d: engine.Decision, reason, seed, now, wake_key, ev
         bus.emit("plan.created", {"plan_id": plan.public_id, "step_count": 1},
                  persona_id=persona.public_id, run_id=run.public_id)
     _remember(persona, run, d, event, now, relevance or 0.0)
+    if d.decision == E.WakeDecision.ACT and d.kind == E.ActivityKind.POST:
+        # F7 (ADR-0009): prozor „post” → nacrt i predlog objave, POSLE commit-a.
+        # Nacrt može da pozove model; ne sme da drži bravu stanja persone.
+        from apps.content.planner import schedule_draft
+
+        run_pk = run.pk
+        transaction.on_commit(lambda: schedule_draft(run_pk))
     return run
 
 

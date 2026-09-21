@@ -5,6 +5,11 @@ from __future__ import annotations
 from django.urls import path
 
 from api.views.behaviour import BehaviourTickView, PersonaTimelineView, PersonaWakeView
+from api.views.content import (
+    ContentItemDetailView,
+    ContentItemsView,
+    ContentScheduleView,
+)
 from api.views.memory import (
     ContextBuildView,
     MemoryCreateView,
@@ -64,6 +69,12 @@ urlpatterns = [
     path("personas/<str:public_id>/trust/change", TrustChangeView.as_view(),
          name="persona-trust-change"),
     path("kill-switches", KillSwitchView.as_view(), name="kill-switches"),
+    # F7 (ADR-0009)
+    path("content/items", ContentItemsView.as_view(), name="content-items"),
+    path("content/items/<str:content_id>", ContentItemDetailView.as_view(),
+         name="content-item-detail"),
+    path("content/items/<str:content_id>/schedule", ContentScheduleView.as_view(),
+         name="content-item-schedule"),
     # F6 (ADR-0008)
     path("channels/accounts", ChannelAccountListView.as_view(), name="channel-accounts"),
     path("channels/accounts/<str:account_id>/capabilities",

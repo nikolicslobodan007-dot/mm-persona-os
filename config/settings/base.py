@@ -152,3 +152,14 @@ COMPANY_LEGAL_NAME = os.environ.get("COMPANY_LEGAL_NAME", "")
 PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://os.webkorporacija.com")
 # Odmah poslati posao worker-u posle ALLOW. Bez ovoga ga pokupi beat za ≤ 15 s.
 RUNTIME_KICK = os.environ.get("RUNTIME_KICK", "false").lower() == "true"
+
+# ---------------------------------------------------------------- F7 (ADR-0009)
+# Prozor „post” u buđenju pravi nacrt (i predlog objave ako postoji dozvoljen kanal).
+CONTENT_AUTODRAFT = os.environ.get("CONTENT_AUTODRAFT", "true").lower() == "true"
+# U dev-u odmah posle commit-a; u produkciji kroz Celery (persona.scheduled).
+CONTENT_ASYNC = False
+# Spoljni LLM samo uz izričito uključivanje; bez toga radi lokalni šablon.
+LLM_EXTERNAL_ENABLED = os.environ.get("LLM_EXTERNAL_ENABLED", "false").lower() == "true"
+# provider → credential_ref (env:/file:). Tajna nikad u bazi.
+LLM_CREDENTIALS = {"anthropic": "env:ANTHROPIC_API_KEY"}
+LLM_BASE_URLS: dict[str, str] = {}

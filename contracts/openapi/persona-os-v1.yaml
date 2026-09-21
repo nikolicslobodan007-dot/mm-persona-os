@@ -240,6 +240,111 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/content/items:
+    get:
+      operationId: content_items_list
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: query
+        name: persona_id
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - APPROVED
+          - ARCHIVED
+          - DRAFT
+          - FAILED
+          - IN_REVIEW
+          - PUBLISHED
+          - REJECTED
+          - SCHEDULED
+      tags:
+      - content
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+    post:
+      operationId: content_items_create
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      tags:
+      - content
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/content/items/{content_id}:
+    get:
+      operationId: content_items_retrieve
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: path
+        name: content_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - content
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/content/items/{content_id}/schedule:
+    post:
+      operationId: content_items_schedule
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: path
+        name: content_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - content
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/context/build:
     post:
       operationId: context_build
@@ -884,6 +989,31 @@ components:
         * `ALWAYS_VISIBLE` - ALWAYS_VISIBLE
         * `PROFILE_ONLY` - PROFILE_ONLY
         * `ON_REQUEST` - ON_REQUEST
+    DraftInRequest:
+      type: object
+      properties:
+        persona_id:
+          type: string
+          minLength: 1
+        topic:
+          type: string
+          default: ''
+          maxLength: 220
+        angle:
+          type: string
+          default: ''
+          maxLength: 1000
+        body:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 5000
+        format:
+          allOf:
+          - $ref: '#/components/schemas/FormatEnum'
+          default: post
+      required:
+      - persona_id
     EvaluateInRequest:
       type: object
       properties:
@@ -916,6 +1046,24 @@ components:
         action_id:
           type: string
           minLength: 1
+    FormatEnum:
+      enum:
+      - post
+      - article
+      - newsletter
+      - comment
+      - reply
+      - video_script
+      - thread
+      type: string
+      description: |-
+        * `post` - post
+        * `article` - article
+        * `newsletter` - newsletter
+        * `comment` - comment
+        * `reply` - reply
+        * `video_script` - video_script
+        * `thread` - thread
     KillSwitchInRequest:
       type: object
       properties:
@@ -1218,6 +1366,18 @@ components:
         * `COMPLAINT` - COMPLAINT
         * `HARD_BOUNCE` - HARD_BOUNCE
         * `MANUAL` - MANUAL
+    ScheduleInRequest:
+      type: object
+      properties:
+        channel_account_id:
+          type: string
+          format: uuid
+        scheduled_for:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - channel_account_id
     ScopeEnum:
       enum:
       - GLOBAL

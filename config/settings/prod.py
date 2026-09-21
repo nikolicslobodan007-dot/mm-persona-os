@@ -116,3 +116,4 @@ CACHES = {
     }
 }
 RUNTIME_KICK = os.environ.get("RUNTIME_KICK", "true").lower() == "true"
+CONTENT_ASYNC = True

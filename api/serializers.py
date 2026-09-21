@@ -371,6 +371,10 @@ def approval_out(ap) -> dict[str, Any]:
         "reason": ap.reason,
         "payload_hash": ap.payload_hash,
         "payload_preview": ap.action.input_json,
+        "channel": ({"channel_account_id": str(ap.action.channel_account_id),
+                     "channel_type": ap.action.channel_account.channel_type,
+                     "handle": ap.action.channel_account.handle}
+                    if ap.action.channel_account_id else None),
         "expires_at": _iso(ap.expires_at),
         "expiry_effect": ap.expiry_effect,
         "decided_by": ap.decided_by or None,
