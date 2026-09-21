@@ -22,17 +22,17 @@
     <a href="/console/costs">Detalji →</a></div>
 </div>
 
-<div class="grid" style="margin-top:16px">
+<div class="grid mt16">
   <div class="card">
     <h2>Zaustavljanje (kill-switch)</h2>
     {% for ks in kill_switches %}
       <div class="msg error"><b>{{ ks.scope }} {{ ks.target_ref }}</b> — {{ ks.reason }}<br>
         <span class="small">{{ ks.activated_by }}, {{ ks.activated_at|date:"d.m. H:i" }}</span>
-        <form method="post" action="/console/kill-switch" class="row" style="margin-top:8px"
+        <form method="post" action="/console/kill-switch" class="row mt8"
               data-confirm="Pustiti? Blokirane akcije ostaju blokirane.">{% csrf_token %}
           <input type="hidden" name="operation" value="clear">
           <input type="hidden" name="kill_switch_id" value="{{ ks.id }}">
-          <input type="text" name="reason" placeholder="Razlog puštanja" required style="flex:1">
+          <input type="text" name="reason" placeholder="Razlog puštanja" required class="grow">
           <button>Pusti</button></form></div>
     {% empty %}<p class="sub">Nijedan aktivan. Sve radi po pravilima.</p>{% endfor %}
     <form method="post" action="/console/kill-switch" data-confirm="Zaustaviti odmah?">{% csrf_token %}
@@ -41,7 +41,7 @@
       <select name="scope_target"><option value="GLOBAL:">Sve (GLOBAL)</option>
         {% for p in personas %}<option value="PERSONA:{{ p.public_id }}">Samo {{ p.display_name }} ({{ p.public_id }})</option>{% endfor %}</select>
       <label>Razlog</label><input type="text" name="reason" placeholder="Zašto se zaustavlja">
-      <div style="margin-top:10px"><button class="danger">⛔ ZAUSTAVI</button></div>
+      <div class="mt10"><button class="danger">⛔ ZAUSTAVI</button></div>
     </form>
   </div>
   <div class="card">
@@ -50,14 +50,14 @@
     {% for p in personas %}<tr><td><a href="/console/personas/{{ p.public_id }}">{{ p.public_id }}</a></td>
       <td>{{ p.display_name }}</td><td><span class="pill {{ p.status|status_tone }}">{{ p.status }}</span></td>
       <td>{{ p.runtime_environment }}</td></tr>{% endfor %}</table>
-    <h2 style="margin-top:16px">Otvoreni incidenti</h2>
+    <h2 class="mt16">Otvoreni incidenti</h2>
     {% for i in incidents %}<div class="small"><span class="pill {{ i.severity|status_tone }}">{{ i.severity }}</span>
       {{ i.title }} <span class="muted">{{ i.occurred_at|date:"d.m. H:i" }}</span></div>
     {% empty %}<p class="sub">Nema.</p>{% endfor %}
   </div>
 </div>
 
-<div class="card" style="margin-top:16px"><h2>Poslednje akcije</h2>
+<div class="card mt16"><h2>Poslednje akcije</h2>
 <table><tr><th>Akcija</th><th>Tip</th><th>Kanal</th><th>Status</th><th>Kad</th></tr>
 {% for a in recent_actions %}<tr><td class="mono"><a href="/console/actions/{{ a.public_id }}">{{ a.public_id|slice:":14" }}…</a></td>
 <td>{{ a.action_type }}</td><td>{{ a.channel_account.channel_type|default:"—" }}</td>

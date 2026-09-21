@@ -6,7 +6,7 @@
 {% for s in statuses %}<option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
 <button>Filtriraj</button></form></div>
 {% for i in items %}
-<div class="card" style="margin-bottom:12px"><div class="row"><b>{{ i.title|default:"(bez teme)" }}</b>
+<div class="card mb12"><div class="row"><b>{{ i.title|default:"(bez teme)" }}</b>
   <span class="pill">{{ i.persona.public_id }}</span>
   <span class="pill {% load console_tags %}{{ i.status|status_tone }}">{{ i.status }}</span>
   {% if i.status_reason %}<span class="small muted">{{ i.status_reason }}</span>{% endif %}

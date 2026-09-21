@@ -221,3 +221,14 @@ class TestKillSwitchAndPages:
             assert r.status_code == 200, path
         assert c.get("/console/personas/P-99999").status_code == 404
         assert ContentItem.objects.count() == 1
+
+
+def test_templates_have_no_inline_styles_or_scripts():
+    """CSP je `style-src 'self'; script-src 'self'` — inline stil bi pregledač tiho ignorisao."""
+    import pathlib
+    import re
+
+    for f in pathlib.Path("console/templates").rglob("*.html"):
+        text = f.read_text(encoding="utf-8")
+        assert 'style="' not in text, f
+        assert "<style" not in text and not re.search(r"<script(?![^>]*\bsrc=)", text), f
