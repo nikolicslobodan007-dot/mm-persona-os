@@ -40,7 +40,10 @@
       "pattern": "^[0-9a-f]{32}$"
     },
     "run_id": {
-      "type": "string",
+      "type": [
+        "string",
+        "null"
+      ],
       "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$"
     },
     "causation_id": {

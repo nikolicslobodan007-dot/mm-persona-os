@@ -343,17 +343,63 @@ def decision_out(d) -> dict[str, Any]:
         "approval_class": d.approval_class,
         "fail_closed": d.fail_closed,
         "evaluated_at": _iso(d.evaluated_at),
+        "reason_codes": d.reason_codes or ([d.reason_code] if d.reason_code else []),
+        "obligations": [{"type": o} for o in (d.obligations or [])],
+        "constraints": d.constraints or {},
+        "risk_components": d.risk_components or {},
+        "policy_version": d.policy_version or None,
+        "input_hash": f"sha256:{d.context_hash}" if d.context_hash else None,
+        "expires_at": _iso(d.expires_at),
     }
 
 
 def approval_out(ap) -> dict[str, Any]:
     return {
         "approval_id": ap.public_id,
+        "action_id": ap.action.public_id,
+        "persona_id": ap.action.persona.public_id,
+        "action_type": ap.action.action_type,
         "approval_class": ap.approval_class,
         "status": ap.status,
+        "reason": ap.reason,
+        "payload_hash": ap.payload_hash,
+        "payload_preview": ap.action.input_json,
         "expires_at": _iso(ap.expires_at),
+        "expiry_effect": ap.expiry_effect,
         "decided_by": ap.decided_by or None,
+        "decided_role": ap.decided_role,
+        "decision_note": ap.decision_note or None,
         "decided_at": _iso(ap.decided_at),
+    }
+
+
+def kill_switch_out(k) -> dict[str, Any]:
+    return {
+        "kill_switch_id": str(k.id),
+        "scope": k.scope,
+        "target": k.target_ref or None,
+        "is_active": k.is_active,
+        "reason": k.reason,
+        "activated_by": k.activated_by,
+        "activated_at": _iso(k.activated_at),
+        "released_by": k.released_by or None,
+        "released_at": _iso(k.released_at),
+        "stop_latency_ms": k.stop_latency_ms,
+    }
+
+
+def incident_out(i) -> dict[str, Any]:
+    return {
+        "incident_id": i.public_id,
+        "severity": i.severity,
+        "status": i.status,
+        "kind": i.incident_kind,
+        "title": i.title,
+        "reason_code": i.summary,
+        "persona_id": i.persona.public_id if i.persona_id else None,
+        "action_id": i.action.public_id if i.action_id else None,
+        "occurred_at": _iso(i.occurred_at),
+        "detected_at": _iso(i.detected_at),
     }
 
 

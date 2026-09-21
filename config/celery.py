@@ -25,6 +25,7 @@ app.conf.task_routes = {
     "observability.publish_outbox": {"queue": QueueName.CONTROL.value},
     "behaviour.scan_due": {"queue": QueueName.PERSONA_SCHEDULED.value},
     "memory.maintenance": {"queue": QueueName.MEMORY.value},
+    "policy.expire_approvals": {"queue": QueueName.APPROVAL.value},
 }
 app.conf.task_default_queue = QueueName.MAINTENANCE.value
 
@@ -48,5 +49,11 @@ app.conf.beat_schedule = {
         "task": "memory.maintenance",
         "schedule": 3600.0,
         "options": {"queue": QueueName.MEMORY.value, "expires": 3000},
+    },
+    # Canon §15.2 — istek odobrenja (najkraći TTL je 30 min, pa je minut dovoljan).
+    "expire-approvals": {
+        "task": "policy.expire_approvals",
+        "schedule": 60.0,
+        "options": {"queue": QueueName.APPROVAL.value, "expires": 50},
     },
 }

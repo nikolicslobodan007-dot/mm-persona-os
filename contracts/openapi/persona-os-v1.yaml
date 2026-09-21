@@ -48,6 +48,97 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/actions/propose:
+    post:
+      operationId: actions_propose
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      tags:
+      - actions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProposalInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/approvals:
+    get:
+      operationId: approvals_list
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: query
+        name: cursor
+        schema:
+          type: string
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: persona_id
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - APPROVED
+          - APPROVED_WITH_CHANGES
+          - CANCELLED
+          - EXPIRED
+          - PENDING
+          - REJECTED
+          - REVOKED
+      tags:
+      - approvals
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/approvals/{approval_id}/decision:
+    post:
+      operationId: approvals_decision
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: path
+        name: approval_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - approvals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/audit:
     get:
       operationId: audit_list
@@ -101,6 +192,48 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ContextInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/kill-switches:
+    get:
+      operationId: kill_switches_list
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: query
+        name: active
+        schema:
+          type: boolean
+      tags:
+      - kill-switches
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+    post:
+      operationId: kill_switches_post
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      tags:
+      - kill-switches
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KillSwitchInRequest'
         required: true
       security:
       - tokenAuth: []
@@ -408,6 +541,34 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/personas/{public_id}/trust/change:
+    post:
+      operationId: personas_trust_change
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - personas
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrustInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/personas/{public_id}/wake:
     post:
       operationId: personas_wake
@@ -424,6 +585,92 @@ paths:
       - tokenAuth: []
       responses:
         '202':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/policy/evaluate:
+    post:
+      operationId: policy_evaluate
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      tags:
+      - policy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluateInRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/policy/evaluate/batch:
+    post:
+      operationId: policy_evaluate_batch
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      tags:
+      - policy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/policy/incidents:
+    get:
+      operationId: policy_incidents_list
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: query
+        name: cursor
+        schema:
+          type: string
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: severity
+        schema:
+          type: string
+          enum:
+          - SEV1
+          - SEV2
+          - SEV3
+          - SEV4
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - ACKNOWLEDGED
+          - CLOSED
+          - MITIGATED
+          - OPEN
+      tags:
+      - policy
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
           content:
             application/json:
               schema:
@@ -470,6 +717,17 @@ components:
       - predicate
       - subject
       - value
+    BatchInRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProposalInRequest'
+          maxItems: 50
+          minItems: 1
+      required:
+      - items
     ContextInRequest:
       type: object
       properties:
@@ -493,6 +751,33 @@ components:
       - persona_id
       - profile
       - run_id
+    DecisionEnum:
+      enum:
+      - APPROVED
+      - APPROVED_WITH_CHANGES
+      - REJECTED
+      type: string
+      description: |-
+        * `APPROVED` - APPROVED
+        * `APPROVED_WITH_CHANGES` - APPROVED_WITH_CHANGES
+        * `REJECTED` - REJECTED
+    DecisionInRequest:
+      type: object
+      properties:
+        decision:
+          $ref: '#/components/schemas/DecisionEnum'
+        payload_override:
+          type: object
+          additionalProperties: {}
+        reason:
+          type: string
+          default: ''
+          maxLength: 2000
+        decided_by:
+          type: string
+          minLength: 1
+      required:
+      - decision
     DisclosureModeEnum:
       enum:
       - ALWAYS_VISIBLE
@@ -503,6 +788,74 @@ components:
         * `ALWAYS_VISIBLE` - ALWAYS_VISIBLE
         * `PROFILE_ONLY` - PROFILE_ONLY
         * `ON_REQUEST` - ON_REQUEST
+    EvaluateInRequest:
+      type: object
+      properties:
+        persona_id:
+          type: string
+          minLength: 1
+        action_type:
+          type: string
+          minLength: 1
+          maxLength: 64
+        payload:
+          type: object
+          additionalProperties: {}
+        intent:
+          type: string
+          default: ''
+          maxLength: 2000
+        target_ref:
+          type: string
+          default: ''
+          maxLength: 500
+        channel_account_id:
+          type: string
+          format: uuid
+          nullable: true
+        run_id:
+          type: string
+          nullable: true
+          minLength: 1
+        action_id:
+          type: string
+          minLength: 1
+    KillSwitchInRequest:
+      type: object
+      properties:
+        operation:
+          allOf:
+          - $ref: '#/components/schemas/OperationEnum'
+          default: activate
+        scope:
+          $ref: '#/components/schemas/ScopeEnum'
+        target:
+          type: string
+          default: ''
+          maxLength: 180
+        kill_switch_id:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+      - reason
+    LevelEnum:
+      enum:
+      - L0
+      - L1
+      - L2
+      - L3
+      - L4
+      type: string
+      description: |-
+        * `L0` - L0
+        * `L1` - L1
+        * `L2` - L2
+        * `L3` - L3
+        * `L4` - L4
     MemoryInRequest:
       type: object
       properties:
@@ -589,6 +942,14 @@ components:
         * `procedural` - procedural
         * `social` - social
         * `content` - content
+    OperationEnum:
+      enum:
+      - activate
+      - clear
+      type: string
+      description: |-
+        * `activate` - activate
+        * `clear` - clear
     PatchedPersonaPatchInRequest:
       type: object
       description: PATCH /api/v1/personas/{public_id}. Samo polja bez sopstvenog toka
@@ -685,6 +1046,38 @@ components:
         * `content_creation` - content_creation
         * `research` - research
         * `reflection` - reflection
+    ProposalInRequest:
+      type: object
+      properties:
+        persona_id:
+          type: string
+          minLength: 1
+        action_type:
+          type: string
+          minLength: 1
+          maxLength: 64
+        payload:
+          type: object
+          additionalProperties: {}
+        intent:
+          type: string
+          default: ''
+          maxLength: 2000
+        target_ref:
+          type: string
+          default: ''
+          maxLength: 500
+        channel_account_id:
+          type: string
+          format: uuid
+          nullable: true
+        run_id:
+          type: string
+          nullable: true
+          minLength: 1
+      required:
+      - action_type
+      - persona_id
     ProvenanceEnum:
       enum:
       - observed
@@ -717,6 +1110,20 @@ components:
           minimum: 1
       required:
       - query
+    ScopeEnum:
+      enum:
+      - GLOBAL
+      - CHANNEL
+      - PERSONA
+      - CAPABILITY
+      - ACCOUNT
+      type: string
+      description: |-
+        * `GLOBAL` - GLOBAL
+        * `CHANNEL` - CHANNEL
+        * `PERSONA` - PERSONA
+        * `CAPABILITY` - CAPABILITY
+        * `ACCOUNT` - ACCOUNT
     SourceKindEnum:
       enum:
       - system_observation
@@ -748,6 +1155,27 @@ components:
           maxLength: 500
       required:
       - content
+      - reason
+    TrustInRequest:
+      type: object
+      properties:
+        capability:
+          type: string
+          minLength: 1
+          maxLength: 64
+        level:
+          $ref: '#/components/schemas/LevelEnum'
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        evidence_ref:
+          type: string
+          default: ''
+          maxLength: 512
+      required:
+      - capability
+      - level
       - reason
   securitySchemes:
     tokenAuth:

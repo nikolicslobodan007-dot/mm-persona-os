@@ -149,6 +149,16 @@ class PolicyDecision(UUIDModel):
     eval_duration_ms = models.PositiveIntegerField(null=True, blank=True)
     trace_id = models.UUIDField(null=True, blank=True)
 
+    # --- F5 (ADR-0007): Canon §8.4 kanonski odgovor
+    policy_version = models.CharField(max_length=40, blank=True)
+    reason_codes = JSON_LIST(help_text="Svi razlozi; prvi je odlučujući (`reason_code`).")
+    obligations = JSON_LIST(help_text="Šta gateway mora da proveri pre izvršenja.")
+    constraints = JSON_DICT()
+    expires_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Posle ovoga odluka ne važi i gateway traži novu evaluaciju.",
+    )
+
     class Meta:
         db_table = "policy_decision"
         indexes = [

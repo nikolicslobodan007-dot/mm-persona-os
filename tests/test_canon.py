@@ -260,8 +260,10 @@ class TestEvents:
 
     def test_run_id_obavezan_gde_treba(self):
         """Canon §7.1 — obavezan unutar buđenja persone, null van njega."""
+        # ADR-0007: action.proposed sme i van buđenja (operatorski predlog);
+        # plan.created nastaje samo u buđenju i run_id mu je uvek obavezan.
         with pytest.raises(ValueError, match="run_id"):
-            EventEnvelope(event_type="action.proposed", persona_id="P-00001",
+            EventEnvelope(event_type="plan.created", persona_id="P-00001",
                           trace_id=TRACE)
         ev = EventEnvelope(event_type="killswitch.activated", persona_id=None,
                            trace_id=TRACE)

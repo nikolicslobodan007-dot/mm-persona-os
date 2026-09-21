@@ -1121,3 +1121,91 @@ __all__ += [
     "SENSITIVE_ALLOWED_PURPOSES",
     "ARCHIVE_BELOW_EFFECTIVE_SALIENCE",
 ]
+
+
+# ---------------------------------------------------------------- F5 (ADR-0007)
+# Policy engine: razlozi odluka, dimenzije limita, obaveze.
+# Izvor: Canon §9, §15; Policy / Approval / Trust Engine v0.1.
+
+
+class PolicyReason(CanonEnum):
+    """`reason_code` odluke. Prvi razlog u listi je odlučujući."""
+
+    KILL_SWITCH_ACTIVE = "KILL_SWITCH_ACTIVE"
+    UNKNOWN_ACTION_TYPE = "UNKNOWN_ACTION_TYPE"
+    HARD_PROHIBITION = "HARD_PROHIBITION"
+    PERSONA_NOT_OPERATIONAL = "PERSONA_NOT_OPERATIONAL"
+    CAPABILITY_NOT_GRANTED = "CAPABILITY_NOT_GRANTED"
+    TRUST_TOO_LOW = "TRUST_TOO_LOW"
+    CHANNEL_REQUIRED = "CHANNEL_REQUIRED"
+    CHANNEL_NOT_ACTIVE = "CHANNEL_NOT_ACTIVE"
+    CHANNEL_CAPABILITY_DISABLED = "CHANNEL_CAPABILITY_DISABLED"
+    DISCLOSURE_MISSING = "DISCLOSURE_MISSING"
+    READ_CONSTRAINTS_MISSING = "READ_CONSTRAINTS_MISSING"
+    DAILY_CAP_REACHED = "DAILY_CAP_REACHED"
+    DIMENSION_CAP_REACHED = "DIMENSION_CAP_REACHED"
+    RISK_CRITICAL = "RISK_CRITICAL"
+    RISK_HIGH = "RISK_HIGH"
+    RISK_MEDIUM_LOW_TRUST = "RISK_MEDIUM_LOW_TRUST"
+    RULE_DENY = "RULE_DENY"
+    RULE_REQUIRES_APPROVAL = "RULE_REQUIRES_APPROVAL"
+    CAPABILITY_REQUIRES_APPROVAL = "CAPABILITY_REQUIRES_APPROVAL"
+    APPROVED = "APPROVED"
+    WITHIN_POLICY = "WITHIN_POLICY"
+    POLICY_ERROR = "POLICY_ERROR"
+
+
+class Obligation(CanonEnum):
+    """Policy v0.1 §3.1, §9 — šta gateway mora da proveri pre izvršenja."""
+
+    CHECK_RATE_LIMIT = "CHECK_RATE_LIMIT"
+    ENSURE_AI_DISCLOSURE = "ENSURE_AI_DISCLOSURE"
+    CHECK_SUPPRESSION_LIST = "CHECK_SUPPRESSION_LIST"
+    LOG_PAYLOAD_HASH = "LOG_PAYLOAD_HASH"
+    RESPECT_ROBOTS = "RESPECT_ROBOTS"
+
+
+#: Canon §9.3 — koja dimenzija dnevnog limita važi za koji ActionType.
+ACTION_RATE_DIMENSION: dict[str, str] = {
+    "channel.post.create": "public_posts",
+    "channel.comment.create": "comment_replies",
+    "channel.comment.moderate": "comment_replies",
+    "mail.reply": "inbound_replies",
+    "mail.send": "outbound_email",
+    "browser.page.read": "web_reads",
+    "channel.read.public": "web_reads",
+    "browser.form.submit": "browser_writes",
+}
+
+#: ActionType koji nema spoljni efekat — ne troši dnevni plafon i ne ide
+#: kroz gateway kao spoljna akcija.
+INTERNAL_ACTION_TYPES: frozenset[str] = frozenset({"content.draft", "memory.consolidate"})
+
+#: Koliko dugo važi odluka ALLOW/THROTTLE/DENY (za REQUIRE_APPROVAL važi TTL klase).
+POLICY_DECISION_TTL_MINUTES = 15
+
+#: Statusi akcije koji troše dnevni plafon (Canon §9.3).
+COUNTED_ACTION_STATUSES: frozenset[ActionStatus] = frozenset({
+    ActionStatus.APPROVAL_PENDING, ActionStatus.QUEUED, ActionStatus.RUNNING,
+    ActionStatus.RETRY_WAIT, ActionStatus.SUCCEEDED,
+})
+
+#: Ko sme da zaustavi (kill-switch) i ko sme da pusti nazad.
+KILL_SWITCH_ACTIVATORS: frozenset[Role] = frozenset(set(Role) - {Role.VIEWER})
+KILL_SWITCH_RELEASERS: frozenset[Role] = frozenset(
+    {Role.TRUST_SAFETY, Role.RUNTIME_ADMIN, Role.SYSTEM_ADMIN}
+)
+#: Canon §15.1 — ko menja poverenje.
+TRUST_CHANGERS: frozenset[Role] = frozenset({Role.TRUST_SAFETY, Role.SYSTEM_ADMIN})
+
+__all__ += [
+    "PolicyReason",
+    "Obligation",
+    "ACTION_RATE_DIMENSION",
+    "INTERNAL_ACTION_TYPES",
+    "POLICY_DECISION_TTL_MINUTES",
+    "COUNTED_ACTION_STATUSES",
+    "KILL_SWITCH_ACTIVATORS",
+    "KILL_SWITCH_RELEASERS",
+    "TRUST_CHANGERS",
+]

@@ -62,6 +62,18 @@ RUN_ID_OPTIONAL: frozenset[str] = frozenset(
         # batch posla nema run (ADR-0006).
         "memory.created",
         "memory.contradiction_detected",
+        # F5 (ADR-0007): akciju sme da predloži i operator, van buđenja.
+        # Canon §7.1 traži run_id samo za evente „koji nastaju unutar buđenja
+        # persone"; §2 kaže da je za operatorske zapise null. Kad akcija nosi
+        # run, emiter ga uvek prosleđuje.
+        "action.proposed",
+        "policy.decision.created",
+        "approval.requested",
+        "approval.resolved",
+        "action.queued",
+        "action.blocked",
+        "trust.level.changed",
+        "policy.incident.opened",
     }
 )
 
