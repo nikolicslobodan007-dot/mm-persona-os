@@ -314,6 +314,7 @@ def action_out(a) -> dict[str, Any]:
         "completed_at": _iso(a.completed_at),
         "error_code": a.error_code,
         "trace_id": a.trace_id.hex if a.trace_id else None,
+        "result": a.result_json or {},
         "attempts": [attempt_out(t) for t in a.attempts.order_by("attempt_number")],
     }
 
@@ -326,6 +327,12 @@ def attempt_out(t) -> dict[str, Any]:
         "evidence_level": t.evidence_level,
         "started_at": _iso(t.started_at),
         "finished_at": _iso(t.finished_at),
+        "duration_ms": t.duration_ms,
+        "error_detail": t.error_detail,
+        # F6: u dry-run-u ovo je tačno ono što BI bilo poslato — bez tajni.
+        "dry_run": (t.payload or {}).get("dry_run"),
+        "requests": (t.payload or {}).get("requests", []),
+        "estimated_cost_usd": (t.payload or {}).get("estimated_cost_usd"),
     }
 
 

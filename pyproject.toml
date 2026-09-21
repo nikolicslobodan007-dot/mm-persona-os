@@ -18,6 +18,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-django>=4.8", "ruff>=0.5", "mypy>=1.10"]
+# F6 (ADR-0008): Chromium za `render: true` i forme na sopstvenim sistemima.
+# Ne ulazi u image do GO odluke — u dry-run-u se ne koristi.
+browser = ["playwright>=1.47"]
 
 [tool.ruff]
 line-length = 100

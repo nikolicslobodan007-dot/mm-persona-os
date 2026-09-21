@@ -135,3 +135,20 @@ AUDIT_APPEND_ONLY = True
 GLOBAL_EXTERNAL_ACTIONS_ENABLED = os.environ.get(
     "GLOBAL_EXTERNAL_ACTIONS_ENABLED", "false"
 ).lower() == "true"
+
+# ---------------------------------------------------------------- F6 (ADR-0008)
+# Canon §12.8 t.1 — hladna pošta NIKADA sa ovih domena ni njihovih poddomena.
+PRIMARY_COMPANY_DOMAINS = [
+    d.strip().lower()
+    for d in os.environ.get(
+        "PRIMARY_COMPANY_DOMAINS",
+        "webkorporacija.com,mercatomaster.com,biznisplan.net",
+    ).split(",")
+    if d.strip()
+]
+# Identifikacija pošiljaoca u podnožju poruke (Zakon o elektronskoj trgovini).
+COMPANY_LEGAL_NAME = os.environ.get("COMPANY_LEGAL_NAME", "")
+# Javna adresa za link odjave (RFC 8058).
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://os.webkorporacija.com")
+# Odmah poslati posao worker-u posle ALLOW. Bez ovoga ga pokupi beat za ≤ 15 s.
+RUNTIME_KICK = os.environ.get("RUNTIME_KICK", "false").lower() == "true"

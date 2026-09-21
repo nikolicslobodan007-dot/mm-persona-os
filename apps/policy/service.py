@@ -319,6 +319,10 @@ def _decide(action: Action, *, now: datetime, approved: ApprovalRequest | None =
                  {"action_id": action.public_id, "queue": _queue_for(action.action_type).value,
                   "priority": min(9, r.risk_score // 12)},
                  persona_id=persona.public_id, run_id=_run_id(action))
+        # F6 (ADR-0008): ALLOW je jedini ulaz u red za izvršenje.
+        from apps.runtime.executor import enqueue
+
+        enqueue(action, now=now)
     elif r.effect == E.PolicyEffect.REQUIRE_APPROVAL:
         action.status = E.ActionStatus.APPROVAL_PENDING
         action.save(update_fields=["status", "policy_decision", "risk_score", "risk_class",
@@ -382,7 +386,8 @@ def reevaluate(action: Action, *, now: datetime | None = None) -> PolicyDecision
     with transaction.atomic():
         action = Action.objects.select_for_update().get(pk=action.pk)
         if action.status not in (E.ActionStatus.PROPOSED.value, E.ActionStatus.QUEUED.value,
-                                 E.ActionStatus.POLICY_CHECK.value):
+                                 E.ActionStatus.POLICY_CHECK.value,
+                                 E.ActionStatus.RETRY_WAIT.value):
             raise PolicyError("VERSION_CONFLICT",
                               f"Akcija u statusu {action.status} se ne evaluira ponovo.",
                               {"status": action.status})
@@ -546,8 +551,8 @@ def change_trust(persona: Persona, capability: str, level: E.TrustLevel, *, acto
 # ---------------------------------------------------------------- kill-switch
 
 
-def _in_scope(scope: E.KillSwitchScope, target: str):
-    base = Action.objects.filter(status__in=[s.value for s in _OPEN])
+def _in_scope(scope: E.KillSwitchScope, target: str, statuses=_OPEN):
+    base = Action.objects.filter(status__in=[s.value for s in statuses])
     if scope == E.KillSwitchScope.GLOBAL:
         return base
     if scope == E.KillSwitchScope.PERSONA:
@@ -558,6 +563,10 @@ def _in_scope(scope: E.KillSwitchScope, target: str):
         return base.filter(channel_account_id=target)
     caps_types = [t for t, caps in config.action_types().items() if target in caps]
     return base.filter(Q(capability=target) | Q(action_type__in=caps_types))
+
+
+def _in_flight(scope: E.KillSwitchScope, target: str):
+    return _in_scope(scope, target, statuses=(E.ActionStatus.RUNNING,))
 
 
 def activate_kill_switch(scope: E.KillSwitchScope, target: str, *, reason: str,
@@ -598,6 +607,9 @@ def activate_kill_switch(scope: E.KillSwitchScope, target: str, *, reason: str,
                       "reason_code": E.PolicyReason.KILL_SWITCH_ACTIVE.value},
                      persona_id=action.persona.public_id, run_id=_run_id(action))
             stopped += 1
+        # F6: akcije u letu (RUNNING) staje sam worker na sledećoj proveri
+        # (CancelToken) — tako se zna da li je spoljni efekat nastao.
+        in_flight = _in_flight(scope, target).count()
         ks.stop_latency_ms = int((time.monotonic() - t0) * 1000)
         ks.save(update_fields=["stop_latency_ms"])
         bus.emit("killswitch.activated",
@@ -606,6 +618,7 @@ def activate_kill_switch(scope: E.KillSwitchScope, target: str, *, reason: str,
         audit.record("policy.killswitch.activated", severity=E.AuditSeverity.CRITICAL,
                      after={"scope": scope.value, "target": target},
                      details={"reason": reason, "blocked_actions": stopped,
+                              "in_flight": in_flight,
                               "stop_latency_ms": ks.stop_latency_ms})
     return ks
 

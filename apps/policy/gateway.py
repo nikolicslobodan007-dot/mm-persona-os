@@ -53,6 +53,13 @@ def _refuse(action: Action, outcome: E.ExecutionOutcome, reason: str, *,
     return GatewayRefused(outcome, reason)
 
 
+def external_live(action: Action) -> bool:
+    """Sme li spoljni efekat da nastane: globalni prekidač I persona u živom okruženju."""
+    return bool(getattr(settings, "GLOBAL_EXTERNAL_ACTIONS_ENABLED", False)
+                and E.RuntimeEnvironment(action.persona.runtime_environment)
+                in _LIVE_ENVIRONMENTS)
+
+
 def authorize(action: Action, *, now: datetime | None = None) -> dict[str, Any]:
     result = _authorize(action, now or timezone.now())
     if isinstance(result, GatewayRefused):
@@ -114,9 +121,7 @@ def _authorize(action: Action, now: datetime) -> dict[str, Any] | GatewayRefused
                     E.OUTCOME_REASON_CODE[E.ExecutionOutcome.DISCLOSURE_MISSING])
 
         internal = action.action_type in E.INTERNAL_ACTION_TYPES
-        live = (getattr(settings, "GLOBAL_EXTERNAL_ACTIONS_ENABLED", False)
-                and E.RuntimeEnvironment(action.persona.runtime_environment)
-                in _LIVE_ENVIRONMENTS)
+        live = external_live(action)
         return {
             "action_id": action.public_id,
             "persona_id": action.persona.public_id,

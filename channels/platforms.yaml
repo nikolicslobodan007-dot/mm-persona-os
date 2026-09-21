@@ -1,0 +1,96 @@
+# Matrica izvršenja po kanalu — šta F6 adapter STVARNO radi.
+# Canon v1.1 §12.1, §21 · Aneks A §2 · ADR-0008
+#
+# Redosled pristupa (Canon §12.1):
+#   1. zvanični API kanala
+#   2. browser automatizacija, SAMO gde uslovi korišćenja to dozvoljavaju
+#   3. CAPABILITY_UNAVAILABLE — validan i očekivan ishod, ne greška
+#
+# Nijedna društvena mreža ovde nema browser put. Lajk tuđe objave, follow,
+# prvi DM i komentar na tuđem sadržaju ne postoje kao ActionType jer ne
+# postoji sankcionisan put (Aneks A §1 t.3).
+#
+# Canon §21: pre GO odluke za svaki kanal ponovo proveriti uslove.
+
+version: 1
+canon: "1.1"
+verified_on: "2026-09-21"   # Aneks A (15.09.) + ponovna provera pre F6
+reverify_by: "2026-12-15"
+
+api_versions:
+  meta_graph: "v25.0"
+  linkedin: "202608"         # li-lms-2026-08; 202508 je istekla 17.08.2026
+  x: "2"
+
+# USD → EUR za procenu troška; stvarni kurs upisuje ledger (Canon §13.1).
+fx_usd_eur: "0.86"
+
+channels:
+
+  SANDBOX:
+    adapter: sandbox
+    actions:
+      channel.post.create: {}
+      channel.comment.create: {}
+      channel.comment.moderate: {}
+      channel.read.public: {}
+
+  WEBSITE:
+    adapter: web
+    actions:
+      browser.page.read: {}
+      browser.form.submit: {}
+
+  EMAIL:
+    adapter: mail
+    actions:
+      mail.send: {}
+      mail.reply: {}
+
+  NEWSLETTER:
+    adapter: mail
+    actions:
+      mail.send: {}
+
+  FACEBOOK:
+    adapter: meta_facebook
+    actions:
+      channel.post.create: {endpoint: "POST /{page_id}/feed"}
+      channel.comment.create: {endpoint: "POST /{comment_id}/comments"}
+      channel.comment.moderate: {endpoint: "POST /{comment_id} is_hidden=true"}
+    unavailable:
+      channel.read.public: "Page Public Content Access je poseban, restriktivan review"
+
+  INSTAGRAM:
+    adapter: meta_instagram
+    actions:
+      channel.post.create: {endpoint: "POST /{ig_id}/media → /media_publish", requires: image_url}
+      channel.comment.create: {endpoint: "POST /{comment_id}/replies"}
+      channel.comment.moderate: {endpoint: "POST /{comment_id} hide=true"}
+    unavailable:
+      channel.read.public: "business_discovery i hashtag pretraga nisu u F6"
+
+  LINKEDIN:
+    adapter: linkedin
+    requires_named_human_admin: true
+    actions:
+      channel.post.create: {endpoint: "POST /rest/posts"}
+      channel.comment.create: {endpoint: "POST /rest/socialActions/{urn}/comments",
+                               min_interval_s: 60}
+      channel.comment.moderate: {endpoint: "DELETE /rest/socialActions/{urn}/comments/{id}"}
+    unavailable:
+      channel.read.public: "Profile i Search API ne postoje za treća lica"
+
+  X:
+    adapter: x
+    actions:
+      channel.post.create: {endpoint: "POST /2/tweets", cost_usd: "0.015",
+                            cost_usd_with_link: "0.20"}
+      channel.comment.create: {endpoint: "POST /2/tweets (reply)", cost_usd: "0.015",
+                               cost_usd_with_link: "0.20"}
+      channel.read.public: {endpoint: "GET /2/tweets/search/recent", cost_usd_per_post: "0.005"}
+    unavailable:
+      channel.comment.moderate: "Skrivanje odgovora nije u self-serve nivou"
+    repetition_guard:
+      similarity_threshold: 0.8
+      window_days: 30

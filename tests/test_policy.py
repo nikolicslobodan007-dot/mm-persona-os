@@ -25,7 +25,6 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from api.context import bind
-from apps.channels.models import ChannelAccount, ChannelCapability
 from apps.observability.models import EventOutbox
 from apps.orchestration.models import Action
 from apps.personas.models import Persona
@@ -39,64 +38,9 @@ from apps.policy.models import (
     TrustState,
 )
 from common import enums as E
-from tests.conftest import requires_db
+from tests.conftest import READ_OK, UA, _propose, _read, requires_db  # noqa: F401
 
 pytestmark = [requires_db]
-UA = "MercatoMasterBot/1.0 (+https://mercatomaster.com/bot; bot@mercatomaster.com)"
-READ_OK = {"robots_respected": True, "user_agent_declared": UA, "rate_per_host_qps": 1.0,
-           "conditional_get": True}
-
-
-def _read(i=0):
-    return {"url": f"https://example.com/{i}", "execution_constraints": READ_OK}
-
-
-@pytest.fixture
-def mila(db):
-    call_command("seed_agent_001", stdout=io.StringIO())
-    call_command("bootstrap_roles", stdout=io.StringIO())
-    return Persona.objects.get(public_id="P-00001")
-
-
-@pytest.fixture
-def page(mila):
-    """Kanal sa AI oznakom i publish capability-jem, uz L1 za objavu."""
-    acc = ChannelAccount.objects.create(
-        persona=mila, channel_type=E.ChannelType.LINKEDIN, handle="mila-page",
-        identity_vehicle=E.IdentityVehicle.PAGE, status=E.AccountStatus.ACTIVE,
-        disclosure_label_status=E.DisclosureLabelStatus.SET, credential_ref="vault:test",
-        named_human_admin="Slobodan",
-    )
-    ChannelCapability.objects.create(account=acc, capability="content.publish_approved",
-                                     is_enabled=True, source="policy",
-                                     evidence_level=E.EvidenceLevel.RESPONSE_ONLY)
-    with bind(actor_id="user:ts"):
-        service.change_trust(mila, "content.publish_approved", E.TrustLevel.L1,
-                             actor="user:ts", reason="QA prolaz")
-    return acc
-
-
-@pytest.fixture
-def mailbox(mila):
-    acc = ChannelAccount.objects.create(
-        persona=mila, channel_type=E.ChannelType.EMAIL, handle="mila@mail.test",
-        identity_vehicle=E.IdentityVehicle.NEWSLETTER, status=E.AccountStatus.ACTIVE,
-        disclosure_label_status=E.DisclosureLabelStatus.NOT_REQUIRED, credential_ref="vault:m",
-    )
-    ChannelCapability.objects.create(account=acc, capability="email.outbound_approved",
-                                     is_enabled=True, source="policy",
-                                     evidence_level=E.EvidenceLevel.RESPONSE_ONLY)
-    with bind(actor_id="user:ts"):
-        service.change_trust(mila, "email.outbound_approved", E.TrustLevel.L2,
-                             actor="user:ts", reason="QA")
-    return acc
-
-
-def _propose(p, at, payload, **kw):
-    with bind(actor_id="user:op"):
-        return service.propose(Persona.objects.get(pk=p.pk), at, payload, **kw)
-
-
 # ---------------------------------------------------------------- guards
 
 

@@ -105,3 +105,14 @@ LOGGING = {
         "persona.audit": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }
+
+# F6 (ADR-0008): tempo po hostu, robots.txt i ETag keš moraju biti zajednički
+# za sve worker-e — zato Redis, ne memorija procesa. Baza 1, broker je na 0.
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.environ.get("CACHE_URL", "redis://redis:6379/1"),
+        "TIMEOUT": 300,
+    }
+}
+RUNTIME_KICK = os.environ.get("RUNTIME_KICK", "true").lower() == "true"

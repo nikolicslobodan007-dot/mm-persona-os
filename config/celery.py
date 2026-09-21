@@ -26,6 +26,10 @@ app.conf.task_routes = {
     "behaviour.scan_due": {"queue": QueueName.PERSONA_SCHEDULED.value},
     "memory.maintenance": {"queue": QueueName.MEMORY.value},
     "policy.expire_approvals": {"queue": QueueName.APPROVAL.value},
+    # runtime.execute se šalje eksplicitno na queue posla (browser/mail/channel).
+    "runtime.dispatch_due": {"queue": QueueName.CONTROL.value},
+    "runtime.reap_leases": {"queue": QueueName.MAINTENANCE.value},
+    "runtime.reconcile": {"queue": QueueName.MAINTENANCE.value},
 }
 app.conf.task_default_queue = QueueName.MAINTENANCE.value
 
@@ -55,5 +59,21 @@ app.conf.beat_schedule = {
         "task": "policy.expire_approvals",
         "schedule": 60.0,
         "options": {"queue": QueueName.APPROVAL.value, "expires": 50},
+    },
+    # F6 (ADR-0008) — izvršenje, leasing (Canon §12.3), reconcile.
+    "runtime-dispatch-due": {
+        "task": "runtime.dispatch_due",
+        "schedule": 15.0,
+        "options": {"queue": QueueName.CONTROL.value, "expires": 12},
+    },
+    "runtime-reap-leases": {
+        "task": "runtime.reap_leases",
+        "schedule": 30.0,
+        "options": {"queue": QueueName.MAINTENANCE.value, "expires": 25},
+    },
+    "runtime-reconcile": {
+        "task": "runtime.reconcile",
+        "schedule": 60.0,
+        "options": {"queue": QueueName.MAINTENANCE.value, "expires": 50},
     },
 }

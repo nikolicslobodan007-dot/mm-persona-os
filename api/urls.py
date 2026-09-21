@@ -24,6 +24,13 @@ from api.views.policy import (
     PolicyEvaluateView,
     TrustChangeView,
 )
+from api.views.runtime import (
+    ChannelAccountCapabilitiesView,
+    ChannelAccountListView,
+    OpsOverviewView,
+    SuppressionView,
+    unsubscribe,
+)
 
 urlpatterns = [
     path("personas", PersonaListView.as_view(), name="personas"),
@@ -57,4 +64,11 @@ urlpatterns = [
     path("personas/<str:public_id>/trust/change", TrustChangeView.as_view(),
          name="persona-trust-change"),
     path("kill-switches", KillSwitchView.as_view(), name="kill-switches"),
+    # F6 (ADR-0008)
+    path("channels/accounts", ChannelAccountListView.as_view(), name="channel-accounts"),
+    path("channels/accounts/<str:account_id>/capabilities",
+         ChannelAccountCapabilitiesView.as_view(), name="channel-account-capabilities"),
+    path("ops/overview", OpsOverviewView.as_view(), name="ops-overview"),
+    path("mail/suppressions", SuppressionView.as_view(), name="mail-suppressions"),
+    path("mail/unsubscribe", unsubscribe, name="mail-unsubscribe"),
 ]

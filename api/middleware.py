@@ -37,7 +37,8 @@ from common import enums as E
 _UNSAFE = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 _REQUEST_ID = re.compile(r"^[A-Za-z0-9._:-]{8,128}$")
 _API_PREFIX = "/api/v1/"
-_EXEMPT_PREFIXES = ("/api/v1/webhooks/",)
+# Javna odjava (RFC 8058) dolazi iz mejl klijenta, bez naših header-a (ADR-0008).
+_EXEMPT_PREFIXES = ("/api/v1/webhooks/", "/api/v1/mail/unsubscribe")
 
 
 def _reject(message: str, details: dict, ctx: RequestContext) -> HttpResponse:

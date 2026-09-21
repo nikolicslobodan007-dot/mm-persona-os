@@ -74,6 +74,12 @@ RUN_ID_OPTIONAL: frozenset[str] = frozenset(
         "action.blocked",
         "trust.level.changed",
         "policy.incident.opened",
+        # F6 (ADR-0008): isto važi za izvršenje akcije koju je predložio
+        # operator — izvršenje nasleđuje run akcije, a ona ga nema.
+        "runtime.execution.started",
+        "runtime.execution.finished",
+        "action.succeeded",
+        "action.failed",
     }
 )
 

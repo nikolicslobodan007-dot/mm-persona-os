@@ -246,3 +246,43 @@ class MailMessage(UUIDModel):
 
     def __str__(self) -> str:
         return f"{self.direction} {self.subject[:48] or self.provider_message_id}"
+
+
+class SuppressionEntry(UUIDModel):
+    """Centralna lista odjava. Canon §12.8 t.6 · ADR-0008.
+
+    Jedna lista za SVE mejlbokseve i SVE persone: odjava kod jedne persone
+    važi za sve. Adresa se ne čuva — samo `sha256(normalizovana adresa)`.
+    Lista mora da zna da li je adresa odjavljena, ne i koja je; tako lista
+    odjava ne postaje baza kontakata.
+
+    `domain_hash` (opciono) odjavljuje ceo domen primaoca (npr. firma koja
+    traži da joj niko ne piše). Upisi se ne brišu — odjava je trajna.
+    """
+
+    address_hash = models.CharField(max_length=64, blank=True, db_index=True)
+    domain_hash = models.CharField(max_length=64, blank=True, db_index=True)
+    reason = models.CharField(max_length=24, choices=E.SuppressionReason.choices())
+    source = models.CharField(max_length=64, help_text="one_click/link/manual/bounce/…")
+    created_by = models.CharField(max_length=120, blank=True)
+
+    class Meta:
+        db_table = "channels_suppression"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["address_hash"], condition=~models.Q(address_hash=""),
+                name="suppression_unique_address",
+            ),
+            models.UniqueConstraint(
+                fields=["domain_hash"],
+                condition=models.Q(address_hash="") & ~models.Q(domain_hash=""),
+                name="suppression_unique_domain",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(address_hash="") | ~models.Q(domain_hash=""),
+                name="suppression_has_target",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"suppression<{(self.address_hash or self.domain_hash)[:12]}> {self.reason}"

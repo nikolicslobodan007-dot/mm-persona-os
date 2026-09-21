@@ -181,6 +181,65 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/channels/accounts:
+    get:
+      operationId: channel_accounts_list
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: query
+        name: channel_type
+        schema:
+          type: string
+          enum:
+          - EMAIL
+          - FACEBOOK
+          - INSTAGRAM
+          - LINKEDIN
+          - NEWSLETTER
+          - SANDBOX
+          - TIKTOK
+          - WEBSITE
+          - X
+          - YOUTUBE
+      - in: query
+        name: persona_id
+        schema:
+          type: string
+      tags:
+      - channels
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/channels/accounts/{account_id}/capabilities:
+    get:
+      operationId: channel_account_capabilities
+      description: 'Presek tri izvora: platforma (platforms.yaml), nalog (ChannelCapability),
+        policy.'
+      parameters:
+      - in: path
+        name: account_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - channels
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/context/build:
     post:
       operationId: context_build
@@ -245,6 +304,27 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/mail/suppressions:
+    post:
+      operationId: mail_suppressions_create
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      tags:
+      - mail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuppressionInRequest'
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/memories/{memory_id}/supersede:
     post:
       operationId: memories_supersede
@@ -267,6 +347,22 @@ paths:
       - tokenAuth: []
       responses:
         '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/ops/overview:
+    get:
+      operationId: ops_overview
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      tags:
+      - ops
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
           content:
             application/json:
               schema:
@@ -1110,6 +1206,18 @@ components:
           minimum: 1
       required:
       - query
+    ReasonEnum:
+      enum:
+      - UNSUBSCRIBE
+      - COMPLAINT
+      - HARD_BOUNCE
+      - MANUAL
+      type: string
+      description: |-
+        * `UNSUBSCRIBE` - UNSUBSCRIBE
+        * `COMPLAINT` - COMPLAINT
+        * `HARD_BOUNCE` - HARD_BOUNCE
+        * `MANUAL` - MANUAL
     ScopeEnum:
       enum:
       - GLOBAL
@@ -1156,6 +1264,21 @@ components:
       required:
       - content
       - reason
+    SuppressionInRequest:
+      type: object
+      properties:
+        address:
+          type: string
+          format: email
+          minLength: 1
+        domain:
+          type: string
+          minLength: 1
+          maxLength: 253
+        reason:
+          allOf:
+          - $ref: '#/components/schemas/ReasonEnum'
+          default: MANUAL
     TrustInRequest:
       type: object
       properties:

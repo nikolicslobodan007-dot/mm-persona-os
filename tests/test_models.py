@@ -64,6 +64,7 @@ class TestAppOwnership:
         "channels": {
             "ChannelAccount", "ChannelCapability", "IntegrationEndpoint",
             "MailMessage",
+            "SuppressionEntry",  # F6, ADR-0008 — Canon §12.8 t.6
         },
         "orchestration": {
             "AgentRun", "AgentPlan", "PlanStep", "Action", "ActionAttempt",
@@ -74,6 +75,7 @@ class TestAppOwnership:
         },
         "runtime": {
             "BrowserProfile", "RuntimeSession", "WorkerJob", "ReconcileTask",
+            "CircuitBreaker",  # F6, ADR-0008 — Canon §12.5
         },
         "observability": {
             "AuditEvent", "MetricPoint", "CostLedger",

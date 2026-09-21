@@ -279,3 +279,35 @@ class ReconcileTask(UUIDModel):
 
     def __str__(self) -> str:
         return f"reconcile<{self.action_id}> {self.status}"
+
+
+class CircuitBreaker(UUIDModel):
+    """Canon §12.5 — po paru (adapter, nalog).
+
+    CLOSED → OPEN na 5 grešaka u 60 s; HALF_OPEN posle 120 s, 1–3 probe.
+    Stanje je u bazi, ne u memoriji worker-a: breaker mora da važi za sve
+    worker-e odjednom, i da preživi restart.
+    """
+
+    adapter_key = models.CharField(max_length=64)
+    account = models.ForeignKey(
+        "channels.ChannelAccount", on_delete=models.CASCADE, null=True, blank=True,
+        related_name="breakers",
+    )
+    state = models.CharField(
+        max_length=16, choices=E.BreakerState.choices(), default=E.BreakerState.CLOSED
+    )
+    failures = models.JSONField(default=list, blank=True,
+                                help_text="ISO vremena grešaka u prozoru od 60 s.")
+    opened_at = models.DateTimeField(null=True, blank=True)
+    probes = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        db_table = "runtime_circuit_breaker"
+        constraints = [
+            models.UniqueConstraint(fields=["adapter_key", "account"],
+                                    name="circuit_breaker_unique_pair"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.adapter_key}/{self.account_id} {self.state}"

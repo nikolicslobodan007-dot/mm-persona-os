@@ -1209,3 +1209,111 @@ __all__ += [
     "KILL_SWITCH_RELEASERS",
     "TRUST_CHANGERS",
 ]
+
+
+# ---------------------------------------------------------------- F6 (ADR-0008)
+# Runtime: izvršenje kroz adaptere, leasing, retry, reconcile, breaker.
+
+
+class SuppressionReason(CanonEnum):
+    """Zašto je adresa na centralnoj listi odjava (Canon §12.8 t.6)."""
+
+    UNSUBSCRIBE = "UNSUBSCRIBE"   # primalac se odjavio (link ili RFC 8058)
+    COMPLAINT = "COMPLAINT"       # prijava kao spam (feedback loop)
+    HARD_BOUNCE = "HARD_BOUNCE"   # adresa ne postoji
+    MANUAL = "MANUAL"             # operator, na zahtev primaoca
+
+
+class RuntimeReason(CanonEnum):
+    """`reason_code` pokušaja izvršenja (uz `ExecutionOutcome`)."""
+
+    DRY_RUN = "DRY_RUN"
+    SANDBOX = "SANDBOX"
+    NO_ADAPTER = "NO_ADAPTER"
+    PLATFORM_UNSUPPORTED = "PLATFORM_UNSUPPORTED"
+    NAMED_ADMIN_MISSING = "NAMED_ADMIN_MISSING"
+    MEDIA_REQUIRED = "MEDIA_REQUIRED"
+    TARGET_REQUIRED = "TARGET_REQUIRED"
+    SUPPRESSED = "SUPPRESSED"
+    PRIMARY_DOMAIN_OUTBOUND = "PRIMARY_DOMAIN_OUTBOUND"
+    TOO_MANY_MAILBOXES = "TOO_MANY_MAILBOXES"
+    MAILBOX_DAILY_CAP = "MAILBOX_DAILY_CAP"
+    SENDING_DOMAIN_MISSING = "SENDING_DOMAIN_MISSING"
+    RECIPIENT_REQUIRED = "RECIPIENT_REQUIRED"
+    REPETITION_GUARD = "REPETITION_GUARD"
+    MIN_INTERVAL = "MIN_INTERVAL"
+    ROBOTS_DISALLOWED = "ROBOTS_DISALLOWED"
+    DOMAIN_NOT_ALLOWED = "DOMAIN_NOT_ALLOWED"
+    DOMAIN_BLOCKED = "DOMAIN_BLOCKED"
+    HOST_RATE = "HOST_RATE"
+    KILL_SWITCH = "KILL_SWITCH"
+    DEADLINE_PASSED = "DEADLINE_PASSED"
+    TIMEOUT = "TIMEOUT"
+    HTTP_4XX = "HTTP_4XX"
+    HTTP_429 = "HTTP_429"
+    HTTP_5XX = "HTTP_5XX"
+    AUTH_FAILED = "AUTH_FAILED"
+    CREDENTIAL_MISSING = "CREDENTIAL_MISSING"
+    NETWORK = "NETWORK"
+    LEASE_LOST = "LEASE_LOST"
+    ADAPTER_ERROR = "ADAPTER_ERROR"
+    RETRIES_EXHAUSTED = "RETRIES_EXHAUSTED"
+    RECONCILE_EFFECT_PRESENT = "RECONCILE_EFFECT_PRESENT"
+    RECONCILE_NO_EFFECT = "RECONCILE_NO_EFFECT"
+    RECONCILE_UNRESOLVED = "RECONCILE_UNRESOLVED"
+
+
+#: Canon §12.3 — leasing.
+LEASE_TTL_SECONDS = 90
+HEARTBEAT_SECONDS = 20
+#: Canon §12.6 — gornja granica trajanja jednog pokušaja.
+MAX_DURATION_SECONDS = 45
+
+#: Canon §12.4 — backoff po vrsti (sekunde, redom po pokušaju).
+RETRY_BACKOFF_SECONDS: dict[str, tuple[int, ...]] = {
+    "read": (2, 8),
+    "write": (30,),
+}
+
+#: Canon §12.5 — circuit breaker.
+BREAKER_FAILURES = 5
+BREAKER_WINDOW_SECONDS = 60
+BREAKER_COOLDOWN_SECONDS = 120
+BREAKER_MAX_PROBES = 3
+
+#: Canon §12.2 — po personi 1 write + 3 read istovremeno.
+MAX_READ_SESSIONS_PER_PERSONA = 3
+
+#: Canon §12.8 — pošta.
+MAX_MAILBOXES_PER_SENDING_DOMAIN = 3
+MAILBOX_WARMUP_START = 5
+MAILBOX_WARMUP_DAYS = 21
+MAILBOX_DEFAULT_CAP = 30
+
+#: Reconcile: koliko provera pre nego što ode čoveku.
+RECONCILE_MAX_CHECKS = 5
+RECONCILE_DELAY_SECONDS = 30
+
+#: ActionType koji su čitanje (retry 3) — sve ostalo spoljno je pisanje (retry 2).
+READ_ACTION_TYPES: frozenset[str] = frozenset({"browser.page.read", "channel.read.public"})
+
+__all__ += [
+    "SuppressionReason",
+    "RuntimeReason",
+    "LEASE_TTL_SECONDS",
+    "HEARTBEAT_SECONDS",
+    "MAX_DURATION_SECONDS",
+    "RETRY_BACKOFF_SECONDS",
+    "BREAKER_FAILURES",
+    "BREAKER_WINDOW_SECONDS",
+    "BREAKER_COOLDOWN_SECONDS",
+    "BREAKER_MAX_PROBES",
+    "MAX_READ_SESSIONS_PER_PERSONA",
+    "MAX_MAILBOXES_PER_SENDING_DOMAIN",
+    "MAILBOX_WARMUP_START",
+    "MAILBOX_WARMUP_DAYS",
+    "MAILBOX_DEFAULT_CAP",
+    "RECONCILE_MAX_CHECKS",
+    "RECONCILE_DELAY_SECONDS",
+    "READ_ACTION_TYPES",
+]
