@@ -171,6 +171,17 @@ class TestDraft:
         assert item.citations and item.content_hash
         assert PromptRecord.objects.filter(run=item.run).exists()
 
+    def test_internal_memories_never_leak_into_text(self, mila):
+        from apps.memory.models import MemoryItem
+
+        item = _draft(topic="Prodaja")
+        cited = MemoryItem.objects.filter(id__in=[c["memory_id"] for c in item.citations])
+        assert all(m.memory_type in ("semantic", "content") for m in cited)
+        for m in MemoryItem.objects.filter(persona=mila).exclude(
+                memory_type__in=["semantic", "content"]):
+            assert m.content.rstrip(".") not in item.body
+        assert "Pre svake objave" not in item.body
+
     def test_prohibited_text_is_rejected(self, mila):
         item = _draft(body="Ja sam prava osoba, ne AI.")
         assert item.status == CS.REJECTED

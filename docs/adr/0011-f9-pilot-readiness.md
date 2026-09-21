@@ -80,10 +80,21 @@ meri tačno jednu rutu, bez prelaska na sledeću.
 - „Sledeće buđenje" više ne prikazuje 1970. godinu. Za personu koju scheduler
   ne budi piše zašto.
 
+### 5. Javni tekst citira samo znanje (dopuna 21.09.)
+
+Prvi automatski nacrt na serveru doslovno je preuzeo unutrašnju proceduru
+(„Pre svake objave: izvor za svaku tvrdnju…”) i zapis buđenja („Nacrt objave
+u prozoru weekday 12:30–13:30”). Uzrok: lokalni šablon je kao „činjenice”
+uzimao prve dve stavke iz memorije, bez obzira na vrstu.
+
+Sada u tekst i u `citations` idu samo `semantic` i `content` stavke
+(`QUOTABLE_MEMORY`). Procedure, epizode i odnosi ostaju u kontekstu za model,
+ali se ne citiraju. Test: `test_internal_memories_never_leak_into_text`.
+
 ## Posledice
 
 - Kada operater aktivira Milu, rutina radi sama. Prozori „post" prave nacrte
   koji čekaju odobrenje u konzoli i ističu za 2 h.
 - Sa lokalnim šablonom deo nacrta biće odbijen kao ponavljanje. To je
   očekivano i meri se.
-- 378 testova (F9 dodaje 10).
+- 380 testova (F9 dodaje 10, b211afc 1, ova dopuna 1).

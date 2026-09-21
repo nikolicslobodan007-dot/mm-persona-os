@@ -125,6 +125,12 @@ def _repetition(persona: Persona, text: str, now: datetime,
     return None
 
 
+#: Samo znanje sme doslovno u javni tekst i kao izvor. Procedure („pre svake
+#: objave…”), epizode („nacrt u prozoru…”) i odnosi ostaju unutrašnji kontekst
+#: modelu — nisu činjenice za čitaoca (ADR-0011 §5).
+QUOTABLE_MEMORY = frozenset({E.MemoryType.SEMANTIC.value, E.MemoryType.CONTENT.value})
+
+
 def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
           angle: str = "", body: str | None = None,
           fmt: E.ContentFormat = E.ContentFormat.POST, run: AgentRun | None = None,
@@ -137,12 +143,14 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
         raise ContentError("VALIDATION_ERROR", "Potrebna je tema ili tekst.")
     with transaction.atomic():
         run = run or operator_run(persona, now)
-        provenance, gen, pack = E.Provenance.USER_PROVIDED, None, None
+        provenance, gen, pack, quotable = E.Provenance.USER_PROVIDED, None, None, []
         if body is None:
             pack = memory_context.build(persona, run, E.RetrievalProfile.CONTENT_CREATION,
                                         query=topic, now=now)
+            quotable = [sc for sc in pack.items
+                        if sc.memory.memory_type in QUOTABLE_MEMORY][:2]
             facts = [sc.memory.content if len(sc.memory.content) < 200 else sc.memory.title
-                     for sc in pack.items[:2]]
+                     for sc in quotable]
             gen = gateway.generate(
                 E.LLMPurpose.CONTENT_DRAFT, _system_prompt(persona),
                 f"{pack.text}\n\n## zadatak\nNapiši kratku objavu na temu: {topic}."
@@ -169,7 +177,7 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
             provenance=provenance.value, disclosure_included=disclose, run=run,
             status_reason=reason,
             citations=[{"memory_id": str(sc.memory.id), "title": sc.memory.title}
-                       for sc in (pack.items[:2] if pack else [])],
+                       for sc in (quotable if pack else [])],
         )
         if idea is not None and status == CS.DRAFT:
             ContentIdea.objects.filter(pk=idea.pk).update(status=E.IdeaStatus.USED.value)
