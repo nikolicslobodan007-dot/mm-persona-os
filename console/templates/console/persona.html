@@ -1,0 +1,44 @@
+{% extends "console/base.html" %}{% load console_tags %}
+{% block title %}{{ p.display_name }}{% endblock %}
+{% block content %}
+<div class="row"><h1>{{ p.display_name }} <span class="muted">{{ p.public_id }}</span></h1><span class="spacer"></span>
+  <span class="pill {{ p.status|status_tone }}">{{ p.status }}</span><span class="pill">{{ p.runtime_environment }}</span>
+  <span class="pill">{{ p.primary_locale }} · {{ p.timezone }}</span></div>
+<div class="grid">
+  <div class="card"><h2>Stanje sada</h2>
+    {% if state %}<table>{% for name, v in state_rows %}<tr><td class="small">{{ name }}</td>
+      <td style="width:55%"><div class="bar"><span style="width:{% widthratio v 1 100 %}%"></span></div></td>
+      <td class="mono small">{{ v }}</td></tr>{% endfor %}</table>
+      <div class="sub">Sledeće buđenje: {{ state.next_wake_at|date:"d.m. H:i"|default:"—" }}</div>
+    {% else %}<p class="sub">Nema stanja.</p>{% endif %}</div>
+  <div class="card"><h2>Poverenje po sposobnosti</h2>
+    <table>{% for cap, lv in trust %}<tr><td class="mono small">{{ cap }}</td><td><span class="pill">{{ lv }}</span></td></tr>
+    {% empty %}<tr><td class="sub">Sve na L0.</td></tr>{% endfor %}</table>
+    <h2 style="margin-top:14px">Nalozi</h2>
+    <table>{% for a in accounts %}<tr><td>{{ a.channel_type }}</td><td class="small">{{ a.handle }}</td>
+      <td><span class="pill {{ a.status|status_tone }}">{{ a.status }}</span></td></tr>{% endfor %}</table>
+    <div class="sub" style="margin-top:8px">Memorija: {% for k, v in memories.items %}{{ k }} {{ v }}{% if not forloop.last %} · {% endif %}{% endfor %}</div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px"><h2>Buđenja</h2>
+<table><tr><th>Kad</th><th>Povod</th><th>Odluka</th><th>Razlog</th></tr>
+{% for r in runs %}<tr><td class="small">{{ r.started_at|date:"d.m. H:i" }}</td><td class="small">{{ r.wake_priority }}</td>
+<td><span class="pill {{ r.decision|status_tone }}">{{ r.decision|default:"—" }}</span></td><td class="small">{{ r.reason_code }}</td></tr>
+{% empty %}<tr><td colspan="4" class="sub">Još se nije budila.</td></tr>{% endfor %}</table></div>
+
+<div class="card" style="margin-top:16px"><h2>Sadržaj</h2>
+<table><tr><th>Kad</th><th>Tema</th><th>Status</th><th>Tekst</th></tr>
+{% for i in items %}<tr><td class="small">{{ i.created_at|date:"d.m. H:i" }}</td><td>{{ i.title }}</td>
+<td><span class="pill {{ i.status|status_tone }}">{{ i.status }}</span> <span class="small muted">{{ i.status_reason }}</span></td>
+<td class="small">{{ i.body|truncatechars:140 }}</td></tr>
+{% empty %}<tr><td colspan="4" class="sub">Još nema nacrta.</td></tr>{% endfor %}</table></div>
+
+<div class="card" style="margin-top:16px"><h2>Akcije</h2>
+<table><tr><th>Akcija</th><th>Tip</th><th>Kanal</th><th>Status</th><th>Kad</th></tr>
+{% for a in actions %}<tr><td class="mono"><a href="/console/actions/{{ a.public_id }}">{{ a.public_id|slice:":14" }}…</a></td>
+<td>{{ a.action_type }}</td><td>{{ a.channel_account.channel_type|default:"—" }}</td>
+<td><span class="pill {{ a.status|status_tone }}">{{ a.status }}</span> <span class="small muted">{{ a.error_code }}</span></td>
+<td class="small">{{ a.created_at|date:"d.m. H:i" }}</td></tr>
+{% empty %}<tr><td colspan="5" class="sub">Nema akcija.</td></tr>{% endfor %}</table></div>
+{% endblock %}

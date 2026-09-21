@@ -1,0 +1,51 @@
+{% extends "console/base.html" %}{% load console_tags %}
+{% block title %}Odobrenja{% endblock %}
+{% block content %}
+<h1>Odobrenja</h1>
+{% if not can_decide %}<div class="msg warning">Možeš da gledaš, ali nemaš dozvolu da odlučuješ.</div>{% endif %}
+{% for ap in pending %}
+<div class="card" style="margin-bottom:14px">
+  <div class="row">
+    <b>{{ ap.action.persona.display_name }}</b>
+    <span class="pill">{{ ap.action.action_type }}</span>
+    <span class="pill">{{ ap.action.channel_account.channel_type|default:"bez kanala" }}{% if ap.action.channel_account %} · {{ ap.action.channel_account.handle }}{% endif %}</span>
+    <span class="pill">{{ ap.approval_class }}</span>
+    <span class="pill">rizik {{ ap.action.risk_score }} · {{ ap.action.risk_class }}</span>
+    <span class="spacer"></span>
+    <span class="pill warn" data-expires="{{ ap.expires_at|iso }}">ističe {{ ap.expires_at|date:"H:i" }}</span>
+  </div>
+  <div class="post">{{ ap.action.input_json.text|default:ap.action.input_json }}</div>
+  <div class="small muted">Razlozi: {{ ap.decision.reason_codes|join:", " }} ·
+    <a href="/console/actions/{{ ap.action.public_id }}">cela akcija</a></div>
+  {% if can_decide %}
+  <div class="row" style="margin-top:12px">
+    <form method="post" action="/console/approvals/{{ ap.public_id }}/decide">{% csrf_token %}
+      <input type="hidden" name="decision" value="APPROVED">
+      <button class="primary">✓ Odobri</button></form>
+    <button type="button" data-toggle="edit-{{ ap.public_id }}">✎ Izmeni pa odobri</button>
+    <button type="button" data-toggle="rej-{{ ap.public_id }}">✕ Odbij</button>
+  </div>
+  <form id="edit-{{ ap.public_id }}" hidden method="post" action="/console/approvals/{{ ap.public_id }}/decide">{% csrf_token %}
+    <input type="hidden" name="decision" value="APPROVED_WITH_CHANGES">
+    <label>Tekst koji se objavljuje (prolazi iste provere ponovo)</label>
+    <textarea name="text">{{ ap.action.input_json.text }}</textarea>
+    <label>Beleška (opciono)</label><input type="text" name="reason">
+    <div style="margin-top:8px"><button class="primary">Sačuvaj izmenu i odobri</button></div>
+  </form>
+  <form id="rej-{{ ap.public_id }}" hidden method="post" action="/console/approvals/{{ ap.public_id }}/decide">{% csrf_token %}
+    <input type="hidden" name="decision" value="REJECTED">
+    <label>Zašto se odbija (obavezno)</label><input type="text" name="reason" required>
+    <div style="margin-top:8px"><button class="danger">Odbij</button></div>
+  </form>
+  {% endif %}
+</div>
+{% empty %}<div class="card"><p class="sub">Ništa ne čeka odobrenje.</p></div>{% endfor %}
+
+<div class="card"><h2>Nedavne odluke</h2>
+<table><tr><th>Persona</th><th>Tip</th><th>Odluka</th><th>Ko</th><th>Kad</th></tr>
+{% for ap in recent %}<tr><td>{{ ap.action.persona.public_id }}</td>
+<td><a href="/console/actions/{{ ap.action.public_id }}">{{ ap.action.action_type }}</a></td>
+<td><span class="pill {{ ap.status|status_tone }}">{{ ap.status }}</span></td>
+<td class="small">{{ ap.decided_by|default:"—" }}</td><td class="small">{{ ap.updated_at|date:"d.m. H:i" }}</td></tr>
+{% empty %}<tr><td colspan="5" class="sub">Još nema.</td></tr>{% endfor %}</table></div>
+{% endblock %}

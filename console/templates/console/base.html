@@ -1,0 +1,39 @@
+{% load static tz console_tags %}<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>{% block title %}Konzola{% endblock %} · MM Persona OS</title>
+<link rel="stylesheet" href="{% static 'console/console.css' %}">
+</head>
+<body>
+{% timezone tz %}
+{% if active_ks %}
+<div class="stopbar">⛔ Aktivan kill-switch — sve akcije u opsegu su zaustavljene.
+  <a href="/console/" style="color:#fff;text-decoration:underline">Detalji</a></div>
+{% endif %}
+<header class="top">
+  <span class="brand">MM Persona OS</span>
+  {% with p=request.path %}
+  <nav>
+    <a href="/console/" class="{% if p == '/console/' %}on{% endif %}">Pregled</a>
+    <a href="/console/approvals" class="{% if 'approvals' in p %}on{% endif %}">Odobrenja
+      {% if pending_count %}<span class="badge">{{ pending_count }}</span>{% endif %}</a>
+    <a href="/console/content" class="{% if 'content' in p %}on{% endif %}">Sadržaj</a>
+    <a href="/console/personas/P-00001" class="{% if 'personas' in p %}on{% endif %}">Mila</a>
+    <a href="/console/costs" class="{% if 'costs' in p %}on{% endif %}">Troškovi</a>
+    <a href="/console/incidents" class="{% if 'incidents' in p %}on{% endif %}">Incidenti</a>
+  </nav>
+  {% endwith %}
+  <div class="me"><span>{{ who }}{% if roles %} · {{ roles|join:", " }}{% endif %}</span>
+    <form method="post" action="/console/logout">{% csrf_token %}<button>Odjava</button></form>
+  </div>
+</header>
+<main>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% block content %}{% endblock %}
+</main>
+{% endtimezone %}
+<script src="{% static 'console/console.js' %}"></script>
+</body>
+</html>

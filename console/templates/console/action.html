@@ -1,0 +1,36 @@
+{% extends "console/base.html" %}{% load console_tags %}
+{% block title %}{{ a.public_id }}{% endblock %}
+{% block content %}
+<div class="row"><h1 class="mono" style="font-size:18px">{{ a.public_id }}</h1><span class="spacer"></span>
+<span class="pill {{ a.status|status_tone }}">{{ a.status }}</span></div>
+<div class="grid">
+  <div class="card"><h2>Šta</h2><table>
+    <tr><td class="sub">Persona</td><td><a href="/console/personas/{{ a.persona.public_id }}">{{ a.persona.display_name }}</a></td></tr>
+    <tr><td class="sub">Tip</td><td>{{ a.action_type }}</td></tr>
+    <tr><td class="sub">Kanal</td><td>{{ a.channel_account.channel_type|default:"—" }} {{ a.channel_account.handle }}</td></tr>
+    <tr><td class="sub">Rizik</td><td>{{ a.risk_score }} · {{ a.risk_class }}</td></tr>
+    <tr><td class="sub">Buđenje</td><td class="mono small">{{ a.run.public_id|default:"operator" }}</td></tr>
+    <tr><td class="sub">Greška</td><td>{{ a.error_code|default:"—" }}</td></tr>
+    <tr><td class="sub">Namera</td><td class="small">{{ a.intent }}</td></tr></table></div>
+  <div class="card"><h2>Sadržaj zahteva</h2><pre>{{ payload }}</pre>
+    <h2>Rezultat</h2><pre>{{ result }}</pre></div>
+</div>
+<div class="card" style="margin-top:16px"><h2>Odluke pravila</h2>
+<table><tr><th>Kad</th><th>Efekat</th><th>Rizik</th><th>Razlozi</th></tr>
+{% for d in decisions %}<tr><td class="small">{{ d.evaluated_at|date:"d.m. H:i:s" }}</td>
+<td><span class="pill {{ d.effect|status_tone }}">{{ d.effect }}</span></td><td>{{ d.risk_score }}</td>
+<td class="small">{{ d.reason_codes|join:", " }}</td></tr>{% endfor %}</table></div>
+<div class="card" style="margin-top:16px"><h2>Odobrenja</h2>
+<table><tr><th>Klasa</th><th>Status</th><th>Ko</th><th>Beleška</th></tr>
+{% for ap in approvals %}<tr><td>{{ ap.approval_class }}</td><td><span class="pill {{ ap.status|status_tone }}">{{ ap.status }}</span></td>
+<td class="small">{{ ap.decided_by|default:"—" }}</td><td class="small">{{ ap.decision_note }}</td></tr>
+{% empty %}<tr><td colspan="4" class="sub">Nije bilo potrebno.</td></tr>{% endfor %}</table></div>
+<div class="card" style="margin-top:16px"><h2>Pokušaji izvršenja</h2>
+{% for x in attempts %}<div style="margin-bottom:12px"><div class="row">
+  <b>#{{ x.a.attempt_number }}</b><span class="pill {{ x.a.outcome|status_tone }}">{{ x.a.outcome|default:"u toku" }}</span>
+  <span class="small">{{ x.a.reason_code }}</span>{% if x.a.payload.dry_run %}<span class="pill">probni režim</span>{% endif %}
+  <span class="small muted">{{ x.a.duration_ms|default:"?" }} ms · {{ x.a.started_at|date:"d.m. H:i:s" }}</span></div>
+  {% if x.a.error_detail %}<div class="small muted">{{ x.a.error_detail }}</div>{% endif %}
+  <details><summary>Šta bi otišlo napolje</summary><pre>{{ x.requests }}</pre></details></div>
+{% empty %}<p class="sub">Još nije izvršavana.</p>{% endfor %}</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% load static %}<!doctype html>
+<html lang="sr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Kod · MM Persona OS</title>
+<link rel="stylesheet" href="{% static 'console/console.css' %}"></head>
+<body><form class="auth" method="post" action="/console/login/2fa">{% csrf_token %}
+  <h1>Drugi korak</h1>
+  <p class="muted small">Upiši šestocifreni kod iz aplikacije za kodove.</p>
+  {% if error %}<div class="msg error">{{ error }}</div>{% endif %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <input class="code-input" type="text" name="code" inputmode="numeric" autocomplete="one-time-code"
+         pattern="[0-9 ]{6,7}" maxlength="7" required autofocus>
+  <button class="primary" type="submit">Prijava</button>
+</form></body></html>

@@ -1,0 +1,14 @@
+{% extends "console/base.html" %}{% load console_tags %}
+{% block title %}Troškovi{% endblock %}
+{% block content %}
+<h1>Troškovi — poslednjih 30 dana</h1>
+<div class="grid"><div class="card"><div class="sub">Ukupno</div><div class="stat">{{ total|eur }}</div>
+<div class="sub">Lokalni šablon i probni režim ne koštaju ništa.</div></div></div>
+<div class="grid" style="margin-top:16px">
+<div class="card"><h2>Po vrsti</h2><table><tr><th>Vrsta</th><th>Stavki</th><th>Iznos</th></tr>
+{% for r in by_bucket %}<tr><td>{{ r.cost_bucket }}</td><td>{{ r.n }}</td><td>{{ r.s|eur }}</td></tr>
+{% empty %}<tr><td colspan="3" class="sub">Nema troškova.</td></tr>{% endfor %}</table></div>
+<div class="card"><h2>Po personi</h2><table><tr><th>Persona</th><th>Iznos</th></tr>
+{% for r in by_persona %}<tr><td>{{ r.persona__display_name|default:"sistem" }}</td><td>{{ r.s|eur }}</td></tr>
+{% empty %}<tr><td colspan="2" class="sub">Nema troškova.</td></tr>{% endfor %}</table></div></div>
+{% endblock %}

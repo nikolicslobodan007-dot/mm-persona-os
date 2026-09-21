@@ -1,0 +1,21 @@
+{% extends "console/base.html" %}
+{% block title %}Sadržaj{% endblock %}
+{% block content %}
+<div class="row"><h1>Sadržaj</h1><span class="spacer"></span>
+<form method="get" class="row"><select name="status"><option value="">svi statusi</option>
+{% for s in statuses %}<option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+<button>Filtriraj</button></form></div>
+{% for i in items %}
+<div class="card" style="margin-bottom:12px"><div class="row"><b>{{ i.title|default:"(bez teme)" }}</b>
+  <span class="pill">{{ i.persona.public_id }}</span>
+  <span class="pill {% load console_tags %}{{ i.status|status_tone }}">{{ i.status }}</span>
+  {% if i.status_reason %}<span class="small muted">{{ i.status_reason }}</span>{% endif %}
+  <span class="spacer"></span><span class="small muted">{{ i.provenance }} · v{{ i.version }} · {{ i.created_at|date:"d.m. H:i" }}</span></div>
+  <div class="post">{{ i.body }}</div>
+  {% for p in i.publications.all %}<div class="small">→ {{ p.channel_account.channel_type }}:
+    <span class="pill {{ p.status|status_tone }}">{{ p.status }}</span>
+    {% if p.provider_payload.dry_run %}<span class="pill">probni režim</span>{% endif %}
+    {% if p.action %}<a href="/console/actions/{{ p.action.public_id }}">akcija</a>{% endif %}</div>{% endfor %}
+</div>
+{% empty %}<div class="card"><p class="sub">Nema sadržaja.</p></div>{% endfor %}
+{% endblock %}

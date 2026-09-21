@@ -31,18 +31,56 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.auth",
     "django.contrib.postgres",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
     "drf_spectacular",
     *PERSONA_OS_APPS,
+    # F8 (ADR-0010): kontrolna tabla. Nije domen Canon §1, pa nije pod apps/.
+    "console",
 ]
 
 # Canon §8.4 — kontekst zahteva (X-Request-ID, traceparent, X-Actor-ID) se
 # postavlja pre bilo čega drugog, da i greška iz middleware-a nosi trace_id.
 MIDDLEWARE = [
     "api.middleware.RequestContextMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    # API je csrf_exempt (DRF APIView + token); CSRF štiti formulare konzole.
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+STATIC_URL = "/static/"
+X_FRAME_OPTIONS = "DENY"
+
+# F8 (ADR-0010) — konzola: sesija 8 h, prijava + TOTP.
+LOGIN_URL = "/console/login"
+SESSION_COOKIE_AGE = 8 * 3600
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Strict"
+CSRF_COOKIE_SAMESITE = "Strict"
+CONSOLE_LOGIN_MAX_FAILURES = 5
+CONSOLE_LOGIN_LOCKOUT_SECONDS = 15 * 60
 
 # Canon §8 — API. Samo token prijava: API koriste servisi i skripte, a
 # sesija bi uvela CSRF na svaki upis bez ikakve koristi (ADR-0004).

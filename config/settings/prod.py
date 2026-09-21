@@ -32,43 +32,8 @@ CSRF_TRUSTED_ORIGINS = [
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
-# F0 base ima minimalan skup — dovoljan za skelet, nedovoljan za javni port.
-# `collectstatic` traži staffiles app; CSRF i clickjacking zaštita traže svoj
-# middleware. Django `check --deploy` pada bez ovoga.
-INSTALLED_APPS = [
-    *INSTALLED_APPS,  # noqa: F405
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
-]
-
-MIDDLEWARE = [
-    "api.middleware.RequestContextMiddleware",
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-]
-
-TEMPLATES = [
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-            ],
-        },
-    },
-]
-
-X_FRAME_OPTIONS = "DENY"
+# Aplikacije, middleware i šabloni su u base-u od F8 (ADR-0010) — konzola ih
+# traži i u testovima. Ovde ostaje samo ono što važi isključivo iza HTTPS-a.
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True

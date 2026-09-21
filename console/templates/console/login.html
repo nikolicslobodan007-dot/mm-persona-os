@@ -1,0 +1,15 @@
+{% load static %}<!doctype html>
+<html lang="sr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Prijava · MM Persona OS</title>
+<link rel="stylesheet" href="{% static 'console/console.css' %}"></head>
+<body><form class="auth" method="post" action="/console/login">{% csrf_token %}
+  <h1>Kontrolna tabla</h1>
+  <p class="muted small">Interni sistem. Pristup samo za operatere.</p>
+  {% if error %}<div class="msg error">{{ error }}</div>{% endif %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <label for="u">Korisničko ime</label>
+  <input id="u" type="text" name="username" autocomplete="username" required autofocus>
+  <label for="pw">Lozinka</label>
+  <input id="pw" type="password" name="password" autocomplete="current-password" required>
+  <button class="primary" type="submit">Dalje</button>
+</form></body></html>

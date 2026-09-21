@@ -1,0 +1,13 @@
+{% extends "console/base.html" %}{% load console_tags %}
+{% block title %}Incidenti{% endblock %}
+{% block content %}
+<h1>Incidenti</h1>
+<div class="card"><table><tr><th>ID</th><th>Težina</th><th>Status</th><th>Opis</th><th>Kad</th></tr>
+{% for i in incidents %}<tr><td class="mono small">{{ i.public_id }}</td>
+<td><span class="pill {{ i.severity|status_tone }}">{{ i.severity }}</span></td>
+<td><span class="pill {{ i.status|status_tone }}">{{ i.status }}</span></td>
+<td>{{ i.title }}{% if i.action %} · <a href="/console/actions/{{ i.action.public_id }}">akcija</a>{% endif %}
+  <div class="small muted">{{ i.incident_kind }} · {{ i.summary }}</div></td>
+<td class="small">{{ i.occurred_at|date:"d.m. H:i" }}</td></tr>
+{% empty %}<tr><td colspan="5" class="sub">Nema incidenata.</td></tr>{% endfor %}</table></div>
+{% endblock %}
