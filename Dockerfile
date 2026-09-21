@@ -11,6 +11,8 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml ./
-RUN pip install -e ".[dev]" || pip install django celery redis psycopg[binary] pgvector pyyaml jsonschema pytest
+# Bez rezervnog spiska: ako instalacija zavisnosti ne uspe, build mora da padne
+# glasno, a ne da tiho napravi image bez polovine paketa.
+RUN pip install -e ".[dev]"
 
 COPY . .

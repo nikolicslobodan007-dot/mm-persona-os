@@ -75,7 +75,10 @@ class TestAppOwnership:
         "runtime": {
             "BrowserProfile", "RuntimeSession", "WorkerJob", "ReconcileTask",
         },
-        "observability": {"AuditEvent", "MetricPoint", "CostLedger"},
+        "observability": {
+            "AuditEvent", "MetricPoint", "CostLedger",
+            "EventOutbox", "EventDelivery", "IdempotencyRecord",
+        },
         "llm_gateway": {"LLMRoute", "PromptRecord", "LLMUsage"},
     }
 

@@ -197,3 +197,106 @@ class CostLedger(models.Model):
 
     def __str__(self) -> str:
         return f"{self.cost_bucket} {self.amount_eur_cents}c"
+
+
+# ============================================================================
+# F2 — event outbox, isporuka i idempotentnost (ADR-0004)
+# ============================================================================
+#
+# Canon §1 ove tri tabele ne navodi. Uvedene su ADR-om-0004 jer bez njih dva
+# hard KPI-ja iz §16.5 nisu dostižna: `audit_completeness = 100%` traži da
+# event ne može da se izgubi između upisa stanja i objave, a
+# `duplicate_side_effects = 0` traži da ponovljen zahtev ne napravi drugi efekat.
+# Žive u `observability` jer ih zovu svi domeni, a nijedan ih ne poseduje —
+# isti razlog zbog kog je tu i `AuditEvent`.
+
+
+class EventOutbox(models.Model):
+    """Event upisan u istoj transakciji kao promena koja ga je izazvala.
+
+    Objava ide posle commit-a, u zasebnom koraku. Ako proces padne između,
+    red ostaje PENDING i objavljuje se sledeći put — event ne može da se
+    izgubi, može samo da zakasni. Potrošači zato moraju da trpe ponavljanje
+    (Canon §7.1: at-least-once), što `EventDelivery` i obezbeđuje.
+    """
+
+    id = models.BigAutoField(primary_key=True)
+    event_id = models.CharField(max_length=32, unique=True)  # EVT- + ULID
+    event_type = models.CharField(max_length=80)
+    event_version = models.PositiveSmallIntegerField(default=1)
+    persona_public_id = models.CharField(max_length=16, blank=True)
+    envelope = JSON_DICT(help_text="Ceo Canon §7.1 envelope, već validiran šemom.")
+    status = models.CharField(
+        max_length=16, choices=E.OutboxStatus.choices(), default=E.OutboxStatus.PENDING
+    )
+    attempts = models.PositiveSmallIntegerField(default=0)
+    last_error = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    published_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "observability_event_outbox"
+        indexes = [
+            models.Index(
+                fields=["id"],
+                condition=models.Q(status=E.OutboxStatus.PENDING.value),
+                name="event_outbox_pending_idx",
+            ),
+            models.Index(fields=["event_type", "created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.event_id} {self.event_type} {self.status}"
+
+
+class EventDelivery(models.Model):
+    """Potvrda da je jedan potrošač obradio jedan event. Canon §7.1.
+
+    Jedinstvenost `(consumer, event_id)` je cela deduplikacija: drugi pokušaj
+    istog eventa ne može da upiše red, pa handler ne radi ponovo. Isti event
+    poslat deset puta daje jedan efekat — to je test iz ugovora API v0.1 §24.
+    """
+
+    id = models.BigAutoField(primary_key=True)
+    consumer = models.CharField(max_length=80)
+    event_id = models.CharField(max_length=32)
+    delivered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "observability_event_delivery"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["consumer", "event_id"], name="event_delivery_once"
+            )
+        ]
+
+
+class IdempotencyRecord(models.Model):
+    """Zapamćen odgovor na zahtev sa `Idempotency-Key`. Canon §6.3, §8.5.
+
+    Isti ključ i isti sadržaj vraćaju isti odgovor bez ponovnog izvršenja.
+    Isti ključ i drugačiji sadržaj vraćaju 409 IDEMPOTENCY_CONFLICT. Zapis
+    živi najmanje 24 sata (Canon §6.3).
+
+    Postgres, ne Redis: Canon §11 kaže da je Postgres izvor istine, a Redis
+    posle restarta gubi ključeve — tačno u trenutku kada klijenti ponavljaju
+    zahteve jer nisu dobili odgovor.
+    """
+
+    id = models.BigAutoField(primary_key=True)
+    scope = models.CharField(max_length=160, help_text="Ko je poslao zahtev.")
+    key = models.CharField(max_length=128)
+    request_hash = models.CharField(max_length=64)
+    method = models.CharField(max_length=8)
+    path = models.CharField(max_length=500)
+    status_code = models.PositiveSmallIntegerField(default=0)
+    response_body = JSON_DICT()
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        db_table = "observability_idempotency_record"
+        constraints = [
+            models.UniqueConstraint(fields=["scope", "key"], name="idempotency_unique_key")
+        ]
+        indexes = [models.Index(fields=["expires_at"])]

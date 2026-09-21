@@ -1,5 +1,10 @@
-"""Canon §8.1 — sve pod /api/v1/. Rute se dodaju u F2."""
+"""Canon §8.1 — sve pod /api/v1/. Van toga samo `/healthz`."""
 
-from django.urls import path
+from django.urls import include, path
 
-urlpatterns: list[path] = []
+from api.views.ops import healthz
+
+urlpatterns = [
+    path("api/v1/", include("api.urls")),
+    path("healthz", healthz, name="healthz"),
+]

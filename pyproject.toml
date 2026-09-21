@@ -1,11 +1,12 @@
 [project]
 name = "mm-persona-os"
 version = "0.1.0"
-description = "MercatoMaster Persona OS — F0 skelet po Canon v1.1"
+description = "MercatoMaster Persona OS po Canon v1.1"
 requires-python = ">=3.12"
 dependencies = [
     "django>=5.0",
     "djangorestframework>=3.15",
+    "drf-spectacular>=0.27",
     "celery>=5.4",
     "redis>=5.0",
     "psycopg[binary]>=3.2",
@@ -32,3 +33,14 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.mypy]
 python_version = "3.12"
 warn_unused_ignores = true
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+# Kod se ne instalira kao paket — pokreće se iz /app. Bez ovoga
+# `pip install -e ".[dev]"` pada na „Multiple top-level packages discovered
+# in a flat-layout", a Dockerfile je tiho prelazio na tvrdo upisan spisak
+# paketa u kome nije bilo ni djangorestframework-a ni gunicorn-a.
+[tool.setuptools]
+packages = []

@@ -7,10 +7,10 @@ Svi timestamp-ovi su UTC sa `Z` sufiksom.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
-from common.ids import EntityKind, new_ulid
+from common.ids import new_ulid
 
 __all__ = [
     "EVENT_TYPES",
@@ -70,7 +70,7 @@ RETIRED_EVENT_TYPES: dict[str, str] = {
 
 
 def _utc_now_z() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace(
+    return datetime.now(UTC).isoformat(timespec="milliseconds").replace(
         "+00:00", "Z"
     )
 

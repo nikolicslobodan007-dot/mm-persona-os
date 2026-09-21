@@ -16,7 +16,7 @@ import re
 import time
 import uuid
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 __all__ = [
     "EntityKind",
@@ -128,7 +128,7 @@ def new_ulid(when: datetime | None = None) -> str:
     else:
         if when.tzinfo is None:
             raise ValueError("when mora biti timezone-aware (UTC)")
-        ms = int(when.astimezone(timezone.utc).timestamp() * 1000)
+        ms = int(when.astimezone(UTC).timestamp() * 1000)
     if not 0 <= ms < (1 << 48):
         raise ValueError(f"vreme van ULID opsega: {ms}")
 

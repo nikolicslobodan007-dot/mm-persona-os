@@ -31,10 +31,44 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.auth",
     "django.contrib.postgres",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "drf_spectacular",
     *PERSONA_OS_APPS,
 ]
 
-MIDDLEWARE = ["django.middleware.common.CommonMiddleware"]
+# Canon §8.4 — kontekst zahteva (X-Request-ID, traceparent, X-Actor-ID) se
+# postavlja pre bilo čega drugog, da i greška iz middleware-a nosi trace_id.
+MIDDLEWARE = [
+    "api.middleware.RequestContextMiddleware",
+    "django.middleware.common.CommonMiddleware",
+]
+
+# Canon §8 — API. Samo token prijava: API koriste servisi i skripte, a
+# sesija bi uvela CSRF na svaki upis bez ikakve koristi (ADR-0004).
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    "EXCEPTION_HANDLER": "api.errors.exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "MM Persona OS API",
+    "VERSION": "1.0.0",
+    "DESCRIPTION": "Canon v1.1 §8. Interni API — nije javni.",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SCHEMA_PATH_PREFIX": "/api/v1",
+    "COMPONENT_SPLIT_REQUEST": True,
+}
+
+# Canon §7.4 — outbox. U testovima se isporuka radi odmah posle commit-a,
+# bez Celery-ja; u produkciji je radi `observability.publish_outbox`.
+EVENT_BUS_EAGER = False
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 

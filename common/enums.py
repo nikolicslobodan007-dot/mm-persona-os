@@ -849,7 +849,21 @@ class LLMPurpose(CanonEnum):
     EVALUATE = "evaluate"
 
 
+class OutboxStatus(CanonEnum):
+    """Stanje reda u event outbox-u (ADR-0004).
+
+    Event se upisuje u istoj transakciji kao i promena stanja, a objavljuje ga
+    zaseban korak. PENDING ostaje dok svi potrošači ne potvrde prijem; DEAD
+    znači da je pređen broj pokušaja i traži se ljudska intervencija.
+    """
+
+    PENDING = "PENDING"
+    PUBLISHED = "PUBLISHED"
+    DEAD = "DEAD"
+
+
 __all__ += [
+    "OutboxStatus",
     "ScopeKind",
     "AssetKind",
     "AssetRole",

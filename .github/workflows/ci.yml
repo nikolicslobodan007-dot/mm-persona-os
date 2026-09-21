@@ -6,22 +6,44 @@ on:
 
 jobs:
   canon:
-    name: Canon lint i testovi
+    name: Canon lint, ruff, testovi
     runs-on: ubuntu-latest
+
+    # Ista baza kao na serveru — testovi modela i API-ja traže pravi
+    # PostgreSQL sa pgvector-om, ne SQLite.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: persona_os
+          POSTGRES_USER: persona
+          POSTGRES_PASSWORD: persona
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U persona"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      POSTGRES_HOST: 127.0.0.1
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: "3.12"}
+        with: {python-version: "3.12", cache: pip}
 
       - name: Instalacija
-        run: pip install pyyaml jsonschema pytest ruff
+        run: pip install -e ".[dev]"
 
       # Canon §20 tačka 7 — ime van Canon-a ne stiže do main grane.
       - name: Canon lint
         run: python tools/canon_lint.py
 
+      - name: Ruff
+        run: ruff check .
+
+      - name: Migracije su u skladu sa modelima
+        run: python manage.py makemigrations --check --dry-run
+
       - name: Testovi
         run: python -m pytest
-
-      - name: Ruff
-        run: ruff check common tools tests || true
