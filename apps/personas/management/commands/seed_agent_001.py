@@ -27,6 +27,8 @@ from apps.personas.models import (
     IdentityFact,
     Persona,
     PersonaAlias,
+    PersonaTag,
+    PersonaTagLink,
     TraitProfile,
     VoiceProfile,
 )
@@ -71,6 +73,13 @@ BASELINE_STATE: dict[str, str] = {
     "topic_saturation": "0.100",
     "risk_alert": "0.000",
 }
+
+#: Niše P-00001 (kategorija `niche`). World Engine ih čita za relevantnost.
+SEED_INTERESTS: tuple[tuple[str, str, str], ...] = (
+    ("ai", "AI", "0.900"),
+    ("b2b", "B2B", "0.900"),
+    ("sales", "Prodaja", "0.700"),
+)
 
 SEED_MEMORIES: tuple[tuple[str, str, str, str], ...] = (
     (
@@ -137,6 +146,7 @@ class Command(BaseCommand):
         self._voice(persona)
         self._state(persona)
         self._routines(persona)
+        self._interests(persona)
         self._visual(persona)
         self._actor(persona)
         self._channel(persona)
@@ -305,6 +315,18 @@ class Command(BaseCommand):
                         max_minutes=90,
                     ),
                 )
+
+    def _interests(self, persona: Persona) -> None:
+        """Niše persone — World Engine po njima meri relevantnost (ADR-0005).
+        Iz Biography.industry „B2B / AI"; težina je jačina interesovanja."""
+        for slug, name, weight in SEED_INTERESTS:
+            tag, _ = PersonaTag.objects.get_or_create(
+                slug=slug, defaults={"name": name, "category": "niche"}
+            )
+            PersonaTagLink.objects.update_or_create(
+                persona=persona, tag=tag,
+                defaults={"weight": Decimal(weight), "source": "manual"},
+            )
 
     def _visual(self, persona: Persona) -> None:
         VisualProfile.objects.update_or_create(

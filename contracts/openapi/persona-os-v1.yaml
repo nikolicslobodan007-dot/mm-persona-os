@@ -90,6 +90,44 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/ops/personas/{public_id}/timeline:
+    get:
+      operationId: ops_persona_timeline
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: query
+        name: cursor
+        schema:
+          type: string
+      - in: query
+        name: decision
+        schema:
+          type: string
+          enum:
+          - ACT
+          - DEFER
+          - SKIP
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: path
+        name: public_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - ops
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/personas:
     get:
       operationId: personas_list
@@ -220,6 +258,28 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/personas/{public_id}/behaviour/tick:
+    post:
+      operationId: personas_behaviour_tick
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - personas
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/personas/{public_id}/snapshot:
     get:
       operationId: personas_snapshot
@@ -236,6 +296,28 @@ paths:
       - tokenAuth: []
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/personas/{public_id}/wake:
+    post:
+      operationId: personas_wake
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - personas
+      security:
+      - tokenAuth: []
+      responses:
+        '202':
           content:
             application/json:
               schema:

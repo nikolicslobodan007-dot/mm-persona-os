@@ -945,3 +945,107 @@ MAX_ATTEMPTS_BY_KIND: dict[str, int] = {
     "write": 2,
     "policy": 1,
 }
+
+
+# ---------------------------------------------------------------- F3 (ADR-0005)
+# Behaviour engine: ishod buđenja, razlozi i troškovi aktivnosti.
+# Izvor: Behaviour + World + Scheduler Engine v0.1 §8, §25, §27.
+
+
+class WakeDecision(CanonEnum):
+    """Ishod jednog buđenja. SKIP i DEFER su jednako važni kao ACT (§25)."""
+
+    ACT = "ACT"        # aktivnost izabrana i (u F3) interno odrađena
+    SKIP = "SKIP"      # svesno ništa — prozor potrošen
+    DEFER = "DEFER"    # ne sada — prozor ostaje, buđenje se pomera
+
+
+class DecisionReason(CanonEnum):
+    """`reason_code` iz Behaviour Engine v0.1 §27. Beleži se na svakom run-u."""
+
+    ROUTINE_WINDOW_DUE = "ROUTINE_WINDOW_DUE"
+    OPERATOR_TASK = "OPERATOR_TASK"
+    WORLD_EVENT_RELEVANT = "WORLD_EVENT_RELEVANT"
+    EVENT_DEFERRED = "EVENT_DEFERRED"
+    NO_WINDOW = "NO_WINDOW"
+    REST_WINDOW = "REST_WINDOW"
+    ROUTINE_NOT_SELECTED = "ROUTINE_NOT_SELECTED"
+    WINDOW_LIMIT_REACHED = "WINDOW_LIMIT_REACHED"
+    LOW_ENERGY_OR_BUDGET = "LOW_ENERGY_OR_BUDGET"
+    OVERLOADED = "OVERLOADED"
+    COOLDOWN_ACTIVE = "COOLDOWN_ACTIVE"
+    PERSONA_PAUSED = "PERSONA_PAUSED"
+
+
+class ActivityKind(CanonEnum):
+    """Vrste aktivnosti iz rutinskih prozora (`RoutineWindow.activity_type`).
+
+    `post` je u F3 isključivo NACRT. Objava je spoljna akcija i ide kroz
+    Policy/Approval (F5) i adapter (F6) — Behaviour je ne može izvršiti.
+    `rest` je prozor bez aktivnosti: uvek SKIP, bez troška pažnje.
+    """
+
+    READ = "read"
+    RESEARCH = "research"
+    WORK = "work"
+    POST = "post"
+    SOCIAL = "social"
+    INBOX = "inbox"
+    REST = "rest"
+
+
+#: Behaviour v0.1 §8 — trošak pažnje po aktivnosti (jedinice, ne minuti).
+ACTIVITY_ATTENTION_COST: dict[ActivityKind, str] = {
+    ActivityKind.READ: "0.70",
+    ActivityKind.RESEARCH: "1.20",
+    ActivityKind.WORK: "2.00",
+    ActivityKind.POST: "1.00",
+    ActivityKind.SOCIAL: "0.50",
+    ActivityKind.INBOX: "0.50",
+    ActivityKind.REST: "0.00",
+}
+
+#: Behaviour v0.1 §8 — semantički cooldown: dve iste aktivnosti ne zaredom.
+ACTIVITY_COOLDOWN_MINUTES: dict[ActivityKind, int] = {
+    ActivityKind.READ: 45,
+    ActivityKind.RESEARCH: 120,
+    ActivityKind.WORK: 30,
+    ActivityKind.POST: 180,
+    ActivityKind.SOCIAL: 60,
+    ActivityKind.INBOX: 60,
+    ActivityKind.REST: 0,
+}
+
+#: Behaviour v0.1 §12 — pragovi relevantnosti svetskog događaja.
+WORLD_RELEVANCE_IGNORE_BELOW = 0.28
+WORLD_RELEVANCE_WAKE_FROM = 0.52
+
+#: Canon §11.2/§11.3 — koji razlog buđenja ide u koji queue.
+WAKE_QUEUE: dict[WakePriority, QueueName] = {
+    WakePriority.OPERATOR_TASK: QueueName.PERSONA_INTERACTIVE,
+    WakePriority.APPROVAL_DECISION: QueueName.PERSONA_INTERACTIVE,
+    WakePriority.INBOUND_HIGH: QueueName.PERSONA_INTERACTIVE,
+    WakePriority.GOAL_DEADLINE: QueueName.PERSONA_SCHEDULED,
+    WakePriority.WORLD_EVENT_HIGH: QueueName.PERSONA_SCHEDULED,
+    WakePriority.ROUTINE_WINDOW: QueueName.PERSONA_SCHEDULED,
+    WakePriority.MAINTENANCE: QueueName.MAINTENANCE,
+}
+
+#: Statusi u kojima scheduler budi personu. READY se budi samo ručno (wake/tick).
+WAKEABLE_BY_SCHEDULER: frozenset[PersonaStatus] = frozenset({PersonaStatus.ACTIVE})
+WAKEABLE_BY_OPERATOR: frozenset[PersonaStatus] = frozenset(
+    {PersonaStatus.READY, PersonaStatus.ACTIVE}
+)
+
+__all__ += [
+    "WakeDecision",
+    "DecisionReason",
+    "ActivityKind",
+    "ACTIVITY_ATTENTION_COST",
+    "ACTIVITY_COOLDOWN_MINUTES",
+    "WORLD_RELEVANCE_IGNORE_BELOW",
+    "WORLD_RELEVANCE_WAKE_FROM",
+    "WAKE_QUEUE",
+    "WAKEABLE_BY_SCHEDULER",
+    "WAKEABLE_BY_OPERATOR",
+]

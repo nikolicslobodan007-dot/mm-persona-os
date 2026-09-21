@@ -75,12 +75,24 @@ class AgentRun(UUIDModel):
     trace_id = models.UUIDField(null=True, blank=True)
     summary_json = JSON_DICT()
 
+    # F3 (ADR-0005): ishod buđenja je kolona, ne samo JSON — SKIP i DEFER
+    # moraju biti merljivi upitom (Behaviour v0.1 §30), a ponovljeno
+    # buđenje sa istim ključem ne sme da napravi drugi run (§18).
+    wake_key = models.CharField(max_length=200, null=True, blank=True, unique=True)
+    decision = models.CharField(
+        max_length=8, choices=E.WakeDecision.choices(), null=True, blank=True
+    )
+    reason_code = models.CharField(
+        max_length=40, choices=E.DecisionReason.choices(), blank=True
+    )
+
     class Meta:
         db_table = "orchestration_agent_run"
         indexes = [
             models.Index(fields=["persona", "started_at"]),
             models.Index(fields=["status", "started_at"]),
             models.Index(fields=["trace_id"]),
+            models.Index(fields=["persona", "decision", "started_at"]),
         ]
         constraints = [
             models.CheckConstraint(

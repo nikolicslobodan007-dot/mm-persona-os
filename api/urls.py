@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from django.urls import path
 
+from api.views.behaviour import BehaviourTickView, PersonaTimelineView, PersonaWakeView
 from api.views.ops import AuditListView
 from api.views.orchestration import ActionDetailView, ActionPolicyTraceView, RunDetailView
 from api.views.personas import PersonaDetailView, PersonaListView, PersonaSnapshotView
@@ -13,6 +14,11 @@ urlpatterns = [
     path("personas/<str:public_id>", PersonaDetailView.as_view(), name="persona-detail"),
     path("personas/<str:public_id>/snapshot", PersonaSnapshotView.as_view(),
          name="persona-snapshot"),
+    path("personas/<str:public_id>/wake", PersonaWakeView.as_view(), name="persona-wake"),
+    path("personas/<str:public_id>/behaviour/tick", BehaviourTickView.as_view(),
+         name="persona-behaviour-tick"),
+    path("ops/personas/<str:public_id>/timeline", PersonaTimelineView.as_view(),
+         name="ops-persona-timeline"),
     path("runs/<str:run_id>", RunDetailView.as_view(), name="run-detail"),
     path("actions/<str:action_id>", ActionDetailView.as_view(), name="action-detail"),
     path("actions/<str:action_id>/policy-trace", ActionPolicyTraceView.as_view(),

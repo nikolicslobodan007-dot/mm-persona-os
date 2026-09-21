@@ -280,6 +280,9 @@ def run_out(r) -> dict[str, Any]:
         "ended_at": _iso(r.ended_at),
         "trace_id": r.trace_id.hex if r.trace_id else None,
         "cost_eur_cents": r.cost_eur_cents,
+        "decision": r.decision,
+        "reason_code": r.reason_code or None,
+        "summary": r.summary_json or {},
         "plans": [{"plan_id": pl.public_id, "status": pl.status, "goal": pl.goal}
                   for pl in r.plans.order_by("created_at")],
         "actions": [action_summary(a) for a in r.actions.order_by("created_at")],
@@ -370,3 +373,18 @@ def audit_out(ev) -> dict[str, Any]:
         "payload_hash": ev.payload_hash,
     }
 
+
+
+def run_brief(r) -> dict[str, Any]:
+    """Red u vremenskoj liniji persone — bez planova i akcija."""
+    summary = r.summary_json or {}
+    return {
+        "run_id": r.public_id,
+        "started_at": _iso(r.started_at),
+        "wake_priority": r.wake_priority,
+        "decision": r.decision,
+        "reason_code": r.reason_code or None,
+        "activity": summary.get("activity"),
+        "window": (summary.get("window") or {}).get("template"),
+        "next_wake_at": summary.get("next_wake_at"),
+    }

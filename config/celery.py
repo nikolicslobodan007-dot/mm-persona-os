@@ -23,6 +23,7 @@ app.autodiscover_tasks()
 #: među deset kanonskih i nijedan worker ga ne sluša, pa bi task tiho čekao.
 app.conf.task_routes = {
     "observability.publish_outbox": {"queue": QueueName.CONTROL.value},
+    "behaviour.scan_due": {"queue": QueueName.PERSONA_SCHEDULED.value},
 }
 app.conf.task_default_queue = QueueName.MAINTENANCE.value
 
@@ -34,5 +35,11 @@ app.conf.beat_schedule = {
         "task": "observability.publish_outbox",
         "schedule": 30.0,
         "options": {"queue": QueueName.CONTROL.value},
+    },
+    # Canon §11.1 — due resolver svakih 30 s, lookahead 90 s.
+    "scan-due-personas": {
+        "task": "behaviour.scan_due",
+        "schedule": 30.0,
+        "options": {"queue": QueueName.PERSONA_SCHEDULED.value, "expires": 25},
     },
 }
