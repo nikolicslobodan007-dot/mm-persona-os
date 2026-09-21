@@ -17,8 +17,12 @@ STAMP="$(date +%Y%m%d-%H%M)"
 cd "$APP_DIR"
 mkdir -p "$BACKUP_DIR"
 
-# shellcheck disable=SC1091
-set -a; source .env.prod; set +a
+# .env.prod je Docker env-file, ne bash skripta: vrednosti sa razmakom ili
+# zagradom ruše `source`. Zato čitamo samo dve promenljive koje nam trebaju.
+env_get() { grep -E "^$1=" .env.prod | tail -1 | cut -d= -f2- | tr -d "\"'"; }
+POSTGRES_USER="$(env_get POSTGRES_USER)"
+POSTGRES_DB="$(env_get POSTGRES_DB)"
+[[ -n "$POSTGRES_USER" && -n "$POSTGRES_DB" ]] || { echo "POSTGRES_USER/DB nisu u .env.prod" >&2; exit 1; }
 
 echo "[$(date -Is)] start"
 
