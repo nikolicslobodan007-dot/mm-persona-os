@@ -452,3 +452,12 @@ class TestAudit:
 
     def test_hash_is_deterministic(self):
         assert audit.sha256_of({"b": 1, "a": 2}) == audit.sha256_of({"a": 2, "b": 1})
+
+
+@pytest.mark.django_db
+def test_home_page_shows_only_name_and_health(db):
+    r = APIClient().get("/")
+    assert r.status_code == 200
+    body = r.content.decode()
+    assert "MM Persona OS" in body and "P-0000" not in body
+    assert r["X-Robots-Tag"] == "noindex, nofollow"

@@ -57,6 +57,11 @@ RUN_ID_OPTIONAL: frozenset[str] = frozenset(
         "killswitch.cleared",
         "cost.recorded",
         "memory.consolidated",
+        # Canon §7.1 i §2 (red 117): run_id je obavezan samo za orchestration,
+        # runtime i policy evente unutar buđenja. Memorija upisana ručno ili iz
+        # batch posla nema run (ADR-0006).
+        "memory.created",
+        "memory.contradiction_detected",
     }
 )
 

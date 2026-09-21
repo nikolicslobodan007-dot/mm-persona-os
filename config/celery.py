@@ -24,6 +24,7 @@ app.autodiscover_tasks()
 app.conf.task_routes = {
     "observability.publish_outbox": {"queue": QueueName.CONTROL.value},
     "behaviour.scan_due": {"queue": QueueName.PERSONA_SCHEDULED.value},
+    "memory.maintenance": {"queue": QueueName.MEMORY.value},
 }
 app.conf.task_default_queue = QueueName.MAINTENANCE.value
 
@@ -41,5 +42,11 @@ app.conf.beat_schedule = {
         "task": "behaviour.scan_due",
         "schedule": 30.0,
         "options": {"queue": QueueName.PERSONA_SCHEDULED.value, "expires": 25},
+    },
+    # Memory v0.1 §14 — istek radne memorije; konsolidacija i bleđenje u 03h lokalno.
+    "memory-maintenance": {
+        "task": "memory.maintenance",
+        "schedule": 3600.0,
+        "options": {"queue": QueueName.MEMORY.value, "expires": 3000},
     },
 }

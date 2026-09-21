@@ -1049,3 +1049,75 @@ __all__ += [
     "WAKEABLE_BY_SCHEDULER",
     "WAKEABLE_BY_OPERATOR",
 ]
+
+
+# ---------------------------------------------------------------- F4 (ADR-0006)
+# Memory engine: profili pretrage, pragovi upisa, budžet konteksta.
+# Izvor: Memory & Knowledge Engine v0.1 §5.2, §7.1–7.2, §12.1.
+
+
+class RetrievalProfile(CanonEnum):
+    """Memory v0.1 §7.2 — isti retriever, različite težine i top-k."""
+
+    REPLY_CONTEXT = "reply_context"
+    DAILY_PLANNER = "daily_planner"
+    CONTENT_CREATION = "content_creation"
+    RESEARCH = "research"
+    REFLECTION = "reflection"
+
+
+#: Profil → svrha LLM poziva (za `MemoryContextPack.purpose`).
+PROFILE_PURPOSE: dict[RetrievalProfile, LLMPurpose] = {
+    RetrievalProfile.REPLY_CONTEXT: LLMPurpose.REPLY,
+    RetrievalProfile.DAILY_PLANNER: LLMPurpose.PLANNING,
+    RetrievalProfile.CONTENT_CREATION: LLMPurpose.CONTENT_DRAFT,
+    RetrievalProfile.RESEARCH: LLMPurpose.SUMMARISE,
+    RetrievalProfile.REFLECTION: LLMPurpose.SUMMARISE,
+}
+
+#: Memory v0.1 §7.2 — podrazumevani top-k po profilu (gornja granica opsega).
+PROFILE_TOP_K: dict[RetrievalProfile, int] = {
+    RetrievalProfile.REPLY_CONTEXT: 14,
+    RetrievalProfile.DAILY_PLANNER: 20,
+    RetrievalProfile.CONTENT_CREATION: 30,
+    RetrievalProfile.RESEARCH: 40,
+    RetrievalProfile.REFLECTION: 50,
+}
+
+#: Memory v0.1 §12.1 — ciljni broj tokena memorije po profilu (gornja granica).
+PROFILE_MEMORY_TOKENS: dict[RetrievalProfile, int] = {
+    RetrievalProfile.REPLY_CONTEXT: 1800,
+    RetrievalProfile.DAILY_PLANNER: 4000,
+    RetrievalProfile.CONTENT_CREATION: 3000,
+    RetrievalProfile.RESEARCH: 8000,
+    RetrievalProfile.REFLECTION: 4000,
+}
+
+#: Memory v0.1 §5.2 — minimalni eligibility M za trajni upis, po tipu.
+#: Working je privremen i ide uvek; ostali moraju da zasluže mesto.
+MEMORY_ELIGIBILITY_MIN: dict[MemoryType, float] = {
+    MemoryType.WORKING: 0.0,
+    MemoryType.EPISODIC: 0.25,
+    MemoryType.SEMANTIC: 0.30,
+    MemoryType.PROCEDURAL: 0.30,
+    MemoryType.SOCIAL: 0.25,
+    MemoryType.CONTENT: 0.20,
+}
+
+#: Memorija sa `sensitivity` iznad ovoga ulazi samo u svrhe sa liste ispod.
+SENSITIVE_FROM = 0.70
+SENSITIVE_ALLOWED_PURPOSES: frozenset[LLMPurpose] = frozenset({LLMPurpose.SUMMARISE})
+
+#: Memory v0.1 §8 — ispod ove efektivne važnosti memorija se arhivira.
+ARCHIVE_BELOW_EFFECTIVE_SALIENCE = 0.05
+
+__all__ += [
+    "RetrievalProfile",
+    "PROFILE_PURPOSE",
+    "PROFILE_TOP_K",
+    "PROFILE_MEMORY_TOKENS",
+    "MEMORY_ELIGIBILITY_MIN",
+    "SENSITIVE_FROM",
+    "SENSITIVE_ALLOWED_PURPOSES",
+    "ARCHIVE_BELOW_EFFECTIVE_SALIENCE",
+]

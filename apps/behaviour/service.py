@@ -123,10 +123,11 @@ def wake(
             event=(engine.PendingEvent(event.public_id, relevance or 0.0) if event else None),
         )
         d = engine.decide(snap)
-        return _persist(persona, state, d, reason, seed, now, wake_key, event)
+        return _persist(persona, state, d, reason, seed, now, wake_key, event, relevance)
 
 
-def _persist(persona, state, d: engine.Decision, reason, seed, now, wake_key, event) -> AgentRun:
+def _persist(persona, state, d: engine.Decision, reason, seed, now, wake_key, event,
+             relevance: float | None = None) -> AgentRun:
     trace_hex = current().trace_id
     run = AgentRun.objects.create(
         public_id=I.ulid_public_id(I.EntityKind.AGENT_RUN, now),
@@ -204,4 +205,44 @@ def _persist(persona, state, d: engine.Decision, reason, seed, now, wake_key, ev
         )
         bus.emit("plan.created", {"plan_id": plan.public_id, "step_count": 1},
                  persona_id=persona.public_id, run_id=run.public_id)
+    _remember(persona, run, d, event, now, relevance or 0.0)
     return run
+
+
+_ACTIVITY_TITLE = {
+    E.ActivityKind.READ: "Čitanje", E.ActivityKind.RESEARCH: "Istraživanje",
+    E.ActivityKind.WORK: "Radni blok", E.ActivityKind.POST: "Nacrt objave",
+    E.ActivityKind.SOCIAL: "Društveni blok", E.ActivityKind.INBOX: "Pregled pošte",
+}
+
+
+def _remember(persona, run, d: engine.Decision, event, now, relevance: float) -> None:
+    """F4 (ADR-0006): šta je persona uradila postaje epizoda. Eligibility
+    odlučuje da li je vredno pamćenja; dnevna konsolidacija ih sažima."""
+    from apps.memory.writer import MemoryInput, MemoryRejected, write
+
+    payload = (event.payload or {}) if event else {}
+    topics = [str(t) for t in payload.get("topics", [])]
+    synthetic = payload.get("source") == "simulation"
+    kind = E.SourceKind.SYNTHETIC_WORLD_EVENT if synthetic else E.SourceKind.SYSTEM_OBSERVATION
+    if d.decision == E.WakeDecision.ACT and d.kind:
+        title = (f"Pročitala: {event.event_type}" if event else _ACTIVITY_TITLE[d.kind])
+        body = (f"Teme: {', '.join(topics)}." if topics else
+                f"{_ACTIVITY_TITLE[d.kind]} u prozoru {d.window.template} "
+                f"{d.window.start:%H:%M}–{d.window.end:%H:%M}." if d.window else title)
+        salience = relevance if event else 0.35
+    elif d.reason == E.DecisionReason.EVENT_DEFERRED and event:
+        title, body, salience = (f"Zapažena vest, odložena: {event.event_type}",
+                                 f"Teme: {', '.join(topics)}. Odložila jer je bila zauzeta.",
+                                 relevance * 0.8)
+    else:
+        return
+    try:
+        write(persona, MemoryInput(
+            memory_type=E.MemoryType.EPISODIC, title=title, content=body,
+            source_kind=kind, provenance=E.Provenance.OBSERVED, salience=salience,
+            tags=topics or ([d.kind.value] if d.kind else []), event_time=now,
+            source_event_id=f"run:{run.public_id}", source_ref=run.public_id, run=run,
+        ), now=now)
+    except MemoryRejected:
+        pass

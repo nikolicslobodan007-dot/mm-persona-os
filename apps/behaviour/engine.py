@@ -78,7 +78,8 @@ class Decision:
             "reason_code": self.reason.value,
             "activity": self.kind.value if self.kind else None,
             "window": (
-                {"id": self.window.id, "template": self.window.template,
+                {"id": self.window.id, "key": self.window.key,
+                 "template": self.window.template,
                  "kind": self.window.kind.value,
                  "start": self.window.start.isoformat(), "end": self.window.end.isoformat(),
                  "probability": str(self.window.probability)}
@@ -157,16 +158,16 @@ def decide(snap: Snapshot) -> Decision:
     def close(reason: E.DecisionReason) -> Decision:
         d.decision, d.reason = E.WakeDecision.SKIP, reason
         _apply(d, state, "window.closed",
-               {"window_id": window.id, "decision": E.WakeDecision.SKIP.value})
+               {"window_id": window.key, "decision": E.WakeDecision.SKIP.value})
         return d
 
-    if window.id in windows_today:
+    if window.key in windows_today:
         d.reason = E.DecisionReason.WINDOW_LIMIT_REACHED
         return d
     if window.kind == E.ActivityKind.REST:
         return close(E.DecisionReason.REST_WINDOW)
 
-    d.roll = roll(snap.seed, snap.persona_id, local_date, window.id)
+    d.roll = roll(snap.seed, snap.persona_id, local_date, window.key)
     if not forced and d.roll >= float(window.probability):
         return close(E.DecisionReason.ROUTINE_NOT_SELECTED)
 
@@ -190,5 +191,5 @@ def decide(snap: Snapshot) -> Decision:
     d.decision, d.kind = E.WakeDecision.ACT, window.kind
     d.reason = E.DecisionReason.OPERATOR_TASK if forced else E.DecisionReason.ROUTINE_WINDOW_DUE
     _apply(d, state, "activity.completed",
-           {"kind": window.kind.value, "at": snap.now.isoformat(), "window_id": window.id})
+           {"kind": window.kind.value, "at": snap.now.isoformat(), "window_id": window.key})
     return d

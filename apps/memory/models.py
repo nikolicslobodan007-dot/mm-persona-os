@@ -75,6 +75,20 @@ class MemoryItem(UUIDModel):
         related_name="supersedes",
     )
 
+    # --- F4 (ADR-0006)
+    # Memory v0.1 §14.1 — isti izvorni događaj ne pravi dva zapisa posle retry-a.
+    source_event_id = models.CharField(max_length=200, null=True, blank=True)
+    # SHA-256 normalizovanog sadržaja: dedup i „ne računaj vektor ponovo".
+    content_hash = models.CharField(max_length=64, blank=True)
+    tags = JSON_LIST(help_text="Teme; po njima konsolidacija grupiše epizode.")
+    # Memory v0.1 §3.3, §10 — semantička tvrdnja: subjekat + predikat + vrednost.
+    # Ista (subjekat, predikat) sa drugom vrednošću je protivrečnost.
+    assertion_subject = models.CharField(max_length=220, blank=True)
+    assertion_predicate = models.CharField(max_length=120, blank=True)
+    assertion_value = models.JSONField(null=True, blank=True)
+    valid_from = models.DateTimeField(null=True, blank=True)
+    valid_to = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         db_table = "memory_item"
         indexes = [
@@ -84,8 +98,25 @@ class MemoryItem(UUIDModel):
             models.Index(fields=["persona", "memory_type", "created_at"]),
             models.Index(fields=["persona", "status", "expires_at"]),
             models.Index(fields=["persona", "salience"]),
+            models.Index(
+                fields=["persona", "assertion_subject", "assertion_predicate"],
+                name="memory_assertion_idx",
+                condition=~models.Q(assertion_predicate=""),
+            ),
+            models.Index(fields=["persona", "content_hash"], name="memory_content_hash_idx"),
         ]
         constraints = [
+            models.UniqueConstraint(
+                fields=["persona", "source_event_id", "memory_type"],
+                condition=models.Q(source_event_id__isnull=False),
+                name="memory_unique_source_event",
+            ),
+            models.CheckConstraint(
+                # Tvrdnja bez subjekta ne može da se uporedi ni sa čim.
+                condition=models.Q(assertion_predicate="")
+                | ~models.Q(assertion_subject=""),
+                name="memory_assertion_has_subject",
+            ),
             models.CheckConstraint(
                 condition=models.Q(salience__gte=0) & models.Q(salience__lte=1),
                 name="memory_salience_unit",
@@ -184,6 +215,10 @@ class MemoryEmbedding(UUIDModel):
         help_text="Zapisano uz vektor: Canon §10.5 traži novu kolonu, ne izmenu."
     )
     embedding = VectorField(dimensions=settings.EMBEDDING_DIM)
+    text_hash = models.CharField(
+        max_length=64, blank=True,
+        help_text="Memory v0.1 §6 — isti tekst i isti model → vektor se ne računa ponovo.",
+    )
 
     class Meta:
         db_table = "memory_embedding"

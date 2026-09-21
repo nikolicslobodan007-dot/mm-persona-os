@@ -50,6 +50,37 @@ class AuditListView(PersonaOSView):
         return ok([audit_out(e) for e in rows], extra_meta={"page": page})
 
 
+_HOME = """<!doctype html><html lang="sr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>MM Persona OS</title>
+<style>body{{font:16px/1.5 system-ui,sans-serif;max-width:40rem;margin:4rem auto;padding:0 1rem;
+color:#1b1f24;background:#fafafa}}h1{{font-size:1.4rem;margin:0 0 .25rem}}
+.s{{display:inline-block;padding:.1rem .5rem;border-radius:.3rem;background:{bg};color:#fff}}
+small{{color:#666}}</style></head><body><h1>MM Persona OS</h1>
+<p>Interni sistem Web Korporacije. Pristup samo uz nalog.</p>
+<p>Status: <span class="s">{status}</span> <small>aplikacija ok · baza {db}</small></p>
+</body></html>"""
+
+
+def home(request):
+    """Početna strana — samo naziv i zdravlje, bez ikakvih podataka o personama.
+    Nije zaštićena prijavom, zato ne sme da otkrije ništa više od ovoga."""
+    from django.http import HttpResponse
+
+    try:
+        with connection.cursor() as c:
+            c.execute("select 1")
+        db = "ok"
+    except Exception:  # noqa: BLE001
+        db = "nedostupna"
+    good = db == "ok"
+    html = _HOME.format(status="radi" if good else "delimično", db=db,
+                        bg="#1a7f37" if good else "#b35900")
+    resp = HttpResponse(html, status=200 if good else 503)
+    resp["X-Robots-Tag"] = "noindex, nofollow"
+    return resp
+
+
 def healthz(request):
     """Za Caddy i ručnu proveru. Van `/api/v1/` jer nije deo ugovora (Canon §8.2)."""
     try:

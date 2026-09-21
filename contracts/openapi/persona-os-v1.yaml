@@ -90,6 +90,56 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/context/build:
+    post:
+      operationId: context_build
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      tags:
+      - context
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContextInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/memories/{memory_id}/supersede:
+    post:
+      operationId: memories_supersede
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: path
+        name: memory_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - memories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupersedeInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/ops/personas/{public_id}/timeline:
     get:
       operationId: ops_persona_timeline
@@ -280,6 +330,62 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/personas/{public_id}/memories:
+    post:
+      operationId: memories_create
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - personas
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemoryInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/personas/{public_id}/memories/query:
+    post:
+      operationId: memories_query
+      description: Posle prijave upisuje principala u kontekst i proverava `X-Actor-ID`.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - personas
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/personas/{public_id}/snapshot:
     get:
       operationId: personas_snapshot
@@ -348,6 +454,45 @@ paths:
           description: ''
 components:
   schemas:
+    AssertionInRequest:
+      type: object
+      properties:
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 220
+        predicate:
+          type: string
+          minLength: 1
+          maxLength: 120
+        value: {}
+      required:
+      - predicate
+      - subject
+      - value
+    ContextInRequest:
+      type: object
+      properties:
+        persona_id:
+          type: string
+          minLength: 1
+        run_id:
+          type: string
+          minLength: 1
+        profile:
+          $ref: '#/components/schemas/ProfileEnum'
+        query:
+          type: string
+          default: ''
+          maxLength: 4000
+        max_tokens:
+          type: integer
+          maximum: 32000
+          minimum: 200
+      required:
+      - persona_id
+      - profile
+      - run_id
     DisclosureModeEnum:
       enum:
       - ALWAYS_VISIBLE
@@ -358,6 +503,92 @@ components:
         * `ALWAYS_VISIBLE` - ALWAYS_VISIBLE
         * `PROFILE_ONLY` - PROFILE_ONLY
         * `ON_REQUEST` - ON_REQUEST
+    MemoryInRequest:
+      type: object
+      properties:
+        memory_type:
+          $ref: '#/components/schemas/MemoryTypeEnum'
+        content:
+          type: string
+          minLength: 1
+          maxLength: 8000
+        title:
+          type: string
+          minLength: 1
+          default: ''
+          maxLength: 220
+        salience:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          default: 0.6
+        confidence:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+        sensitivity:
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          default: 0.0
+        source_kind:
+          allOf:
+          - $ref: '#/components/schemas/SourceKindEnum'
+          default: first_party_user_input
+        provenance:
+          allOf:
+          - $ref: '#/components/schemas/ProvenanceEnum'
+          default: user_provided
+        tags:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 60
+          maxItems: 20
+        assertion:
+          $ref: '#/components/schemas/AssertionInRequest'
+        pinned:
+          type: boolean
+          default: false
+      required:
+      - content
+      - memory_type
+    MemoryTypeEnum:
+      enum:
+      - working
+      - episodic
+      - semantic
+      - procedural
+      - social
+      - content
+      type: string
+      description: |-
+        * `working` - working
+        * `episodic` - episodic
+        * `semantic` - semantic
+        * `procedural` - procedural
+        * `social` - social
+        * `content` - content
+    MemoryTypesEnum:
+      enum:
+      - working
+      - episodic
+      - semantic
+      - procedural
+      - social
+      - content
+      type: string
+      description: |-
+        * `working` - working
+        * `episodic` - episodic
+        * `semantic` - semantic
+        * `procedural` - procedural
+        * `social` - social
+        * `content` - content
     PatchedPersonaPatchInRequest:
       type: object
       description: PATCH /api/v1/personas/{public_id}. Samo polja bez sopstvenog toka
@@ -440,6 +671,84 @@ components:
         * `BRAND_AGENT` - BRAND_AGENT
         * `ASSISTANT` - ASSISTANT
         * `SIMULATION_ONLY` - SIMULATION_ONLY
+    ProfileEnum:
+      enum:
+      - reply_context
+      - daily_planner
+      - content_creation
+      - research
+      - reflection
+      type: string
+      description: |-
+        * `reply_context` - reply_context
+        * `daily_planner` - daily_planner
+        * `content_creation` - content_creation
+        * `research` - research
+        * `reflection` - reflection
+    ProvenanceEnum:
+      enum:
+      - observed
+      - user_provided
+      - generated
+      - inferred
+      type: string
+      description: |-
+        * `observed` - observed
+        * `user_provided` - user_provided
+        * `generated` - generated
+        * `inferred` - inferred
+    QueryInRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          maxLength: 2000
+        profile:
+          allOf:
+          - $ref: '#/components/schemas/ProfileEnum'
+          default: research
+        memory_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemoryTypesEnum'
+        top_k:
+          type: integer
+          maximum: 100
+          minimum: 1
+      required:
+      - query
+    SourceKindEnum:
+      enum:
+      - system_observation
+      - first_party_user_input
+      - public_web_source
+      - llm_inference
+      - synthetic_world_event
+      type: string
+      description: |-
+        * `system_observation` - system_observation
+        * `first_party_user_input` - first_party_user_input
+        * `public_web_source` - public_web_source
+        * `llm_inference` - llm_inference
+        * `synthetic_world_event` - synthetic_world_event
+    SupersedeInRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 8000
+        title:
+          type: string
+          minLength: 1
+          maxLength: 220
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required:
+      - content
+      - reason
   securitySchemes:
     tokenAuth:
       type: apiKey

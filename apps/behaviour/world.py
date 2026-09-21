@@ -38,9 +38,16 @@ class Route:
     outcome: str  # ignore / store_only / wake
 
 
+#: Kad locale nema region („sr-Latn"), jezik određuje zemlju.
+_LANG_COUNTRY = {"sr": "RS", "hr": "HR", "bs": "BA", "sl": "SI", "mk": "MK",
+                 "it": "IT", "de": "DE", "fr": "FR", "es": "ES"}
+
+
 def _persona_geo(p: Persona) -> set[str]:
-    region = (p.primary_locale.split("-")[-1] if "-" in p.primary_locale else "").upper()
-    return {region} if len(region) == 2 else set()
+    parts = p.primary_locale.replace("_", "-").split("-")
+    region = next((x.upper() for x in parts[1:] if len(x) == 2 and x.isalpha()), "")
+    region = region or _LANG_COUNTRY.get(parts[0].lower(), "")
+    return {region} if region else set()
 
 
 def relevance(p: Persona, topics: list[str], geo: list[str], occurred_at: datetime,
@@ -99,6 +106,7 @@ def ingest(*, event_type: str, topics: list[str], geo: list[str] | None = None,
             routes.append(Route(p.public_id, r, "ignore"))
         elif r < E.WORLD_RELEVANCE_WAKE_FROM or woken >= FANOUT_CAP:
             routes.append(Route(p.public_id, r, "store_only"))
+            _store(p, ev, topics, source, r, now)
         else:
             woken += 1
             routes.append(Route(p.public_id, r, "wake"))
@@ -108,3 +116,21 @@ def ingest(*, event_type: str, topics: list[str], geo: list[str] | None = None,
 def pending_wakes(routes: list[Route]) -> list[Route]:
     return [r for r in routes if r.outcome == "wake"]
 
+
+
+def _store(p: Persona, ev: WorldEvent, topics: list[str], source: str, r: float,
+           now: datetime) -> None:
+    """„store_only" (§12): ne budi personu, ali zapamti da se desilo (F4)."""
+    from apps.memory.writer import MemoryInput, MemoryRejected, write
+
+    kind = (E.SourceKind.SYNTHETIC_WORLD_EVENT if source == "simulation"
+            else E.SourceKind.SYSTEM_OBSERVATION)
+    try:
+        write(p, MemoryInput(
+            memory_type=E.MemoryType.EPISODIC, title=f"Zapažena vest: {ev.event_type}",
+            content=f"Teme: {', '.join(topics)}. Izvor: {source}.", source_kind=kind,
+            provenance=E.Provenance.OBSERVED, salience=r, tags=topics, event_time=now,
+            source_event_id=f"world:{ev.public_id}", source_ref=ev.public_id,
+        ), now=now)
+    except MemoryRejected:
+        pass

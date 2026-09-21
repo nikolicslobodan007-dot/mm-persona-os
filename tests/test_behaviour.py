@@ -401,3 +401,18 @@ class TestBehaviourApi:
         assert "REST_WINDOW" in {r["reason_code"] for r in body["data"]}
         skips = c.get("/api/v1/ops/personas/P-00001/timeline", {"decision": "SKIP"}).json()["data"]
         assert skips and all(r["decision"] == "SKIP" for r in skips)
+
+
+@requires_db
+@pytest.mark.django_db
+def test_same_story_after_reseed(mila):
+    """Kockica zavisi od ključa prozora, ne od UUID-a reda — ista priča i posle
+    `seed_agent_001 --reset` ili na drugom serveru."""
+    def story():
+        out = io.StringIO()
+        call_command("simulate", persona="P-00001", days=3, start="2026-09-21",
+                     seed=20260914, stdout=out)
+        return out.getvalue()
+    first = story()
+    call_command("seed_agent_001", reset=True, stdout=io.StringIO())
+    assert story() == first

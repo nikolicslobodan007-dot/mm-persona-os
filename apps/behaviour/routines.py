@@ -31,6 +31,12 @@ class Window:
     probability: Decimal
     constraints: dict = field(default_factory=dict, hash=False, compare=False)
 
+    @property
+    def key(self) -> str:
+        """Stabilan identitet prozora — ne zavisi od UUID-a reda u bazi, pa isti
+        seed daje istu priču i posle ponovnog seed-a ili na drugom serveru."""
+        return f"{self.template}:{self.kind.value}:{self.start.strftime('%H%M')}"
+
     def applies_on(self, d: date) -> bool:
         return bool(self.day_mask & (1 << d.weekday()))
 

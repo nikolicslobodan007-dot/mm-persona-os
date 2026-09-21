@@ -5,6 +5,12 @@ from __future__ import annotations
 from django.urls import path
 
 from api.views.behaviour import BehaviourTickView, PersonaTimelineView, PersonaWakeView
+from api.views.memory import (
+    ContextBuildView,
+    MemoryCreateView,
+    MemoryQueryView,
+    MemorySupersedeView,
+)
 from api.views.ops import AuditListView
 from api.views.orchestration import ActionDetailView, ActionPolicyTraceView, RunDetailView
 from api.views.personas import PersonaDetailView, PersonaListView, PersonaSnapshotView
@@ -19,6 +25,12 @@ urlpatterns = [
          name="persona-behaviour-tick"),
     path("ops/personas/<str:public_id>/timeline", PersonaTimelineView.as_view(),
          name="ops-persona-timeline"),
+    path("personas/<str:public_id>/memories", MemoryCreateView.as_view(), name="memories"),
+    path("personas/<str:public_id>/memories/query", MemoryQueryView.as_view(),
+         name="memories-query"),
+    path("context/build", ContextBuildView.as_view(), name="context-build"),
+    path("memories/<str:memory_id>/supersede", MemorySupersedeView.as_view(),
+         name="memory-supersede"),
     path("runs/<str:run_id>", RunDetailView.as_view(), name="run-detail"),
     path("actions/<str:action_id>", ActionDetailView.as_view(), name="action-detail"),
     path("actions/<str:action_id>/policy-trace", ActionPolicyTraceView.as_view(),

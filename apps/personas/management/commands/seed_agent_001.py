@@ -151,6 +151,10 @@ class Command(BaseCommand):
         self._actor(persona)
         self._channel(persona)
         self._memories(persona)
+        # F4 — vektori i hash sadržaja za seed memorije (ADR-0006).
+        from apps.memory.lifecycle import reindex
+
+        reindex(persona)
         rules = self._policy_rules()
 
         self.stdout.write(
