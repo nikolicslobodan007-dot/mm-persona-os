@@ -36,3 +36,10 @@ Na strani persone postoji forma **„Napiši nacrt sada”**, sa temom koja nije
 
 - Model može da se proba kad god treba, bez menjanja rutine.
 - 385 testova (dodato 5).
+
+## Dopuna 22.09. — oblik teksta iz modela
+
+Prvi nacrt napisan modelom počeo je naslovom `**Mila Vuković (AI)**`, u markdown-u, i imao je jednu gramatičku grešku („po prideva”).
+
+- **System prompt:** vrati samo tekst objave, bez naslova, imena, potpisa, markdown-a i hashtag-ova, jer potpis i AI oznaku dodaje sistem; tri do pet rečenica (problem, primer, zaključak); memoriju koristi kao znanje, ne prepisuj je doslovno; srpski, latinica, pravilna gramatika i padeži.
+- **`clean_generated`:** ako model ipak doda prvi red sa imenom persone ili markdown oznake (`**`, `#`, `- `), sistem ih uklanja pre provera. Na tekst iz šablona se ne primenjuje.

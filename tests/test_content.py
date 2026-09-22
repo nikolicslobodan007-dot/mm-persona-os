@@ -228,6 +228,12 @@ class TestDraft:
             assert m.content.rstrip(".") not in item.body
         assert "Pre svake objave" not in item.body
 
+    def test_model_heading_and_markdown_are_removed(self, mila):
+        raw = ("**Mila Vuković (AI)**\n\nB2B kupci biraju po **dokazu**.\n\n"
+               "# Zaključak\n- izvor uvek.")
+        assert content.clean_generated(raw, mila) == (
+            "B2B kupci biraju po dokazu.\n\nZaključak\nizvor uvek.")
+
     def test_prohibited_text_is_rejected(self, mila):
         item = _draft(body="Ja sam prava osoba, ne AI.")
         assert item.status == CS.REJECTED

@@ -104,12 +104,32 @@ def operator_run(persona: Persona, now: datetime) -> AgentRun:
 
 
 def _system_prompt(persona: Persona) -> str:
+    lang = ("srpski, latinica, pravilna gramatika i padeži"
+            if persona.primary_locale.lower().startswith("sr") else persona.primary_locale)
     return "\n".join([
         f"Pišeš kao {persona.display_name}, AI persona. Ne tvrdi da si čovek.",
         "Piši kratko, konkretno, bez preuveličavanja. Brojke samo sa izvorom.",
         "Ne pominji stvarne osobe imenom. Ne traži lične podatke od čitalaca.",
-        f"Jezik: {persona.primary_locale}.",
+        "Vrati samo tekst objave: bez naslova, bez svog imena i potpisa, bez "
+        "markdown-a (bez **, #, listi), bez hashtag-ova. Potpis i AI oznaku sistem dodaje sam.",
+        "Tri do pet kratkih rečenica: jedan problem, jedan konkretan primer, jedan zaključak.",
+        "Kontekst iz memorije koristi kao znanje, ne prepisuj ga doslovno.",
+        f"Jezik: {lang}.",
     ])
+
+
+_MD = re.compile(r"(\*\*|__|^#+\s*|^[-*]\s+)", re.M)
+
+
+def clean_generated(text: str, persona: Persona) -> str:
+    """Model ponekad doda naslov sa imenom ili markdown — objava ga ne prikazuje."""
+    lines = text.strip().splitlines()
+    name = persona.display_name.split("(")[0].strip().lower()
+    while lines and (not lines[0].strip() or name in lines[0].lower()
+                     and len(lines[0]) <= len(persona.display_name) + 6):
+        lines.pop(0)
+    out = _MD.sub("", "\n".join(lines))
+    return re.sub(r"\n{3,}", "\n\n", out).strip()
 
 
 def _repetition(persona: Persona, text: str, now: datetime,
@@ -159,6 +179,8 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
                 brief={"topic": topic, "angle": angle, "facts": facts,
                        "language": persona.primary_locale})
             body, provenance = gen.text, E.Provenance.GENERATED
+            if gen.provider != gateway.LOCAL_PROVIDER:
+                body = clean_generated(body, persona)
         body = body.strip()
         disclose = persona.disclosure_mode == E.DisclosureMode.ALWAYS_VISIBLE.value
         if disclose and disclosure_line(persona) not in body:
