@@ -29,6 +29,11 @@
     <h2 class="mt16">Nalozi</h2>
     <table>{% for a in accounts %}<tr><td>{{ a.channel_type }}</td><td class="small">{{ a.handle }}</td>
       <td><span class="pill {{ a.status|status_tone }}">{{ a.status }}</span></td></tr>{% endfor %}</table>
+    <h2 class="mt16">Ključ za model</h2>
+    <table>{% for route, source, env in llm_keys %}<tr><td class="mono small">{{ route }}</td>
+      <td>{% if source == "persona" %}<span class="pill ok">svoj</span>{% elif source == "shared" %}<span class="pill warn">zajednički</span>{% else %}<span class="pill bad">nema — šablon</span>{% endif %}</td>
+      <td class="mono small muted">{{ env }}</td></tr>
+    {% empty %}<tr><td class="sub">Nema uključenog spoljnog modela — piše lokalni šablon.</td></tr>{% endfor %}</table>
     <div class="sub mt8">Memorija: {% for k, v in memories.items %}{{ k }} {{ v }}{% if not forloop.last %} · {% endif %}{% endfor %}</div>
   </div>
 </div>

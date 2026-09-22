@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import time
 import urllib.error
 import urllib.request
@@ -107,11 +108,42 @@ def _post_json(url: str, headers: dict, body: dict, timeout: int) -> dict:
         raise LLMError("NETWORK", str(e)[:300]) from e
 
 
-def _call_external(route: LLMRoute, system: str, prompt: str) -> tuple[str, int, int, str]:
+def persona_env_name(provider: str, persona) -> str | None:
+    """Ime promenljive za ključ jedne persone: `ANTHROPIC_API_KEY` → `ANTHROPIC_API_KEY_P00001`.
+
+    Samo za `env:` reference. U bazi nema ni ključa ni imena — pravilo je u kodu
+    (ADR-0013), a ključ je samo u `.env.prod`.
+    """
+    base = getattr(settings, "LLM_CREDENTIALS", {}).get(provider, "")
+    if persona is None or not base.startswith("env:"):
+        return None
+    return f"{base[4:]}_{persona.public_id.replace('-', '')}"
+
+
+def credential_ref(provider: str, persona=None) -> tuple[str | None, str]:
+    """(referenca, izvor) — izvor je `persona`, `shared` ili `none`.
+
+    Persona sa svojim ključem koristi njega. Bez njega koristi zajednički, osim
+    ako je `LLM_REQUIRE_PERSONA_KEY=true` — tada ide na lokalni šablon.
+    """
+    name = persona_env_name(provider, persona)
+    if name and os.environ.get(name, "").strip():
+        return f"env:{name}", "persona"
+    if persona is not None and getattr(settings, "LLM_REQUIRE_PERSONA_KEY", False):
+        return None, "none"
+    base = getattr(settings, "LLM_CREDENTIALS", {}).get(provider)
+    return (base, "shared") if base else (None, "none")
+
+
+def _call_external(route: LLMRoute, system: str, prompt: str,
+                   persona=None) -> tuple[str, int, int, str]:
     from apps.runtime.transport import CredentialMissing, resolve_secret
 
+    ref, _source = credential_ref(route.provider, persona)
+    if ref is None:
+        raise LLMError("NO_PERSONA_KEY", persona.public_id if persona else "")
     try:
-        key = resolve_secret(settings.LLM_CREDENTIALS[route.provider])
+        key = resolve_secret(ref).strip()
     except CredentialMissing as e:
         raise LLMError("CREDENTIAL_MISSING", str(e)) from e
     max_out = route.max_output_tokens or 800
@@ -182,7 +214,7 @@ def generate(purpose: E.LLMPurpose, system: str, prompt: str, *, persona=None, r
                 continue
         try:
             if external:
-                text, tin, tout, finish = _call_external(route, system, prompt)
+                text, tin, tout, finish = _call_external(route, system, prompt, persona)
             else:
                 text = local.compose(purpose, brief or {}, prompt)
                 tin, tout, finish = _tokens(system + prompt), _tokens(text), "template"

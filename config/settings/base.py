@@ -200,4 +200,7 @@ CONTENT_ASYNC = False
 LLM_EXTERNAL_ENABLED = os.environ.get("LLM_EXTERNAL_ENABLED", "false").lower() == "true"
 # provider → credential_ref (env:/file:). Tajna nikad u bazi.
 LLM_CREDENTIALS = {"anthropic": "env:ANTHROPIC_API_KEY"}
+#: ADR-0013 — svaka persona može imati svoj ključ (`ANTHROPIC_API_KEY_P00001`).
+#: true = persona bez svog ključa ne koristi zajednički, nego lokalni šablon.
+LLM_REQUIRE_PERSONA_KEY = os.environ.get("LLM_REQUIRE_PERSONA_KEY", "false").lower() == "true"
 LLM_BASE_URLS: dict[str, str] = {}

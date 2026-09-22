@@ -140,6 +140,52 @@ class TestGateway:
         assert g.amount_eur_cents == 1
         assert CostLedger.objects.get().cost_bucket == E.CostBucket.LLM
 
+    def _keyed(self, mila, settings, monkeypatch):
+        settings.LLM_EXTERNAL_ENABLED = True
+        LLMRoute.objects.create(purpose=E.LLMPurpose.CONTENT_DRAFT, name="C",
+                                provider="anthropic", model_key="m", priority=1,
+                                data_training_allowed=True)
+        seen = []
+
+        def fake(url, headers, body, timeout):
+            seen.append(headers["x-api-key"])
+            return {"content": [{"type": "text", "text": "Iz modela."}],
+                    "usage": {"input_tokens": 10, "output_tokens": 5}, "stop_reason": "end_turn"}
+
+        monkeypatch.setattr(gateway, "_post_json", fake)
+        return seen
+
+    def test_persona_key_wins_over_shared(self, mila, settings, monkeypatch):
+        """ADR-0013 — svaka persona svoj ključ."""
+        seen = self._keyed(mila, settings, monkeypatch)
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "zajednicki")
+        monkeypatch.setenv("ANTHROPIC_API_KEY_P00001", "  milin  ")
+        with bind(actor_id="user:op"):
+            gateway.generate(E.LLMPurpose.CONTENT_DRAFT, "s", "p", persona=mila)
+            gateway.generate(E.LLMPurpose.CONTENT_DRAFT, "s", "p")
+        assert seen == ["milin", "zajednicki"]
+        assert gateway.credential_ref("anthropic", mila) == (
+            "env:ANTHROPIC_API_KEY_P00001", "persona")
+
+    def test_shared_key_when_persona_has_none(self, mila, settings, monkeypatch):
+        seen = self._keyed(mila, settings, monkeypatch)
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "zajednicki")
+        monkeypatch.delenv("ANTHROPIC_API_KEY_P00001", raising=False)
+        with bind(actor_id="user:op"):
+            gateway.generate(E.LLMPurpose.CONTENT_DRAFT, "s", "p", persona=mila)
+        assert seen == ["zajednicki"]
+
+    def test_require_persona_key_falls_back_to_template(self, mila, settings, monkeypatch):
+        seen = self._keyed(mila, settings, monkeypatch)
+        settings.LLM_REQUIRE_PERSONA_KEY = True
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "zajednicki")
+        monkeypatch.delenv("ANTHROPIC_API_KEY_P00001", raising=False)
+        with bind(actor_id="user:op"):
+            g = gateway.generate(E.LLMPurpose.CONTENT_DRAFT, "s", "p", persona=mila,
+                                 brief={"topic": "AI"})
+        assert seen == [] and g.provider == "local"
+        assert g.fallbacks == ["anthropic/m:NO_PERSONA_KEY"]
+
     def test_external_failure_falls_back_to_local(self, mila, settings, monkeypatch):
         settings.LLM_EXTERNAL_ENABLED = True
         monkeypatch.setenv("ANTHROPIC_API_KEY", "k")

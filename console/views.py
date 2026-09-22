@@ -236,11 +236,26 @@ def persona(request, public_id: str):
         "memories": dict(MemoryItem.objects.filter(persona=p).values_list("status")
                          .annotate(n=Count("id"))),
         "accounts": p.channel_accounts.all().order_by("channel_type"),
+        "llm_keys": _llm_keys(p),
         "can_draft": bool(_roles(request.user) & _DRAFTERS)
         and p.status in {E.PersonaStatus.READY.value, E.PersonaStatus.ACTIVE.value},
         "manual_limit": _manual_limit(),
     }
     return render(request, "console/persona.html", ctx)
+
+
+def _llm_keys(p) -> list[tuple[str, str, str]]:
+    """(ruta, izvor, ime promenljive) za svaku uključenu spoljnu rutu — bez tajne."""
+    from apps.llm_gateway import gateway
+    from apps.llm_gateway.models import LLMRoute
+
+    out = []
+    for r in (LLMRoute.objects.filter(is_enabled=True).exclude(provider=gateway.LOCAL_PROVIDER)
+              .order_by("priority")):
+        _ref, source = gateway.credential_ref(r.provider, p)
+        out.append((f"{r.provider}/{r.model_key}", source,
+                    gateway.persona_env_name(r.provider, p) or ""))
+    return out
 
 
 def _manual_limit() -> int:
