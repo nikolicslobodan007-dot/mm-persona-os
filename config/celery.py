@@ -28,6 +28,7 @@ app.conf.task_routes = {
     "policy.expire_approvals": {"queue": QueueName.APPROVAL.value},
     # runtime.execute se šalje eksplicitno na queue posla (browser/mail/channel).
     "runtime.dispatch_due": {"queue": QueueName.CONTROL.value},
+    "channels.mail_poll": {"queue": QueueName.MAIL.value},
     "content.draft_for_run": {"queue": QueueName.PERSONA_SCHEDULED.value},
     "runtime.reap_leases": {"queue": QueueName.MAINTENANCE.value},
     "runtime.reconcile": {"queue": QueueName.MAINTENANCE.value},
@@ -71,6 +72,12 @@ app.conf.beat_schedule = {
         "task": "runtime.reap_leases",
         "schedule": 30.0,
         "options": {"queue": QueueName.MAINTENANCE.value, "expires": 25},
+    },
+    # ADR-0015 — pristigla pošta persona (IMAP na sopstvenom Mailcow-u).
+    "channels-mail-poll": {
+        "task": "channels.mail_poll",
+        "schedule": 120.0,
+        "options": {"queue": QueueName.MAIL.value, "expires": 110},
     },
     "runtime-reconcile": {
         "task": "runtime.reconcile",

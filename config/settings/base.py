@@ -203,4 +203,16 @@ LLM_CREDENTIALS = {"anthropic": "env:ANTHROPIC_API_KEY"}
 #: ADR-0013 — svaka persona može imati svoj ključ (`ANTHROPIC_API_KEY_P00001`).
 #: true = persona bez svog ključa ne koristi zajednički, nego lokalni šablon.
 LLM_REQUIRE_PERSONA_KEY = os.environ.get("LLM_REQUIRE_PERSONA_KEY", "false").lower() == "true"
+
+# ---------------------------------------------------------------- ADR-0015 — sandučići
+#: Svi agenti žive na ovom domenu. Adresa je za primanje i odgovore; hladna
+#: pošta sa njega ostaje zabranjena (PRIMARY_COMPANY_DOMAINS, Canon §12.8).
+AGENT_MAIL_DOMAIN = os.environ.get("AGENT_MAIL_DOMAIN", "webkorporacija.com")
+MAILCOW_ENABLED = os.environ.get("MAILCOW_ENABLED", "false").lower() == "true"
+MAILCOW_URL = os.environ.get("MAILCOW_URL", "")          # npr. https://mail.primer.rs
+MAILCOW_IMAP_HOST = os.environ.get("MAILCOW_IMAP_HOST", "")  # prazno = host iz MAILCOW_URL
+MAILCOW_CREDENTIAL = "env:MAILCOW_API_KEY"
+MAILBOX_PASSWORD_CREDENTIAL = "env:MAILBOX_PASSWORD_SECRET"
+MAILBOX_QUOTA_MB = int(os.environ.get("MAILBOX_QUOTA_MB", "1024"))
+MAIL_BODY_RETENTION_DAYS = int(os.environ.get("MAIL_BODY_RETENTION_DAYS", "90"))
 LLM_BASE_URLS: dict[str, str] = {}

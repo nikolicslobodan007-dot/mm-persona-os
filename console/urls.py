@@ -17,6 +17,8 @@ urlpatterns = [
          name="console-persona-draft"),
     path("personas/<str:public_id>/lessons", views.persona_lesson_add,
          name="console-persona-lesson-add"),
+    path("personas/<str:public_id>/mailbox", views.persona_mailbox,
+         name="console-persona-mailbox"),
     path("lessons/<uuid:lesson_id>/toggle", views.lesson_toggle, name="console-lesson-toggle"),
     path("content", views.content, name="console-content"),
     path("actions/<str:action_id>", views.action, name="console-action"),

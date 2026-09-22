@@ -256,11 +256,23 @@ def persona(request, public_id: str):
         "accounts": p.channel_accounts.all().order_by("channel_type"),
         "llm_keys": _llm_keys(p),
         "lessons": _lessons(p),
+        "mail": _mail(p),
         "can_draft": bool(_roles(request.user) & _DRAFTERS)
         and p.status in {E.PersonaStatus.READY.value, E.PersonaStatus.ACTIVE.value},
         "manual_limit": _manual_limit(),
     }
     return render(request, "console/persona.html", ctx)
+
+
+def _mail(p) -> dict:
+    from apps.channels import mailbox
+    from apps.channels.models import MailMessage
+
+    acc = mailbox.mailbox_of(p)
+    return {"account": acc, "planned": None if acc else mailbox.address_for(p),
+            "enabled": mailbox.enabled(),
+            "inbox": MailMessage.objects.filter(persona=p, direction="in")
+            .order_by("-received_at")[:10] if acc else []}
 
 
 def _lessons(p):
@@ -340,6 +352,26 @@ def persona_lesson_add(request, public_id: str):
         messages.error(request, "Upiši pravilo.")
     else:
         messages.success(request, "Pravilo dodato.")
+    return redirect(f"/console/personas/{public_id}")
+
+
+@console_view
+@require_POST
+def persona_mailbox(request, public_id: str):
+    """Otvara sandučić persone na Mailcow-u (ADR-0015)."""
+    from apps.channels import mailbox
+
+    p = Persona.objects.filter(public_id=public_id).first()
+    if p is None:
+        raise Http404
+    if not (_roles(request.user) & _DRAFTERS):
+        messages.error(request, "Tvoja uloga ne otvara sandučiće.")
+    else:
+        try:
+            acc = mailbox.provision(p, actor=principal_of(request.user))
+            messages.success(request, f"Sandučić otvoren: {acc.persona_address}")
+        except mailbox.MailboxError as e:
+            messages.error(request, f"Sandučić nije otvoren — {e.code}: {e.detail}")
     return redirect(f"/console/personas/{public_id}")
 
 
