@@ -40,6 +40,11 @@
 {% empty %}<tr><td colspan="4" class="sub">Još se nije budila.</td></tr>{% endfor %}</table></div>
 
 <div class="card mt16"><h2>Sadržaj</h2>
+{% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/draft" class="row mb12">{% csrf_token %}
+  <input type="text" name="topic" class="grow" maxlength="200" placeholder="Tema (prazno = sledeća niša persone)">
+  <button class="primary">Napiši nacrt sada</button>
+</form>
+<p class="sub mb12">Model piše odmah (oko 10 s). Nacrt ide na odobrenje, a u SIMULATION samo na sandbox. Najviše {{ manual_limit }} ručnih nacrta dnevno.</p>{% endif %}
 <table><tr><th>Kad</th><th>Tema</th><th>Status</th><th>Tekst</th></tr>
 {% for i in items %}<tr><td class="small">{{ i.created_at|date:"d.m. H:i" }}</td><td>{{ i.title }}</td>
 <td><span class="pill {{ i.status|status_tone }}">{{ i.status }}</span> <span class="small muted">{{ i.status_reason }}</span></td>

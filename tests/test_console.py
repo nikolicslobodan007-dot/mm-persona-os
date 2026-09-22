@@ -223,6 +223,57 @@ class TestKillSwitchAndPages:
         assert ContentItem.objects.count() == 1
 
 
+class TestDraftNow:
+    """ADR-0012 — „Napiši nacrt sada” iz konzole."""
+
+    @pytest.fixture
+    def ready(self, mila):
+        call_command("pilot_setup", persona="P-00001", actor="user:boss", stdout=io.StringIO())
+        return mila
+
+    def test_draft_goes_to_approval(self, boss, ready):
+        c = _login(Client(), boss)
+        assert "Napiši nacrt sada" in c.get("/console/personas/P-00001").content.decode()
+        r = c.post("/console/personas/P-00001/draft", {"topic": "Ponuda za veleprodaju"})
+        assert r.status_code == 302 and r["Location"] == "/console/approvals"
+        item = ContentItem.objects.get(title="Ponuda za veleprodaju")
+        assert item.run.reason_code == E.DecisionReason.OPERATOR_TASK
+        ap = ApprovalRequest.objects.get(status=E.ApprovalStatus.PENDING)
+        assert ap.action.channel_account.channel_type == E.ChannelType.SANDBOX
+        assert "Ponuda za veleprodaju" in c.get("/console/approvals").content.decode() or \
+            item.body[:30] in c.get("/console/approvals").content.decode()
+
+    def test_empty_topic_uses_persona_niche(self, boss, ready):
+        c = _login(Client(), boss)
+        c.post("/console/personas/P-00001/draft", {"topic": ""})
+        item = ContentItem.objects.get()
+        assert item.title in {"AI", "B2B", "Prodaja"}
+
+    def test_daily_limit(self, boss, ready, monkeypatch):
+        monkeypatch.setattr(content, "MANUAL_DRAFTS_PER_DAY", 2)
+        c = _login(Client(), boss)
+        for t in ("Tema jedan o kupcima", "Tema dva o rokovima", "Tema tri o ceni"):
+            c.post("/console/personas/P-00001/draft", {"topic": t})
+        assert ContentItem.objects.count() == 2
+
+    def test_not_for_paused_persona(self, boss, ready):
+        from apps.personas.models import Persona
+
+        Persona.objects.filter(pk=ready.pk).update(status=E.PersonaStatus.PAUSED.value)
+        c = _login(Client(), boss)
+        assert "Napiši nacrt sada" not in c.get("/console/personas/P-00001").content.decode()
+        c.post("/console/personas/P-00001/draft", {"topic": "Nešto"})
+        assert not ContentItem.objects.exists()
+
+    def test_viewer_cannot_draft(self, ready):
+        u = User.objects.create_user("gledalac", password="Tajna-lozinka-1")
+        u.groups.add(Group.objects.get(name=E.Role.VIEWER.value))
+        call_command("console_totp", user="gledalac", stdout=io.StringIO())
+        c = _login(Client(), u)
+        c.post("/console/personas/P-00001/draft", {"topic": "Nešto"})
+        assert not ContentItem.objects.exists()
+
+
 def test_templates_have_no_inline_styles_or_scripts():
     """CSP je `style-src 'self'; script-src 'self'` — inline stil bi pregledač tiho ignorisao."""
     import pathlib

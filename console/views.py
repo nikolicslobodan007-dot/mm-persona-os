@@ -236,8 +236,17 @@ def persona(request, public_id: str):
         "memories": dict(MemoryItem.objects.filter(persona=p).values_list("status")
                          .annotate(n=Count("id"))),
         "accounts": p.channel_accounts.all().order_by("channel_type"),
+        "can_draft": bool(_roles(request.user) & _DRAFTERS)
+        and p.status in {E.PersonaStatus.READY.value, E.PersonaStatus.ACTIVE.value},
+        "manual_limit": _manual_limit(),
     }
     return render(request, "console/persona.html", ctx)
+
+
+def _manual_limit() -> int:
+    from apps.content.service import MANUAL_DRAFTS_PER_DAY
+
+    return MANUAL_DRAFTS_PER_DAY
 
 
 def _state_max(state, field):
@@ -269,6 +278,36 @@ def persona_status(request, public_id: str):
         messages.success(request, f"{p.public_id} je sada {p.status}.")
     except (lifecycle.LifecycleError, ValueError) as e:
         messages.error(request, str(e))
+    return redirect(f"/console/personas/{public_id}")
+
+
+_DRAFTERS = frozenset({E.Role.OPERATOR, E.Role.PERSONA_MANAGER, E.Role.SYSTEM_ADMIN})
+
+
+@console_view
+@require_POST
+def persona_draft(request, public_id: str):
+    """„Napiši nacrt sada” — isti put kao rutina, bez čekanja prozora (ADR-0012)."""
+    from apps.content import service as content
+
+    p = Persona.objects.filter(public_id=public_id).first()
+    if p is None:
+        raise Http404
+    if not (_roles(request.user) & _DRAFTERS):
+        messages.error(request, "Tvoja uloga ne pravi nacrte.")
+        return redirect(f"/console/personas/{public_id}")
+    try:
+        item, sent = content.draft_now(p, topic=request.POST.get("topic", ""))
+    except content.ContentError as e:
+        messages.error(request, str(e))
+        return redirect(f"/console/personas/{public_id}")
+    if sent:
+        messages.success(request, f"Nacrt „{item.title}” čeka odobrenje.")
+        return redirect("/console/approvals")
+    if item.status == E.ContentStatus.DRAFT.value:
+        messages.success(request, f"Nacrt „{item.title}” je napravljen (nema dozvoljenog kanala).")
+    else:
+        messages.error(request, f"Nacrt „{item.title}” je odbijen: {item.status_reason}.")
     return redirect(f"/console/personas/{public_id}")
 
 

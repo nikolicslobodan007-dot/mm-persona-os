@@ -325,3 +325,53 @@ def plan_post_for_run(run: AgentRun) -> ContentItem | None:
         submit(item, account, now=run.started_at)
         item.refresh_from_db()
     return item
+
+
+# ---------------------------------------------------------------- ručni nacrt (konzola)
+
+#: Koliko ručnih nacrata dnevno po personi — štiti trošak modela od greške ili
+#: zaglavljenog dugmeta. Rutina persone se ne računa ovde.
+MANUAL_DRAFTS_PER_DAY = 10
+MANUAL_STATUSES = frozenset({E.PersonaStatus.READY.value, E.PersonaStatus.ACTIVE.value})
+
+
+def manual_topic(persona: Persona) -> str:
+    """Bez teme od operatora: niše persone redom, da uzastopni nacrti ne budu isti."""
+    tags = list(PersonaTagLink.objects.filter(persona=persona).select_related("tag")
+                .order_by("-weight", "tag__slug").values_list("tag__name", flat=True))
+    if not tags:
+        return ""
+    return tags[ContentItem.objects.filter(persona=persona).count() % len(tags)]
+
+
+def draft_now(persona: Persona, *, topic: str = "", now: datetime | None = None
+              ) -> tuple[ContentItem, bool]:
+    """Nacrt na zahtev operatora (ADR-0012). Vraća (nacrt, poslat_na_odobrenje).
+
+    Isti put kao rutina: memorija → model → provere → predlog → odobrenje.
+    Ništa ne ide napolje bez odobrenja, a u SIMULATION samo na sandbox.
+    """
+    now = now or timezone.now()
+    if persona.status not in MANUAL_STATUSES:
+        raise ContentError("VALIDATION_ERROR",
+                           f"Persona je {persona.status} — nacrt se pravi samo za READY/ACTIVE.")
+    since = now - timedelta(days=1)
+    manual = ContentItem.objects.filter(
+        persona=persona, created_at__gte=since,
+        run__reason_code=E.DecisionReason.OPERATOR_TASK.value).count()
+    if manual >= MANUAL_DRAFTS_PER_DAY:
+        raise ContentError("RATE_LIMITED",
+                           f"Već {manual} ručnih nacrta u 24 h (najviše {MANUAL_DRAFTS_PER_DAY}).")
+    topic = (topic or "").strip()[:200] or manual_topic(persona)
+    if not topic:
+        raise ContentError("VALIDATION_ERROR", "Upiši temu — persona nema niše.")
+    item = draft(persona, topic=topic, now=now)
+    if item.status != CS.DRAFT.value:
+        return item, False
+    account = publish_channel(persona)
+    if account is None:
+        return item, False
+    submit(item, account, now=now)
+    item.refresh_from_db()
+    return item, True
+
