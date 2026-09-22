@@ -29,6 +29,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from api.context import bind
+from apps.content.lessons import prompt_section
 from apps.content.service import _system_prompt, operator_run
 from apps.llm_gateway import gateway
 from apps.memory import context as memory_context
@@ -103,10 +104,12 @@ class Command(BaseCommand):
             facts = [sc.memory.content if len(sc.memory.content) < 200 else sc.memory.title
                      for sc in pack.items[:2]]
             t0 = time.monotonic()
+            rules = prompt_section(p)
             try:
                 g = gateway.generate(
                     E.LLMPurpose.CONTENT_DRAFT, _system_prompt(p),
-                    f"{pack.text}\n\n## zadatak\nNapiši kratku objavu na temu: {t}.",
+                    f"{pack.text}\n\n" + (f"{rules}\n\n" if rules else "")
+                    + f"## zadatak\nNapiši kratku objavu na temu: {t}.",
                     persona=p, run=run, context_pack=pack.record, only=route,
                     brief={"topic": t, "facts": facts, "language": p.primary_locale})
                 texts.append(g.text)

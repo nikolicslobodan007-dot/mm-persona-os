@@ -171,9 +171,13 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
                         if sc.memory.memory_type in QUOTABLE_MEMORY][:2]
             facts = [sc.memory.content if len(sc.memory.content) < 200 else sc.memory.title
                      for sc in quotable]
+            from apps.content.lessons import prompt_section
+
+            rules = prompt_section(persona)
             gen = gateway.generate(
                 E.LLMPurpose.CONTENT_DRAFT, _system_prompt(persona),
-                f"{pack.text}\n\n## zadatak\nNapiši kratku objavu na temu: {topic}."
+                f"{pack.text}\n\n" + (f"{rules}\n\n" if rules else "")
+                + f"## zadatak\nNapiši kratku objavu na temu: {topic}."
                 + (f" Ugao: {angle}." if angle else ""),
                 persona=persona, run=run, context_pack=pack.record, now=now,
                 brief={"topic": topic, "angle": angle, "facts": facts,

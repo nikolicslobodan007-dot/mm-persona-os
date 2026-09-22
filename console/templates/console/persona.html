@@ -44,6 +44,22 @@
 <td><span class="pill {{ r.decision|status_tone }}">{{ r.decision|default:"—" }}</span></td><td class="small">{{ r.reason_code }}</td></tr>
 {% empty %}<tr><td colspan="4" class="sub">Još se nije budila.</td></tr>{% endfor %}</table></div>
 
+<div class="card mt16"><h2>Pouke urednika</h2>
+<p class="sub mb12">Ulaze u svaki nacrt koji piše model. „Svi” važi za sve agente, i za nove.</p>
+{% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/lessons" class="row mb12">{% csrf_token %}
+  <input type="text" name="text" class="grow" maxlength="500" placeholder="Novo pravilo pisanja, npr. „Koristi srpske navodnice „…” ”" required>
+  <label class="row small"><input type="checkbox" name="everyone" value="1"> za sve agente</label>
+  <button>Dodaj</button>
+</form>{% endif %}
+<table><tr><th>Kad</th><th>Važi za</th><th>Pravilo</th><th></th></tr>
+{% for l in lessons %}<tr{% if not l.is_active %} class="muted"{% endif %}><td class="small">{{ l.created_at|date:"d.m. H:i" }}</td>
+<td>{% if l.persona_id %}<span class="pill">{{ p.public_id }}</span>{% else %}<span class="pill ok">svi</span>{% endif %}</td>
+<td class="small">{{ l.text }}</td>
+<td>{% if can_draft %}<form method="post" action="/console/lessons/{{ l.id }}/toggle">{% csrf_token %}
+  <input type="hidden" name="back" value="/console/personas/{{ p.public_id }}">
+  <button class="small">{% if l.is_active %}Isključi{% else %}Uključi{% endif %}</button></form>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="4" class="sub">Još nema pouka. Nastaju kad odbiješ ili izmeniš nacrt.</td></tr>{% endfor %}</table></div>
+
 <div class="card mt16"><h2>Sadržaj</h2>
 {% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/draft" class="row mb12">{% csrf_token %}
   <input type="text" name="topic" class="grow" maxlength="200" placeholder="Tema (prazno = sledeća niša persone)">

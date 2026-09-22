@@ -236,3 +236,33 @@ class Publication(UUIDModel):
 
     def __str__(self) -> str:
         return f"{self.channel_account_id}:{self.provider_post_id or self.status}"
+
+
+class EditorialLesson(UUIDModel):
+    """Pouka iz odluke urednika — odbijanje sa razlogom ili izmena teksta (ADR-0014).
+
+    `persona` prazna = pouka važi za SVE persone (kućni stil organizacije).
+    Nije memorija: ne bledi, ne takmiči se u retrieval-u, nego ide u svaki
+    prompt za pisanje dok je aktivna. Urednik je gasi kad više ne važi.
+    """
+
+    persona = models.ForeignKey(
+        "personas.Persona", null=True, blank=True, on_delete=models.CASCADE,
+        related_name="editorial_lessons",
+        help_text="Prazno = važi za sve persone.")
+    kind = models.CharField(max_length=16, help_text="rejected | edited | manual")
+    text = models.CharField(max_length=500, help_text="Pravilo, kako ga model čita.")
+    example_before = models.CharField(max_length=300, blank=True)
+    example_after = models.CharField(max_length=300, blank=True)
+    source_action = models.ForeignKey(
+        "orchestration.Action", null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="+")
+    created_by = models.CharField(max_length=120)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["persona", "is_active", "created_at"])]
+
+    def __str__(self) -> str:
+        return f"{self.persona_id or 'SVI'}: {self.text[:60]}"
+

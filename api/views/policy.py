@@ -222,12 +222,21 @@ class ApprovalDecisionView(PersonaOSView):
                            {"decided_by": v["decided_by"], "principal": principal})
         roles = roles_of(request.user) & E.APPROVAL_DECIDERS
         role = sorted(roles, key=lambda r: r.value)[0] if roles else None
+        before = str((ap.action.input_json or {}).get("text", ""))
         try:
             ap = service.decide_approval(ap, E.ApprovalStatus(v["decision"]), actor=principal,
                                          role=role, reason=v["reason"],
                                          payload_override=v.get("payload_override"))
         except service.PolicyError as exc:
             raise _err(exc) from exc
+        kind = {"REJECTED": "rejected", "APPROVED_WITH_CHANGES": "edited"}.get(v["decision"])
+        if kind and ap.action.action_type == "channel.post.create":
+            from apps.content import lessons
+
+            lessons.learn(persona=ap.action.persona, kind=kind, actor=principal,
+                          reason=v["reason"], before=before,
+                          after=str((v.get("payload_override") or {}).get("text", "")),
+                          source_action=ap.action)
         a = Action.objects.select_related("persona", "run", "policy_decision").get(
             pk=ap.action_id)
         fresh = ApprovalRequest.objects.select_related("action", "action__persona").get(pk=ap.pk)

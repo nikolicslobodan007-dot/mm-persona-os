@@ -60,7 +60,9 @@ class TestAppOwnership:
             "KnowledgeFact",
         },
         "social_graph": {"Actor", "Relationship", "RelationshipEvent"},
-        "content": {"ContentIdea", "ContentItem", "ContentAsset", "Publication"},
+        # ADR-0014 dodaje EditorialLesson.
+        "content": {"ContentIdea", "ContentItem", "ContentAsset", "Publication",
+                    "EditorialLesson"},
         "channels": {
             "ChannelAccount", "ChannelCapability", "IntegrationEndpoint",
             "MailMessage",

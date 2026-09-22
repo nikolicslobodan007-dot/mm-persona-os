@@ -29,12 +29,16 @@
     <input type="hidden" name="decision" value="APPROVED_WITH_CHANGES">
     <label>Tekst koji se objavljuje (prolazi iste provere ponovo)</label>
     <textarea name="text">{{ ap.action.input_json.text }}</textarea>
-    <label>Beleška (opciono)</label><input type="text" name="reason">
+    <label>Pravilo za ubuduće (opciono — ako je prazno, pouka je sama izmena)</label><input type="text" name="reason">
+    <label class="row small mt8"><input type="checkbox" name="learn" value="1" checked> Zapamti kao pouku</label>
+    <label class="row small"><input type="checkbox" name="everyone" value="1"> Pouka važi za sve agente (kućni stil)</label>
     <div class="mt8"><button class="primary">Sačuvaj izmenu i odobri</button></div>
   </form>
   <form id="rej-{{ ap.public_id }}" hidden method="post" action="/console/approvals/{{ ap.public_id }}/decide">{% csrf_token %}
     <input type="hidden" name="decision" value="REJECTED">
     <label>Zašto se odbija (obavezno)</label><input type="text" name="reason" required>
+    <label class="row small mt8"><input type="checkbox" name="learn" value="1" checked> Zapamti kao pouku</label>
+    <label class="row small"><input type="checkbox" name="everyone" value="1"> Pouka važi za sve agente (kućni stil)</label>
     <div class="mt8"><button class="danger">Odbij</button></div>
   </form>
   {% endif %}

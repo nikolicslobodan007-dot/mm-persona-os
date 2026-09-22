@@ -190,18 +190,36 @@ def approval_decide(request, approval_id: str):
         return redirect("/console/approvals")
     roles = roles_of(request.user) & E.APPROVAL_DECIDERS
     role = sorted(roles, key=lambda r: r.value)[0] if roles else None
+    before = str((ap.action.input_json or {}).get("text", ""))
     try:
         policy.decide_approval(ap, E.ApprovalStatus(decision), actor=principal_of(request.user),
                                role=role, reason=reason, payload_override=override)
     except policy.PolicyError as e:
         messages.error(request, str(e))
         return redirect("/console/approvals")
-    a = Action.objects.get(pk=ap.action_id)
+    a = Action.objects.select_related("persona").get(pk=ap.action_id)
     _sync_content(a)
+    if request.POST.get("learn") == "1":
+        lesson = _learn(a, decision, reason, before, override, request)
+        if lesson is not None:
+            scope = "svi agenti" if lesson.persona_id is None else a.persona.display_name
+            messages.info(request, f"Pouka zapamćena ({scope}): {lesson.text[:120]}")
     label = {"APPROVED": "Odobreno", "APPROVED_WITH_CHANGES": "Odobreno sa izmenom",
              "REJECTED": "Odbijeno"}[decision]
     messages.success(request, f"{label}: {a.public_id} → {a.status}")
     return redirect("/console/approvals")
+
+
+def _learn(action, decision, reason, before, override, request):
+    from apps.content import lessons
+
+    kind = {"REJECTED": "rejected", "APPROVED_WITH_CHANGES": "edited"}.get(decision)
+    if kind is None:
+        return None
+    return lessons.learn(persona=action.persona, kind=kind, actor=principal_of(request.user),
+                         reason=reason, before=before,
+                         after=(override or {}).get("text", ""),
+                         everyone=request.POST.get("everyone") == "1", source_action=action)
 
 
 def _sync_content(action: Action) -> None:
@@ -237,11 +255,18 @@ def persona(request, public_id: str):
                          .annotate(n=Count("id"))),
         "accounts": p.channel_accounts.all().order_by("channel_type"),
         "llm_keys": _llm_keys(p),
+        "lessons": _lessons(p),
         "can_draft": bool(_roles(request.user) & _DRAFTERS)
         and p.status in {E.PersonaStatus.READY.value, E.PersonaStatus.ACTIVE.value},
         "manual_limit": _manual_limit(),
     }
     return render(request, "console/persona.html", ctx)
+
+
+def _lessons(p):
+    from apps.content.lessons import visible
+
+    return visible(p)[:30]
 
 
 def _llm_keys(p) -> list[tuple[str, str, str]]:
@@ -297,6 +322,47 @@ def persona_status(request, public_id: str):
 
 
 _DRAFTERS = frozenset({E.Role.OPERATOR, E.Role.PERSONA_MANAGER, E.Role.SYSTEM_ADMIN})
+
+@console_view
+@require_POST
+def persona_lesson_add(request, public_id: str):
+    """Ručno pravilo pisanja — za ovu personu ili za sve (ADR-0014)."""
+    from apps.content import lessons
+
+    p = Persona.objects.filter(public_id=public_id).first()
+    if p is None:
+        raise Http404
+    if not (_roles(request.user) & _DRAFTERS):
+        messages.error(request, "Tvoja uloga ne menja pravila pisanja.")
+    elif lessons.learn(persona=p, kind="manual", actor=principal_of(request.user),
+                       reason=request.POST.get("text", "")[:500],
+                       everyone=request.POST.get("everyone") == "1") is None:
+        messages.error(request, "Upiši pravilo.")
+    else:
+        messages.success(request, "Pravilo dodato.")
+    return redirect(f"/console/personas/{public_id}")
+
+
+@console_view
+@require_POST
+def lesson_toggle(request, lesson_id: str):
+    from api import audit
+    from apps.content.models import EditorialLesson
+
+    les = EditorialLesson.objects.filter(pk=lesson_id).select_related("persona").first()
+    if les is None:
+        raise Http404
+    back = request.POST.get("back", "")
+    back = back if back.startswith("/console/personas/") else "/console/"
+    if not (_roles(request.user) & _DRAFTERS):
+        messages.error(request, "Tvoja uloga ne menja pravila pisanja.")
+        return redirect(back)
+    les.is_active = not les.is_active
+    les.save(update_fields=["is_active", "updated_at"])
+    audit.record("content.lesson.toggled", persona=les.persona,
+                 details={"lesson_id": str(les.id), "active": les.is_active})
+    messages.success(request, "Pouka uključena." if les.is_active else "Pouka isključena.")
+    return redirect(back)
 
 
 @console_view
