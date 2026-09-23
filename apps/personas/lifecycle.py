@@ -96,7 +96,31 @@ def change_status(persona: Persona, to: S, *, actor: str, roles: set[E.Role],
             BehaviourState.objects.filter(Q(next_wake_at__lt=now) | Q(next_wake_at__isnull=True),
                                           persona=p).update(next_wake_at=now)
         p.refresh_from_db()
+        if to in (S.READY, S.ARCHIVED):
+            transaction.on_commit(lambda p=p, to=to: _mailbox_for_status(p, to, actor))
         audit.record("persona.status.changed", persona=p, severity=E.AuditSeverity.WARNING,
                       before={"status": frm.value}, after={"status": to.value},
                       details={"reason": reason, "actor": actor})
     return p
+
+
+def _mailbox_for_status(persona: Persona, to: S, actor: str) -> None:
+    """Sandučić prati status: READY → otvori, ARCHIVED → ugasi (ADR-0016).
+
+    Nikada ne ruši promenu statusa: greška se zapisuje u audit, a operater je
+    vidi na strani persone.
+    """
+    from apps.channels import mailbox
+
+    if not mailbox.enabled():
+        return
+    try:
+        if to == S.READY:
+            mailbox.provision(persona, actor=actor)
+        else:
+            mailbox.deactivate(persona, actor=actor)
+    except mailbox.MailboxError as e:
+        audit.record("channel.mailbox.failed", persona=persona,
+                     severity=E.AuditSeverity.WARNING,
+                     details={"code": e.code, "detail": e.detail, "status": to.value})
+

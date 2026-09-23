@@ -215,4 +215,8 @@ MAILCOW_CREDENTIAL = "env:MAILCOW_API_KEY"
 MAILBOX_PASSWORD_CREDENTIAL = "env:MAILBOX_PASSWORD_SECRET"
 MAILBOX_QUOTA_MB = int(os.environ.get("MAILBOX_QUOTA_MB", "1024"))
 MAIL_BODY_RETENTION_DAYS = int(os.environ.get("MAIL_BODY_RETENTION_DAYS", "90"))
+#: ADR-0016 — nacrt odgovora na pristiglu poštu (uvek uz odobrenje).
+MAIL_AUTOREPLY = os.environ.get("MAIL_AUTOREPLY", "true").lower() == "true"
+MAIL_REPLIES_PER_DAY = int(os.environ.get("MAIL_REPLIES_PER_DAY", "5"))
+MAIL_REPLY_MAX_AGE_HOURS = int(os.environ.get("MAIL_REPLY_MAX_AGE_HOURS", "72"))
 LLM_BASE_URLS: dict[str, str] = {}

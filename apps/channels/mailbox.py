@@ -42,6 +42,9 @@ from apps.personas.models import Persona
 from common import enums as E
 
 MAILBOX_REF = "derived:mailbox:v1"
+#: Sandučić agenta sme da odgovara na primljenu poštu; slanje i dalje traži
+#: odobrenje, poverenje L2 i otključan globalni prekidač (ADR-0016).
+REPLY_CAPABILITY = "email.reply_inbound"
 _TRANSLIT = str.maketrans({"đ": "dj", "Đ": "Dj", "ß": "ss"})
 
 
@@ -193,8 +196,31 @@ def provision(persona: Persona, *, actor: str) -> ChannelAccount:
             last_verified_at=timezone.now())
     except IntegrityError as e:
         raise MailboxError("VERSION_CONFLICT", str(e)[:200]) from e
+    from apps.channels.models import ChannelCapability
+
+    ChannelCapability.objects.update_or_create(
+        account=acc, capability=REPLY_CAPABILITY,
+        defaults={"is_enabled": True, "source": "api",
+                  "evidence_level": E.EvidenceLevel.RESPONSE_ONLY.value,
+                  "verified_at": timezone.now()})
     audit.record("channel.mailbox.provisioned", persona=persona,
                  details={"address": addr, "actor": actor})
+    return acc
+
+
+def deactivate(persona: Persona, *, actor: str) -> ChannelAccount | None:
+    """Gasi sandučić (arhiviran agent). Poruke ostaju, prijava više ne radi."""
+    acc = mailbox_of(persona)
+    if acc is None:
+        return None
+    if enabled():
+        _mailcow_ok(_api("/api/v1/edit/mailbox",
+                         {"items": [acc.persona_address], "attr": {"active": "0"}}))
+    acc.status = E.AccountStatus.REVOKED.value
+    acc.save(update_fields=["status", "updated_at"])
+    audit.record("channel.mailbox.deactivated", persona=persona,
+                 severity=E.AuditSeverity.WARNING,
+                 details={"address": acc.persona_address, "actor": actor})
     return acc
 
 
@@ -250,6 +276,7 @@ def poll(acc: ChannelAccount, *, now: datetime | None = None, limit: int = 50) -
     host = getattr(settings, "MAILCOW_IMAP_HOST", "") or re.sub(
         r"^https?://", "", settings.MAILCOW_URL).split("/")[0]
     n = 0
+    fresh: list[MailMessage] = []
     with imaplib.IMAP4_SSL(host, 993, timeout=30) as imap:
         imap.login(acc.persona_address, password_for(acc.persona))
         imap.select("INBOX")
@@ -257,11 +284,17 @@ def poll(acc: ChannelAccount, *, now: datetime | None = None, limit: int = 50) -
         for num in (data[0].split() if data and data[0] else [])[:limit]:
             _, parts = imap.fetch(num, "(RFC822)")
             raw = next((p[1] for p in parts if isinstance(p, tuple)), b"")
-            if raw and store_inbound(acc, raw, now) is not None:
+            m = store_inbound(acc, raw, now) if raw else None
+            if m is not None:
+                fresh.append(m)
                 n += 1
     if n:
         audit.record("channel.mail.received", persona=acc.persona,
                      details={"account": acc.persona_address, "count": n})
+    if fresh:
+        from apps.channels import reply
+
+        reply.draft_replies(fresh, now=now)
     return n
 
 
