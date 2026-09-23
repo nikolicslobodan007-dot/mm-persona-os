@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.db.models import Count, Sum
@@ -262,6 +263,7 @@ def persona(request, public_id: str):
         "lessons": _lessons(p),
         "mail": _mail(p),
         "org": _org(p),
+        "lik": _lik(p),
         "can_draft": bool(_roles(request.user) & _DRAFTERS)
         and p.status in {E.PersonaStatus.READY.value, E.PersonaStatus.ACTIVE.value},
         "manual_limit": _manual_limit(),
@@ -291,6 +293,16 @@ def _org(p) -> dict:
             "escalation": org.escalation_target(p), "dossier": org.dossier_of(p),
             "choices": Position.objects.select_related("department")
             .order_by("department__sort_order", "code")}
+
+
+def _lik(p) -> dict:
+    """Profilna slika, galerija i stanje generatora (ADR-0018)."""
+    from apps.visuals import generator
+
+    _ref, source = generator.credential_ref(p)
+    return {"enabled": generator.enabled(), "key": source,
+            "portrait": generator.reference_of(p), "gallery": generator.gallery_of(p),
+            "model": settings.IMAGE_MODEL}
 
 
 def _lessons(p):
@@ -469,6 +481,49 @@ def persona_dossier(request, public_id: str):
     except org.OrgError as e:
         messages.error(request, str(e))
     return redirect(f"/console/personas/{public_id}")
+
+
+@console_view
+@require_POST
+def persona_portrait(request, public_id: str):
+    """Pravi profilnu sliku ili dodaje sliku u galeriju (ADR-0018)."""
+    from apps.visuals import generator
+
+    p = Persona.objects.filter(public_id=public_id).first()
+    if p is None:
+        raise Http404
+    if not (_roles(request.user) & _DRAFTERS):
+        messages.error(request, "Tvoja uloga ne pravi slike.")
+        return redirect(f"/console/personas/{public_id}")
+    scene = request.POST.get("scene", "").strip()
+    try:
+        r = (generator.make_photo(p, scene, actor=principal_of(request.user)) if scene
+             else generator.make_portrait(p, actor=principal_of(request.user)))
+        messages.success(request, f"Slika {r.asset.public_id} napravljena "
+                                  f"({r.cost_eur_cents} c).")
+    except generator.ImageError as e:
+        messages.error(request, f"{e.code}: {e.detail}")
+    return redirect(f"/console/personas/{public_id}")
+
+
+@console_view
+def asset(request, public_id: str):
+    """Prikaz slike iz storage-a — samo prijavljenom operateru."""
+    from django.http import HttpResponse
+
+    from apps.visuals import storage
+    from apps.visuals.models import MediaAsset
+
+    a = MediaAsset.objects.filter(public_id=public_id).first()
+    if a is None:
+        raise Http404
+    try:
+        data = storage.get(a.storage_key)
+    except storage.StorageError as e:
+        raise Http404 from e
+    r = HttpResponse(data, content_type=a.mime_type)
+    r["Cache-Control"] = "private, max-age=3600"
+    return r
 
 
 @console_view

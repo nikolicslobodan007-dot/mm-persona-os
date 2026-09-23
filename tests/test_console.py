@@ -320,3 +320,30 @@ class TestOrgConsole:
         c.post("/console/personas/P-00001/dossier", {"birth_date": "2014-01-01"})
         firma.refresh_from_db()
         assert firma.birth_date_model.year == 1991
+
+
+class TestLikConsole:
+    """ADR-0018 — kartica „Lik" i prikaz slike iz storage-a."""
+
+    def test_card_shows_portrait_and_serves_image(self, boss, mila, settings, monkeypatch):
+        from apps.visuals import generator, storage
+
+        settings.IMAGE_ENABLED = True
+        settings.IMAGE_MODEL = "gpt-image-2"
+        monkeypatch.setenv("OPENAI_API_KEY", "kljuc")
+        with bind(actor_id="user:boss"):
+            call_command("seed_org", "--persona", "P-00001", stdout=io.StringIO())
+        files = {}
+        monkeypatch.setattr(generator, "_call", lambda *a, **k: b"\x89PNG\r\n\x1a\nx")
+        monkeypatch.setattr(storage, "put",
+                            lambda data, *, key, mime: files.__setitem__(key, data) or key)
+        monkeypatch.setattr(storage, "get", lambda key: files[key])
+        with bind(actor_id="user:boss"):
+            r = generator.make_portrait(mila, actor="user:boss")
+
+        c = _login(Client(), boss)
+        html = c.get("/console/personas/P-00001").content.decode()
+        assert f"/console/assets/{r.asset.public_id}" in html
+        img = c.get(f"/console/assets/{r.asset.public_id}")
+        assert img.status_code == 200 and img["Content-Type"] == "image/png"
+        assert img.content.startswith(b"\x89PNG")

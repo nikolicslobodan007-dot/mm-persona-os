@@ -82,6 +82,7 @@ action_types:
   browser.page.read:        [web.read_public]
   browser.form.submit:      [browser.form_submit_approved]
   content.draft:            []
+  visual.generate:          []   # ADR-0018 — slika agenta, bez spoljašnjeg efekta
   memory.consolidate:       []
 
 # Canon §9.4 — tvrde zabrane.

@@ -220,3 +220,27 @@ MAIL_AUTOREPLY = os.environ.get("MAIL_AUTOREPLY", "true").lower() == "true"
 MAIL_REPLIES_PER_DAY = int(os.environ.get("MAIL_REPLIES_PER_DAY", "5"))
 MAIL_REPLY_MAX_AGE_HOURS = int(os.environ.get("MAIL_REPLY_MAX_AGE_HOURS", "72"))
 LLM_BASE_URLS: dict[str, str] = {}
+
+# ---------------------------------------------------------------- ADR-0018 — lik agenta
+#: Slike agenata. Dok je isključeno, ništa se ne generiše i ništa se ne plaća.
+IMAGE_ENABLED = os.environ.get("IMAGE_ENABLED", "false").lower() == "true"
+IMAGE_PROVIDER = os.environ.get("IMAGE_PROVIDER", "openai")
+IMAGE_MODEL = os.environ.get("IMAGE_MODEL", "gpt-image-2")
+IMAGE_API_URL = os.environ.get("IMAGE_API_URL", "https://api.openai.com/v1/images")
+#: Isto pravilo kao za jezički model (ADR-0013): persona sme imati svoj ključ
+#: (`OPENAI_API_KEY_P00001`), inače se koristi zajednički.
+IMAGE_CREDENTIALS = {"openai": "env:OPENAI_API_KEY"}
+IMAGE_QUALITY = os.environ.get("IMAGE_QUALITY", "medium")
+IMAGE_SIZE_PORTRAIT = os.environ.get("IMAGE_SIZE_PORTRAIT", "1024x1536")
+IMAGE_SIZE_SCENE = os.environ.get("IMAGE_SIZE_SCENE", "1024x1024")
+IMAGES_PER_DAY = int(os.environ.get("IMAGES_PER_DAY", "20"))
+#: Cena po slici u µEUR — ista jedinica kao kod LLM ruta, da zbir bude uporediv.
+#: Menja se u `.env.prod` kad provajder promeni cenovnik.
+IMAGE_PRICE_MICRO_EUR = int(os.environ.get("IMAGE_PRICE_MICRO_EUR", "35000"))
+
+# Object storage (MinIO u compose-u; isti API kao S3).
+S3_ENDPOINT = os.environ.get("S3_ENDPOINT", "http://minio:9000")
+S3_BUCKET = os.environ.get("S3_BUCKET", "persona-media")
+S3_REGION = os.environ.get("S3_REGION", "us-east-1")
+S3_ACCESS_CREDENTIAL = "env:MINIO_ROOT_USER"
+S3_SECRET_CREDENTIAL = "env:MINIO_ROOT_PASSWORD"
