@@ -370,3 +370,159 @@ class VoiceProfile(models.Model):
 
     def __str__(self) -> str:
         return f"voice<{self.persona_id}> v{self.voice_version}"
+
+
+# ---------------------------------------------------------------- organizacija (ADR-0017)
+
+
+class Department(UUIDModel):
+    """Sektor korporacije. ADR-0017.
+
+    Organizacija nije ukras: ona kaže ko kome odgovara, ko je za šta zadužen
+    i na kom nivou važi pouka urednika. Poverenje (Canon §3.11) je odvojeno —
+    šef-agent ne dobija nijednu dozvolu time što je šef.
+    """
+
+    code = models.CharField(max_length=32, unique=True)  # SALES, CONTENT, …
+    name = models.CharField(max_length=120)
+    purpose = models.TextField(blank=True)
+    parent = models.ForeignKey(
+        "self", on_delete=models.PROTECT, null=True, blank=True, related_name="children"
+    )
+    head = models.ForeignKey(
+        Persona, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="heads_departments",
+        help_text="Agent koji vodi sektor; odgovornost čoveka time ne prestaje.",
+    )
+    human_owner = models.CharField(
+        max_length=120, blank=True, help_text="Čovek koji odgovara za sektor (user:…)."
+    )
+    sort_order = models.SmallIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "personas_department"
+        indexes = [models.Index(fields=["is_active", "sort_order"])]
+
+    def __str__(self) -> str:
+        return f"{self.code} {self.name}"
+
+
+class Position(UUIDModel):
+    """Radno mesto — posao, ne osoba. ADR-0017."""
+
+    department = models.ForeignKey(
+        Department, on_delete=models.PROTECT, related_name="positions"
+    )
+    code = models.CharField(max_length=48, unique=True)
+    title = models.CharField(max_length=160)
+    specialty = models.CharField(max_length=160, blank=True)
+    level = models.CharField(
+        max_length=16, choices=E.OrgLevel.choices(), default=E.OrgLevel.MEDIOR
+    )
+    reports_to = models.ForeignKey(
+        "self", on_delete=models.PROTECT, null=True, blank=True, related_name="reports"
+    )
+    duties = JSON_LIST(help_text="Šta radi, jednom rečenicom po stavci.")
+    headcount_max = models.PositiveSmallIntegerField(default=1)
+    is_open = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "personas_position"
+        indexes = [models.Index(fields=["department", "level"])]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(headcount_max__gte=1),
+                name="position_headcount_min_one",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.code} {self.title}"
+
+
+class Assignment(UUIDModel):
+    """Ko sedi na kom radnom mestu, i od kada. ADR-0017.
+
+    Istorija se ne briše: raspored koji se završi dobija `ended_at`, pa se
+    uvek zna ko je šta radio kad je nešto objavljeno.
+    """
+
+    persona = models.ForeignKey(
+        Persona, on_delete=models.CASCADE, related_name="assignments"
+    )
+    position = models.ForeignKey(
+        Position, on_delete=models.PROTECT, related_name="assignments"
+    )
+    started_at = models.DateTimeField()
+    ended_at = models.DateTimeField(null=True, blank=True)
+    is_primary = models.BooleanField(default=True)
+    note = models.CharField(max_length=240, blank=True)
+
+    class Meta:
+        db_table = "personas_assignment"
+        indexes = [models.Index(fields=["persona", "ended_at"])]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["persona"],
+                condition=models.Q(ended_at__isnull=True, is_primary=True),
+                name="assignment_one_primary_open",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(ended_at__isnull=True)
+                | models.Q(ended_at__gt=models.F("started_at")),
+                name="assignment_end_after_start",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.persona_id} → {self.position_id}"
+
+
+class PersonaDossier(models.Model):
+    """Modelovana lična istorija i izgled. ADR-0017.
+
+    Canon §17 ostaje na snazi: ovde nema državnog identiteta — ni matičnog
+    broja, ni broja dokumenta, ni tačne adrese. Sve je izmišljeno, dosledno i
+    služi da agent zvuči kao ista osoba iz meseca u mesec, i da slika
+    odgovara opisu (visina, građa, boja očiju i kose).
+    """
+
+    persona = models.OneToOneField(
+        Persona, on_delete=models.CASCADE, primary_key=True, related_name="dossier"
+    )
+    birth_place = models.CharField(max_length=120, blank=True)
+    residence = models.CharField(max_length=160, blank=True)
+    height_cm = models.SmallIntegerField(null=True, blank=True)
+    weight_kg = models.SmallIntegerField(null=True, blank=True)
+    build = models.CharField(max_length=48, blank=True)       # vitka, atletska, krupna
+    eye_color = models.CharField(max_length=32, blank=True)
+    hair_color = models.CharField(max_length=32, blank=True)
+    hair_style = models.CharField(max_length=64, blank=True)
+    distinguishing_marks = models.CharField(max_length=200, blank=True)
+    marital_status = models.CharField(max_length=48, blank=True)
+    children = models.PositiveSmallIntegerField(default=0)
+    hobbies = JSON_LIST()
+    appearance_prompt = models.TextField(
+        blank=True, help_text="Opis za generisanje slike; isti lik na svakoj slici."
+    )
+    dossier_version = models.PositiveIntegerField(default=1)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "personas_dossier"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(height_cm__isnull=True)
+                | (models.Q(height_cm__gte=120) & models.Q(height_cm__lte=230)),
+                name="dossier_height_range",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(weight_kg__isnull=True)
+                | (models.Q(weight_kg__gte=35) & models.Q(weight_kg__lte=250)),
+                name="dossier_weight_range",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"dosije<{self.persona_id}> v{self.dossier_version}"

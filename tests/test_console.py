@@ -216,7 +216,7 @@ class TestKillSwitchAndPages:
         for path in ("/console/", "/console/approvals", "/console/content",
                      "/console/content?status=IN_REVIEW", "/console/personas/P-00001",
                      f"/console/actions/{ap.action.public_id}", "/console/costs",
-                     "/console/incidents"):
+                     "/console/incidents", "/console/org"):
             r = c.get(path)
             assert r.status_code == 200, path
         assert c.get("/console/personas/P-99999").status_code == 404
@@ -283,3 +283,40 @@ def test_templates_have_no_inline_styles_or_scripts():
         text = f.read_text(encoding="utf-8")
         assert 'style="' not in text, f
         assert "<style" not in text and not re.search(r"<script(?![^>]*\bsrc=)", text), f
+
+
+class TestOrgConsole:
+    """ADR-0017 — organizacija i dosije iz konzole."""
+
+    @pytest.fixture
+    def firma(self, mila):
+        with bind(actor_id="user:boss"):
+            call_command("seed_org", "--persona", "P-00001", stdout=io.StringIO())
+        return mila
+
+    def test_org_page_shows_sectors_and_seats(self, boss, firma):
+        c = _login(Client(), boss)
+        html = c.get("/console/org").content.decode()
+        assert "Marketing i sadržaj" in html and "Urednik sadržaja" in html
+        assert "Mila Vuković (AI)" in html
+
+    def test_reassign_from_console(self, boss, firma):
+        from apps.personas import org
+
+        c = _login(Client(), boss)
+        r = c.post("/console/personas/P-00001/assign", {"position": "SEF-MKT"})
+        assert r.status_code == 302
+        assert org.position_of(firma).code == "SEF-MKT"
+
+    def test_dossier_written_from_console_and_minor_refused(self, boss, firma):
+        from apps.personas import org
+
+        c = _login(Client(), boss)
+        c.post("/console/personas/P-00001/dossier",
+               {"residence": "Subotica", "height_cm": "170", "hobbies": "trčanje, čitanje"})
+        d = org.dossier_of(firma)
+        assert d.residence == "Subotica" and d.height_cm == 170
+        assert d.hobbies == ["trčanje", "čitanje"]
+        c.post("/console/personas/P-00001/dossier", {"birth_date": "2014-01-01"})
+        firma.refresh_from_db()
+        assert firma.birth_date_model.year == 1991

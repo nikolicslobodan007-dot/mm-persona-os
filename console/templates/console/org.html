@@ -1,0 +1,24 @@
+{% extends "console/base.html" %}
+{% block title %}Organizacija{% endblock %}
+{% block content %}
+<div class="row"><h1>Organizacija</h1><span class="spacer"></span>
+  <span class="pill">{{ rows|length }} sektora</span><span class="pill">{{ total }} na poslu</span></div>
+<p class="sub mb12">Radno mesto kaže ko šta radi i kome odgovara. Ono ne daje nijednu dozvolu —
+  dozvole idu po sposobnosti i poverenju, a odobrenje koje traži čoveka nijedan agent ne daje.</p>
+
+{% for r in rows %}
+<div class="card mt16"><h2>{{ r.dep.name }} <span class="muted">{{ r.dep.code }}</span></h2>
+  <p class="sub">{{ r.dep.purpose }}{% if r.dep.human_owner %} · odgovara: {{ r.dep.human_owner }}{% endif %}</p>
+  <table><tr><th>Radno mesto</th><th>Nivo</th><th>Specijalnost</th><th>Odgovara</th><th>Ko radi</th></tr>
+  {% for i in r.positions %}<tr>
+    <td>{{ i.pos.title }} <span class="muted small">{{ i.pos.code }}</span></td>
+    <td><span class="pill">{{ i.pos.level }}</span></td>
+    <td class="small">{{ i.pos.specialty|default:"—" }}</td>
+    <td class="small">{% if i.pos.reports_to %}{{ i.pos.reports_to.title }}{% else %}čoveku{% endif %}</td>
+    <td class="small">{% for p in i.people %}<a href="/console/personas/{{ p.public_id }}">{{ p.display_name }}</a>{% if not forloop.last %}, {% endif %}{% empty %}<span class="muted">nepopunjeno</span>{% endfor %}</td>
+  </tr>{% empty %}<tr><td colspan="5" class="sub">Nema radnih mesta.</td></tr>{% endfor %}</table>
+</div>
+{% empty %}
+<div class="card mt16"><p class="sub">Organizacija još nije postavljena. Pokreni <span class="mono">manage.py seed_org</span>.</p></div>
+{% endfor %}
+{% endblock %}

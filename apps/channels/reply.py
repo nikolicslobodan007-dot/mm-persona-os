@@ -105,9 +105,13 @@ def draft_reply(msg: MailMessage, *, now: datetime | None = None):
     query = f"{msg.subject}\n{msg.body_text[:500]}"
     pack = memory_context.build(persona, run, E.RetrievalProfile.REPLY_CONTEXT, query=query,
                                 now=now)
+    from apps.personas.org import prompt_section as org_section
+
+    who = org_section(persona, now=now)
     gen = gateway.generate(
         E.LLMPurpose.REPLY, _system_prompt(persona),
-        f"{pack.text}\n\n## poruka na koju se odgovara\nOd: {msg.from_addr}\n"
+        (f"{who}\n\n" if who else "")
+        + f"{pack.text}\n\n## poruka na koju se odgovara\nOd: {msg.from_addr}\n"
         f"Naslov: {msg.subject}\n\n{msg.body_text[:4000]}\n\n## zadatak\nNapiši odgovor.",
         persona=persona, run=run, context_pack=pack.record, now=now,
         brief={"topic": msg.subject or "poruka", "language": persona.primary_locale})

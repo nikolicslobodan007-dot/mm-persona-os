@@ -30,7 +30,9 @@ capabilities:
   email.reply_inbound:
     description: "Odgovor na dolazni email"
     min_trust_level: L2
-    requires_approval_class: null
+    # ADR-0017: svaki odgovor traži odobrenje, ne samo prvi po adresatu.
+    # Dok ne izmerimo kvalitet odgovora, čovek vidi svaki pre slanja.
+    requires_approval_class: A2
     requires_disclosure_label: false
 
   email.outbound_approved:

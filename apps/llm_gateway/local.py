@@ -59,6 +59,12 @@ def compose(purpose: E.LLMPurpose, brief: dict, prompt: str) -> str:
     for f in facts:
         parts.append(f.rstrip(".") + ".")
     if purpose == E.LLMPurpose.REPLY:
-        return " ".join(parts[1:] or parts)
+        # Šablon ne ume da odgovori na tuđu poruku — vraća pristojnu potvrdu
+        # prijema, ne uvod za objavu (ADR-0016, dopuna 23.09.).
+        body = " ".join(parts[1:])
+        ack = ("Thank you for your message. I have received it and will get back to you "
+               "with an answer shortly." if english else
+               "Hvala na poruci. Primili smo je i javljamo se ubrzo sa odgovorom.")
+        return f"{ack} {body}".strip() if body else ack
     parts.append(_pick(closes, topic, "close"))
     return " ".join(parts)

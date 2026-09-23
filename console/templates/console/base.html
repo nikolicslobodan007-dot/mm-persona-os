@@ -21,6 +21,7 @@
       {% if pending_count %}<span class="badge">{{ pending_count }}</span>{% endif %}</a>
     <a href="/console/content" class="{% if 'content' in p %}on{% endif %}">Sadržaj</a>
     <a href="/console/personas/P-00001" class="{% if 'personas' in p %}on{% endif %}">Mila</a>
+    <a href="/console/org" class="{% if p == '/console/org' %}on{% endif %}">Organizacija</a>
     <a href="/console/costs" class="{% if 'costs' in p %}on{% endif %}">Troškovi</a>
     <a href="/console/incidents" class="{% if 'incidents' in p %}on{% endif %}">Incidenti</a>
   </nav>

@@ -1,11 +1,11 @@
 """Pouke urednika — persona uči iz odbijanja i izmena (ADR-0014).
 
 Svaka odluka urednika sa razlogom ili izmenom postaje kratko pravilo koje ide
-u svaki sledeći prompt za pisanje. Dva nivoa:
+u svaki sledeći prompt za pisanje. Tri nivoa (ADR-0014, prošireno ADR-0017):
 
-  - pouka jedne persone (`persona` popunjena);
-  - kućni stil organizacije (`persona` prazna) — važi za sve persone, i za
-    one koje tek nastaju.
+  - pouka jednog agenta (`persona` popunjena);
+  - pravilo sektora (`department` popunjen) — važi za sve u tom sektoru;
+  - kućni stil firme (oba prazna) — važi za sve, i za one koji tek nastaju.
 
 Pouka nije memorija: ne bledi i ne zavisi od retrieval-a. Zato se u prompt
 stavlja doslovno, ograničena brojem, a urednik je gasi kad prestane da važi.
@@ -25,6 +25,7 @@ from apps.personas.models import Persona
 #: Koliko pouka ide u prompt — po nivou. Najnovije prve.
 PROMPT_LIMIT_PERSONA = 10
 PROMPT_LIMIT_GLOBAL = 10
+PROMPT_LIMIT_DEPARTMENT = 10
 _EXCERPT = 120
 
 
@@ -57,8 +58,13 @@ def describe_edit(before: str, after: str, *, max_ops: int = 3) -> str:
 
 
 def learn(*, persona: Persona, kind: str, actor: str, reason: str = "", before: str = "",
-          after: str = "", everyone: bool = False, source_action=None) -> EditorialLesson | None:
-    """Pravi pouku iz odluke. Vraća None kad nema šta da se nauči."""
+          after: str = "", everyone: bool = False, department=None,
+          source_action=None) -> EditorialLesson | None:
+    """Pravi pouku iz odluke. Vraća None kad nema šta da se nauči.
+
+    Domet je tačno jedan: `everyone` (cela firma) > `department` (sektor) >
+    agent. Šira odluka poništava užu, da pouka ne bi važila dvaput.
+    """
     reason = (reason or "").strip()
     if kind == "edited":
         change = describe_edit(before, after)
@@ -74,36 +80,53 @@ def learn(*, persona: Persona, kind: str, actor: str, reason: str = "", before: 
         if not reason:
             return None
         text, ex_before, ex_after = reason, "", ""
-    target = None if everyone else persona
-    dup = EditorialLesson.objects.filter(persona=target, text=text[:500], is_active=True).first()
+    dep = None if everyone else department
+    target = None if (everyone or dep is not None) else persona
+    dup = EditorialLesson.objects.filter(persona=target, department=dep, text=text[:500],
+                                         is_active=True).first()
     if dup:
         return dup
     lesson = EditorialLesson.objects.create(
-        persona=target, kind=kind, text=text[:500], example_before=ex_before,
-        example_after=ex_after, source_action=source_action, created_by=actor[:120])
+        persona=target, department=dep, kind=kind, text=text[:500],
+        example_before=ex_before, example_after=ex_after, source_action=source_action,
+        created_by=actor[:120])
+    scope = "all" if everyone else (dep.code if dep is not None else persona.public_id)
     audit.record("content.lesson.learned", persona=persona,
-                 details={"lesson_id": str(lesson.id), "kind": kind,
-                          "scope": "all" if everyone else persona.public_id})
+                 details={"lesson_id": str(lesson.id), "kind": kind, "scope": scope})
     return lesson
 
 
-def active_for(persona: Persona) -> tuple[list[EditorialLesson], list[EditorialLesson]]:
-    """(kućni stil, pouke persone) — aktivne, najnovije prve, sa plafonom."""
+def active_for(persona: Persona) -> tuple[list[EditorialLesson], list[EditorialLesson],
+                                          list[EditorialLesson]]:
+    """(kućni stil, pravila sektora, pouke agenta) — aktivne, najnovije prve."""
+    from apps.personas.org import department_of
+
     qs = EditorialLesson.objects.filter(is_active=True).order_by("-created_at")
-    return (list(qs.filter(persona__isnull=True)[:PROMPT_LIMIT_GLOBAL]),
+    dep = department_of(persona)
+    dep_rules = (list(qs.filter(department=dep)[:PROMPT_LIMIT_DEPARTMENT])
+                 if dep is not None else [])
+    return (list(qs.filter(persona__isnull=True, department__isnull=True)[:PROMPT_LIMIT_GLOBAL]),
+            dep_rules,
             list(qs.filter(persona=persona)[:PROMPT_LIMIT_PERSONA]))
 
 
 def prompt_section(persona: Persona) -> str:
-    org, own = active_for(persona)
-    if not org and not own:
+    firm, dep, own = active_for(persona)
+    if not firm and not dep and not own:
         return ""
     lines = ["## pouke urednika (obavezno poštuj; novije imaju prednost)"]
-    lines += [f"- [svi] {x.text}" for x in org]
+    lines += [f"- [svi] {x.text}" for x in firm]
+    lines += [f"- [{x.department.code}] {x.text}" for x in dep]
     lines += [f"- {x.text}" for x in own]
     return "\n".join(lines)
 
 
 def visible(persona: Persona):
-    return (EditorialLesson.objects.filter(Q(persona=persona) | Q(persona__isnull=True))
-            .order_by("-is_active", "-created_at"))
+    from apps.personas.org import department_of
+
+    dep = department_of(persona)
+    scope = Q(persona=persona) | Q(persona__isnull=True, department__isnull=True)
+    if dep is not None:
+        scope |= Q(department=dep)
+    return (EditorialLesson.objects.filter(scope)
+            .select_related("department").order_by("-is_active", "-created_at"))

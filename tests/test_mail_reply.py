@@ -153,11 +153,23 @@ class TestDraft:
         with bind(actor_id="service:mail-poll"):
             action = reply.draft_reply(m, now=NOW)
         assert action is not None and action.action_type == "mail.reply"
-        assert action.status != E.ActionStatus.SUCCEEDED
+        # ADR-0017: svaki odgovor traži odobrenje, ne samo prvi po adresatu.
+        assert action.status == E.ActionStatus.APPROVAL_PENDING
         assert action.input_json["to"] == "petar@kupac.rs"
         assert action.input_json["subject"] == "Re: Upit za rokove"
         assert action.input_json["text"].strip()
         assert not MailMessage.objects.filter(direction=E.MailDirection.OUTBOUND).exists()
+
+    def test_second_reply_to_same_address_also_waits(self, mila, mc):
+        """Nalaz od 23.09.: drugi odgovor je ranije prolazio bez čoveka."""
+        acc = _box(mila)
+        first = self._inbound(acc)
+        second_raw = HUMAN.replace(b"<u1@kupac.rs>", b"<u3@kupac.rs>")
+        with bind(actor_id="service:mail-poll"):
+            second = mailbox.store_inbound(acc, second_raw, NOW)
+            reply.draft_reply(first, now=NOW)
+            a2 = reply.draft_reply(second, now=NOW)
+        assert a2.status == E.ActionStatus.APPROVAL_PENDING
 
     def test_same_message_answered_once(self, mila, mc):
         acc = _box(mila)

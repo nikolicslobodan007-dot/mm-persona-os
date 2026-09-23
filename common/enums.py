@@ -43,6 +43,7 @@ __all__ = [
     "KillSwitchScope",
     "ErrorCode",
     "QueueName",
+    "OrgLevel",
     "OUTCOME_TO_STATUS",
     "EFFECT_TO_ZONE",
     "RISK_BANDS",
@@ -613,6 +614,20 @@ class QueueName(CanonEnum):
 #
 # Pravilo za buduće izmene: vrednost odavde koja uđe u ugovor, u event payload
 # ili u policy DSL prestaje da bude radna i seli se gore, kroz ADR.
+
+
+class OrgLevel(CanonEnum):
+    """Nivo radnog mesta u organizaciji (ADR-0017).
+
+    Nije poverenje i nije dozvola: L-nivoi iz Canon §3.11 odlučuju šta agent
+    sme, a ovo samo kaže ko kome odgovara i ko je za šta zadužen.
+    """
+
+    HEAD = "head"
+    LEAD = "lead"
+    SENIOR = "senior"
+    MEDIOR = "medior"
+    JUNIOR = "junior"
 
 
 class ScopeKind(CanonEnum):

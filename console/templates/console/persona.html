@@ -55,16 +55,52 @@
 <button class="primary">Otvori sandučić</button></form>{% endif %}{% endif %}
 </div>
 
+<div class="card mt16"><h2>Radno mesto i dosije</h2>
+{% if org.position %}
+<p class="sub">{{ org.department.name }} · <strong>{{ org.position.title }}</strong>{% if org.position.specialty %} — {{ org.position.specialty }}{% endif %}.
+  Odgovara: {% if org.boss %}<a href="/console/personas/{{ org.boss.public_id }}">{{ org.boss.display_name }}</a>{% else %}čoveku{% endif %} ·
+  eskalacija: <span class="mono">{{ org.escalation }}</span></p>
+{% else %}<p class="sub">Nije raspoređen ni na jedno radno mesto.</p>{% endif %}
+{% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/assign" class="row mb12">{% csrf_token %}
+  <select name="position" class="grow">{% for pos in org.choices %}<option value="{{ pos.code }}"{% if org.position and pos.code == org.position.code %} selected{% endif %}>{{ pos.department.name }} — {{ pos.title }}</option>{% endfor %}</select>
+  <button>Rasporedi</button></form>{% endif %}
+
+<h2 class="mt16">Dosije</h2>
+<p class="sub mb12">Modelovana biografija — izmišljena, dosledna i bez državnog identiteta.
+  Visina, građa i boje služe slici; godine i mesto ulaze u ton pisanja.</p>
+{% if can_draft %}
+<form method="post" action="/console/personas/{{ p.public_id }}/dossier">{% csrf_token %}
+<table>
+<tr><td class="small">Datum rođenja</td><td><input type="date" name="birth_date" value="{{ p.birth_date_model|date:'Y-m-d' }}"></td>
+    <td class="small">Mesto rođenja</td><td><input name="birth_place" maxlength="120" value="{{ org.dossier.birth_place|default:'' }}"></td></tr>
+<tr><td class="small">Prebivalište</td><td><input name="residence" maxlength="160" value="{{ org.dossier.residence|default:'' }}"></td>
+    <td class="small">Porodični status</td><td><input name="marital_status" maxlength="48" value="{{ org.dossier.marital_status|default:'' }}"></td></tr>
+<tr><td class="small">Visina (cm)</td><td><input name="height_cm" type="number" min="120" max="230" value="{{ org.dossier.height_cm|default:'' }}"></td>
+    <td class="small">Težina (kg)</td><td><input name="weight_kg" type="number" min="35" max="250" value="{{ org.dossier.weight_kg|default:'' }}"></td></tr>
+<tr><td class="small">Građa</td><td><input name="build" maxlength="48" value="{{ org.dossier.build|default:'' }}"></td>
+    <td class="small">Deca</td><td><input name="children" type="number" min="0" max="12" value="{{ org.dossier.children|default:'0' }}"></td></tr>
+<tr><td class="small">Boja očiju</td><td><input name="eye_color" maxlength="32" value="{{ org.dossier.eye_color|default:'' }}"></td>
+    <td class="small">Boja kose</td><td><input name="hair_color" maxlength="32" value="{{ org.dossier.hair_color|default:'' }}"></td></tr>
+<tr><td class="small">Frizura</td><td><input name="hair_style" maxlength="64" value="{{ org.dossier.hair_style|default:'' }}"></td>
+    <td class="small">Hobiji</td><td><input name="hobbies" class="grow" value="{% for h in org.dossier.hobbies %}{{ h }}{% if not forloop.last %}, {% endif %}{% endfor %}" placeholder="zarezom odvojeno"></td></tr>
+</table>
+<p class="small mt8">Opis izgleda (osnov za sliku — isti lik na svakoj):</p>
+<textarea name="appearance_prompt" rows="3" class="grow" maxlength="200">{{ org.dossier.appearance_prompt|default:'' }}</textarea>
+<div class="row mt8"><button>Sačuvaj dosije</button>{% if org.dossier %}<span class="sub">verzija {{ org.dossier.dossier_version }}</span>{% endif %}</div>
+</form>{% elif org.dossier %}<p class="sub">Dosije v{{ org.dossier.dossier_version }} — {{ org.dossier.residence }}.</p>{% endif %}
+</div>
+
 <div class="card mt16"><h2>Pouke urednika</h2>
 <p class="sub mb12">Ulaze u svaki nacrt koji piše model. „Svi” važi za sve agente, i za nove.</p>
 {% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/lessons" class="row mb12">{% csrf_token %}
   <input type="text" name="text" class="grow" maxlength="500" placeholder="Novo pravilo pisanja, npr. „Koristi srpske navodnice „…” ”" required>
   <label class="row small"><input type="checkbox" name="everyone" value="1"> za sve agente</label>
+  <label class="row small"><input type="checkbox" name="sector" value="1"> za moj sektor</label>
   <button>Dodaj</button>
 </form>{% endif %}
 <table><tr><th>Kad</th><th>Važi za</th><th>Pravilo</th><th></th></tr>
 {% for l in lessons %}<tr{% if not l.is_active %} class="muted"{% endif %}><td class="small">{{ l.created_at|date:"d.m. H:i" }}</td>
-<td>{% if l.persona_id %}<span class="pill">{{ p.public_id }}</span>{% else %}<span class="pill ok">svi</span>{% endif %}</td>
+<td>{% if l.persona_id %}<span class="pill">{{ p.public_id }}</span>{% elif l.department_id %}<span class="pill">{{ l.department.code }}</span>{% else %}<span class="pill ok">svi</span>{% endif %}</td>
 <td class="small">{{ l.text }}</td>
 <td>{% if can_draft %}<form method="post" action="/console/lessons/{{ l.id }}/toggle">{% csrf_token %}
   <input type="hidden" name="back" value="/console/personas/{{ p.public_id }}">

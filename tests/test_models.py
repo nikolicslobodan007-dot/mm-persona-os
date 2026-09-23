@@ -46,6 +46,9 @@ class TestAppOwnership:
             "Persona", "PersonaAlias", "PersonaTag", "PersonaTagLink",
             "Biography", "LifeEvent", "IdentityFact", "TraitProfile",
             "VoiceProfile",
+            # ADR-0017 — organizacija i dosije žive uz personu, ne u zasebnom app-u
+            # (Canon §1 ima tačno 12 app-ova).
+            "Department", "Position", "Assignment", "PersonaDossier",
         },
         "visuals": {
             "VisualProfile", "MediaAsset", "AssetCollection", "AssetCollectionItem",

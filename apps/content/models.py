@@ -249,7 +249,11 @@ class EditorialLesson(UUIDModel):
     persona = models.ForeignKey(
         "personas.Persona", null=True, blank=True, on_delete=models.CASCADE,
         related_name="editorial_lessons",
-        help_text="Prazno = važi za sve persone.")
+        help_text="Prazno = važi za sve persone (ili za ceo sektor, ako je on popunjen).")
+    department = models.ForeignKey(
+        "personas.Department", null=True, blank=True, on_delete=models.CASCADE,
+        related_name="editorial_lessons",
+        help_text="Popunjeno = pouka važi za sve u tom sektoru (ADR-0017).")
     kind = models.CharField(max_length=16, help_text="rejected | edited | manual")
     text = models.CharField(max_length=500, help_text="Pravilo, kako ga model čita.")
     example_before = models.CharField(max_length=300, blank=True)
@@ -261,8 +265,18 @@ class EditorialLesson(UUIDModel):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        indexes = [models.Index(fields=["persona", "is_active", "created_at"])]
+        indexes = [models.Index(fields=["persona", "is_active", "created_at"]),
+                   models.Index(fields=["department", "is_active", "created_at"])]
+        constraints = [
+            models.CheckConstraint(
+                # Pouka ima tačno jedan domet: agent, sektor ili cela firma.
+                condition=~(models.Q(persona__isnull=False)
+                            & models.Q(department__isnull=False)),
+                name="lesson_single_scope",
+            )
+        ]
 
     def __str__(self) -> str:
-        return f"{self.persona_id or 'SVI'}: {self.text[:60]}"
+        who = self.persona_id or self.department_id or "SVI"
+        return f"{who}: {self.text[:60]}"
 

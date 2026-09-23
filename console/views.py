@@ -216,10 +216,14 @@ def _learn(action, decision, reason, before, override, request):
     kind = {"REJECTED": "rejected", "APPROVED_WITH_CHANGES": "edited"}.get(decision)
     if kind is None:
         return None
+    from apps.personas.org import department_of
+
+    dep = department_of(action.persona) if request.POST.get("sector") == "1" else None
     return lessons.learn(persona=action.persona, kind=kind, actor=principal_of(request.user),
                          reason=reason, before=before,
                          after=(override or {}).get("text", ""),
-                         everyone=request.POST.get("everyone") == "1", source_action=action)
+                         everyone=request.POST.get("everyone") == "1", department=dep,
+                         source_action=action)
 
 
 def _sync_content(action: Action) -> None:
@@ -257,6 +261,7 @@ def persona(request, public_id: str):
         "llm_keys": _llm_keys(p),
         "lessons": _lessons(p),
         "mail": _mail(p),
+        "org": _org(p),
         "can_draft": bool(_roles(request.user) & _DRAFTERS)
         and p.status in {E.PersonaStatus.READY.value, E.PersonaStatus.ACTIVE.value},
         "manual_limit": _manual_limit(),
@@ -273,6 +278,19 @@ def _mail(p) -> dict:
             "enabled": mailbox.enabled(),
             "inbox": MailMessage.objects.filter(persona=p, direction="in")
             .order_by("-received_at")[:10] if acc else []}
+
+
+def _org(p) -> dict:
+    """Radno mesto, šef i dosije — za karticu na strani persone (ADR-0017)."""
+    from apps.personas import org
+    from apps.personas.models import Position
+
+    pos = org.position_of(p)
+    return {"position": pos, "department": pos.department if pos else None,
+            "boss": org.manager_of(p), "chain": org.chain_of_command(p),
+            "escalation": org.escalation_target(p), "dossier": org.dossier_of(p),
+            "choices": Position.objects.select_related("department")
+            .order_by("department__sort_order", "code")}
 
 
 def _lessons(p):
@@ -348,10 +366,108 @@ def persona_lesson_add(request, public_id: str):
         messages.error(request, "Tvoja uloga ne menja pravila pisanja.")
     elif lessons.learn(persona=p, kind="manual", actor=principal_of(request.user),
                        reason=request.POST.get("text", "")[:500],
-                       everyone=request.POST.get("everyone") == "1") is None:
+                       everyone=request.POST.get("everyone") == "1",
+                       department=(org_module().department_of(p)
+                                   if request.POST.get("sector") == "1" else None)) is None:
         messages.error(request, "Upiši pravilo.")
     else:
         messages.success(request, "Pravilo dodato.")
+    return redirect(f"/console/personas/{public_id}")
+
+
+def org_module():
+    from apps.personas import org
+
+    return org
+
+
+@console_view
+def org_chart(request):
+    """Ko je kome šef i ko je na kom radnom mestu (ADR-0017)."""
+    from apps.personas.models import Department
+
+    deps = (Department.objects.filter(is_active=True)
+            .prefetch_related("positions__assignments__persona", "positions__reports_to")
+            .order_by("sort_order"))
+    rows = []
+    for d in deps:
+        items = []
+        for pos in sorted(d.positions.all(), key=lambda x: (x.level != "head", x.code)):
+            items.append({"pos": pos,
+                          "people": [a.persona for a in pos.assignments.all()
+                                     if a.ended_at is None]})
+        rows.append({"dep": d, "positions": items})
+    total = sum(len(i["people"]) for r in rows for i in r["positions"])
+    return render(request, "console/org.html",
+                  _nav(request) | {"rows": rows, "total": total})
+
+
+@console_view
+@require_POST
+def persona_assign(request, public_id: str):
+    """Premešta agenta na drugo radno mesto (ADR-0017)."""
+    from apps.personas import org
+    from apps.personas.models import Position
+
+    p = Persona.objects.filter(public_id=public_id).first()
+    if p is None:
+        raise Http404
+    if not (_roles(request.user) & _DRAFTERS):
+        messages.error(request, "Tvoja uloga ne menja raspored.")
+        return redirect(f"/console/personas/{public_id}")
+    pos = Position.objects.filter(code=request.POST.get("position", "")).first()
+    if pos is None:
+        messages.error(request, "Nepoznato radno mesto.")
+    else:
+        try:
+            org.assign(p, pos, actor=principal_of(request.user),
+                       note=request.POST.get("note", "")[:240])
+            messages.success(request, f"{p.display_name}: {pos.title}.")
+        except org.OrgError as e:
+            messages.error(request, str(e))
+    return redirect(f"/console/personas/{public_id}")
+
+
+#: Polja dosijea koja se menjaju iz konzole. Brojevi se čiste, ostalo je tekst.
+_DOSSIER_TEXT = ("birth_place", "residence", "build", "eye_color", "hair_color",
+                 "hair_style", "marital_status", "appearance_prompt")
+_DOSSIER_INT = ("height_cm", "weight_kg", "children")
+
+
+@console_view
+@require_POST
+def persona_dossier(request, public_id: str):
+    """Upis dosijea — modelovana biografija, bez državnog identiteta (Canon §17)."""
+    from datetime import date
+
+    from apps.personas import org
+
+    p = Persona.objects.filter(public_id=public_id).first()
+    if p is None:
+        raise Http404
+    if not (_roles(request.user) & _DRAFTERS):
+        messages.error(request, "Tvoja uloga ne menja dosije.")
+        return redirect(f"/console/personas/{public_id}")
+    fields = {k: request.POST.get(k, "").strip()[:200] for k in _DOSSIER_TEXT}
+    for k in _DOSSIER_INT:
+        raw = request.POST.get(k, "").strip()
+        if raw.isdigit():
+            fields[k] = int(raw)
+    hobbies = [h.strip() for h in request.POST.get("hobbies", "").split(",") if h.strip()]
+    fields["hobbies"] = hobbies[:8]
+    born = None
+    raw_born = request.POST.get("birth_date", "").strip()
+    if raw_born:
+        try:
+            born = date.fromisoformat(raw_born)
+        except ValueError:
+            messages.error(request, "Datum rođenja: format GGGG-MM-DD.")
+            return redirect(f"/console/personas/{public_id}")
+    try:
+        org.set_dossier(p, actor=principal_of(request.user), birth_date=born, **fields)
+        messages.success(request, "Dosije upisan.")
+    except org.OrgError as e:
+        messages.error(request, str(e))
     return redirect(f"/console/personas/{public_id}")
 
 
