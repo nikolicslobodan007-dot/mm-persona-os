@@ -72,8 +72,11 @@ class TestAssignment:
         assert Assignment.objects.filter(persona=firma, ended_at__isnull=True).count() == 1
 
     def test_headcount_is_respected(self, firma):
+        """Šefovska stolica je za jednog; izvršilačka mesta primaju više (ADR-0028)."""
         other = _second()
-        pos = Position.objects.get(code="URE-SR")  # headcount_max = 1, zauzeto
+        pos = Position.objects.get(code="SEF-MKT")      # headcount_max = 1
+        with bind(actor_id="user:slobodan"):
+            org.assign(firma, pos, actor="user:slobodan")   # stolica je sada zauzeta
         with bind(actor_id="user:slobodan"), pytest.raises(org.OrgError) as e:
             org.assign(other, pos, actor="user:slobodan")
         assert e.value.code == "VALIDATION_ERROR"

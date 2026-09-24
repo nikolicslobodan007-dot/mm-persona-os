@@ -37,32 +37,59 @@ DEPARTMENTS: tuple[tuple[str, str, str], ...] = (
      "Pravila platformi, AI oznake, incidenti i provera pre objave."),
 )
 
-#: (code, sektor, naziv, nivo, specijalnost, odgovara, poslovi)
-POSITIONS: tuple[tuple[str, str, str, str, str, str | None, list[str]], ...] = (
+#: (code, sektor, naziv, nivo, specijalnost, odgovara, poslovi, koliko ljudi)
+#: Šefovska mesta su za jednog; izvršilačka primaju više agenata, jer se posao
+#: deli po jeziku, tržištu i smeni (ADR-0017, dopuna 24.09.).
+POSITIONS: tuple[tuple[str, str, str, str, str, str | None, list[str], int], ...] = (
     ("DIR-00", "UPRAVA", "Direktor korporacije", L.HEAD, "vođenje", None,
-     ["postavlja ciljeve sektorima", "prati merenja i troškove"]),
+     ["postavlja ciljeve sektorima", "prati merenja i troškove"], 1),
+    ("UPR-ASI", "UPRAVA", "Asistent uprave", L.MEDIOR, "izveštaji", "DIR-00",
+     ["sprema preglede za direktora", "prati rokove po sektorima"], 1),
+
     ("SEF-NAB", "NABAVKA", "Šef nabavke", L.HEAD, "dobavljači", "DIR-00",
-     ["traži proizvođače", "ugovara uslove i robnu marku"]),
+     ["traži proizvođače", "ugovara uslove i robnu marku"], 1),
+    ("NAB-REF", "NABAVKA", "Referent nabavke", L.MEDIOR, "proizvođači i uzorci",
+     "SEF-NAB", ["traži i upoređuje dobavljače", "vodi prepisku o uzorcima"], 3),
+
     ("SEF-PRO", "PRODAJA", "Šef prodaje i izvoza", L.HEAD, "izvoz", "DIR-00",
-     ["vodi tržišta", "priprema ponude"]),
+     ["vodi tržišta", "priprema ponude"], 1),
+    ("PRO-REF", "PRODAJA", "Referent prodaje", L.MEDIOR, "ponude i upiti",
+     "SEF-PRO", ["odgovara na upite kupaca", "priprema nacrte ponuda"], 3),
+
     ("SEF-MKT", "MARKETING", "Šef marketinga", L.HEAD, "sadržaj", "DIR-00",
-     ["planira teme i kalendar", "pušta sadržaj u odobrenje"]),
-    ("SEF-POD", "PODRSKA", "Šef podrške", L.HEAD, "korisnici", "DIR-00",
-     ["prati poštu i upite", "vodi reklamacije"]),
-    ("SEF-LOG", "LOGISTIKA", "Šef logistike", L.HEAD, "otprema", "DIR-00",
-     ["prati rokove", "usklađuje magacin i otpremu"]),
-    ("SEF-FIN", "FINANSIJE", "Šef finansija", L.HEAD, "marže", "DIR-00",
-     ["prati avanse i marže", "prati troškove sistema"]),
-    ("SEF-IST", "ISTRAZIVANJE", "Šef istraživanja", L.HEAD, "tržište", "DIR-00",
-     ["prati konkurenciju i cene", "priprema nalaze za ostale sektore"]),
-    ("SEF-KVA", "KVALITET", "Šef kvaliteta i usklađenosti", L.HEAD, "pravila", "DIR-00",
-     ["prati pravila platformi i AI oznake", "vodi incidente"]),
+     ["planira teme i kalendar", "pušta sadržaj u odobrenje"], 1),
     ("URE-SR", "MARKETING", "Urednik sadržaja — B2B, srpski", L.SENIOR,
      "B2B, automatizacija, produktivnost", "SEF-MKT",
      ["piše nacrte objava sa izvorom", "odgovara na poslovnu poštu",
-      "uči iz odluka urednika"]),
+      "uči iz odluka urednika"], 2),
+    ("MKT-DRU", "MARKETING", "Urednik društvenih mreža", L.MEDIOR,
+     "kratke objave i zajednica", "SEF-MKT",
+     ["prilagođava tekst platformi", "prati šta je odjeknulo"], 2),
+
+    ("SEF-POD", "PODRSKA", "Šef podrške", L.HEAD, "korisnici", "DIR-00",
+     ["prati poštu i upite", "vodi reklamacije"], 1),
     ("POD-SR", "PODRSKA", "Agent podrške — srpski", L.MEDIOR, "upiti i reklamacije",
-     "SEF-POD", ["odgovara na pristigla pitanja", "prosleđuje ono što traži čoveka"]),
+     "SEF-POD", ["odgovara na pristigla pitanja", "prosleđuje ono što traži čoveka"], 3),
+
+    ("SEF-LOG", "LOGISTIKA", "Šef logistike", L.HEAD, "otprema", "DIR-00",
+     ["prati rokove", "usklađuje magacin i otpremu"], 1),
+    ("LOG-REF", "LOGISTIKA", "Referent otpreme", L.MEDIOR, "rokovi i prevoznici",
+     "SEF-LOG", ["prati pošiljke i rokove", "javlja kašnjenja pre nego što se vide"], 3),
+
+    ("SEF-FIN", "FINANSIJE", "Šef finansija", L.HEAD, "marže", "DIR-00",
+     ["prati avanse i marže", "prati troškove sistema"], 1),
+    ("FIN-REF", "FINANSIJE", "Referent naplate", L.MEDIOR, "avansi i naplata",
+     "SEF-FIN", ["prati ko je platio i ko kasni", "priprema podsetnike za naplatu"], 2),
+
+    ("SEF-IST", "ISTRAZIVANJE", "Šef istraživanja", L.HEAD, "tržište", "DIR-00",
+     ["prati konkurenciju i cene", "priprema nalaze za ostale sektore"], 1),
+    ("IST-ANA", "ISTRAZIVANJE", "Analitičar tržišta", L.MEDIOR, "cene i konkurencija",
+     "SEF-IST", ["prati cene i ponudu konkurencije", "piše kratke nalaze sa izvorom"], 3),
+
+    ("SEF-KVA", "KVALITET", "Šef kvaliteta i usklađenosti", L.HEAD, "pravila", "DIR-00",
+     ["prati pravila platformi i AI oznake", "vodi incidente"], 1),
+    ("KVA-KON", "KVALITET", "Kontrolor usklađenosti", L.MEDIOR, "provera pre objave",
+     "SEF-KVA", ["proverava oznake i tvrdnje pre objave", "prijavljuje odstupanja"], 2),
 )
 
 #: Modelovani dosije referentne persone (ADR-0017). Izmišljeno i dosledno.
@@ -113,13 +140,14 @@ class Command(BaseCommand):
                               "human_owner": human_owner, "is_active": True})
                 deps[code] = d
             made = {}
-            for code, dep, title, level, specialty, _boss, duties in POSITIONS:
+            for code, dep, title, level, specialty, _boss, duties, koliko in POSITIONS:
                 p, _ = Position.objects.update_or_create(
                     code=code,
                     defaults={"department": deps[dep], "title": title, "level": level,
-                              "specialty": specialty, "duties": duties})
+                              "specialty": specialty, "duties": duties,
+                              "headcount_max": koliko})
                 made[code] = p
-            for code, _dep, _t, _l, _s, boss, _d in POSITIONS:
+            for code, _dep, _t, _l, _s, boss, _d, _k in POSITIONS:
                 if boss:
                     Position.objects.filter(pk=made[code].pk).update(
                         reports_to=made[boss])

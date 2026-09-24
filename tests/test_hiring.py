@@ -128,10 +128,16 @@ class TestPremestaj:
         assert rasporedi.last().ended_at is None
 
     def test_full_seat_is_refused(self, firma_pre):
-        """Dok Mila sedi na uredničkom mestu, niko drugi tamo ne može."""
+        """Šefovska stolica je za jednog: drugi na njoj biva odbijen.
+
+        Izvršilačka mesta primaju više agenata (`headcount_max`), pa se pravilo
+        proverava na mestu šefa, ne na uredničkom.
+        """
+        call_command("premesti", "--persona", "P-00001", "--mesto", "SEF-MKT",
+                     stdout=io.StringIO())
         ana = _zaposli(ime="Ana Perić", mesto="POD-SR")
         with pytest.raises(CommandError, match="popunjeno"):
-            call_command("premesti", "--persona", ana.public_id, "--mesto", "URE-SR",
+            call_command("premesti", "--persona", ana.public_id, "--mesto", "SEF-MKT",
                          stdout=io.StringIO())
 
 
@@ -203,3 +209,62 @@ class TestJezik:
         org.set_dossier(firma, actor="user:boss",
                         appearance_prompt="Žena u tridesetim, vitka.")
         assert "b2b" not in generator.appearance_of(firma)
+
+
+class TestEkipa:
+    """ADR-0028 — prva ekipa: po nekoliko agenata na svakom radnom mestu."""
+
+    def test_every_position_gets_someone(self, firma):
+        """Sa Milom na čelu marketinga i Jovanom u uredništvu — nijedno mesto prazno.
+
+        Spisak namerno ne sadrži njih dvoje: oni već postoje, a komanda ne dira
+        postojeće agente.
+        """
+        from apps.personas import ekipa, org
+        from apps.personas.models import Position
+
+        _zaposli()                                   # Jovan na URE-SR
+        call_command("seed_ekipa", stdout=io.StringIO())
+        prazna = [p.code for p in Position.objects.all() if not org.holders(p)]
+        assert prazna == [], prazna
+        assert Persona.objects.count() == len(ekipa.EKIPA) + 2
+
+    def test_roster_is_mixed_and_balanced(self):
+        """Evropska imena, otprilike pola-pola — to je odluka, pa se i proverava."""
+        from apps.personas import ekipa
+
+        imena = [r["ime"] for r in ekipa.EKIPA]
+        assert len(imena) == len(set(imena))                  # bez duplikata
+        # Imena van srpskog kruga: mađarska, slovačka, bošnjačka, hrvatska, češka.
+        strana = [i for i in imena if i.split()[1] in
+                  {"Kovács", "Halupka", "Hadžić", "Farkaš", "Salihović", "Horvat",
+                   "Mujić", "Nagy", "Tomaško", "Begović", "Tóth", "Kučera"}]
+        assert len(strana) >= 10
+        zene = [r for r in ekipa.EKIPA if r["marital_status"] in
+                ("udata", "neudata", "razvedena") or r["izgled"].startswith("Žena")]
+        assert 0.4 <= len(zene) / len(ekipa.EKIPA) <= 0.6
+
+    def test_dossier_and_niches_are_written(self, firma_pre):
+        from apps.personas import org
+
+        call_command("seed_ekipa", "--samo", "KVALITET", stdout=io.StringIO())
+        darko = Persona.objects.get(slug="darko-simic")
+        d = org.dossier_of(darko)
+        assert d.birth_place == "Pančevo" and d.height_cm == 186
+        assert d.appearance_prompt.startswith("Muškarac")
+        assert darko.tag_links.count() == 2                    # dve niše
+
+    def test_running_twice_changes_nothing(self, firma_pre):
+        call_command("seed_ekipa", "--samo", "FINANSIJE", stdout=io.StringIO())
+        koliko = Persona.objects.count()
+        out = io.StringIO()
+        call_command("seed_ekipa", "--samo", "FINANSIJE", stdout=out)
+        assert Persona.objects.count() == koliko
+        assert "već postoji" in out.getvalue()
+
+    def test_show_does_not_write(self, firma_pre):
+        koliko = Persona.objects.count()
+        out = io.StringIO()
+        call_command("seed_ekipa", "--pokazi", stdout=out)
+        assert Persona.objects.count() == koliko
+        assert "Ukupno na spisku" in out.getvalue()
