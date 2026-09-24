@@ -573,3 +573,66 @@ class TestMasovnaAkcija:
                {"agenti": ["P-00002"], "akcija": "OBRISI", "razlog": "ne"})
         jovan.refresh_from_db()
         assert jovan.status == E.PersonaStatus.READY
+
+
+class TestKljuceviUKonzoli:
+    """ADR-0026 — ključ se unosi u konzoli, a vrednost se posle ne vidi nigde."""
+
+    @pytest.fixture
+    def tajne(self, settings, tmp_path):
+        settings.AGENT_SECRETS_DIR = str(tmp_path / "secrets")
+        return tmp_path / "secrets"
+
+    def test_tab_exists(self, boss, mila, tajne):
+        c = _login(Client(), boss)
+        html = c.get("/console/personas/P-00001").content.decode()
+        assert '<section data-tab="modeli">' in html and 'href="#modeli"' in html
+
+    def test_key_is_saved_and_never_shown_again(self, boss, mila, tajne):
+        from apps.llm_gateway.models import AgentCredential
+
+        c = _login(Client(), boss)
+        kljuc = "sk-or-v1-0123456789abcdef"
+        r = c.post("/console/personas/P-00001/kljuc",
+                   {"provider": "openrouter", "kljuc": kljuc, "label": "OpenRouter"})
+        assert r.status_code == 302
+        cred = AgentCredential.objects.get(persona=mila, provider="openrouter")
+        assert cred.credential_ref.startswith("file:")
+        html = c.get("/console/personas/P-00001").content.decode()
+        assert kljuc not in html                      # vrednost se ne vraća
+        assert "…cdef" in html or "cdef" in html      # samo otisak
+
+    def test_bad_key_is_refused_with_a_message(self, boss, mila, tajne):
+        from apps.llm_gateway.models import AgentCredential
+
+        c = _login(Client(), boss)
+        r = c.post("/console/personas/P-00001/kljuc",
+                   {"provider": "openrouter", "kljuc": "kratko"}, follow=True)
+        assert "znakova" in r.content.decode()
+        assert not AgentCredential.objects.exists()
+
+    def test_route_can_be_assigned_and_removed(self, boss, mila, tajne):
+        from apps.llm_gateway.models import AgentRoute, LLMRoute
+
+        ruta = LLMRoute.objects.create(
+            purpose=E.LLMPurpose.CONTENT_DRAFT.value, name="Jeftin",
+            provider="openrouter", model_key="mistral-small", is_enabled=False,
+            data_training_allowed=True)
+        c = _login(Client(), boss)
+        c.post("/console/personas/P-00001/ruta", {"ruta": str(ruta.pk), "prioritet": "0"})
+        assert AgentRoute.objects.filter(persona=mila, route=ruta).exists()
+        ar = AgentRoute.objects.get(persona=mila, route=ruta)
+        c.post("/console/personas/P-00001/ruta", {"ukloni": str(ar.pk)})
+        assert not AgentRoute.objects.filter(persona=mila).exists()
+
+    def test_viewer_cannot_set_a_key(self, boss, mila, tajne):
+        from apps.llm_gateway.models import AgentCredential
+        from console.auth import console_view  # noqa: F401
+
+        u = User.objects.create_user("gledalac", password="Tajna-lozinka-1")
+        u.groups.add(Group.objects.get(name=E.Role.VIEWER.value))
+        call_command("console_totp", user="gledalac", stdout=io.StringIO())
+        c = _login(Client(), u)
+        c.post("/console/personas/P-00001/kljuc",
+               {"provider": "openrouter", "kljuc": "sk-or-v1-0123456789abcdef"})
+        assert not AgentCredential.objects.exists()

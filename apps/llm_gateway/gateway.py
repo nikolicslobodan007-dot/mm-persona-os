@@ -34,7 +34,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.llm_gateway import local
-from apps.llm_gateway.models import LLMRoute, LLMUsage, PromptRecord
+from apps.llm_gateway.models import AgentRoute, LLMRoute, LLMUsage, PromptRecord
 from common import enums as E
 
 LOCAL_PROVIDER = "local"
@@ -77,20 +77,40 @@ def local_route(purpose: E.LLMPurpose) -> LLMRoute:
     return route
 
 
-def routes(purpose: E.LLMPurpose) -> list[LLMRoute]:
-    rs = list(LLMRoute.objects.filter(purpose=purpose.value, is_enabled=True)
-              .exclude(provider=LOCAL_PROVIDER).order_by("priority", "name"))
-    return rs + [local_route(purpose)]
+def routes(purpose: E.LLMPurpose, persona=None) -> list[LLMRoute]:
+    """Rute za jednu svrhu: **prvo agentove, pa firmine, pa lokalni šablon**.
+
+    Agentova ruta nije nova vrsta rute nego pokazivač na postojeću (ADR-0026):
+    tako cena, `data_training_allowed` i ostali uslovi ostaju na jednom mestu,
+    a agent bira samo redosled.
+    """
+    # Agentova ruta ne traži da je ruta uključena za celu firmu: tako jedan
+    # agent sme da koristi model koji ostali nemaju, a da ga niko ne nasledi
+    # kroz rezervu (ADR-0026).
+    moje: list[LLMRoute] = []
+    if persona is not None:
+        moje = [ar.route for ar in AgentRoute.objects.filter(
+            persona=persona, purpose=purpose.value, is_enabled=True,
+        ).select_related("route").order_by("priority")]
+    uzeti = {r.pk for r in moje}
+    firmine = [r for r in LLMRoute.objects.filter(
+        purpose=purpose.value, is_enabled=True).exclude(
+        provider=LOCAL_PROVIDER).order_by("priority", "name") if r.pk not in uzeti]
+    return moje + firmine + [local_route(purpose)]
 
 
-def _external_allowed(route: LLMRoute) -> str | None:
+def _external_allowed(route: LLMRoute, persona=None) -> str | None:
     if not getattr(settings, "LLM_EXTERNAL_ENABLED", False):
         return "LLM_EXTERNAL_DISABLED"
     if not route.data_training_allowed:
         return "PROVIDER_MAY_TRAIN"
-    if route.provider not in getattr(settings, "LLM_CREDENTIALS", {}):
-        return "NO_CREDENTIAL_REF"
-    return None
+    # Ključ sme da dođe iz tri mesta: agentov ključ iz konzole (ADR-0026),
+    # promenljiva okruženja po agentu, ili zajednička. Nijedno od to troje —
+    # ruta ne postoji za ovog agenta, ma koliko bila jeftina.
+    ref, _izvor = credential_ref(route.provider, persona)
+    if ref:
+        return None
+    return "NO_PERSONA_KEY" if persona is not None else "NO_CREDENTIAL_REF"
 
 
 # ---------------------------------------------------------------- provajderi
@@ -126,6 +146,11 @@ def credential_ref(provider: str, persona=None) -> tuple[str | None, str]:
     Persona sa svojim ključem koristi njega. Bez njega koristi zajednički, osim
     ako je `LLM_REQUIRE_PERSONA_KEY=true` — tada ide na lokalni šablon.
     """
+    if persona is not None:
+        from apps.llm_gateway import secrets as agent_secrets
+
+        if (ref := agent_secrets.ref_for(persona, provider)):
+            return ref, "persona"
     name = persona_env_name(provider, persona)
     if name and os.environ.get(name, "").strip():
         return f"env:{name}", "persona"
@@ -139,17 +164,21 @@ def _call_external(route: LLMRoute, system: str, prompt: str,
                    persona=None) -> tuple[str, int, int, str]:
     from apps.runtime.transport import CredentialMissing, resolve_secret
 
-    ref, _source = credential_ref(route.provider, persona)
+    ref, source = credential_ref(route.provider, persona)
     if ref is None:
         raise LLMError("NO_PERSONA_KEY", persona.public_id if persona else "")
     try:
         key = resolve_secret(ref).strip()
     except CredentialMissing as e:
         raise LLMError("CREDENTIAL_MISSING", str(e)) from e
+    if source == "persona" and persona is not None and ref.startswith("file:"):
+        from apps.llm_gateway import secrets as agent_secrets
+
+        agent_secrets.touch(persona, route.provider)
     max_out = route.max_output_tokens or 800
     if route.provider == "anthropic":
-        base = getattr(settings, "LLM_BASE_URLS", {}).get("anthropic",
-                                                          "https://api.anthropic.com")
+        base = route.base_url or getattr(settings, "LLM_BASE_URLS", {}).get(
+            "anthropic", "https://api.anthropic.com")
         # Claude 5 generacija: `temperature`/`top_p` → 400, a razmišljanje je
         # uključeno ako se ne isključi. Za kratke objave ga isključujemo (brže,
         # jeftinije); ruta može da ga uključi sa quota_json {"thinking": "adaptive"}.
@@ -167,7 +196,8 @@ def _call_external(route: LLMRoute, system: str, prompt: str,
         return (text, int(u.get("input_tokens", 0)), int(u.get("output_tokens", 0)),
                 str(data.get("stop_reason", "")))
     if route.is_openai_compatible:
-        base = getattr(settings, "LLM_BASE_URLS", {}).get(route.provider)
+        base = route.base_url or getattr(settings, "LLM_BASE_URLS", {}).get(
+            route.provider)
         if not base:
             raise LLMError("NO_BASE_URL", route.provider)
         data = _post_json(f"{base.rstrip('/')}/chat/completions",
@@ -204,11 +234,11 @@ def generate(purpose: E.LLMPurpose, system: str, prompt: str, *, persona=None, r
     """
     now = now or timezone.now()
     fallbacks: list[str] = []
-    for route in ([only] if only is not None else routes(purpose)):
+    for route in ([only] if only is not None else routes(purpose, persona)):
         t0 = time.monotonic()
         external = route.provider != LOCAL_PROVIDER
         if external:
-            why = _external_allowed(route)
+            why = _external_allowed(route, persona)
             if why:
                 fallbacks.append(f"{route.provider}/{route.model_key}:{why}")
                 continue

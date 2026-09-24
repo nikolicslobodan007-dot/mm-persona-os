@@ -86,7 +86,8 @@ class TestAppOwnership:
             "AuditEvent", "MetricPoint", "CostLedger",
             "EventOutbox", "EventDelivery", "IdempotencyRecord",
         },
-        "llm_gateway": {"LLMRoute", "PromptRecord", "LLMUsage"},
+        "llm_gateway": {"LLMRoute", "PromptRecord", "LLMUsage",
+                    "AgentCredential", "AgentRoute"},
     }
 
     @pytest.mark.parametrize("app_label", sorted(OWNERSHIP))

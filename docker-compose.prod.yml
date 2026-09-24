@@ -75,6 +75,8 @@ services:
     volumes:
       - static:/app/staticfiles
       - media:/app/media
+      # Ključevi agenata (ADR-0026): fajlovi 0600, van baze i van slike.
+      - secrets:/secrets
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
@@ -85,6 +87,7 @@ services:
     # Canon §11.1 — beat na 30 s.
     command: celery -A config.celery beat --loglevel=INFO
     env_file: [.env.prod]
+    volumes: ["secrets:/secrets"]
     depends_on:
       redis: {condition: service_healthy}
       web: {condition: service_started}
@@ -98,6 +101,7 @@ services:
       -Q control,approval,persona.interactive,persona.scheduled,memory,maintenance
       --concurrency=2 --max-tasks-per-child=200
     env_file: [.env.prod]
+    volumes: ["secrets:/secrets"]
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
@@ -113,7 +117,7 @@ services:
       -Q browser --concurrency=${BROWSER_CONCURRENCY:-1} --max-tasks-per-child=25
     env_file: [.env.prod]
     shm_size: "1gb"           # bez ovoga Chromium puca na /dev/shm
-    volumes: ["browserprofiles:/app/browser_profiles"]
+    volumes: ["browserprofiles:/app/browser_profiles", "secrets:/secrets"]
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
@@ -125,6 +129,7 @@ services:
       celery -A config.celery worker --loglevel=INFO
       -Q channel,mail,media --concurrency=2 --max-tasks-per-child=200
     env_file: [.env.prod]
+    volumes: ["secrets:/secrets"]
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
@@ -144,6 +149,7 @@ services:
 
 volumes:
   pgdata:
+  secrets:
   redisdata:
   miniodata:
   browserprofiles:

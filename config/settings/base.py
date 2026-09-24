@@ -200,6 +200,9 @@ CONTENT_ASYNC = False
 LLM_EXTERNAL_ENABLED = os.environ.get("LLM_EXTERNAL_ENABLED", "false").lower() == "true"
 # provider → credential_ref (env:/file:). Tajna nikad u bazi.
 LLM_CREDENTIALS = {"anthropic": "env:ANTHROPIC_API_KEY"}
+#: Gde žive ključevi agenata unetih kroz konzolu (ADR-0026). Fajlovi 0600, van
+#: baze i van slike; direktorijum je docker volume, ne tmpfs.
+AGENT_SECRETS_DIR = os.environ.get("AGENT_SECRETS_DIR", "/secrets")
 #: ADR-0013 — svaka persona može imati svoj ključ (`ANTHROPIC_API_KEY_P00001`).
 #: true = persona bez svog ključa ne koristi zajednički, nego lokalni šablon.
 LLM_REQUIRE_PERSONA_KEY = os.environ.get("LLM_REQUIRE_PERSONA_KEY", "false").lower() == "true"

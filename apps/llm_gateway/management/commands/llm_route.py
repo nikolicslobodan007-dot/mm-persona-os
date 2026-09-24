@@ -6,6 +6,14 @@
     manage.py llm_route enable  --provider anthropic --model claude-sonnet-5
     manage.py llm_route disable --provider anthropic --model claude-sonnet-5
 
+Nov provajder ne traži izmenu koda (ADR-0026) — adresa API-ja ide uz rutu:
+
+    manage.py llm_route add --provider openrouter --model mistral-small \
+        --base-url https://openrouter.ai/api/v1 --ne-trenira --in-usd 0.2 --out-usd 0.6
+
+`--ne-trenira` se navodi **samo** kad uslovi provajdera izričito kažu da ne
+uči na poslatim podacima; bez toga gateway odbija rutu, ma koliko jeftina bila.
+
 Cene se unose u USD po milion tokena (kako ih provajder objavljuje) i
 pretvaraju u EUR mikrocente po 1000 tokena po kursu iz channels/platforms.yaml.
 Nova ruta je uvek isključena: prvo `content_eval`, pa odluka, pa `enable`.
@@ -47,15 +55,20 @@ class Command(BaseCommand):
         parser.add_argument("--in-usd", default="0", help="USD po milion ulaznih tokena")
         parser.add_argument("--out-usd", default="0", help="USD po milion izlaznih tokena")
         parser.add_argument("--max-output", type=int, default=800)
+        parser.add_argument("--base-url", default="",
+                            help="Adresa API-ja; prazno = iz podešavanja.")
+        parser.add_argument("--ne-trenira", action="store_true", dest="no_train",
+                            help="Uslovi provajdera izričito zabranjuju trening.")
         parser.add_argument("--actor", default="user:slobodan")
 
     def handle(self, *args, op, provider, model, purpose, priority, in_usd, out_usd,
-               max_output, actor, **opts):
+               max_output, actor, base_url, no_train, **opts):
         if op == "list":
             for r in LLMRoute.objects.order_by("purpose", "priority"):
                 self.stdout.write(
                     f"{r.purpose:14} {r.provider}/{r.model_key:28} prio {r.priority:<5} "
                     f"{'UKLJUČENA' if r.is_enabled else 'isključena':10} "
+                    f"{'ne trenira' if r.data_training_allowed else 'TRENIRA — odbija se':20} "
                     f"ulaz {r.input_price_micro_eur_per_1k} / izlaz "
                     f"{r.output_price_micro_eur_per_1k} µEUR/1k")
             return
@@ -67,7 +80,8 @@ class Command(BaseCommand):
                     purpose=purpose, provider=provider, model_key=model,
                     defaults={"name": f"{provider} {model}", "priority": priority,
                               "is_enabled": False, "max_output_tokens": max_output,
-                              "data_training_allowed": provider in NO_TRAINING,
+                              "data_training_allowed": no_train or provider in NO_TRAINING,
+                              "base_url": base_url.strip(),
                               "is_openai_compatible": provider != "anthropic",
                               "input_price_micro_eur_per_1k": _micro_eur_per_1k(in_usd),
                               "output_price_micro_eur_per_1k": _micro_eur_per_1k(out_usd),

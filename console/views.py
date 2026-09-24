@@ -20,6 +20,7 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods, require_POST
 
+from api import audit
 from api.base import principal_of, roles_of
 from apps.behaviour.models import BehaviourState
 from apps.content.models import ContentItem
@@ -409,6 +410,7 @@ def persona(request, public_id: str):
         "memory_scopes": _memory_scopes(p),
         "accounts": p.channel_accounts.all().order_by("channel_type"),
         "llm_keys": _llm_keys(p),
+        "modeli": _modeli(p),
         "lessons": _lessons(p),
         "mail": _mail(p),
         "org": _org(p),
@@ -492,6 +494,85 @@ def _llm_keys(p) -> list[tuple[str, str, str]]:
         out.append((f"{r.provider}/{r.model_key}", source,
                     gateway.persona_env_name(r.provider, p) or ""))
     return out
+
+
+def _modeli(p) -> dict:
+    """Ključevi i rute jednog agenta (ADR-0026). Nijedna vrednost ključa ne izlazi."""
+    from apps.llm_gateway import secrets as agent_secrets
+    from apps.llm_gateway.models import AgentRoute, LLMRoute
+
+    moje = (AgentRoute.objects.filter(persona=p).select_related("route")
+            .order_by("purpose", "priority"))
+    return {
+        "kljucevi": agent_secrets.listing(p),
+        "rute": list(moje),
+        "ponuda": list(LLMRoute.objects.filter(is_enabled=True)
+                       .exclude(provider="local").order_by("purpose", "priority")),
+        "svrhe": [s.value for s in E.LLMPurpose],
+    }
+
+
+@require_POST
+@console_view
+def persona_key(request, public_id: str):
+    """Upisuje ili uklanja ključ agenta. Vrednost ide u fajl, nikad u bazu."""
+    from apps.llm_gateway import secrets as agent_secrets
+
+    p = Persona.objects.filter(public_id=public_id).first()
+    if p is None:
+        raise Http404
+    if not _roles(request.user) & _DRAFTERS:
+        messages.error(request, "Tvoja uloga ne sme da menja ključeve.")
+        return redirect(f"/console/personas/{public_id}#modeli")
+    provider = (request.POST.get("provider") or "").strip().lower()
+    actor = principal_of(request.user)
+    try:
+        if request.POST.get("ukloni"):
+            ok = agent_secrets.drop_key(p, provider, actor=actor)
+            messages.success(request, f"Ključ za {provider} uklonjen."
+                             if ok else f"Ključ za {provider} ne postoji.")
+        else:
+            cred = agent_secrets.set_key(
+                p, provider, request.POST.get("kljuc", ""), actor=actor,
+                label=request.POST.get("label", ""))
+            messages.success(
+                request, f"Ključ za {provider} je sačuvan (…{cred.fingerprint}). "
+                         "Vrednost se više nigde ne prikazuje.")
+    except agent_secrets.SecretError as e:
+        messages.error(request, str(e))
+    return redirect(f"/console/personas/{public_id}#modeli")
+
+
+@require_POST
+@console_view
+def persona_route(request, public_id: str):
+    """Dodaje ili uklanja rutu agenta za jednu svrhu (ADR-0026)."""
+    from apps.llm_gateway.models import AgentRoute, LLMRoute
+
+    p = Persona.objects.filter(public_id=public_id).first()
+    if p is None:
+        raise Http404
+    if not _roles(request.user) & _DRAFTERS:
+        messages.error(request, "Tvoja uloga ne sme da menja rute.")
+        return redirect(f"/console/personas/{public_id}#modeli")
+    if (obrisi := request.POST.get("ukloni")):
+        AgentRoute.objects.filter(persona=p, pk=obrisi).delete()
+        messages.success(request, "Ruta uklonjena; agent se vraća na firminu.")
+        return redirect(f"/console/personas/{public_id}#modeli")
+    route = LLMRoute.objects.filter(pk=request.POST.get("ruta", "")).first()
+    if route is None:
+        messages.error(request, "Ta ruta ne postoji.")
+        return redirect(f"/console/personas/{public_id}#modeli")
+    AgentRoute.objects.update_or_create(
+        persona=p, purpose=route.purpose, route=route,
+        defaults={"priority": int(request.POST.get("prioritet") or 0),
+                  "is_enabled": True, "note": (request.POST.get("napomena") or "")[:240]})
+    audit.record("llm.agent_route.set", persona=p,
+                 details={"purpose": route.purpose,
+                          "route": f"{route.provider}/{route.model_key}",
+                          "actor": principal_of(request.user)})
+    messages.success(request, f"{route.purpose}: {route.provider}/{route.model_key}.")
+    return redirect(f"/console/personas/{public_id}#modeli")
 
 
 def _manual_limit() -> int:

@@ -20,6 +20,7 @@
   <a href="#lik">Lik i dosije</a>
   <a href="#sadrzaj">Sadržaj <span class="count">{{ items|length }}</span></a>
   <a href="#posta">Pošta <span class="count">{{ mail.inbox|length }}</span></a>
+  <a href="#modeli">Modeli i ključevi</a>
   <a href="#pravila">Pravila i poverenje</a>
   <a href="#akcije">Akcije</a>
 </div>
@@ -143,6 +144,63 @@
   </div>
 </section>
 
+<section data-tab="modeli">
+  <div class="card mb12"><h2>Ključevi</h2>
+  <p class="sub mb12">Ključ se upisuje u fajl na serveru, sa pravima samo za ovaj program —
+    <strong>u bazi ostaje samo putanja</strong>, nikad sama vrednost (ADR-0026). Zato se
+    posle upisa više nigde ne prikazuje: vidiš samo poslednja četiri znaka, kad je postavljen
+    i kad je poslednji put upotrebljen. Ako ga izgubiš, praviš nov kod provajdera.</p>
+  <table><tr><th>Provajder</th><th>Oznaka</th><th>Ključ</th><th>Postavio</th><th>Poslednji put</th><th></th></tr>
+  {% for k in modeli.kljucevi %}<tr>
+    <td class="mono">{{ k.provider }}</td><td class="small">{{ k.label|default:"—" }}</td>
+    <td class="mono small">…{{ k.fingerprint }}</td>
+    <td class="small">{{ k.set_by }}<br><span class="sub">{{ k.created_at|date:"d.m. H:i" }}</span></td>
+    <td class="small">{% if k.last_used_at %}{{ k.last_used_at|date:"d.m. H:i" }}{% else %}<span class="sub">nije korišćen</span>{% endif %}</td>
+    <td>{% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/kljuc"
+        data-confirm="Ukloniti ključ za {{ k.provider }}?">{% csrf_token %}
+      <input type="hidden" name="provider" value="{{ k.provider }}">
+      <input type="hidden" name="ukloni" value="1"><button class="danger">Ukloni</button></form>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6" class="sub">Agent nema nijedan svoj ključ — piše lokalnim šablonom.</td></tr>{% endfor %}
+  </table>
+  {% if can_draft %}
+  <form method="post" action="/console/personas/{{ p.public_id }}/kljuc" class="row mt16"
+        autocomplete="off">{% csrf_token %}
+    <input type="text" name="provider" class="filter" placeholder="provajder (anthropic, openrouter…)" required>
+    <input type="text" name="label" class="filter" placeholder="oznaka (nije obavezno)">
+    <input type="password" name="kljuc" class="grow" placeholder="Ključ — vidi se samo sada" required autocomplete="new-password">
+    <button class="primary">Sačuvaj</button>
+  </form>
+  <p class="sub mt8">Ne slikaj ekran dok je ključ u polju.</p>
+  {% endif %}
+  </div>
+
+  <div class="card"><h2>Koji model za koju svrhu</h2>
+  <p class="sub mb12">Agentova ruta ide <strong>ispred firmine</strong>: prvo se probaju
+    njegove po prioritetu, pa firmine, pa lokalni šablon. Ruta bez ključa i ruta čiji
+    provajder sme da uči na našim podacima se preskaču — i to piše u tragu poziva.</p>
+  <table><tr><th>Svrha</th><th>Model</th><th>Prioritet</th><th>Provajder ne uči</th><th></th></tr>
+  {% for r in modeli.rute %}<tr>
+    <td class="mono small">{{ r.purpose }}</td>
+    <td>{{ r.route.provider }}/{{ r.route.model_key }}<br><span class="sub small">{{ r.note }}</span></td>
+    <td class="small">{{ r.priority }}</td>
+    <td>{% if r.route.data_training_allowed %}<span class="pill ok">da</span>{% else %}<span class="pill bad">ne — preskače se</span>{% endif %}</td>
+    <td>{% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/ruta">{% csrf_token %}
+      <input type="hidden" name="ukloni" value="{{ r.pk }}"><button>Ukloni</button></form>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="5" class="sub">Nema sopstvenih ruta — agent koristi firmine.</td></tr>{% endfor %}
+  </table>
+  {% if can_draft %}
+  <form method="post" action="/console/personas/{{ p.public_id }}/ruta" class="row mt16">{% csrf_token %}
+    <select name="ruta" class="grow">
+      {% for r in modeli.ponuda %}<option value="{{ r.pk }}">{{ r.purpose }} — {{ r.provider }}/{{ r.model_key }}</option>{% endfor %}
+    </select>
+    <input type="number" name="prioritet" class="filter" value="0" min="-100" max="100">
+    <input type="text" name="napomena" class="filter" placeholder="napomena">
+    <button class="primary">Dodeli</button>
+  </form>
+  {% endif %}
+  </div>
+</section>
+
 <section data-tab="pravila">
   <div class="card"><h2>Pouke urednika</h2>
   <p class="sub mb12">Ulaze u svaki nacrt koji piše model. „Svi” važi za sve agente, i za nove.</p>
@@ -169,12 +227,8 @@
       <table class="plain">{% for a in accounts %}<tr><td>{{ a.channel_type }}</td><td class="small">{{ a.handle }}</td>
         <td><span class="pill {{ a.status|status_tone }}">{{ a.status }}</span></td></tr>
       {% empty %}<tr><td class="sub">Nema naloga.</td></tr>{% endfor %}</table></div>
-    <div class="card"><h2>Ključ za model</h2>
-      <table class="plain">{% for route, source, env in llm_keys %}<tr><td class="mono small">{{ route }}</td>
-        <td>{% if source == "persona" %}<span class="pill ok">svoj</span>{% elif source == "shared" %}<span class="pill warn">zajednički</span>{% else %}<span class="pill bad">nema — šablon</span>{% endif %}</td>
-        <td class="mono small muted">{{ env }}</td></tr>
-      {% empty %}<tr><td class="sub">Nema uključenog spoljnog modela — piše lokalni šablon.</td></tr>{% endfor %}</table>
-      <div class="sub mt8">Memorija po statusu: {% for k, v in memories.items %}{{ k }} {{ v }}{% if not forloop.last %} · {% endif %}{% endfor %}</div></div>
+    <div class="card"><h2>Memorija</h2>
+      <div class="sub">Po statusu: {% for k, v in memories.items %}{{ k }} {{ v }}{% if not forloop.last %} · {% endif %}{% endfor %}</div></div>
     <div class="card"><h2>Šta agent pamti</h2>
       <p class="sub mb12">Zapisi se sažimaju u nivoe; tema koja se ponavlja kod više agenata
         postaje znanje sektora, pa firme. Zajedničko se ne upisuje ručno — samo nastaje sažimanjem.</p>

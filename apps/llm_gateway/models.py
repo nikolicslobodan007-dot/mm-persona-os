@@ -54,6 +54,10 @@ class LLMRoute(UUIDModel):
         help_text="True samo ako provajder izričito NE trenira na našim podacima.",
     )
     is_openai_compatible = models.BooleanField(default=True)
+    base_url = models.CharField(
+        max_length=300, blank=True,
+        help_text="Adresa API-ja provajdera. Nije tajna, pa sme u bazu; prazno "
+                  "znači „uzmi iz podešavanja” (ADR-0026).")
     quota_json = JSON_DICT(help_text="RPM, TPM, dnevni limit, datum isteka besplatne kvote.")
     notes = models.TextField(blank=True)
 
@@ -199,3 +203,72 @@ class LLMUsage(UUIDModel):
 
     def __str__(self) -> str:
         return f"{self.input_tokens}+{self.output_tokens} tok → {self.amount_eur_cents}c"
+
+
+class AgentCredential(UUIDModel):
+    """Ključ jednog agenta kod jednog provajdera — **referenca, ne ključ**. ADR-0026.
+
+    U bazi nikada ne stoji sam ključ. Stoji `file:` ili `env:` referenca, a
+    vrednost živi u fajlu sa pravima 0600, van baze i van `pg_dump`-a. Zato
+    postoji i CHECK: red koji ne izgleda kao referenca ne može ni da uđe.
+
+    Otisak (`fingerprint`) je poslednja četiri znaka ključa — dovoljno da čovek
+    prepozna koji je ključ postavio, premalo da išta otključa.
+    """
+
+    persona = models.ForeignKey(
+        "personas.Persona", on_delete=models.CASCADE, related_name="llm_credentials"
+    )
+    provider = models.CharField(max_length=80)
+    credential_ref = models.CharField(max_length=512)
+    label = models.CharField(max_length=120, blank=True)
+    fingerprint = models.CharField(max_length=8, blank=True)
+    set_by = models.CharField(max_length=120)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "llm_gateway_agent_credential"
+        constraints = [
+            models.UniqueConstraint(fields=["persona", "provider"],
+                                    name="agent_credential_unique"),
+            models.CheckConstraint(
+                condition=models.Q(credential_ref__regex=r"^(env|file):."),
+                name="agent_credential_is_reference_only",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.persona_id}:{self.provider}"
+
+
+class AgentRoute(UUIDModel):
+    """Koji model ovaj agent koristi za koju svrhu. ADR-0026.
+
+    Firmina ruta ostaje zajednička polazna tačka; agentova je ispred nje.
+    Time jedan agent može da piše nacrte jeftinim modelom, a da odgovore na
+    poštu i dalje piše onaj koji je za to izmeren.
+    """
+
+    persona = models.ForeignKey(
+        "personas.Persona", on_delete=models.CASCADE, related_name="llm_routes"
+    )
+    purpose = models.CharField(max_length=24, choices=E.LLMPurpose.choices())
+    route = models.ForeignKey(LLMRoute, on_delete=models.CASCADE,
+                              related_name="agent_routes")
+    priority = models.SmallIntegerField(default=0)
+    is_enabled = models.BooleanField(default=True)
+    note = models.CharField(max_length=240, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "llm_gateway_agent_route"
+        indexes = [models.Index(fields=["persona", "purpose", "is_enabled", "priority"])]
+        constraints = [
+            models.UniqueConstraint(fields=["persona", "purpose", "route"],
+                                    name="agent_route_unique"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.persona_id}:{self.purpose}→{self.route_id}"
