@@ -10,3 +10,6 @@ venv/
 staticfiles/
 media/
 .env.prod
+
+# privremeni paketi iz Cowork sesije
+*.tar.gz

@@ -89,6 +89,20 @@ Outcome = Done | Waiting | Delegated | Failed
 Handler = Callable[[PlanStep, dict], Outcome]
 _HANDLERS: dict[str, Handler] = {}
 
+#: Moduli koji registruju obrađivače. Motor ih učitava sam — obrađivač postoji
+#: tek kad se njegov modul uveze, pa bi inače isti plan radio u jednom procesu
+#: (worker koji je poštu primio), a padao u drugom (web koji nastavlja posle
+#: odobrenja). Nalaz od 24.09.
+HANDLER_MODULES = ("apps.channels.reply",)
+
+
+def load_handlers() -> None:
+    """Uvozi module sa obrađivačima. Uvoz je keširan, pa se ponavlja besplatno."""
+    import importlib
+
+    for name in HANDLER_MODULES:
+        importlib.import_module(name)
+
 
 def handler(name: str) -> Callable[[Handler], Handler]:
     """Registruje obrađivač koraka. `input_json["handler"]` bira koji se zove."""
@@ -101,6 +115,7 @@ def handler(name: str) -> Callable[[Handler], Handler]:
 
 
 def registered() -> list[str]:
+    load_handlers()
     return sorted(_HANDLERS)
 
 
@@ -135,6 +150,7 @@ def summary(plan: AgentPlan) -> str:
 def start(persona, goal: str, steps: list[dict], *, actor: str, run=None,
           now: datetime | None = None) -> AgentPlan:
     """Pravi plan i njegove korake. Svaki korak: {handler, type, description, input}."""
+    load_handlers()
     now = now or timezone.now()
     if not steps:
         raise PlanError("VALIDATION_ERROR", "Plan bez koraka nema smisla.")
@@ -210,6 +226,7 @@ def _resume_parent(child: AgentPlan, status: E.PlanStatus, reason: str) -> None:
 
 def advance(plan: AgentPlan, *, now: datetime | None = None) -> AgentPlan:
     """Izvršava korake dok ne naiđe na čekanje, grešku ili kraj."""
+    load_handlers()
     now = now or timezone.now()
     for _ in range(MAX_PER_PASS):
         plan.refresh_from_db()

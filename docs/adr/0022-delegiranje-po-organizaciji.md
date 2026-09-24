@@ -84,6 +84,23 @@ od njih nije dobio dozvolu od onog drugog.
   korak u `RUNNING` (isto ograničenje kao u ADR-0021). Rešava se kad uvedemo
   isticanje koraka po vremenu.
 
+## Dopuna 24.09. — motor sam učitava obrađivače
+
+Prva provera na serveru (`manage.py plan --handlers`) ispisala je **samo**
+`org.delegate`. Razlog: obrađivač postoji tek kad se njegov modul uveze, a
+`apps/channels/reply.py` se uvozio jedino kad stigne pošta — u `worker_channel`.
+
+Posledica bi bila plan koji radi u jednom procesu a pada u drugom: `web`
+nastavlja plan posle odobrenja, pa bi korak sa `mail.send` tamo dobio
+„Nepoznat obrađivač koraka" i plan bi bio odbačen sa netačnim razlogom.
+(Zatečeni Milin plan to nije pogodio — na odobrenje se korak samo zatvara, ne
+poziva se ponovo — ali bi svaki sledeći korak posle čekanja pogodio.)
+
+Rešenje: `plans.HANDLER_MODULES` + `load_handlers()`, koji `start()`,
+`advance()` i `registered()` zovu na ulazu. Uvoz je keširan, pa se ponavlja
+besplatno. **Novi obrađivač u novom modulu mora da se upiše u
+`HANDLER_MODULES`** — to je jedino mesto koje treba zapamtiti.
+
 ## Kod
 
 - `apps/personas/org.py`: `subordinates()`, `can_delegate()`

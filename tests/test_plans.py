@@ -206,3 +206,17 @@ class TestMailReplyAsPlan:
         plan = AgentPlan.objects.get(persona=mc.persona)
         assert plan.status == PS.ABANDONED
         assert "Ne obećavaj rok" in plan.steps.get(sequence=2).output_json["reason"]
+
+
+class TestHandlerRegistry:
+    """Obrađivač postoji tek kad se njegov modul uveze — motor to radi sam.
+
+    Nalaz od 24.09.: `manage.py plan --handlers` na serveru je ispisao samo
+    `org.delegate`, jer se `apps.channels.reply` uvozi tek kad stigne pošta.
+    Isti plan bi tako radio u workeru, a padao u web procesu.
+    """
+
+    def test_engine_loads_every_handler_module(self):
+        imena = plans.registered()
+        for ime in ("mail.draft", "mail.send", "org.delegate"):
+            assert ime in imena
