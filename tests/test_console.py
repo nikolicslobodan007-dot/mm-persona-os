@@ -365,10 +365,18 @@ class TestUploadConsole:
         png = b"\x89PNG\r\n\x1a\n" + b"0" * 32
 
         c = _login(Client(), boss)
+        jpg = b"\xff\xd8\xff\xe0" + b"1" * 32
         r = c.post("/console/personas/P-00001/upload",
-                   {"slika": SimpleUploadedFile("mila.png", png, "image/png"),
+                   {"slike": [SimpleUploadedFile("mila.png", png, "image/png"),
+                              SimpleUploadedFile("sajam.jpg", jpg, "image/jpeg")],
                     "kao_profilna": "1"})
         assert r.status_code == 302
         asset = generator.reference_of(mila)
         assert asset is not None and asset.generation_model == generator.MANUAL_MODEL
         assert c.get(f"/console/assets/{asset.public_id}").status_code == 200
+        # prva je profilna, druga ide u galeriju
+        gallery = generator.gallery_of(mila)
+        assert len(gallery) == 1 and gallery[0].mime_type == "image/jpeg"
+        # profilna se vidi i u zaglavlju strane, umanjena
+        html = c.get("/console/personas/P-00001").content.decode()
+        assert f'class="avatar" src="/console/assets/{asset.public_id}"' in html

@@ -1,7 +1,8 @@
 {% extends "console/base.html" %}{% load console_tags l10n %}
 {% block title %}{{ p.display_name }}{% endblock %}
 {% block content %}
-<div class="row"><h1>{{ p.display_name }} <span class="muted">{{ p.public_id }}</span></h1><span class="spacer"></span>
+<div class="row">{% if lik.portrait %}<img class="avatar" src="/console/assets/{{ lik.portrait.public_id }}" alt="Profilna slika" width="56" height="56">{% endif %}
+  <h1>{{ p.display_name }} <span class="muted">{{ p.public_id }}</span></h1><span class="spacer"></span>
   <span class="pill {{ p.status|status_tone }}">{{ p.status }}</span><span class="pill">{{ p.runtime_environment }}</span>
   <span class="pill">{{ p.primary_locale }} · {{ p.timezone }}</span></div>
 <div class="grid">
@@ -96,19 +97,19 @@
   Model: <span class="mono">{{ lik.model }}</span> · ključ: <span class="pill">{{ lik.key }}</span>
   {% if not lik.enabled %}<span class="pill">slike se otpremaju ručno</span>{% endif %}</p>
 <div class="face">
-  {% if lik.portrait %}<figure class="portrait"><img src="/console/assets/{{ lik.portrait.public_id }}" alt="Profilna slika">
-    <figcaption class="sub small">{{ lik.portrait.public_id }}</figcaption></figure>
+  {% if lik.portrait %}<figure class="portrait"><img src="/console/assets/{{ lik.portrait.public_id }}" alt="Profilna slika" width="150">
+    <figcaption class="sub small">profilna · {{ lik.portrait.public_id }}</figcaption></figure>
   {% else %}<p class="sub">Još nema profilne slike.</p>{% endif %}
-  {% for a in lik.gallery %}<figure class="shot"><img src="/console/assets/{{ a.public_id }}" alt="Slika {{ a.public_id }}">
+  {% for a in lik.gallery %}<figure class="shot"><img src="/console/assets/{{ a.public_id }}" alt="Slika {{ a.public_id }}" width="110">
     <figcaption class="sub small">{{ a.public_id }}</figcaption></figure>{% endfor %}
 </div>
 {% if can_draft %}
 <form method="post" action="/console/personas/{{ p.public_id }}/upload" class="row mt16" enctype="multipart/form-data">{% csrf_token %}
-  <input type="file" name="slika" accept="image/png,image/jpeg,image/webp" required>
+  <input type="file" name="slike" accept="image/png,image/jpeg,image/webp" multiple required>
   <input type="text" name="opis" maxlength="80" placeholder="Opis (za galeriju)">
-  <label class="row small"><input type="checkbox" name="kao_profilna" value="1"> kao profilna</label>
-  <button>Otpremi sliku</button></form>
-<p class="sub small mt8">Ručno napravljene slike (ChatGPT prozor) otpremaju se ovde — ne koštaju ništa.
+  <label class="row small"><input type="checkbox" name="kao_profilna" value="1"> prva je profilna</label>
+  <button>Otpremi slike</button></form>
+<p class="sub small mt8">Može više slika odjednom (najviše 20). Ručno napravljene slike (ChatGPT prozor) otpremaju se ovde — ne koštaju ništa.
   Da isti lik ostane isti, u ChatGPT-u uz svaku novu sliku priloži profilnu i traži istu osobu.</p>
 {% if lik.enabled %}
 <form method="post" action="/console/personas/{{ p.public_id }}/portrait" class="row mt16">{% csrf_token %}

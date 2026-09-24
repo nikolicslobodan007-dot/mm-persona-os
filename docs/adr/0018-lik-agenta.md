@@ -132,3 +132,12 @@ novu sliku priložiti profilnu** i tražiti istu osobu. Razlika je samo u tome k
 pritiska dugme.
 
 459 testova (dodato 8).
+
+**Ispravke posle prve upotrebe (24.09.):**
+
+- otpremanje prima **više slika odjednom** (najviše 20); ako je čekirano
+  „prva je profilna", prva postaje profilna, ostale idu u galeriju;
+- profilna se prikazuje **umanjeno**: kao mali okrugli lik u zaglavlju strane
+  agenta i kao sličica u kartici „Lik" — ne u punoj veličini. Veličina je
+  zadata i atributom na `img`, ne samo u CSS-u, da keširan stil ne može da je
+  poništi.

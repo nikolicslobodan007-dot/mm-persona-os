@@ -506,6 +506,10 @@ def persona_portrait(request, public_id: str):
     return redirect(f"/console/personas/{public_id}")
 
 
+#: Koliko slika prima jedno otpremanje.
+UPLOAD_BATCH = 20
+
+
 @console_view
 @require_POST
 def persona_upload(request, public_id: str):
@@ -518,18 +522,29 @@ def persona_upload(request, public_id: str):
     if not (_roles(request.user) & _DRAFTERS):
         messages.error(request, "Tvoja uloga ne menja slike.")
         return redirect(f"/console/personas/{public_id}")
-    f = request.FILES.get("slika")
-    if f is None:
-        messages.error(request, "Izaberi fajl.")
+    files = request.FILES.getlist("slike") or request.FILES.getlist("slika")
+    if not files:
+        messages.error(request, "Izaberi bar jedan fajl.")
         return redirect(f"/console/personas/{public_id}")
-    try:
-        r = generator.import_image(
-            p, f.read(), actor=principal_of(request.user),
-            as_portrait=request.POST.get("kao_profilna") == "1",
-            label=request.POST.get("opis", "")[:80])
-        messages.success(request, f"Slika {r.asset.public_id} otpremljena.")
-    except generator.ImageError as e:
-        messages.error(request, f"{e.code}: {e.detail}")
+    if len(files) > UPLOAD_BATCH:
+        messages.error(request, f"Najviše {UPLOAD_BATCH} slika odjednom.")
+        return redirect(f"/console/personas/{public_id}")
+    # „Kao profilna" važi samo za prvu sliku; ostale idu u galeriju.
+    portrait_first = request.POST.get("kao_profilna") == "1"
+    label = request.POST.get("opis", "")[:80]
+    done, failed = [], []
+    for i, f in enumerate(files):
+        try:
+            r = generator.import_image(
+                p, f.read(), actor=principal_of(request.user),
+                as_portrait=portrait_first and i == 0, label=label)
+            done.append(r.asset.public_id)
+        except generator.ImageError as e:
+            failed.append(f"{f.name}: {e.code}")
+    if done:
+        messages.success(request, f"Otpremljeno {len(done)}: " + ", ".join(done))
+    for why in failed:
+        messages.error(request, why)
     return redirect(f"/console/personas/{public_id}")
 
 
