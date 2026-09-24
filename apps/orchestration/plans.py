@@ -93,7 +93,7 @@ _HANDLERS: dict[str, Handler] = {}
 #: tek kad se njegov modul uveze, pa bi inače isti plan radio u jednom procesu
 #: (worker koji je poštu primio), a padao u drugom (web koji nastavlja posle
 #: odobrenja). Nalaz od 24.09.
-HANDLER_MODULES = ("apps.channels.reply",)
+HANDLER_MODULES = ("apps.channels.reply", "apps.content.steps")
 
 
 def load_handlers() -> None:
@@ -336,6 +336,16 @@ def depth_of(plan: AgentPlan, limit: int = 10) -> int:
         depth += 1
         current = parent
     return depth
+
+
+@handler("plan.note")
+def _step_note(step: PlanStep, state: dict) -> Outcome:
+    """Beleška u planu — korak bez spoljašnjeg efekta.
+
+    Koristi se da se vidi da je plan nastavljen posle čekanja ili posle
+    izvršioca. Ne radi ništa i ne sme da radi ništa.
+    """
+    return Done({"note": (step.input_json or {}).get("note", step.description)[:300]})
 
 
 @handler("org.delegate")

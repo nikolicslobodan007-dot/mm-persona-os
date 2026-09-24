@@ -14,7 +14,7 @@ import io
 from datetime import UTC, datetime
 
 import pytest
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 
 from api.context import bind
 from apps.orchestration import plans
@@ -245,3 +245,38 @@ class TestDubina:
         assert AgentPlan.objects.get(persona=marko).status == PS.ABANDONED
         assert plan.status == PS.ABANDONED
         assert "dublji" in plan.steps.get(sequence=1).output_json["reason"]
+
+
+class TestPosao:
+    """ADR-0024 — izvršilac dobija pravi posao, ne prazan plan."""
+
+    def test_boss_orders_a_draft_and_gets_it_back(self, ekipa):
+        mila, jovan, _ = ekipa
+        out = io.StringIO()
+        with bind(actor_id="user:slobodan"):
+            call_command("plan", "--persona", "P-00001", "--zadaj", "P-00002",
+                         "--tema", "Rokovi isporuke u B2B", stdout=out)
+        sefov = AgentPlan.objects.get(persona=mila)
+        izvrsiocev = AgentPlan.objects.get(persona=jovan)
+        assert izvrsiocev.status == PS.COMPLETED
+        assert sefov.status == PS.COMPLETED
+        nacrt = izvrsiocev.steps.get(sequence=1).output_json
+        assert nacrt["item"] and nacrt["tekst"].strip()
+        assert sefov.steps.get(sequence=2).status == SS.DONE
+
+    def test_upwards_order_is_refused_at_the_command(self, ekipa):
+        with pytest.raises(CommandError, match="ne odgovara"):
+            call_command("plan", "--persona", "P-00002", "--zadaj", "P-00001",
+                         "--tema", "Bilo šta", stdout=io.StringIO())
+
+    def test_submit_without_a_channel_stops_with_a_reason(self, ekipa, poslovi):
+        mila, jovan, _ = ekipa
+        with bind(actor_id="user:op"):
+            plan = plans.start(jovan, "Objavi", [
+                {"handler": "content.draft", "input": {"tema": "Rokovi"}},
+                {"handler": "content.submit", "description": "Predloži objavu"},
+            ], actor="user:op")
+            plans.advance(plan)
+        plan.refresh_from_db()
+        assert plan.status == PS.ABANDONED
+        assert "nema nalog" in plan.steps.get(sequence=2).output_json["reason"]
