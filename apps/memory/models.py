@@ -38,7 +38,20 @@ class MemoryItem(UUIDModel):
     """Osnovni memorijski zapis. Pretraga je UVEK persona-scoped (Canon §10.2)."""
 
     persona = models.ForeignKey(
-        "personas.Persona", on_delete=models.CASCADE, related_name="memories"
+        "personas.Persona", on_delete=models.CASCADE, related_name="memories",
+        help_text="Čiji je rad proizveo zapis. Kod zajedničke memorije ostaje "
+                  "autor, a ko sme da čita određuje `scope` (ADR-0020).",
+    )
+    # --- ADR-0020: opseg čitanja i nivo pečaćenja
+    scope = models.CharField(
+        max_length=16, choices=E.MemoryScope.choices(), default=E.MemoryScope.PERSONA
+    )
+    department = models.ForeignKey(
+        "personas.Department", on_delete=models.CASCADE, null=True, blank=True,
+        related_name="memories", help_text="Popunjeno samo kad je `scope=department`.",
+    )
+    level = models.PositiveSmallIntegerField(
+        default=0, help_text="0 = izvorni zapis; 1+ = sažetak nastao pečaćenjem.",
     )
     memory_type = models.CharField(max_length=24, choices=E.MemoryType.choices())
     status = models.CharField(
@@ -104,6 +117,9 @@ class MemoryItem(UUIDModel):
                 condition=~models.Q(assertion_predicate=""),
             ),
             models.Index(fields=["persona", "content_hash"], name="memory_content_hash_idx"),
+            # ADR-0020 — zajedničko znanje se čita po opsegu, ne po personi.
+            models.Index(fields=["scope", "department", "status"]),
+            models.Index(fields=["persona", "scope", "level", "status"]),
         ]
         constraints = [
             models.UniqueConstraint(
@@ -116,6 +132,14 @@ class MemoryItem(UUIDModel):
                 condition=models.Q(assertion_predicate="")
                 | ~models.Q(assertion_subject=""),
                 name="memory_assertion_has_subject",
+            ),
+            models.CheckConstraint(
+                # ADR-0020 — sektor se upisuje tačno kad je opseg sektorski.
+                condition=models.Q(scope=E.MemoryScope.DEPARTMENT.value,
+                                   department__isnull=False)
+                | (~models.Q(scope=E.MemoryScope.DEPARTMENT.value)
+                   & models.Q(department__isnull=True)),
+                name="memory_department_matches_scope",
             ),
             models.CheckConstraint(
                 condition=models.Q(salience__gte=0) & models.Q(salience__lte=1),

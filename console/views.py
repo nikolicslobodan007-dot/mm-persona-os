@@ -258,6 +258,7 @@ def persona(request, public_id: str):
         .order_by("-created_at")[:20],
         "memories": dict(MemoryItem.objects.filter(persona=p).values_list("status")
                          .annotate(n=Count("id"))),
+        "memory_scopes": _memory_scopes(p),
         "accounts": p.channel_accounts.all().order_by("channel_type"),
         "llm_keys": _llm_keys(p),
         "lessons": _lessons(p),
@@ -280,6 +281,13 @@ def _mail(p) -> dict:
             "enabled": mailbox.enabled(),
             "inbox": MailMessage.objects.filter(persona=p, direction="in")
             .order_by("-received_at")[:10] if acc else []}
+
+
+def _memory_scopes(p) -> dict:
+    """Koliko memorije agent vidi po opsegu (ADR-0020)."""
+    from apps.memory import sealing
+
+    return sealing.counts(p)
 
 
 def _org(p) -> dict:

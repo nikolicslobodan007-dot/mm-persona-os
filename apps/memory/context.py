@@ -86,6 +86,10 @@ def _line(sc: retrieval.Scored) -> str:
         marks.append("⚠ sporno")
     if m.provenance == E.Provenance.INFERRED.value:
         marks.append("izvod, ne činjenica")
+    if m.scope == E.MemoryScope.DEPARTMENT.value:
+        marks.append("znanje sektora")
+    elif m.scope == E.MemoryScope.COMPANY.value:
+        marks.append("znanje firme")
     head = f"[{m.memory_type} · pouzdanost {m.confidence}" + (
         f" · {'; '.join(marks)}" if marks else "") + "]"
     body = f"{m.title}: {m.content}" if m.title else m.content

@@ -13,6 +13,9 @@ razlaganje skora („zašto je ovo izabrano", §16.1). Retriever ne menja
 memoriju (§18.1); broj prisećanja upisuje Context Builder.
 
 Signal `relationship` je u F4 uvek 0: nema Social Graph-a (ADR-0006).
+
+ADR-0020: kandidati više nisu samo lični zapisi nego i zajedničko znanje
+sektora i firme — vidi `visible_to()`.
 """
 
 from __future__ import annotations
@@ -63,8 +66,24 @@ def effective_salience(m: MemoryItem, now: datetime) -> float:
     return base * math.exp(-E.MEMORY_LAMBDA[E.MemoryType(m.memory_type)] * age)
 
 
+def visible_to(persona) -> Q:
+    """Šta agent sme da čita (ADR-0020): svoje + svog sektora + firme.
+
+    Canon §10.2 je i dalje na snazi za lične zapise — `scope=persona` uvek ide
+    uz `persona=`. Zajedničko znanje nastaje samo pečaćenjem naviše, pa ovde
+    nema puta kojim bi tuđi lični zapis ušao u tuđi kontekst.
+    """
+    from apps.personas.org import department_of
+
+    cond = Q(scope=E.MemoryScope.PERSONA.value, persona=persona)
+    dep = department_of(persona)
+    if dep is not None:
+        cond |= Q(scope=E.MemoryScope.DEPARTMENT.value, department=dep)
+    return cond | Q(scope=E.MemoryScope.COMPANY.value)
+
+
 def _base_qs(persona, now, memory_types, purpose):
-    qs = MemoryItem.objects.filter(persona=persona, status__in=RETRIEVABLE).filter(
+    qs = MemoryItem.objects.filter(visible_to(persona), status__in=RETRIEVABLE).filter(
         Q(expires_at__isnull=True) | Q(expires_at__gt=now))
     if memory_types:
         qs = qs.filter(memory_type__in=[t.value for t in memory_types])

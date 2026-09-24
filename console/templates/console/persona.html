@@ -179,7 +179,16 @@
         <td>{% if source == "persona" %}<span class="pill ok">svoj</span>{% elif source == "shared" %}<span class="pill warn">zajednički</span>{% else %}<span class="pill bad">nema — šablon</span>{% endif %}</td>
         <td class="mono small muted">{{ env }}</td></tr>
       {% empty %}<tr><td class="sub">Nema uključenog spoljnog modela — piše lokalni šablon.</td></tr>{% endfor %}</table>
-      <div class="sub mt8">Memorija: {% for k, v in memories.items %}{{ k }} {{ v }}{% if not forloop.last %} · {% endif %}{% endfor %}</div></div>
+      <div class="sub mt8">Memorija po statusu: {% for k, v in memories.items %}{{ k }} {{ v }}{% if not forloop.last %} · {% endif %}{% endfor %}</div></div>
+    <div class="card"><h2>Šta agent pamti</h2>
+      <p class="sub mb12">Zapisi se sažimaju u nivoe; tema koja se ponavlja kod više agenata
+        postaje znanje sektora, pa firme. Zajedničko se ne upisuje ručno — samo nastaje sažimanjem.</p>
+      <table class="plain">
+        <tr><td>svoji zapisi</td><td><b>{{ memory_scopes.svoje }}</b></td></tr>
+        <tr><td>svoji sažeci</td><td><b>{{ memory_scopes.sažeci }}</b></td></tr>
+        <tr><td>znanje sektora</td><td><b>{{ memory_scopes.sektor }}</b></td></tr>
+        <tr><td>znanje firme</td><td><b>{{ memory_scopes.firma }}</b></td></tr>
+      </table></div>
   </div>
 </section>
 

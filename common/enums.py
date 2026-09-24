@@ -26,6 +26,7 @@ __all__ = [
     "ApprovalClass",
     "TrustLevel",
     "MemoryType",
+    "MemoryScope",
     "MemoryStatus",
     "Provenance",
     "IdentityVehicle",
@@ -319,6 +320,19 @@ class MemoryType(CanonEnum):
     PROCEDURAL = "procedural"
     SOCIAL = "social"      # bivši RELATIONSHIP
     CONTENT = "content"
+
+
+class MemoryScope(CanonEnum):
+    """Ko sme da čita memoriju (ADR-0020).
+
+    Canon §10.2 je do sada tražio da je svaka pretraga vezana za jednu
+    personu. Ostaje tako za `PERSONA`; `DEPARTMENT` i `COMPANY` su zajedničko
+    znanje koje nastaje **samo pečaćenjem naviše**, nikad direktnim upisom.
+    """
+
+    PERSONA = "persona"
+    DEPARTMENT = "department"
+    COMPANY = "company"
 
 
 class MemoryStatus(CanonEnum):
