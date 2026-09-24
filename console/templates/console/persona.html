@@ -151,22 +151,28 @@
     posle upisa više nigde ne prikazuje: vidiš samo poslednja četiri znaka, kad je postavljen
     i kad je poslednji put upotrebljen. Ako ga izgubiš, praviš nov kod provajdera.</p>
   <table><tr><th>Provajder</th><th>Oznaka</th><th>Ključ</th><th>Postavio</th><th>Poslednji put</th><th></th></tr>
-  {% for k in modeli.kljucevi %}<tr>
-    <td class="mono">{{ k.provider }}</td><td class="small">{{ k.label|default:"—" }}</td>
-    <td class="mono small">…{{ k.fingerprint }}</td>
-    <td class="small">{{ k.set_by }}<br><span class="sub">{{ k.created_at|date:"d.m. H:i" }}</span></td>
-    <td class="small">{% if k.last_used_at %}{{ k.last_used_at|date:"d.m. H:i" }}{% else %}<span class="sub">nije korišćen</span>{% endif %}</td>
+  {% for red in modeli.kljucevi %}<tr>
+    <td class="mono">{{ red.k.provider }}
+      {% if red.bez_rute %}<br><span class="pill bad">nema rutu — niko ga ne koristi</span>{% endif %}</td>
+    <td class="small">{{ red.k.label|default:"—" }}</td>
+    <td class="mono small">…{{ red.k.fingerprint }}</td>
+    <td class="small">{{ red.k.set_by }}<br><span class="sub">{{ red.k.created_at|date:"d.m. H:i" }}</span></td>
+    <td class="small">{% if red.k.last_used_at %}{{ red.k.last_used_at|date:"d.m. H:i" }}{% else %}<span class="sub">nije korišćen</span>{% endif %}</td>
     <td>{% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/kljuc"
-        data-confirm="Ukloniti ključ za {{ k.provider }}?">{% csrf_token %}
-      <input type="hidden" name="provider" value="{{ k.provider }}">
+        data-confirm="Ukloniti ključ za {{ red.k.provider }}?">{% csrf_token %}
+      <input type="hidden" name="provider" value="{{ red.k.provider }}">
       <input type="hidden" name="ukloni" value="1"><button class="danger">Ukloni</button></form>{% endif %}</td></tr>
   {% empty %}<tr><td colspan="6" class="sub">Agent nema nijedan svoj ključ — piše lokalnim šablonom.</td></tr>{% endfor %}
   </table>
   {% if can_draft %}
   <form method="post" action="/console/personas/{{ p.public_id }}/kljuc" class="row mt16"
         autocomplete="off">{% csrf_token %}
-    <input type="text" name="provider" class="filter" placeholder="provajder (anthropic, openrouter…)" required>
-    <input type="text" name="label" class="filter" placeholder="oznaka (nije obavezno)">
+    <select name="provider" class="filter">
+      {% for pr in modeli.provajderi %}<option value="{{ pr }}">{{ pr }}</option>
+      {% empty %}<option value="">nema nijedne rute</option>{% endfor %}
+    </select>
+    <input type="text" name="nov_provider" class="filter" placeholder="ili nov provajder">
+    <input type="text" name="label" class="filter" placeholder="oznaka">
     <input type="password" name="kljuc" class="grow" placeholder="Ključ — vidi se samo sada" required autocomplete="new-password">
     <button class="primary">Sačuvaj</button>
   </form>

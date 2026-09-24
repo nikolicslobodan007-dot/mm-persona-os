@@ -636,3 +636,25 @@ class TestKljuceviUKonzoli:
         c.post("/console/personas/P-00001/kljuc",
                {"provider": "openrouter", "kljuc": "sk-or-v1-0123456789abcdef"})
         assert not AgentCredential.objects.exists()
+
+    def test_orphan_key_is_flagged(self, boss, mila, tajne):
+        """Ključ za provajdera bez rute ne koristi niko — mora da se vidi."""
+        c = _login(Client(), boss)
+        c.post("/console/personas/P-00001/kljuc",
+               {"nov_provider": "antropic", "kljuc": "sk-ant-0123456789abcdef"})
+        html = c.get("/console/personas/P-00001").content.decode()
+        assert "nema rutu" in html
+
+    def test_known_provider_from_the_dropdown(self, boss, mila, tajne):
+        from apps.llm_gateway.models import AgentCredential, LLMRoute
+
+        LLMRoute.objects.create(purpose=E.LLMPurpose.CONTENT_DRAFT.value, name="C",
+                                provider="anthropic", model_key="claude-sonnet-5",
+                                data_training_allowed=True)
+        c = _login(Client(), boss)
+        html = c.get("/console/personas/P-00001").content.decode()
+        assert '<option value="anthropic">' in html
+        c.post("/console/personas/P-00001/kljuc",
+               {"provider": "anthropic", "kljuc": "sk-ant-0123456789abcdef"})
+        assert AgentCredential.objects.filter(persona=mila, provider="anthropic").exists()
+        assert "nema rutu" not in c.get("/console/personas/P-00001").content.decode()

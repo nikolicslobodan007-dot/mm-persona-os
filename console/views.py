@@ -503,8 +503,14 @@ def _modeli(p) -> dict:
 
     moje = (AgentRoute.objects.filter(persona=p).select_related("route")
             .order_by("purpose", "priority"))
+    # Provajderi koji stvarno postoje kao rute — ključ za bilo šta drugo ne bi
+    # imao ko da upotrebi, a greška u kucanju („antropic") je tiha (ADR-0026).
+    poznati = sorted(set(LLMRoute.objects.exclude(provider="local")
+                         .values_list("provider", flat=True)))
+    kljucevi = agent_secrets.listing(p)
     return {
-        "kljucevi": agent_secrets.listing(p),
+        "kljucevi": [{"k": k, "bez_rute": k.provider not in poznati} for k in kljucevi],
+        "provajderi": poznati,
         "rute": list(moje),
         "ponuda": list(LLMRoute.objects.filter(is_enabled=True)
                        .exclude(provider="local").order_by("purpose", "priority")),
@@ -524,7 +530,10 @@ def persona_key(request, public_id: str):
     if not _roles(request.user) & _DRAFTERS:
         messages.error(request, "Tvoja uloga ne sme da menja ključeve.")
         return redirect(f"/console/personas/{public_id}#modeli")
-    provider = (request.POST.get("provider") or "").strip().lower()
+    # Padajući spisak je prvi izbor; slobodno polje je za provajdera koji još
+    # nema rutu. Ako je popunjeno oboje, važi ono što je čovek otkucao.
+    provider = ((request.POST.get("nov_provider") or "").strip()
+                or (request.POST.get("provider") or "").strip()).lower()
     actor = principal_of(request.user)
     try:
         if request.POST.get("ukloni"):

@@ -67,6 +67,16 @@ je tačno ono što Canon §16.4 štiti. „Javni" je tekst na izlazu, ne na ulaz
 Zato pravilo ostaje celo, a ušteda se traži kod jeftinih modela **koji ne
 treniraju** — a takvih ima dovoljno.
 
+### Provajder se bira, ne kuca
+
+Prvi ključ unet u konzoli otišao je pod imenom `antropic` — bez „h". Ključ je
+uredno sačuvan, ali ga nijedna ruta ne traži, pa ga niko nikad ne bi
+upotrebio, a greška se nigde ne bi videla.
+
+Zato je polje sada **padajući spisak provajdera koji stvarno imaju rutu**, uz
+slobodno polje za provajdera koji rutu još nema. A ključ čiji provajder ne
+odgovara nijednoj ruti nosi oznaku **„nema rutu — niko ga ne koristi"**.
+
 ## Šta je odbačeno
 
 - **Ključ u bazi, makar i šifrovan.** Ključ za dešifrovanje bi morao negde da
