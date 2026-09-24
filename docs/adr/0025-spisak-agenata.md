@@ -45,6 +45,21 @@ kartica „Stanje" vidi bez skrolovanja. „Buđenja" su dnevnik rada, ne trenut
 stanje — sele se u karticu „Akcije", ispod planova. Na vrhu strane stoji
 povratak na spisak.
 
+### Sličica i označavanje
+
+Red počinje **profilnom slikom** agenta; ko je još nema, dobija slovo u krugu —
+lice je najbrži način da se u spisku od hiljadu redova nađe pravi agent.
+
+Uz sliku ide i **kućica za označavanje**, pa se ista radnja radi nad više
+agenata odjednom: za sada „Aktiviraj" i „Pauziraj", a spisak radnji
+(`MASOVNE_AKCIJE`) je jedno mesto u kodu i raste kad zatreba.
+
+Masovna radnja **ne daje nijedno novo pravo**: svaki agent prolazi kroz isti
+`lifecycle.change_status`, istu tabelu prelaza i istu ulogu kao da si ga
+otvorio pojedinačno. Razlog je obavezan i ide u audit. Ko ne sme da pređe —
+preskače se, i u poruci stoji **zašto**, po agentu. Najviše 200 agenata po
+radnji, kao brana od promašenog „označi sve".
+
 ## Šta je odbačeno
 
 - **Beskonačno skrolovanje umesto listanja.** Operater koji traži jednog
@@ -53,6 +68,10 @@ povratak na spisak.
   na kojima više nisu.
 - **Kolona sa poverenjem u spisku.** Poverenje ide po capability-ju, pa jedan
   broj po agentu ne postoji — pokazivati „nivo agenta" bi bila laž (Canon §3.11).
+- **Masovno arhiviranje i brisanje.** Arhiviranje je trajno (Canon §3.1);
+  trajna radnja nad stotinu agenata jednim klikom nema dovoljno dobar razlog.
+- **„Označi sve" preko svih strana.** Kućica označava samo ono što se vidi;
+  označavanje nevidljivog je najbrži put do nesreće.
 
 ## Posledice
 
@@ -61,7 +80,9 @@ povratak na spisak.
 
 ## Kod
 
-- `console/views.py` — `personas()`, `_red_spiska()`, `PO_STRANI`
+- `console/views.py` — `personas()`, `personas_bulk()`, `_red_spiska()`,
+  `PO_STRANI`, `MASOVNE_AKCIJE`, `MASOVNO_NAJVISE`
 - `console/templates/console/personas.html`
 - `console/templates/console/persona.html` — povratak, preraspodela kartica
-- `tests/test_console.py::TestSpisakAgenata` (5 provera)
+- `console/static/console/console.js` — označavanje svih na strani
+- `tests/test_console.py::TestSpisakAgenata`, `::TestMasovnaAkcija` (11 provera)

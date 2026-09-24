@@ -183,6 +183,10 @@ label.row input{width:auto}
 .who .dot{flex:none;width:34px;height:34px;border-radius:50%;background:var(--accent-bg);
   color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:15px}
 .filter{width:auto;min-width:170px}
+.face-sm{flex:none;width:36px;height:36px;border-radius:50%;object-fit:cover;
+  object-position:50% 22%;background:var(--line);border:1px solid var(--line)}
+th.pick,td.pick{width:1%;padding-right:0}
+td.pick input,th.pick input{width:17px;height:17px;accent-color:var(--accent);cursor:pointer}
 
 /* ---------------------------------------------------------------- pomoćno */
 

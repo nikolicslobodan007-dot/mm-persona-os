@@ -502,3 +502,74 @@ class TestSpisakAgenata:
         c = _login(Client(), boss)
         html = c.get("/console/personas/P-00002").content.decode()
         assert "Svi agenti" in html
+
+
+class TestMasovnaAkcija:
+    """ADR-0025 — sličica, označavanje i akcija nad više agenata."""
+
+    @pytest.fixture
+    def dvoje(self, mila):
+        from apps.personas import hiring, org
+        from apps.personas.models import Position
+
+        with bind(actor_id="user:boss"):
+            call_command("seed_org", "--persona", "P-00001", stdout=io.StringIO())
+            org.assign(mila, Position.objects.get(code="SEF-MKT"), actor="user:boss")
+            jovan = hiring.hire(name="Jovan Ilić",
+                                position=Position.objects.get(code="URE-SR"),
+                                actor="user:boss")
+        return mila, jovan
+
+    def test_checkbox_per_agent(self, boss, dvoje):
+        c = _login(Client(), boss)
+        html = c.get("/console/personas").content.decode()
+        assert 'name="agenti" value="P-00002"' in html
+        assert "data-pick-all" in html
+
+    def test_bulk_activate_moves_only_those_picked(self, boss, dvoje):
+        mila, jovan = dvoje
+        c = _login(Client(), boss)
+        r = c.post("/console/personas/masovno",
+                   {"agenti": ["P-00002"], "akcija": "ACTIVE", "razlog": "Kreće u rad."})
+        assert r.status_code == 302
+        jovan.refresh_from_db()
+        mila.refresh_from_db()
+        assert jovan.status == E.PersonaStatus.ACTIVE
+        assert mila.status != E.PersonaStatus.ACTIVE      # neoznačeni se ne diraju
+
+    def test_reason_is_required(self, boss, dvoje):
+        _, jovan = dvoje
+        c = _login(Client(), boss)
+        c.post("/console/personas/masovno",
+               {"agenti": ["P-00002"], "akcija": "ACTIVE", "razlog": "  "})
+        jovan.refresh_from_db()
+        assert jovan.status == E.PersonaStatus.READY
+
+    def test_forbidden_transition_is_skipped_with_a_reason(self, boss, dvoje):
+        """Ko ne sme da pređe — preskače se, ostali prolaze, i kaže se zašto."""
+        from apps.personas.models import Persona
+
+        _, jovan = dvoje
+        nacrt = Persona.objects.create(
+            public_id="P-00009", slug="p-00009", display_name="Nedovršen (AI)",
+            persona_type=E.PersonaType.AI_CREATOR, status=E.PersonaStatus.DRAFT,
+            disclosure_mode=E.DisclosureMode.ALWAYS_VISIBLE, primary_locale="sr-Latn",
+            timezone="Europe/Belgrade")
+        c = _login(Client(), boss)
+        r = c.post("/console/personas/masovno",
+                   {"agenti": ["P-00002", "P-00009"], "akcija": "ACTIVE",
+                    "razlog": "Kreću u rad."}, follow=True)
+        html = r.content.decode()
+        jovan.refresh_from_db()
+        nacrt.refresh_from_db()
+        assert jovan.status == E.PersonaStatus.ACTIVE       # jedan je prošao
+        assert nacrt.status == E.PersonaStatus.DRAFT        # drugi nije ni mogao
+        assert "P-00009" in html and "ne postoji" in html   # i rečeno je zašto
+
+    def test_unknown_action_changes_nothing(self, boss, dvoje):
+        _, jovan = dvoje
+        c = _login(Client(), boss)
+        c.post("/console/personas/masovno",
+               {"agenti": ["P-00002"], "akcija": "OBRISI", "razlog": "ne"})
+        jovan.refresh_from_db()
+        assert jovan.status == E.PersonaStatus.READY

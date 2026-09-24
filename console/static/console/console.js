@@ -62,3 +62,24 @@
   });
   window.addEventListener("hashchange", function () { show(location.hash.slice(1)); });
 })();
+
+// „Označi sve" u spisku agenata (ADR-0025). Bez JS-a spisak i dalje radi —
+// samo se svaki red označava rukom.
+(function () {
+  document.querySelectorAll("table[data-pick]").forEach(function (t) {
+    var all = t.querySelector("[data-pick-all]");
+    if (!all) return;
+    var boxes = Array.prototype.slice.call(
+      t.querySelectorAll("input[type=checkbox][name=agenti]"));
+    all.addEventListener("change", function () {
+      boxes.forEach(function (b) { b.checked = all.checked; });
+    });
+    boxes.forEach(function (b) {
+      b.addEventListener("change", function () {
+        all.checked = boxes.every(function (x) { return x.checked; });
+        all.indeterminate = !all.checked && boxes.some(function (x) { return x.checked; });
+      });
+    });
+  });
+})();
+

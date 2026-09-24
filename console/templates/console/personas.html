@@ -21,13 +21,20 @@
   {% if q or sektor or status %}<a class="btn" href="/console/personas">Poništi</a>{% endif %}
 </form>
 
+<form method="post" action="/console/personas/masovno" data-confirm="Primeniti na sve označene agente?">
+{% csrf_token %}<input type="hidden" name="next" value="{{ put }}">
 <div class="card">
-<table>
-  <tr><th>Agent</th><th>Radno mesto</th><th>Odgovara</th><th>Status</th><th>Čeka</th><th>Poslednji put</th></tr>
+<table data-pick>
+  <tr>
+    {% if sme_masovno %}<th class="pick"><input type="checkbox" data-pick-all title="Označi sve na strani"></th>{% endif %}
+    <th>Agent</th><th>Radno mesto</th><th>Odgovara</th><th>Status</th><th>Čeka</th><th>Poslednji put</th>
+  </tr>
   {% for r in agenti %}
   <tr>
+    {% if sme_masovno %}<td class="pick"><input type="checkbox" name="agenti" value="{{ r.p.public_id }}"></td>{% endif %}
     <td><a class="who" href="/console/personas/{{ r.p.public_id }}">
-      <span class="dot">{{ r.p.display_name|first }}</span>
+      {% if r.slika %}<img class="face-sm" src="/console/assets/{{ r.slika.public_id }}" alt="" width="36" height="36">
+      {% else %}<span class="dot">{{ r.p.display_name|first }}</span>{% endif %}
       <span><strong>{{ r.p.display_name }}</strong><br><span class="mono small">{{ r.p.public_id }}</span></span></a></td>
     <td>{% if r.mesto %}{{ r.mesto.title }}<br><span class="sub small">{{ r.sektor.name }}</span>
       {% else %}<span class="sub">nije raspoređen</span>{% endif %}</td>
@@ -38,10 +45,26 @@
     <td class="small">{% if r.kad %}{{ r.kad|date:"d.m. H:i" }}{% else %}<span class="sub">nije se budio</span>{% endif %}</td>
   </tr>
   {% empty %}
-  <tr><td colspan="6" class="sub">Nijedan agent ne odgovara pretrazi.</td></tr>
+  <tr><td colspan="7" class="sub">Nijedan agent ne odgovara pretrazi.</td></tr>
   {% endfor %}
 </table>
 </div>
+
+{% if sme_masovno and agenti %}
+<div class="card mt16">
+  <h2>Sa označenim agentima</h2>
+  <p class="sub mb12">Ista provera kao da si svakog otvorio pojedinačno: ko ne sme da
+    pređe u traženi status, preskače se i kaže ti se zašto. Razlog ide u audit.</p>
+  <div class="row">
+    <select name="akcija" class="filter">
+      {% for k, ime in akcije %}<option value="{{ k }}">{{ ime }}</option>{% endfor %}
+    </select>
+    <input type="text" name="razlog" class="grow" placeholder="Razlog (obavezno)" required>
+    <button>Primeni</button>
+  </div>
+</div>
+{% endif %}
+</form>
 
 {% if strana.has_other_pages %}
 <div class="row mt16">

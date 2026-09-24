@@ -280,6 +280,9 @@ def personas(request):
         "statusi": [s.value for s in E.PersonaStatus],
         "ukupno": qs.count(), "svih": Persona.objects.count(),
         "upit": _upit(request),
+        "akcije": [(k, v[0]) for k, v in MASOVNE_AKCIJE.items()],
+        "sme_masovno": bool(_roles(request.user) & _DRAFTERS),
+        "put": request.get_full_path(),
     }
     return render(request, "console/personas.html", ctx)
 
@@ -294,8 +297,12 @@ def _upit(request) -> str:
 def _red_spiska(personas: list) -> list[dict]:
     """Jedan upit po koloni, ne jedan po agentu — spisak mora da podnese 10.000."""
     from apps.personas.models import Assignment
+    from apps.visuals.models import VisualProfile
 
     ids = [p.pk for p in personas]
+    slike = {v.persona_id: v.reference_asset for v in VisualProfile.objects.filter(
+        persona_id__in=ids, reference_asset__isnull=False).select_related(
+        "reference_asset")}
     mesta = {a.persona_id: a for a in Assignment.objects.filter(
         persona_id__in=ids, ended_at__isnull=True, is_primary=True)
         .select_related("position", "position__department")}
@@ -315,11 +322,63 @@ def _red_spiska(personas: list) -> list[dict]:
     for p in personas:
         a = mesta.get(p.pk)
         sef = sefovi.get(a.position.reports_to_id) if a and a.position.reports_to_id else None
-        out.append({"p": p, "mesto": a.position if a else None,
+        out.append({"p": p, "slika": slike.get(p.pk),
+                    "mesto": a.position if a else None,
                     "sektor": a.position.department if a else None,
                     "sef": sef if sef and sef.pk != p.pk else None,
                     "ceka": ceka.get(p.pk, 0), "kad": posao.get(p.pk)})
     return out
+
+
+#: Koliko agenata sme jedna masovna akcija. Brana od promašenog „označi sve".
+MASOVNO_NAJVISE = 200
+
+#: Šta se sme uraditi nad više agenata odjednom. Svaka stavka je običan prelaz
+#: statusa — ide kroz `lifecycle.change_status`, sa razlogom i audit zapisom.
+MASOVNE_AKCIJE = {
+    "ACTIVE": ("Aktiviraj", E.PersonaStatus.ACTIVE),
+    "PAUSED": ("Pauziraj", E.PersonaStatus.PAUSED),
+}
+
+
+@require_POST
+@console_view
+def personas_bulk(request):
+    """Isti prelaz nad više agenata. Ko ne sme da pređe — preskače se, sa razlogom.
+
+    Masovna akcija ne daje nijedno novo pravo: svaki agent prolazi kroz istu
+    proveru prelaza i istu ulogu kao da si ga otvorio pojedinačno (ADR-0025).
+    """
+    izbor = request.POST.getlist("agenti")[:MASOVNO_NAJVISE]
+    akcija = request.POST.get("akcija", "")
+    razlog = (request.POST.get("razlog") or "").strip()
+    nazad = _safe_next(request, "/console/personas")
+    if akcija not in MASOVNE_AKCIJE:
+        messages.error(request, "Nepoznata akcija.")
+        return redirect(nazad)
+    if not izbor:
+        messages.error(request, "Nijedan agent nije označen.")
+        return redirect(nazad)
+    if not razlog:
+        messages.error(request, "Masovna promena statusa traži razlog.")
+        return redirect(nazad)
+
+    _ime, cilj = MASOVNE_AKCIJE[akcija]
+    uloge, actor = _roles(request.user), principal_of(request.user)
+    uspelo, preskoceno = [], []
+    for p in Persona.objects.filter(public_id__in=izbor).order_by("public_id"):
+        try:
+            lifecycle.change_status(p, cilj, actor=actor, roles=uloge, reason=razlog)
+            uspelo.append(p.public_id)
+        except lifecycle.LifecycleError as e:
+            preskoceno.append(f"{p.public_id}: {e}")
+    if uspelo:
+        messages.success(request, f"{cilj.value}: {', '.join(uspelo)}.")
+    for red in preskoceno[:8]:
+        messages.warning(request, red)
+    if len(preskoceno) > 8:
+        messages.warning(request, f"…i još {len(preskoceno) - 8} preskočenih.")
+    return redirect(nazad)
 
 
 # ---------------------------------------------------------------- persona
