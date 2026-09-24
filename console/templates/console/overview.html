@@ -2,27 +2,63 @@
 {% block title %}Pregled{% endblock %}
 {% block content %}
 <div data-autorefresh="60"></div>
-<div class="row"><h1>Pregled</h1><span class="spacer"></span>
-  <span class="pill {% if runtime.external_actions_enabled %}bad{% else %}ok{% endif %}">
-  {% if runtime.external_actions_enabled %}SPOLJNE AKCIJE UKLJUČENE{% else %}Probni režim — ništa ne izlazi napolje{% endif %}</span>
+<div class="page-head">
+  <div>
+    <h1>Pregled</h1>
+    <div class="sub">Stanje korporacije u ovom trenutku.</div>
+  </div>
+  <div class="pills">
+    <span class="pill {% if runtime.external_actions_enabled %}bad{% else %}ok{% endif %}">
+    {% if runtime.external_actions_enabled %}SPOLJNE AKCIJE UKLJUČENE{% else %}Probni režim — ništa ne izlazi napolje{% endif %}</span>
+  </div>
 </div>
 
-<div class="grid">
-  <div class="card"><div class="sub">Čeka odobrenje</div><div class="stat">{{ pending_count }}</div>
+{% if kill_switches or pending_count or incidents or content_today|get:"FAILED" %}
+<div class="attention">
+  <h2>Traži tebe</h2>
+  <ul>
+    {% for ks in kill_switches %}<li><b>Zaustavljeno:</b> {{ ks.scope }} {{ ks.target_ref }} — {{ ks.reason }}
+      <span class="muted small">({{ ks.activated_by }}, {{ ks.activated_at|date:"d.m. H:i" }})</span></li>{% endfor %}
+    {% if pending_count %}<li><b>{{ pending_count }}</b> na čekanju — tvoje odobrenje pre nego što išta krene:
+      <a href="/console/approvals">otvori red</a></li>{% endif %}
+    {% for i in incidents %}<li><span class="pill {{ i.severity|status_tone }}">{{ i.severity }}</span>
+      {{ i.title }} <span class="muted small">{{ i.occurred_at|date:"d.m. H:i" }}</span> — <a href="/console/incidents">incidenti</a></li>{% endfor %}
+    {% if content_today|get:"FAILED" %}<li><b>{{ content_today|get:"FAILED" }}</b> neuspelih objava u poslednja 24 h —
+      <a href="/console/content?status=FAILED">pogledaj</a></li>{% endif %}
+  </ul>
+</div>
+{% else %}
+<div class="attention calm">
+  <h2>Ništa ne čeka</h2>
+  <p class="sub">Nema odobrenja u redu, nema otvorenih incidenata, kill-switch nije aktivan.</p>
+</div>
+{% endif %}
+
+<div class="grid k3">
+  <div class="card kpi"><div class="sub">Čeka odobrenje</div><div class="stat">{{ pending_count }}</div>
     <a href="/console/approvals">Otvori red →</a></div>
-  <div class="card"><div class="sub">Sadržaj u poslednja 24 h</div>
-    <div class="stat">{{ content_today|get:"PUBLISHED" }} <span class="sub">objavljeno</span></div>
+  <div class="card kpi"><div class="sub">Objavljeno za 24 h</div>
+    <div class="stat">{{ content_today|get:"PUBLISHED" }}</div>
     <div class="sub">{{ content_today|get:"IN_REVIEW" }} na odobrenju · {{ content_today|get:"DRAFT" }} nacrta ·
-      {{ content_today|get:"REJECTED" }} odbijeno · {{ content_today|get:"FAILED" }} neuspelo</div></div>
-  <div class="card"><div class="sub">Izvršenje</div>
-    <div class="stat">{{ runtime.running_actions }} <span class="sub">u toku</span></div>
+      {{ content_today|get:"REJECTED" }} odbijeno</div></div>
+  <div class="card kpi"><div class="sub">Izvršenje</div>
+    <div class="stat">{{ runtime.running_actions }}</div>
     <div class="sub">{{ runtime.due }} u redu · najstariji {{ runtime.oldest_due_age_s }} s ·
       {{ runtime.reconcile_pending }} za proveru · {{ runtime.breakers|length }} breaker-a otvoreno</div></div>
-  <div class="card"><div class="sub">Trošak ovog meseca</div><div class="stat">{{ cost_month|eur }}</div>
+  <div class="card kpi"><div class="sub">Trošak ovog meseca</div><div class="stat">{{ cost_month|eur }}</div>
     <a href="/console/costs">Detalji →</a></div>
 </div>
 
 <div class="grid mt16">
+  <div class="card">
+    <h2>Agenti</h2>
+    <table><tr><th>ID</th><th>Ime</th><th>Status</th><th>Okruženje</th></tr>
+    {% for p in personas %}<tr><td><a href="/console/personas/{{ p.public_id }}">{{ p.public_id }}</a></td>
+      <td>{{ p.display_name }}</td><td><span class="pill {{ p.status|status_tone }}">{{ p.status }}</span></td>
+      <td>{{ p.runtime_environment }}</td></tr>
+    {% empty %}<tr><td colspan="4" class="sub">Još nema agenata.</td></tr>{% endfor %}</table>
+  </div>
+
   <div class="card">
     <h2>Zaustavljanje (kill-switch)</h2>
     {% for ks in kill_switches %}
@@ -41,19 +77,8 @@
       <select name="scope_target"><option value="GLOBAL:">Sve (GLOBAL)</option>
         {% for p in personas %}<option value="PERSONA:{{ p.public_id }}">Samo {{ p.display_name }} ({{ p.public_id }})</option>{% endfor %}</select>
       <label>Razlog</label><input type="text" name="reason" placeholder="Zašto se zaustavlja">
-      <div class="mt10"><button class="danger">⛔ ZAUSTAVI</button></div>
+      <div class="mt12"><button class="danger">⛔ ZAUSTAVI</button></div>
     </form>
-  </div>
-  <div class="card">
-    <h2>Persone</h2>
-    <table><tr><th>ID</th><th>Ime</th><th>Status</th><th>Okruženje</th></tr>
-    {% for p in personas %}<tr><td><a href="/console/personas/{{ p.public_id }}">{{ p.public_id }}</a></td>
-      <td>{{ p.display_name }}</td><td><span class="pill {{ p.status|status_tone }}">{{ p.status }}</span></td>
-      <td>{{ p.runtime_environment }}</td></tr>{% endfor %}</table>
-    <h2 class="mt16">Otvoreni incidenti</h2>
-    {% for i in incidents %}<div class="small"><span class="pill {{ i.severity|status_tone }}">{{ i.severity }}</span>
-      {{ i.title }} <span class="muted">{{ i.occurred_at|date:"d.m. H:i" }}</span></div>
-    {% empty %}<p class="sub">Nema.</p>{% endfor %}
   </div>
 </div>
 

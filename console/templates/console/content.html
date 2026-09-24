@@ -1,10 +1,11 @@
 {% extends "console/base.html" %}
 {% block title %}Sadržaj{% endblock %}
 {% block content %}
-<div class="row"><h1>Sadržaj</h1><span class="spacer"></span>
-<form method="get" class="row"><select name="status"><option value="">svi statusi</option>
-{% for s in statuses %}<option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
-<button>Filtriraj</button></form></div>
+<div class="page-head">
+  <div><h1>Sadržaj</h1><div class="sub">Nacrti, odobreno i objavljeno — po agentima.</div></div>
+  <form method="get" class="row pills"><select name="status"><option value="">svi statusi</option>
+  {% for s in statuses %}<option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+  <button>Filtriraj</button></form></div>
 {% for i in items %}
 <div class="card mb12"><div class="row"><b>{{ i.title|default:"(bez teme)" }}</b>
   <span class="pill">{{ i.persona.public_id }}</span>

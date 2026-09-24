@@ -8,32 +8,61 @@
 </head>
 <body>
 {% timezone tz %}
+<div class="shell">
 {% if active_ks %}
 <div class="stopbar">⛔ Aktivan kill-switch — sve akcije u opsegu su zaustavljene.
   <a href="/console/" class="stoplink">Detalji</a></div>
 {% endif %}
-<header class="top">
-  <span class="brand">MM Persona OS</span>
+<aside class="side">
+  <span class="brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="5" fill="currentColor" opacity=".12"></rect>
+      <circle cx="12" cy="10" r="3.2" fill="currentColor"></circle>
+      <path d="M6.2 19c.8-3 3.1-4.6 5.8-4.6S17 16 17.8 19" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" fill="none"></path>
+    </svg>MM Persona OS</span>
   {% with p=request.path %}
+  <div class="group">Rad</div>
   <nav>
-    <a href="/console/" class="{% if p == '/console/' %}on{% endif %}">Pregled</a>
-    <a href="/console/approvals" class="{% if 'approvals' in p %}on{% endif %}">Odobrenja
-      {% if pending_count %}<span class="badge">{{ pending_count }}</span>{% endif %}</a>
-    <a href="/console/content" class="{% if 'content' in p %}on{% endif %}">Sadržaj</a>
-    <a href="/console/personas/P-00001" class="{% if 'personas' in p %}on{% endif %}">Mila</a>
-    <a href="/console/org" class="{% if p == '/console/org' %}on{% endif %}">Organizacija</a>
-    <a href="/console/costs" class="{% if 'costs' in p %}on{% endif %}">Troškovi</a>
-    <a href="/console/incidents" class="{% if 'incidents' in p %}on{% endif %}">Incidenti</a>
+    <a href="/console/" class="{% if p == '/console/' %}on{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z" fill="currentColor"/></svg>
+      Pregled</a>
+    <a href="/console/approvals" class="{% if 'approvals' in p %}on{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 13 4 4 10-10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Odobrenja{% if pending_count %}<span class="badge">{{ pending_count }}</span>{% endif %}</a>
+    <a href="/console/content" class="{% if 'content' in p %}on{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4h9l5 5v11H5V4Z" stroke="currentColor" stroke-width="1.8"/><path d="M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Sadržaj</a>
+  </nav>
+  <div class="group">Korporacija</div>
+  <nav>
+    <a href="/console/personas/P-00001" class="{% if 'personas' in p %}on{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.8"/><path d="M5 20c1-4 3.7-6 7-6s6 2 7 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Agenti</a>
+    <a href="/console/org" class="{% if p == '/console/org' %}on{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="5" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="16" width="6" height="5" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="15" y="16" width="6" height="5" rx="1.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v4M6 16v-2h12v2" stroke="currentColor" stroke-width="1.8"/></svg>
+      Organizacija</a>
+  </nav>
+  <div class="group">Nadzor</div>
+  <nav>
+    <a href="/console/costs" class="{% if 'costs' in p %}on{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.8"/><path d="M14.5 9.3c-.6-.8-1.5-1.2-2.6-1.2-1.6 0-2.6.8-2.6 1.9 0 2.6 5.4 1.4 5.4 4 0 1.2-1.1 2-2.8 2-1.2 0-2.2-.4-2.8-1.2M12 6.4v11.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      Troškovi</a>
+    <a href="/console/incidents" class="{% if 'incidents' in p %}on{% endif %}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4.5 21 19H3L12 4.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.05" fill="currentColor"/></svg>
+      Incidenti</a>
   </nav>
   {% endwith %}
-  <div class="me"><span>{{ who }}{% if roles %} · {{ roles|join:", " }}{% endif %}</span>
+  <div class="me">
+    <span>{{ who }}{% if roles %}<br>{{ roles|join:", " }}{% endif %}</span>
     <form method="post" action="/console/logout">{% csrf_token %}<button>Odjava</button></form>
   </div>
-</header>
+</aside>
 <main>
   {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
   {% block content %}{% endblock %}
 </main>
+</div>
 {% endtimezone %}
 <script src="{% static 'console/console.js' %}"></script>
 </body>

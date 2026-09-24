@@ -1,10 +1,12 @@
 {% extends "console/base.html" %}
 {% block title %}Organizacija{% endblock %}
 {% block content %}
-<div class="row"><h1>Organizacija</h1><span class="spacer"></span>
-  <span class="pill">{{ rows|length }} sektora</span><span class="pill">{{ total }} na poslu</span></div>
-<p class="sub mb12">Radno mesto kaže ko šta radi i kome odgovara. Ono ne daje nijednu dozvolu —
-  dozvole idu po sposobnosti i poverenju, a odobrenje koje traži čoveka nijedan agent ne daje.</p>
+<div class="page-head">
+  <div><h1>Organizacija</h1>
+    <div class="sub">Radno mesto kaže ko šta radi i kome odgovara. Ono ne daje nijednu dozvolu —
+      dozvole idu po sposobnosti i poverenju, a odobrenje koje traži čoveka nijedan agent ne daje.</div></div>
+  <div class="pills"><span class="pill">{{ rows|length }} sektora</span><span class="pill">{{ total }} na poslu</span></div>
+</div>
 
 {% for r in rows %}
 <div class="card mt16"><h2>{{ r.dep.name }} <span class="muted">{{ r.dep.code }}</span></h2>

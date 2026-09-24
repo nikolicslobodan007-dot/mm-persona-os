@@ -1,7 +1,8 @@
 {% extends "console/base.html" %}{% load console_tags %}
 {% block title %}Incidenti{% endblock %}
 {% block content %}
-<h1>Incidenti</h1>
+<div class="page-head"><div><h1>Incidenti</h1>
+  <div class="sub">Sve što je sistem sam prijavio kao problem.</div></div></div>
 <div class="card"><table><tr><th>ID</th><th>Težina</th><th>Status</th><th>Opis</th><th>Kad</th></tr>
 {% for i in incidents %}<tr><td class="mono small">{{ i.public_id }}</td>
 <td><span class="pill {{ i.severity|status_tone }}">{{ i.severity }}</span></td>

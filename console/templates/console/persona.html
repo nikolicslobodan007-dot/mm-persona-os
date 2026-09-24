@@ -1,160 +1,195 @@
 {% extends "console/base.html" %}{% load console_tags l10n %}
 {% block title %}{{ p.display_name }}{% endblock %}
 {% block content %}
-<div class="row">{% if lik.portrait %}<img class="avatar" src="/console/assets/{{ lik.portrait.public_id }}" alt="Profilna slika" width="56" height="56">{% endif %}
-  <h1>{{ p.display_name }} <span class="muted">{{ p.public_id }}</span></h1><span class="spacer"></span>
-  <span class="pill {{ p.status|status_tone }}">{{ p.status }}</span><span class="pill">{{ p.runtime_environment }}</span>
-  <span class="pill">{{ p.primary_locale }} · {{ p.timezone }}</span></div>
-<div class="grid">
-  <div class="card"><h2>Stanje sada</h2>
-    {% if state %}<table>{% for name, v, mx in state_rows %}<tr><td class="small">{{ name }}</td>
-      <td class="w55"><meter min="0" max="{{ mx|unlocalize }}" value="{{ v|unlocalize }}"></meter></td>
-      <td class="mono small">{{ v }}</td></tr>{% endfor %}</table>
-      <div class="sub">Sledeće buđenje: {% if not wakeable %}ne budi se sama dok je {{ p.status }}{% elif next_wake %}{{ next_wake|date:"d.m. H:i" }}{% else %}uskoro{% endif %}</div>
-    {% else %}<p class="sub">Nema stanja.</p>{% endif %}</div>
-  <div class="card"><h2>Status</h2>
-    <p class="sub">Trenutno <span class="pill {{ p.status|status_tone }}">{{ p.status }}</span> u okruženju {{ p.runtime_environment }}.
-    {% if p.status == "READY" %}Scheduler je ne budi dok ne postane ACTIVE.{% endif %}</p>
-    {% for t in targets %}
-    <form method="post" action="/console/personas/{{ p.public_id }}/status" class="row mt8"
-          data-confirm="{{ p.status }} → {{ t.value }}?">{% csrf_token %}
-      <input type="hidden" name="to" value="{{ t.value }}">
-      <input type="text" name="reason" class="grow" placeholder="Razlog (obavezno)" required>
-      <button class="{% if t.value == 'ACTIVE' %}primary{% elif t.value == 'ARCHIVED' or t.value == 'SUSPENDED' %}danger{% endif %}">→ {{ t.value }}</button>
-    </form>
-    {% empty %}<p class="sub">Tvoja uloga nema dozvoljen prelaz iz ovog statusa.</p>{% endfor %}
+<div class="page-head">
+  {% if lik.portrait %}<img class="avatar" src="/console/assets/{{ lik.portrait.public_id }}" alt="Profilna slika" width="52" height="52">{% endif %}
+  <div>
+    <h1>{{ p.display_name }}</h1>
+    <div class="sub">{{ p.public_id }}{% if org.position %} · {{ org.position.title }}, {{ org.department.name }}{% endif %}</div>
   </div>
-  <div class="card"><h2>Poverenje po sposobnosti</h2>
-    <table>{% for cap, lv in trust %}<tr><td class="mono small">{{ cap }}</td><td><span class="pill">{{ lv }}</span></td></tr>
-    {% empty %}<tr><td class="sub">Sve na L0.</td></tr>{% endfor %}</table>
-    <h2 class="mt16">Nalozi</h2>
-    <table>{% for a in accounts %}<tr><td>{{ a.channel_type }}</td><td class="small">{{ a.handle }}</td>
-      <td><span class="pill {{ a.status|status_tone }}">{{ a.status }}</span></td></tr>{% endfor %}</table>
-    <h2 class="mt16">Ključ za model</h2>
-    <table>{% for route, source, env in llm_keys %}<tr><td class="mono small">{{ route }}</td>
-      <td>{% if source == "persona" %}<span class="pill ok">svoj</span>{% elif source == "shared" %}<span class="pill warn">zajednički</span>{% else %}<span class="pill bad">nema — šablon</span>{% endif %}</td>
-      <td class="mono small muted">{{ env }}</td></tr>
-    {% empty %}<tr><td class="sub">Nema uključenog spoljnog modela — piše lokalni šablon.</td></tr>{% endfor %}</table>
-    <div class="sub mt8">Memorija: {% for k, v in memories.items %}{{ k }} {{ v }}{% if not forloop.last %} · {% endif %}{% endfor %}</div>
+  <div class="pills">
+    <span class="pill {{ p.status|status_tone }}">{{ p.status }}</span>
+    <span class="pill">{{ p.runtime_environment }}</span>
+    <span class="pill">{{ p.primary_locale }} · {{ p.timezone }}</span>
   </div>
 </div>
 
-<div class="card mt16"><h2>Buđenja</h2>
-<table><tr><th>Kad</th><th>Povod</th><th>Odluka</th><th>Razlog</th></tr>
-{% for r in runs %}<tr><td class="small">{{ r.started_at|date:"d.m. H:i" }}</td><td class="small">{{ r.wake_priority }}</td>
-<td><span class="pill {{ r.decision|status_tone }}">{{ r.decision|default:"—" }}</span></td><td class="small">{{ r.reason_code }}</td></tr>
-{% empty %}<tr><td colspan="4" class="sub">Još se nije budila.</td></tr>{% endfor %}</table></div>
-
-<div class="card mt16"><h2>Pošta</h2>
-{% if mail.account %}<p class="sub mb12">Adresa: <b class="mono">{{ mail.account.persona_address }}</b> · pošta se čita na 2 min. Slanje ide samo preko odobrenja.</p>
-<table><tr><th>Stiglo</th><th>Od</th><th>Naslov</th><th>Tekst</th></tr>
-{% for m in mail.inbox %}<tr><td class="small">{{ m.received_at|date:"d.m. H:i" }}</td><td class="small">{{ m.from_addr|truncatechars:40 }}</td>
-<td>{{ m.subject|truncatechars:60 }}</td><td class="small">{{ m.body_text|truncatechars:120 }}</td></tr>
-{% empty %}<tr><td colspan="4" class="sub">Sandučić je prazan.</td></tr>{% endfor %}</table>
-{% else %}<p class="sub mb12">Nema sandučić. Biće: <b class="mono">{{ mail.planned }}</b>{% if not mail.enabled %} — Mailcow veza još nije uključena (MAILCOW_ENABLED).{% endif %}</p>
-{% if can_draft and mail.enabled %}<form method="post" action="/console/personas/{{ p.public_id }}/mailbox" data-confirm="Otvoriti sandučić {{ mail.planned }}?">{% csrf_token %}
-<button class="primary">Otvori sandučić</button></form>{% endif %}{% endif %}
+<div class="tabs" data-tabs>
+  <a href="#stanje">Stanje</a>
+  <a href="#lik">Lik i dosije</a>
+  <a href="#sadrzaj">Sadržaj <span class="count">{{ items|length }}</span></a>
+  <a href="#posta">Pošta <span class="count">{{ mail.inbox|length }}</span></a>
+  <a href="#pravila">Pravila i poverenje</a>
+  <a href="#akcije">Akcije</a>
 </div>
 
-<div class="card mt16"><h2>Radno mesto i dosije</h2>
-{% if org.position %}
-<p class="sub">{{ org.department.name }} · <strong>{{ org.position.title }}</strong>{% if org.position.specialty %} — {{ org.position.specialty }}{% endif %}.
-  Odgovara: {% if org.boss %}<a href="/console/personas/{{ org.boss.public_id }}">{{ org.boss.display_name }}</a>{% else %}čoveku{% endif %} ·
-  eskalacija: <span class="mono">{{ org.escalation }}</span></p>
-{% else %}<p class="sub">Nije raspoređen ni na jedno radno mesto.</p>{% endif %}
-{% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/assign" class="row mb12">{% csrf_token %}
-  <select name="position" class="grow">{% for pos in org.choices %}<option value="{{ pos.code }}"{% if org.position and pos.code == org.position.code %} selected{% endif %}>{{ pos.department.name }} — {{ pos.title }}</option>{% endfor %}</select>
-  <button>Rasporedi</button></form>{% endif %}
+<section data-tab="stanje">
+  <div class="grid">
+    <div class="card"><h2>Stanje sada</h2>
+      {% if state %}<table class="plain">{% for name, v, mx in state_rows %}<tr><td class="small">{{ name }}</td>
+        <td class="w55"><meter min="0" max="{{ mx|unlocalize }}" value="{{ v|unlocalize }}"></meter></td>
+        <td class="mono small">{{ v }}</td></tr>{% endfor %}</table>
+        <div class="sub mt8">Sledeće buđenje: {% if not wakeable %}ne budi se sama dok je {{ p.status }}{% elif next_wake %}{{ next_wake|date:"d.m. H:i" }}{% else %}uskoro{% endif %}</div>
+      {% else %}<p class="sub">Nema stanja.</p>{% endif %}</div>
 
-<h2 class="mt16">Dosije</h2>
-<p class="sub mb12">Modelovana biografija — izmišljena, dosledna i bez državnog identiteta.
-  Visina, građa i boje služe slici; godine i mesto ulaze u ton pisanja.</p>
-{% if can_draft %}
-<form method="post" action="/console/personas/{{ p.public_id }}/dossier">{% csrf_token %}
-<table>
-<tr><td class="small">Datum rođenja</td><td><input type="date" name="birth_date" value="{{ p.birth_date_model|date:'Y-m-d' }}"></td>
-    <td class="small">Mesto rođenja</td><td><input name="birth_place" maxlength="120" value="{{ org.dossier.birth_place|default:'' }}"></td></tr>
-<tr><td class="small">Prebivalište</td><td><input name="residence" maxlength="160" value="{{ org.dossier.residence|default:'' }}"></td>
-    <td class="small">Porodični status</td><td><input name="marital_status" maxlength="48" value="{{ org.dossier.marital_status|default:'' }}"></td></tr>
-<tr><td class="small">Visina (cm)</td><td><input name="height_cm" type="number" min="120" max="230" value="{{ org.dossier.height_cm|default:'' }}"></td>
-    <td class="small">Težina (kg)</td><td><input name="weight_kg" type="number" min="35" max="250" value="{{ org.dossier.weight_kg|default:'' }}"></td></tr>
-<tr><td class="small">Građa</td><td><input name="build" maxlength="48" value="{{ org.dossier.build|default:'' }}"></td>
-    <td class="small">Deca</td><td><input name="children" type="number" min="0" max="12" value="{{ org.dossier.children|default:'0' }}"></td></tr>
-<tr><td class="small">Boja očiju</td><td><input name="eye_color" maxlength="32" value="{{ org.dossier.eye_color|default:'' }}"></td>
-    <td class="small">Boja kose</td><td><input name="hair_color" maxlength="32" value="{{ org.dossier.hair_color|default:'' }}"></td></tr>
-<tr><td class="small">Frizura</td><td><input name="hair_style" maxlength="64" value="{{ org.dossier.hair_style|default:'' }}"></td>
-    <td class="small">Hobiji</td><td><input name="hobbies" class="grow" value="{% for h in org.dossier.hobbies %}{{ h }}{% if not forloop.last %}, {% endif %}{% endfor %}" placeholder="zarezom odvojeno"></td></tr>
-</table>
-<p class="small mt8">Opis izgleda (osnov za sliku — isti lik na svakoj):</p>
-<textarea name="appearance_prompt" rows="3" class="grow" maxlength="200">{{ org.dossier.appearance_prompt|default:'' }}</textarea>
-<div class="row mt8"><button>Sačuvaj dosije</button>{% if org.dossier %}<span class="sub">verzija {{ org.dossier.dossier_version }}</span>{% endif %}</div>
-</form>{% elif org.dossier %}<p class="sub">Dosije v{{ org.dossier.dossier_version }} — {{ org.dossier.residence }}.</p>{% endif %}
-</div>
+    <div class="card"><h2>Status</h2>
+      <p class="sub">Trenutno <span class="pill {{ p.status|status_tone }}">{{ p.status }}</span> u okruženju {{ p.runtime_environment }}.
+      {% if p.status == "READY" %}Scheduler je ne budi dok ne postane ACTIVE.{% endif %}</p>
+      {% for t in targets %}
+      <form method="post" action="/console/personas/{{ p.public_id }}/status" class="row mt8"
+            data-confirm="{{ p.status }} → {{ t.value }}?">{% csrf_token %}
+        <input type="hidden" name="to" value="{{ t.value }}">
+        <input type="text" name="reason" class="grow" placeholder="Razlog (obavezno)" required>
+        <button class="{% if t.value == 'ACTIVE' %}primary{% elif t.value == 'ARCHIVED' or t.value == 'SUSPENDED' %}danger{% endif %}">→ {{ t.value }}</button>
+      </form>
+      {% empty %}<p class="sub">Tvoja uloga nema dozvoljen prelaz iz ovog statusa.</p>{% endfor %}
+    </div>
+  </div>
 
-<div class="card mt16"><h2>Lik</h2>
-<p class="sub mb12">Profilna slika je sidro identiteta: svaka sledeća slika nastaje njenom izmenom,
-  pa je na svima ista osoba. Sve je sintetičko i nosi oznaku da je AI.
-  Model: <span class="mono">{{ lik.model }}</span> · ključ: <span class="pill">{{ lik.key }}</span>
-  {% if not lik.enabled %}<span class="pill">slike se otpremaju ručno</span>{% endif %}</p>
-<div class="face">
-  {% if lik.portrait %}<figure class="portrait"><img src="/console/assets/{{ lik.portrait.public_id }}" alt="Profilna slika" width="150" height="150">
-    <figcaption class="sub small">profilna · {{ lik.portrait.public_id }}</figcaption></figure>
-  {% else %}<p class="sub">Još nema profilne slike.</p>{% endif %}
-  {% for a in lik.gallery %}<figure class="shot"><img src="/console/assets/{{ a.public_id }}" alt="Slika {{ a.public_id }}" width="110" height="110">
-    <figcaption class="sub small">{{ a.public_id }}</figcaption></figure>{% endfor %}
-</div>
-{% if can_draft %}
-<form method="post" action="/console/personas/{{ p.public_id }}/upload" class="row mt16" enctype="multipart/form-data">{% csrf_token %}
-  <input type="file" name="slike" accept="image/png,image/jpeg,image/webp" multiple required>
-  <input type="text" name="opis" maxlength="80" placeholder="Opis (za galeriju)">
-  <label class="row small"><input type="checkbox" name="kao_profilna" value="1"> prva je profilna</label>
-  <button>Otpremi slike</button></form>
-<p class="sub small mt8">Može više slika odjednom (najviše 20). Ručno napravljene slike (ChatGPT prozor) otpremaju se ovde — ne koštaju ništa.
-  Da isti lik ostane isti, u ChatGPT-u uz svaku novu sliku priloži profilnu i traži istu osobu.</p>
-{% if lik.enabled %}
-<form method="post" action="/console/personas/{{ p.public_id }}/portrait" class="row mt16">{% csrf_token %}
-  <button>{% if lik.portrait %}Napravi profilnu iznova{% else %}Napravi profilnu{% endif %}</button></form>
-<form method="post" action="/console/personas/{{ p.public_id }}/portrait" class="row mt8">{% csrf_token %}
-  <input type="text" name="scene" class="grow" maxlength="200" placeholder="Scena za novu sliku, npr. „u magacinu pored paleta sa drvenim sanducima”" required>
-  <button>Dodaj sliku</button></form>
-{% endif %}
-{% endif %}
-</div>
+  <div class="card mt16"><h2>Buđenja</h2>
+  <table><tr><th>Kad</th><th>Povod</th><th>Odluka</th><th>Razlog</th></tr>
+  {% for r in runs %}<tr><td class="small">{{ r.started_at|date:"d.m. H:i" }}</td><td class="small">{{ r.wake_priority }}</td>
+  <td><span class="pill {{ r.decision|status_tone }}">{{ r.decision|default:"—" }}</span></td><td class="small">{{ r.reason_code }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="sub">Još se nije budila.</td></tr>{% endfor %}</table></div>
+</section>
 
-<div class="card mt16"><h2>Pouke urednika</h2>
-<p class="sub mb12">Ulaze u svaki nacrt koji piše model. „Svi” važi za sve agente, i za nove.</p>
-{% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/lessons" class="row mb12">{% csrf_token %}
-  <input type="text" name="text" class="grow" maxlength="500" placeholder="Novo pravilo pisanja, npr. „Koristi srpske navodnice „…” ”" required>
-  <label class="row small"><input type="checkbox" name="everyone" value="1"> za sve agente</label>
-  <label class="row small"><input type="checkbox" name="sector" value="1"> za moj sektor</label>
-  <button>Dodaj</button>
-</form>{% endif %}
-<table><tr><th>Kad</th><th>Važi za</th><th>Pravilo</th><th></th></tr>
-{% for l in lessons %}<tr{% if not l.is_active %} class="muted"{% endif %}><td class="small">{{ l.created_at|date:"d.m. H:i" }}</td>
-<td>{% if l.persona_id %}<span class="pill">{{ p.public_id }}</span>{% elif l.department_id %}<span class="pill">{{ l.department.code }}</span>{% else %}<span class="pill ok">svi</span>{% endif %}</td>
-<td class="small">{{ l.text }}</td>
-<td>{% if can_draft %}<form method="post" action="/console/lessons/{{ l.id }}/toggle">{% csrf_token %}
-  <input type="hidden" name="back" value="/console/personas/{{ p.public_id }}">
-  <button class="small">{% if l.is_active %}Isključi{% else %}Uključi{% endif %}</button></form>{% endif %}</td></tr>
-{% empty %}<tr><td colspan="4" class="sub">Još nema pouka. Nastaju kad odbiješ ili izmeniš nacrt.</td></tr>{% endfor %}</table></div>
+<section data-tab="lik">
+  <div class="card"><h2>Radno mesto</h2>
+  {% if org.position %}
+  <p class="sub">{{ org.department.name }} · <strong>{{ org.position.title }}</strong>{% if org.position.specialty %} — {{ org.position.specialty }}{% endif %}.
+    Odgovara: {% if org.boss %}<a href="/console/personas/{{ org.boss.public_id }}">{{ org.boss.display_name }}</a>{% else %}čoveku{% endif %} ·
+    eskalacija: <span class="mono">{{ org.escalation }}</span></p>
+  {% else %}<p class="sub">Nije raspoređen ni na jedno radno mesto.</p>{% endif %}
+  {% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/assign" class="row mt12">{% csrf_token %}
+    <select name="position" class="grow">{% for pos in org.choices %}<option value="{{ pos.code }}"{% if org.position and pos.code == org.position.code %} selected{% endif %}>{{ pos.department.name }} — {{ pos.title }}</option>{% endfor %}</select>
+    <button>Rasporedi</button></form>{% endif %}
+  </div>
 
-<div class="card mt16"><h2>Sadržaj</h2>
-{% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/draft" class="row mb12">{% csrf_token %}
-  <input type="text" name="topic" class="grow" maxlength="200" placeholder="Tema (prazno = sledeća niša persone)">
-  <button class="primary">Napiši nacrt sada</button>
-</form>
-<p class="sub mb12">Model piše odmah (oko 10 s). Nacrt ide na odobrenje, a u SIMULATION samo na sandbox. Najviše {{ manual_limit }} ručnih nacrta dnevno.</p>{% endif %}
-<table><tr><th>Kad</th><th>Tema</th><th>Status</th><th>Tekst</th></tr>
-{% for i in items %}<tr><td class="small">{{ i.created_at|date:"d.m. H:i" }}</td><td>{{ i.title }}</td>
-<td><span class="pill {{ i.status|status_tone }}">{{ i.status }}</span> <span class="small muted">{{ i.status_reason }}</span></td>
-<td class="small">{{ i.body|truncatechars:140 }}</td></tr>
-{% empty %}<tr><td colspan="4" class="sub">Još nema nacrta.</td></tr>{% endfor %}</table></div>
+  <div class="card mt16"><h2>Lik</h2>
+  <p class="sub mb12">Profilna slika je sidro identiteta: svaka sledeća nastaje njenom izmenom, pa je na svima ista osoba.
+    Sve je sintetičko i nosi oznaku da je AI.
+    Model: <span class="mono">{{ lik.model }}</span> · ključ: <span class="pill">{{ lik.key }}</span>
+    {% if not lik.enabled %}<span class="pill">slike se otpremaju ručno</span>{% endif %}</p>
+  <div class="face">
+    {% if lik.portrait %}<figure class="portrait"><img src="/console/assets/{{ lik.portrait.public_id }}" alt="Profilna slika" width="164" height="164">
+      <figcaption class="sub small">profilna · {{ lik.portrait.public_id }}</figcaption></figure>
+    {% else %}<p class="sub">Još nema profilne slike.</p>{% endif %}
+    {% for a in lik.gallery %}<figure class="shot"><img src="/console/assets/{{ a.public_id }}" alt="Slika {{ a.public_id }}" width="120" height="120">
+      <figcaption class="sub small">{{ a.public_id }}</figcaption></figure>{% endfor %}
+  </div>
+  {% if can_draft %}
+  <form method="post" action="/console/personas/{{ p.public_id }}/upload" class="row mt16" enctype="multipart/form-data">{% csrf_token %}
+    <input type="file" name="slike" accept="image/png,image/jpeg,image/webp" multiple required>
+    <input type="text" name="opis" maxlength="80" placeholder="Opis (za galeriju)">
+    <label class="row small"><input type="checkbox" name="kao_profilna" value="1"> prva je profilna</label>
+    <button>Otpremi slike</button></form>
+  <p class="sub small mt8">Može više slika odjednom (najviše 20). Ručno napravljene slike (ChatGPT prozor) otpremaju se ovde — ne koštaju ništa.
+    Da isti lik ostane isti, u ChatGPT-u uz svaku novu sliku priloži profilnu i traži istu osobu.</p>
+  {% if lik.enabled %}
+  <form method="post" action="/console/personas/{{ p.public_id }}/portrait" class="row mt16">{% csrf_token %}
+    <button>{% if lik.portrait %}Napravi profilnu iznova{% else %}Napravi profilnu{% endif %}</button></form>
+  <form method="post" action="/console/personas/{{ p.public_id }}/portrait" class="row mt8">{% csrf_token %}
+    <input type="text" name="scene" class="grow" maxlength="200" placeholder="Scena za novu sliku, npr. „u magacinu pored paleta sa drvenim sanducima”" required>
+    <button>Dodaj sliku</button></form>
+  {% endif %}
+  {% endif %}
+  </div>
 
-<div class="card mt16"><h2>Akcije</h2>
-<table><tr><th>Akcija</th><th>Tip</th><th>Kanal</th><th>Status</th><th>Kad</th></tr>
-{% for a in actions %}<tr><td class="mono"><a href="/console/actions/{{ a.public_id }}">{{ a.public_id|slice:":14" }}…</a></td>
-<td>{{ a.action_type }}</td><td>{{ a.channel_account.channel_type|default:"—" }}</td>
-<td><span class="pill {{ a.status|status_tone }}">{{ a.status }}</span> <span class="small muted">{{ a.error_code }}</span></td>
-<td class="small">{{ a.created_at|date:"d.m. H:i" }}</td></tr>
-{% empty %}<tr><td colspan="5" class="sub">Nema akcija.</td></tr>{% endfor %}</table></div>
+  <div class="card mt16"><h2>Dosije</h2>
+  <p class="sub mb12">Modelovana biografija — izmišljena, dosledna i bez državnog identiteta.
+    Visina, građa i boje služe slici; godine i mesto ulaze u ton pisanja.</p>
+  {% if can_draft %}
+  <form method="post" action="/console/personas/{{ p.public_id }}/dossier">{% csrf_token %}
+  <table class="plain">
+  <tr><td class="small">Datum rođenja</td><td><input type="date" name="birth_date" value="{{ p.birth_date_model|date:'Y-m-d' }}"></td>
+      <td class="small">Mesto rođenja</td><td><input name="birth_place" maxlength="120" value="{{ org.dossier.birth_place|default:'' }}"></td></tr>
+  <tr><td class="small">Prebivalište</td><td><input name="residence" maxlength="160" value="{{ org.dossier.residence|default:'' }}"></td>
+      <td class="small">Porodični status</td><td><input name="marital_status" maxlength="48" value="{{ org.dossier.marital_status|default:'' }}"></td></tr>
+  <tr><td class="small">Visina (cm)</td><td><input name="height_cm" type="number" min="120" max="230" value="{{ org.dossier.height_cm|default:'' }}"></td>
+      <td class="small">Težina (kg)</td><td><input name="weight_kg" type="number" min="35" max="250" value="{{ org.dossier.weight_kg|default:'' }}"></td></tr>
+  <tr><td class="small">Građa</td><td><input name="build" maxlength="48" value="{{ org.dossier.build|default:'' }}"></td>
+      <td class="small">Deca</td><td><input name="children" type="number" min="0" max="12" value="{{ org.dossier.children|default:'0' }}"></td></tr>
+  <tr><td class="small">Boja očiju</td><td><input name="eye_color" maxlength="32" value="{{ org.dossier.eye_color|default:'' }}"></td>
+      <td class="small">Boja kose</td><td><input name="hair_color" maxlength="32" value="{{ org.dossier.hair_color|default:'' }}"></td></tr>
+  <tr><td class="small">Frizura</td><td><input name="hair_style" maxlength="64" value="{{ org.dossier.hair_style|default:'' }}"></td>
+      <td class="small">Hobiji</td><td><input name="hobbies" value="{% for h in org.dossier.hobbies %}{{ h }}{% if not forloop.last %}, {% endif %}{% endfor %}" placeholder="zarezom odvojeno"></td></tr>
+  </table>
+  <label>Opis izgleda — osnov za sliku, isti lik na svakoj</label>
+  <textarea name="appearance_prompt" rows="3" maxlength="200">{{ org.dossier.appearance_prompt|default:'' }}</textarea>
+  <div class="row mt12"><button class="primary">Sačuvaj dosije</button>{% if org.dossier %}<span class="sub">verzija {{ org.dossier.dossier_version }}</span>{% endif %}</div>
+  </form>{% elif org.dossier %}<p class="sub">Dosije v{{ org.dossier.dossier_version }} — {{ org.dossier.residence }}.</p>{% endif %}
+  </div>
+</section>
+
+<section data-tab="sadrzaj">
+  <div class="card"><h2>Sadržaj</h2>
+  {% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/draft" class="row mb12">{% csrf_token %}
+    <input type="text" name="topic" class="grow" maxlength="200" placeholder="Tema (prazno = sledeća niša persone)">
+    <button class="primary">Napiši nacrt sada</button>
+  </form>
+  <p class="sub mb12">Model piše odmah (oko 10 s). Nacrt ide na odobrenje, a u SIMULATION samo na sandbox. Najviše {{ manual_limit }} ručnih nacrta dnevno.</p>{% endif %}
+  <table><tr><th>Kad</th><th>Tema</th><th>Status</th><th>Tekst</th></tr>
+  {% for i in items %}<tr><td class="small">{{ i.created_at|date:"d.m. H:i" }}</td><td>{{ i.title }}</td>
+  <td><span class="pill {{ i.status|status_tone }}">{{ i.status }}</span> <span class="small muted">{{ i.status_reason }}</span></td>
+  <td class="small">{{ i.body|truncatechars:140 }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="sub">Još nema nacrta.</td></tr>{% endfor %}</table></div>
+</section>
+
+<section data-tab="posta">
+  <div class="card"><h2>Pošta</h2>
+  {% if mail.account %}<p class="sub mb12">Adresa: <b class="mono">{{ mail.account.persona_address }}</b> · pošta se čita na 2 min. Slanje ide samo preko odobrenja.</p>
+  <table><tr><th>Stiglo</th><th>Od</th><th>Naslov</th><th>Tekst</th></tr>
+  {% for m in mail.inbox %}<tr><td class="small">{{ m.received_at|date:"d.m. H:i" }}</td><td class="small">{{ m.from_addr|truncatechars:40 }}</td>
+  <td>{{ m.subject|truncatechars:60 }}</td><td class="small">{{ m.body_text|truncatechars:120 }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="sub">Sandučić je prazan.</td></tr>{% endfor %}</table>
+  {% else %}<p class="sub mb12">Nema sandučić. Biće: <b class="mono">{{ mail.planned }}</b>{% if not mail.enabled %} — Mailcow veza još nije uključena (MAILCOW_ENABLED).{% endif %}</p>
+  {% if can_draft and mail.enabled %}<form method="post" action="/console/personas/{{ p.public_id }}/mailbox" data-confirm="Otvoriti sandučić {{ mail.planned }}?">{% csrf_token %}
+  <button class="primary">Otvori sandučić</button></form>{% endif %}{% endif %}
+  </div>
+</section>
+
+<section data-tab="pravila">
+  <div class="card"><h2>Pouke urednika</h2>
+  <p class="sub mb12">Ulaze u svaki nacrt koji piše model. „Svi” važi za sve agente, i za nove.</p>
+  {% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/lessons" class="row mb12">{% csrf_token %}
+    <input type="text" name="text" class="grow" maxlength="500" placeholder="Novo pravilo pisanja, npr. „Koristi srpske navodnice „…” ”" required>
+    <label class="row small"><input type="checkbox" name="everyone" value="1"> za sve agente</label>
+    <label class="row small"><input type="checkbox" name="sector" value="1"> za moj sektor</label>
+    <button>Dodaj</button>
+  </form>{% endif %}
+  <table><tr><th>Kad</th><th>Važi za</th><th>Pravilo</th><th></th></tr>
+  {% for l in lessons %}<tr{% if not l.is_active %} class="muted"{% endif %}><td class="small">{{ l.created_at|date:"d.m. H:i" }}</td>
+  <td>{% if l.persona_id %}<span class="pill">{{ p.public_id }}</span>{% elif l.department_id %}<span class="pill">{{ l.department.code }}</span>{% else %}<span class="pill ok">svi</span>{% endif %}</td>
+  <td class="small">{{ l.text }}</td>
+  <td>{% if can_draft %}<form method="post" action="/console/lessons/{{ l.id }}/toggle">{% csrf_token %}
+    <input type="hidden" name="back" value="/console/personas/{{ p.public_id }}">
+    <button class="small">{% if l.is_active %}Isključi{% else %}Uključi{% endif %}</button></form>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4" class="sub">Još nema pouka. Nastaju kad odbiješ ili izmeniš nacrt.</td></tr>{% endfor %}</table></div>
+
+  <div class="grid mt16">
+    <div class="card"><h2>Poverenje po sposobnosti</h2>
+      <table class="plain">{% for cap, lv in trust %}<tr><td class="mono small">{{ cap }}</td><td><span class="pill">{{ lv }}</span></td></tr>
+      {% empty %}<tr><td class="sub">Sve na L0.</td></tr>{% endfor %}</table></div>
+    <div class="card"><h2>Nalozi</h2>
+      <table class="plain">{% for a in accounts %}<tr><td>{{ a.channel_type }}</td><td class="small">{{ a.handle }}</td>
+        <td><span class="pill {{ a.status|status_tone }}">{{ a.status }}</span></td></tr>
+      {% empty %}<tr><td class="sub">Nema naloga.</td></tr>{% endfor %}</table></div>
+    <div class="card"><h2>Ključ za model</h2>
+      <table class="plain">{% for route, source, env in llm_keys %}<tr><td class="mono small">{{ route }}</td>
+        <td>{% if source == "persona" %}<span class="pill ok">svoj</span>{% elif source == "shared" %}<span class="pill warn">zajednički</span>{% else %}<span class="pill bad">nema — šablon</span>{% endif %}</td>
+        <td class="mono small muted">{{ env }}</td></tr>
+      {% empty %}<tr><td class="sub">Nema uključenog spoljnog modela — piše lokalni šablon.</td></tr>{% endfor %}</table>
+      <div class="sub mt8">Memorija: {% for k, v in memories.items %}{{ k }} {{ v }}{% if not forloop.last %} · {% endif %}{% endfor %}</div></div>
+  </div>
+</section>
+
+<section data-tab="akcije">
+  <div class="card"><h2>Akcije</h2>
+  <table><tr><th>Akcija</th><th>Tip</th><th>Kanal</th><th>Status</th><th>Kad</th></tr>
+  {% for a in actions %}<tr><td class="mono"><a href="/console/actions/{{ a.public_id }}">{{ a.public_id|slice:":14" }}…</a></td>
+  <td>{{ a.action_type }}</td><td>{{ a.channel_account.channel_type|default:"—" }}</td>
+  <td><span class="pill {{ a.status|status_tone }}">{{ a.status }}</span> <span class="small muted">{{ a.error_code }}</span></td>
+  <td class="small">{{ a.created_at|date:"d.m. H:i" }}</td></tr>
+  {% empty %}<tr><td colspan="5" class="sub">Nema akcija.</td></tr>{% endfor %}</table></div>
+</section>
 {% endblock %}

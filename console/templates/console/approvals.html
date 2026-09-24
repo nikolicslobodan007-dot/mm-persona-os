@@ -1,7 +1,8 @@
 {% extends "console/base.html" %}{% load console_tags %}
 {% block title %}Odobrenja{% endblock %}
 {% block content %}
-<h1>Odobrenja</h1>
+<div class="page-head"><div><h1>Odobrenja</h1>
+  <div class="sub">Ništa ne izlazi napolje dok ti ne kažeš da može.</div></div></div>
 {% if not can_decide %}<div class="msg warning">Možeš da gledaš, ali nemaš dozvolu da odlučuješ.</div>{% endif %}
 {% for ap in pending %}
 <div class="card mb12">

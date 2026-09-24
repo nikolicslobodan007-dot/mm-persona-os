@@ -1,75 +1,197 @@
-:root{--bg:#f6f7f9;--panel:#fff;--ink:#16181d;--muted:#5d6470;--line:#e2e5ea;--accent:#1f4fd1;
---ok:#1a7f37;--ok-bg:#e6f4ea;--warn:#9a6700;--warn-bg:#fff4d6;--bad:#c62828;--bad-bg:#fdecea;
---mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
---sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
-@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--panel:#171a21;--ink:#e7e9ee;--muted:#9aa2af;
---line:#2a2f3a;--accent:#7aa2ff;--ok:#5cc278;--ok-bg:#12291a;--warn:#e0b04a;--warn-bg:#2d2412;
---bad:#ff7b72;--bad-bg:#341816}}
+/* Konzola v2 — ADR-0019.
+   Tri pravila iza ovog stila:
+     1. čita se sa udaljenosti: osnovni tekst 16 px, tabele 15 px;
+     2. strana ima jedan sadržaj, ne beskrajan niz kartica (otuda tabovi);
+     3. ono što traži čoveka stoji na vrhu i vidi se bojom, ne veličinom. */
+
+:root{
+  --bg:#f4f6f9; --panel:#fff; --panel-2:#fafbfd;
+  --ink:#141820; --ink-2:#39404d; --muted:#67707e;
+  --line:#dfe4ec; --line-2:#eef1f6;
+  --accent:#1f4fd1; --accent-bg:#eaf0ff;
+  --ok:#137a3b; --ok-bg:#e4f5ea;
+  --warn:#8a5d00; --warn-bg:#fdf1d3;
+  --bad:#bf2222; --bad-bg:#fdeaea;
+  --shadow:0 1px 2px rgba(16,24,40,.05), 0 1px 3px rgba(16,24,40,.06);
+  --shadow-lg:0 4px 14px rgba(16,24,40,.08);
+  --r:14px; --r-sm:9px;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0e1116; --panel:#171b23; --panel-2:#1c212a;
+  --ink:#e9ecf2; --ink-2:#c2c8d4; --muted:#9aa3b2;
+  --line:#2a3140; --line-2:#222834;
+  --accent:#86a8ff; --accent-bg:#16203a;
+  --ok:#5fc47d; --ok-bg:#12291b; --warn:#e3b556; --warn-bg:#2c2413;
+  --bad:#ff8078; --bad-bg:#33191a;
+  --shadow:0 1px 2px rgba(0,0,0,.4); --shadow-lg:0 6px 18px rgba(0,0,0,.45);
+}}
+
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
-a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
-header.top{display:flex;align-items:center;gap:20px;padding:10px 20px;background:var(--panel);
-border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
-header.top .brand{font-weight:700;letter-spacing:.2px}
-header.top nav{display:flex;gap:4px;flex-wrap:wrap}
-header.top nav a{padding:6px 10px;border-radius:6px;color:var(--ink)}
-header.top nav a.on{background:var(--bg);font-weight:600}
-header.top .me{margin-left:auto;display:flex;gap:10px;align-items:center;color:var(--muted);font-size:13px}
-.badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:10px;background:var(--bad);color:#fff;
-font-size:12px;text-align:center;font-weight:600}
-main{max-width:1180px;margin:0 auto;padding:20px}
-h1{font-size:22px;margin:4px 0 16px}h2{font-size:16px;margin:0 0 10px}
-.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
-.stat{font-size:28px;font-weight:700;line-height:1.1}.sub{color:var(--muted);font-size:13px}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
-.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;
-background:var(--bg);color:var(--muted);white-space:nowrap}
-.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--sans)}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+h1{font-size:27px;line-height:1.25;margin:0;letter-spacing:-.01em}
+h2{font-size:18px;line-height:1.3;margin:0 0 12px;letter-spacing:-.005em}
+h3{font-size:15px;margin:0 0 8px;color:var(--ink-2)}
+p{margin:0 0 10px}
+
+/* ---------------------------------------------------------------- okvir */
+
+.shell{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.side{background:var(--panel);border-right:1px solid var(--line);padding:18px 14px;
+  position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.side .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;
+  padding:4px 8px 16px;letter-spacing:-.01em}
+.side .brand svg{flex:none}
+.side .group{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;padding:14px 8px 6px}
+.side nav{display:flex;flex-direction:column;gap:2px}
+.side nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-sm);
+  color:var(--ink-2);font-size:15px}
+.side nav a:hover{background:var(--line-2);text-decoration:none}
+.side nav a.on{background:var(--accent-bg);color:var(--accent);font-weight:650}
+.side nav a svg{flex:none;opacity:.85}
+.side nav a .badge{margin-left:auto}
+.side .me{margin-top:auto;padding-top:14px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:8px}
+.side .me form{margin:0}
+.side .me button{width:100%}
+
+main{padding:26px 30px 60px;max-width:1280px}
+.page-head{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.page-head .pills{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}
+.page-sub{color:var(--muted);font-size:15px;margin:2px 0 20px;max-width:75ch}
+
+/* ---------------------------------------------------------------- kartice */
+
+.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.grid.k3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:20px 22px;box-shadow:var(--shadow)}
+.card > h2:first-child{display:flex;align-items:center;gap:8px}
+.kpi .sub{font-size:13px;text-transform:uppercase;letter-spacing:.05em;font-weight:650}
+.stat{font-size:34px;font-weight:700;line-height:1.1;letter-spacing:-.02em;margin:6px 0 4px}
+.sub{color:var(--muted);font-size:14px}
+.small{font-size:13.5px}
+.muted{color:var(--muted)}
+.mono,code,pre{font-family:var(--mono);font-size:13px}
+
+/* ---------------------------------------------------------------- pažnja */
+
+.attention{border:1px solid var(--line);border-left:4px solid var(--warn);
+  background:var(--panel);border-radius:var(--r);padding:16px 20px;margin-bottom:22px;
+  box-shadow:var(--shadow)}
+.attention.calm{border-left-color:var(--ok)}
+.attention h2{margin-bottom:8px}
+.attention ul{margin:0;padding-left:20px}
+.attention li{margin:3px 0}
+
+/* ---------------------------------------------------------------- tabovi */
+
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);
+  margin:18px 0 22px}
+.tabs a{padding:10px 14px;border-radius:var(--r-sm) var(--r-sm) 0 0;color:var(--ink-2);
+  font-weight:600;font-size:15px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs a:hover{background:var(--line-2);text-decoration:none}
+.tabs a.on{color:var(--accent);border-bottom-color:var(--accent);background:transparent}
+.tabs .count{color:var(--muted);font-weight:500}
+
+/* ---------------------------------------------------------------- tabele */
+
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line-2);vertical-align:top}
+tbody tr:hover td{background:var(--panel-2)}
+th{color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em;
+  border-bottom:1px solid var(--line)}
+table.plain td{border:0;padding:6px 10px 6px 0}
+table.plain td:first-child{color:var(--muted);white-space:nowrap;width:1%}
+
+/* ---------------------------------------------------------------- sitno */
+
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;
+  font-size:12.5px;font-weight:650;background:var(--line-2);color:var(--ink-2);white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
 .pill.bad{background:var(--bad-bg);color:var(--bad)}
-.mono,code,pre{font-family:var(--mono);font-size:12.5px}
-pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto;
-max-height:420px;white-space:pre-wrap;word-break:break-word}
-.post{white-space:pre-wrap;background:var(--bg);border-left:3px solid var(--accent);padding:10px 12px;
-border-radius:0 8px 8px 0;margin:8px 0}
+.badge{display:inline-block;min-width:22px;padding:1px 7px;border-radius:999px;background:var(--bad);
+  color:#fff;font-size:12px;text-align:center;font-weight:700}
+.bar{height:9px;border-radius:5px;background:var(--line);overflow:hidden;min-width:80px}
+.bar>span{display:block;height:100%;max-width:100%;background:var(--accent)}
+meter{width:100%;height:12px}
+pre{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px;
+  overflow:auto;max-height:420px;white-space:pre-wrap;word-break:break-word}
+.post{white-space:pre-wrap;background:var(--panel-2);border-left:3px solid var(--accent);
+  padding:14px 16px;border-radius:0 var(--r-sm) var(--r-sm) 0;margin:12px 0;font-size:15.5px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .spacer{flex:1}
-button,.btn{font:inherit;border:1px solid var(--line);background:var(--panel);color:var(--ink);
-padding:7px 14px;border-radius:7px;cursor:pointer}
-button.primary{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
-button.danger{background:var(--bad);border-color:var(--bad);color:#fff;font-weight:600}
-button:hover{filter:brightness(.96)}
-input[type=text],input[type=password],textarea,select{font:inherit;width:100%;padding:8px 10px;
-border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink)}
-textarea{min-height:120px;font-family:var(--sans)}
-label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+.grow{flex:1;min-width:180px}
 details summary{cursor:pointer;color:var(--accent);margin-top:8px}
-.msg{padding:10px 14px;border-radius:8px;margin-bottom:12px;border:1px solid var(--line)}
-.msg.success{background:var(--ok-bg);color:var(--ok)}.msg.error{background:var(--bad-bg);color:var(--bad)}
-.msg.warning{background:var(--warn-bg);color:var(--warn)}
-.stopbar{background:var(--bad);color:#fff;padding:10px 20px;font-weight:600;display:flex;gap:12px;
-align-items:center;flex-wrap:wrap}
-.stopbar form{margin:0}.stopbar button{background:#fff;color:var(--bad);border:0}
-.auth{max-width:380px;margin:12vh auto;background:var(--panel);border:1px solid var(--line);
-border-radius:12px;padding:28px}
-.auth h1{margin-top:0}.auth button{width:100%;margin-top:16px}
-.code-input{font-family:var(--mono);font-size:24px;letter-spacing:6px;text-align:center}
-.muted{color:var(--muted)}.small{font-size:13px}
-.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;min-width:80px}
-.bar>span{display:block;height:100%;max-width:100%;background:var(--accent)}
-@media (max-width:640px){main{padding:12px}th:nth-child(n+4),td:nth-child(n+4){display:none}}
-.mt8{margin-top:8px}.mt10{margin-top:10px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mb12{margin-bottom:12px}
-.grow{flex:1}.h-id{font-size:18px}.w55{width:55%}.stoplink{color:#fff;text-decoration:underline}
-meter{width:100%;height:10px}
-/* ADR-0018 — kartica „Lik”: profilna i galerija u ravnomernoj mreži. */
-.face{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;margin:4px 0 4px}
-.face figure{margin:0;width:110px}
-.face figure.portrait{width:150px}
-.face img{display:block;width:100%;height:110px;object-fit:cover;object-position:50% 25%;
-border-radius:10px;background:var(--line);border:1px solid var(--line)}
-.face figure.portrait img{height:150px}
-.face figcaption{margin-top:4px;word-break:break-all;line-height:1.3}
-.avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:50% 25%;
-background:var(--line);border:1px solid var(--line);margin-right:10px}
+
+/* ---------------------------------------------------------------- unos */
+
+button,.btn{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel);
+  color:var(--ink);padding:9px 16px;border-radius:var(--r-sm);cursor:pointer;box-shadow:var(--shadow)}
+button:hover{background:var(--panel-2)}
+button.primary{background:var(--ok);border-color:var(--ok);color:#fff}
+button.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+button.primary:hover,button.danger:hover{filter:brightness(1.07)}
+input[type=text],input[type=password],input[type=date],input[type=number],input[type=file],
+textarea,select{font:inherit;width:100%;padding:10px 12px;border:1px solid var(--line);
+  border-radius:var(--r-sm);background:var(--panel);color:var(--ink)}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+textarea{min-height:130px;font-family:var(--sans)}
+label{display:block;font-size:13.5px;color:var(--muted);margin:12px 0 5px}
+label.row{margin:6px 0}
+label.row input{width:auto}
+
+.msg{padding:12px 16px;border-radius:var(--r-sm);margin-bottom:14px;border:1px solid var(--line);
+  font-size:15px}
+.msg.success{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.msg.error{background:var(--bad-bg);color:var(--bad);border-color:transparent}
+.msg.warning{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+
+.stopbar{background:var(--bad);color:#fff;padding:12px 24px;font-weight:650;display:flex;gap:12px;
+  align-items:center;flex-wrap:wrap;grid-column:1/-1}
+.stopbar form{margin:0}
+.stopbar button{background:#fff;color:var(--bad);border:0}
+.stoplink{color:#fff;text-decoration:underline}
+
+.auth{max-width:400px;margin:12vh auto;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:32px;box-shadow:var(--shadow-lg)}
+.auth h1{margin-top:0;font-size:22px}
+.auth button{width:100%;margin-top:18px}
+.code-input{font-family:var(--mono);font-size:26px;letter-spacing:8px;text-align:center}
+
+/* ---------------------------------------------------------------- lik */
+
+.face{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;margin:6px 0 4px}
+.face figure{margin:0;width:120px}
+.face figure.portrait{width:164px}
+.face img{display:block;width:100%;height:120px;object-fit:cover;object-position:50% 25%;
+  border-radius:12px;background:var(--line);border:1px solid var(--line)}
+.face figure.portrait img{height:164px}
+.face figcaption{margin-top:6px;word-break:break-all;line-height:1.35}
+.avatar{width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:50% 25%;
+  background:var(--line);border:1px solid var(--line)}
+
+/* ---------------------------------------------------------------- pomoćno */
+
+.mt8{margin-top:8px}.mt10{margin-top:10px}.mt12{margin-top:12px}.mt16{margin-top:20px}
+.mb12{margin-bottom:14px}.h-id{font-size:20px}.w55{width:55%}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;
+    border-right:0;border-bottom:1px solid var(--line);gap:10px;padding:12px 14px}
+  .side .brand{padding:0}
+  .side .group{display:none}
+  .side nav{flex-direction:row;flex-wrap:wrap}
+  .side .me{margin-top:0;border-top:0;padding-top:0;flex-direction:row;align-items:center;
+    margin-left:auto}
+  main{padding:18px 14px 48px}
+  h1{font-size:23px}
+  th:nth-child(n+4),td:nth-child(n+4){display:none}
+}

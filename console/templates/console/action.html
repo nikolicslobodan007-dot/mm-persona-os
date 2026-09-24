@@ -1,10 +1,11 @@
 {% extends "console/base.html" %}{% load console_tags %}
 {% block title %}{{ a.public_id }}{% endblock %}
 {% block content %}
-<div class="row"><h1 class="mono h-id">{{ a.public_id }}</h1><span class="spacer"></span>
-<span class="pill {{ a.status|status_tone }}">{{ a.status }}</span></div>
+<div class="page-head"><div><h1 class="mono h-id">{{ a.public_id }}</h1>
+  <div class="sub">{{ a.action_type }} · {{ a.persona.display_name }}</div></div>
+  <div class="pills"><span class="pill {{ a.status|status_tone }}">{{ a.status }}</span></div></div>
 <div class="grid">
-  <div class="card"><h2>Šta</h2><table>
+  <div class="card"><h2>Šta</h2><table class="plain">
     <tr><td class="sub">Persona</td><td><a href="/console/personas/{{ a.persona.public_id }}">{{ a.persona.display_name }}</a></td></tr>
     <tr><td class="sub">Tip</td><td>{{ a.action_type }}</td></tr>
     <tr><td class="sub">Kanal</td><td>{{ a.channel_account.channel_type|default:"—" }} {{ a.channel_account.handle }}</td></tr>

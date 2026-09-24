@@ -380,3 +380,33 @@ class TestUploadConsole:
         # profilna se vidi i u zaglavlju strane, umanjena
         html = c.get("/console/personas/P-00001").content.decode()
         assert f'class="avatar" src="/console/assets/{asset.public_id}"' in html
+
+
+class TestKonzolaV2:
+    """ADR-0019 — pregledniji raspored: bočna navigacija, tabovi, traka pažnje."""
+
+    def test_sidebar_and_groups(self, boss, pending):
+        c = _login(Client(), boss)
+        html = c.get("/console/").content.decode()
+        assert 'class="shell"' in html and 'class="side"' in html
+        for group in ("Rad", "Korporacija", "Nadzor"):
+            assert f'class="group">{group}<' in html
+        assert 'class="badge"' in html          # brojač odobrenja u navigaciji
+
+    def test_attention_strip_lists_pending(self, boss, pending):
+        c = _login(Client(), boss)
+        html = c.get("/console/").content.decode()
+        assert "Traži tebe" in html and "/console/approvals" in html
+
+    def test_attention_strip_is_calm_when_nothing_waits(self, boss, mila):
+        c = _login(Client(), boss)
+        html = c.get("/console/").content.decode()
+        assert "Ništa ne čeka" in html
+
+    def test_persona_page_has_tabs_and_sections(self, boss, mila):
+        c = _login(Client(), boss)
+        html = c.get("/console/personas/P-00001").content.decode()
+        assert "data-tabs" in html
+        for tab in ("stanje", "lik", "sadrzaj", "posta", "pravila", "akcije"):
+            assert f'<section data-tab="{tab}">' in html
+            assert f'href="#{tab}"' in html
