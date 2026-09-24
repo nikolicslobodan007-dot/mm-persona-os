@@ -53,3 +53,20 @@ bi istog trenutka prešle na šablon.
 - Rok isteka ključa se ne vidi preko API-ja. Beleži se u „stanje rada” i
   obnavlja se ručno pre isteka.
 - 388 testova (dodato 3).
+
+## Dopuna 24.09. — ključ po agentu je pravilo, ne mogućnost
+
+Prvi zadatak koji je Mila zadala Jovanu (P-00002) vratio se napisan **lokalnim
+šablonom**: novi agent nema svoj ključ, a zajedničkog na serveru nema, pa je
+gateway pao na rezervu.
+
+Odluka: `LLM_REQUIRE_PERSONA_KEY=true` postaje podrazumevano stanje. Agent bez
+svog ključa **ne pozajmljuje zajednički** — piše lokalnim šablonom, i to se
+vidi u planu (`model: local/template-v1`, ADR-0024).
+
+Razlog je isti kao i prvi put, samo sada za deset hiljada agenata: trošak se
+meri po agentu, a ključ koji procuri gasi jednog agenta, ne celu firmu.
+
+Zato `manage.py zaposli` na kraju ispisuje tačan red koji treba dodati u
+`.env.prod` (`ANTHROPIC_API_KEY_P00002=…`), ili potvrdu da ključ već postoji.
+

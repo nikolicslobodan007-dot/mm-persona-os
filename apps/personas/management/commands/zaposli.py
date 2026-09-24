@@ -10,6 +10,7 @@ Organizacija u konzoli.
 
 from __future__ import annotations
 
+import os
 from datetime import date
 
 from django.core.management.base import BaseCommand, CommandError
@@ -74,4 +75,17 @@ class Command(BaseCommand):
         if not nise:
             self.stdout.write(self.style.WARNING(
                 "  bez niša: World Engine mu neće naći nijedan relevantan događaj."))
-        self.stdout.write("  sledeće: ključ modela, portret, pa poverenje po potrebi.")
+        self._kljuc(persona)
+        self.stdout.write("  sledeće: portret, pa poverenje po potrebi.")
+
+    def _kljuc(self, persona) -> None:
+        """Agent bez svog ključa tiho piše lokalnim šablonom (ADR-0013/0024)."""
+        from apps.llm_gateway import gateway
+
+        ime = gateway.persona_env_name("anthropic", persona)
+        if ime and os.environ.get(ime, "").strip():
+            self.stdout.write(f"  ključ modela: {ime} ✓")
+            return
+        self.stdout.write(self.style.WARNING(
+            f"  nema ključ modela — dodaj `{ime}=…` u .env.prod, "
+            "inače mu nacrte piše lokalni šablon."))
