@@ -56,3 +56,8 @@ def rate_limits() -> dict[str, int]:
 
 def hard_prohibitions() -> list[dict[str, Any]]:
     return capabilities()["hard_prohibitions"]
+
+
+def protected_paths() -> tuple[str, ...]:
+    """Putanje koje nijedan agent ne dira, ni na jednom nivou (ADR-0034)."""
+    return tuple(capabilities().get("protected_paths") or ())

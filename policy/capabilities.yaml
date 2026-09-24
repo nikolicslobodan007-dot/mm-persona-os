@@ -59,6 +59,58 @@ capabilities:
     requires_approval_class: A3
     requires_disclosure_label: false
 
+  # ADR-0034 — departman za programiranje. Ovi capability-ji nemaju spoljašnji
+  # efekat: menjaju sam sistem. Zato im kapija nije odobrenje nego provera —
+  # osim tamo gde se greška ne može vratiti (migracija, produkcija).
+
+  code.read:
+    description: "Čitanje izvornog koda korporacije"
+    min_trust_level: L0
+    requires_approval_class: null
+    requires_disclosure_label: false
+
+  code.write:
+    description: "Izmena koda u dozvoljenom opsegu; kapija su testovi i recenzija"
+    min_trust_level: L1
+    requires_approval_class: null
+    requires_disclosure_label: false
+
+  test.run:
+    description: "Pokretanje testova i linta"
+    min_trust_level: L0
+    requires_approval_class: null
+    requires_disclosure_label: false
+
+  review.comment:
+    description: "Pisanje nalaza recenzije nad tuđom izmenom"
+    min_trust_level: L1
+    requires_approval_class: null
+    requires_disclosure_label: false
+
+  migration.write:
+    description: "Pisanje migracije baze — kod se vraća, obrisana kolona ne"
+    min_trust_level: L2
+    requires_approval_class: A2
+    requires_disclosure_label: false
+
+  dependency.add:
+    description: "Dodavanje zavisnosti; licenca se proverava pre svega (ADR-0032)"
+    min_trust_level: L2
+    requires_approval_class: A2
+    requires_disclosure_label: false
+
+  deploy.stage:
+    description: "Puštanje na probno okruženje"
+    min_trust_level: L1
+    requires_approval_class: null
+    requires_disclosure_label: false
+
+  deploy.prod:
+    description: "Puštanje u produkciju — ljudska kapija dok se učinak ne izmeri"
+    min_trust_level: L2
+    requires_approval_class: A1
+    requires_disclosure_label: false
+
 # Canon §3.11 (A-08) — ukinuti capability-ji.
 # Nemaju kanal na kom se izvršavaju: Instagram i Facebook nemaju endpoint,
 # X ih je premestio u Enterprise, LinkedIn Messages i Invitations su
@@ -84,6 +136,27 @@ action_types:
   content.draft:            []
   visual.generate:          []   # ADR-0018 — slika agenta, bez spoljašnjeg efekta
   memory.consolidate:       []
+
+# ADR-0034 — zone koje nijedan agent ne dira, ni na jednom nivou poverenja.
+#
+# Ovo NISU poverenje sa nivoom L0: nivo se može podići, a ova lista ne može —
+# osim ADR-om i ljudskom rukom. Razlog je prost: agent koji sme da menja ono
+# što ga ograničava nije ograničen. Svaka stavka je prefiks putanje.
+protected_paths:
+  - apps/policy/                    # policy engine, poverenje, odobrenja
+  - api/audit.py                    # pisač audita
+  - apps/observability/models.py    # tabela audita
+  - apps/runtime/transport.py       # jedino mesto gde bajt izlazi napolje
+  - apps/runtime/control.py         # kill-switch
+  - common/enums.py                 # Canon §20 — enumi samo ovde
+  - policy/capabilities.yaml        # ovaj katalog
+  - policy/risk_weights.yaml
+  - channels/platforms.yaml         # Aneks A matrica
+  - channels/identity_vehicles.yaml
+  - docs/adr/                       # same odluke
+  - tools/canon_lint.py             # kapija koja proverava sve ostalo
+  - .env
+  - docker-compose
 
 # Canon §9.4 — tvrde zabrane.
 # Nisu DENY pravila koja se mogu isključiti, nego sistemsko ograničenje

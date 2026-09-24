@@ -161,8 +161,61 @@ def _channel_ctx(account: ChannelAccount | None) -> engine.Channel | None:
 
 
 def trust_map(persona: Persona) -> dict[str, E.TrustLevel]:
+    """Poverenje bez opsega — ono što motor pravila oduvek dobija.
+
+    Redovi sa opsegom (ADR-0034) namerno se ne mešaju ovde: oni važe samo za
+    kod i pitaju se kroz `trust_for()`, sa putanjom u ruci.
+    """
     return {c: E.TrustLevel(lv) for c, lv in
-            TrustState.objects.filter(persona=persona).values_list("capability", "level")}
+            TrustState.objects.filter(persona=persona, scope="").values_list(
+                "capability", "level")}
+
+
+def normalize_path(path: str) -> str:
+    """Putanja u obliku u kom se poredi: kose crte napred, bez vodeće tačke."""
+    p = str(path).replace("\\", "/").strip()
+    while p.startswith("./"):
+        p = p[2:]
+    return p.lstrip("/")
+
+
+def path_is_protected(path: str) -> str | None:
+    """Vraća zonu koja zabranjuje putanju, ili `None`.
+
+    Ovo se pita **pre** poverenja i ne zavisi od nivoa: zaštićena zona se ne
+    otvara podizanjem nivoa, nego samo ADR-om i ljudskom rukom (ADR-0034).
+    """
+    p = normalize_path(path)
+    for zona in config.protected_paths():
+        z = normalize_path(zona)
+        if p == z.rstrip("/") or p.startswith(z if z.endswith("/") else z):
+            return zona
+    return None
+
+
+def trust_for(persona: Persona, capability: str, path: str = "") -> E.TrustLevel:
+    """Nivo poverenja za capability na datoj putanji.
+
+    Pobeđuje **najduži opseg koji je prefiks putanje**; ako nijedan ne odgovara,
+    važi red bez opsega; ako ni njega nema — `L0`. Time `L0` na `apps/policy/`
+    obara opšti `L1`, a ne obrnuto.
+    """
+    redovi = list(TrustState.objects.filter(persona=persona, capability=capability)
+                  .values_list("scope", "level"))
+    if not redovi:
+        return E.TrustLevel.L0
+    p = normalize_path(path)
+    najbolji, duzina = E.TrustLevel.L0, -1
+    for scope, level in redovi:
+        s = normalize_path(scope)
+        if not s:
+            if duzina < 0:
+                najbolji = E.TrustLevel(level)
+            continue
+        if p == s.rstrip("/") or p.startswith(s if s.endswith("/") else s):
+            if len(s) > duzina:
+                najbolji, duzina = E.TrustLevel(level), len(s)
+    return najbolji
 
 
 def _grants(persona: Persona, now: datetime) -> frozenset[str]:
@@ -506,10 +559,12 @@ def expire_approvals(now: datetime | None = None) -> int:
 
 
 def _set_trust(persona: Persona, capability: str, level: E.TrustLevel, *, actor: str,
-               reason: str, evidence: str = "", automatic: bool = False) -> bool:
+               reason: str, evidence: str = "", automatic: bool = False,
+               scope: str = "") -> bool:
     now = timezone.now()
+    scope = normalize_path(scope) if scope else ""
     ts, _ = TrustState.objects.select_for_update().get_or_create(
-        persona=persona, capability=capability,
+        persona=persona, capability=capability, scope=scope,
         defaults={"level": E.TrustLevel.L0.value, "granted_at": now})
     before = E.TrustLevel(ts.level)
     changed = before != level
@@ -527,7 +582,12 @@ def _set_trust(persona: Persona, capability: str, level: E.TrustLevel, *, actor:
     active = CapabilityGrant.objects.filter(persona=persona, capability=capability,
                                             channel_account__isnull=True,
                                             revoked_at__isnull=True)
-    if config.trust_at_least(level, minimum) and minimum != E.TrustLevel.L0:
+    # Dozvola (`CapabilityGrant`) je opšta i nema opseg. Red sa opsegom zato ne
+    # dira dozvolu: on samo sužava ili proširuje nivo u svom delu koda, a pravo
+    # da capability uopšte postoji ostaje na redu bez opsega (ADR-0034).
+    if scope:
+        pass
+    elif config.trust_at_least(level, minimum) and minimum != E.TrustLevel.L0:
         if not active.exists():
             CapabilityGrant.objects.create(persona=persona, capability=capability,
                                            min_trust_level=minimum.value, granted_by=actor,
@@ -537,18 +597,19 @@ def _set_trust(persona: Persona, capability: str, level: E.TrustLevel, *, actor:
     if changed:
         bus.emit("trust.level.changed",
                  {"capability": capability, "from_level": before.value,
-                  "to_level": level.value, "reason": reason[:200]},
+                  "to_level": level.value, "reason": reason[:200], "scope": scope},
                  persona_id=persona.public_id)
         audit.record("policy.trust.changed", persona=persona,
                      severity=E.AuditSeverity.WARNING if automatic else E.AuditSeverity.INFO,
                      before={"capability": capability, "level": before.value},
                      after={"capability": capability, "level": level.value},
-                     details={"reason": reason, "evidence": evidence, "automatic": automatic})
+                     details={"reason": reason, "evidence": evidence,
+                              "automatic": automatic, "scope": scope})
     return changed
 
 
 def change_trust(persona: Persona, capability: str, level: E.TrustLevel, *, actor: str,
-                 reason: str, evidence: str = "") -> bool:
+                 reason: str, evidence: str = "", scope: str = "") -> bool:
     """Canon §3.11 — L3/L4 se ne dodeljuju; capability mora postojati u katalogu."""
     if level not in E.ASSIGNABLE_TRUST_LEVELS:
         raise PolicyError("VALIDATION_ERROR",
@@ -558,9 +619,13 @@ def change_trust(persona: Persona, capability: str, level: E.TrustLevel, *, acto
                           {"allowed": sorted(config.capabilities()["capabilities"])})
     if not reason.strip():
         raise PolicyError("VALIDATION_ERROR", "Promena poverenja traži razlog.")
+    if scope and (zona := path_is_protected(scope)):
+        raise PolicyError("PROTECTED_PATH",
+                          f"`{zona}` je zaštićena zona (ADR-0034): tu se poverenje ne "
+                          "dodeljuje ni na jednom nivou.")
     with transaction.atomic():
         return _set_trust(persona, capability, level, actor=actor, reason=reason,
-                          evidence=evidence)
+                          evidence=evidence, scope=scope)
 
 
 # ---------------------------------------------------------------- kill-switch

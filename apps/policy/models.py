@@ -330,6 +330,11 @@ class TrustState(UUIDModel):
         "personas.Persona", on_delete=models.CASCADE, related_name="trust_states"
     )
     capability = models.CharField(max_length=64)
+    #: Opseg u kom nivo važi — prefiks putanje u kodu (ADR-0034). Prazno znači
+    #: „svuda". Za isti capability može da postoji više redova: najduži prefiks
+    #: koji odgovara putanji pobeđuje, pa `L0` na `apps/policy/` obara opšti `L1`.
+    #: Sve što nije kod ostaje bez opsega i ponaša se kao i dosad.
+    scope = models.CharField(max_length=200, blank=True, default="")
     level = models.CharField(
         max_length=4, choices=E.TrustLevel.choices(), default=E.TrustLevel.L0
     )
@@ -351,7 +356,7 @@ class TrustState(UUIDModel):
         indexes = [models.Index(fields=["persona", "level"])]
         constraints = [
             models.UniqueConstraint(
-                fields=["persona", "capability"], name="trust_state_unique_pair"
+                fields=["persona", "capability", "scope"], name="trust_state_unique_pair"
             ),
             models.CheckConstraint(
                 condition=models.Q(
