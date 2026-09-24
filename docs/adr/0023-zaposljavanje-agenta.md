@@ -97,10 +97,29 @@ To nije greška nego tačno ponašanje — ali je pokazalo dve rupe.
 Time je i uspostavljen pravi lanac: **čovek → Mila (šef marketinga) → Jovan
 (urednik)** — prvi na kom se delegiranje iz ADR-0022 proverava uživo.
 
+## Dopuna 24.09. — dosije iz jedne komande
+
+Zapošljavanje ostavlja dosije skoro prazan, namerno: agent sme da radi pre
+nego što dobije lice. Ali popunjavanje kroz formu u konzoli je isti problem
+kao i ključevi — na desetom agentu dosadno, na hiljaditom nemoguće.
+
+    manage.py dosije --persona P-00002 --pokazi
+    manage.py dosije --persona P-00002 --visina 183 --gradja atletska \
+        --oci tamnosmeđe --hobiji "planinarenje, stari bicikli" --izgled "…"
+
+`--pokazi` ispisuje tri stvari: dosije, **odeljak koji ide u sistemski prompt**
+i **tekst za sliku** — tačno ono što se nalepi u generator dok slike pravimo
+ručno. Tako se opis lika ne izmišlja dvaput: jednom u dosijeu, drugi put u
+prozoru generatora.
+
+Opis izgleda prolazi iste tvrde zabrane kao i poziv generatoru (ADR-0018), pa
+se greška vidi pri upisu, a ne tek pred sliku.
+
 ## Kod
 
 - `apps/personas/hiring.py` — `hire()`, `next_public_id()`, `slugify_sr()`
 - `apps/personas/management/commands/zaposli.py`
 - `apps/personas/management/commands/seed_org.py` — `--spisak`
 - `apps/personas/management/commands/premesti.py`
+- `apps/personas/management/commands/dosije.py`
 - `tests/test_hiring.py` (12 provera)

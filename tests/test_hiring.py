@@ -133,3 +133,40 @@ class TestPremestaj:
         with pytest.raises(CommandError, match="popunjeno"):
             call_command("premesti", "--persona", ana.public_id, "--mesto", "URE-SR",
                          stdout=io.StringIO())
+
+
+class TestDosijeKomanda:
+    """ADR-0023 (dopuna) — dosije se popunjava i proverava iz jedne komande."""
+
+    def test_writes_fields_and_bumps_version(self, firma):
+        from apps.personas import org
+
+        out = io.StringIO()
+        call_command("dosije", "--persona", "P-00001", "--visina", "170",
+                     "--gradja", "vitka", "--oci", "tamne",
+                     "--hobiji", "trčanje, keramika", stdout=out)
+        d = org.dossier_of(firma)
+        assert (d.height_cm, d.build, d.eye_color) == (170, "vitka", "tamne")
+        assert d.hobbies == ["trčanje", "keramika"]
+
+    def test_show_prints_the_image_text(self, firma):
+        call_command("dosije", "--persona", "P-00001",
+                     "--izgled", "Žena u tridesetim, vitka, tamna kosa do ramena.",
+                     stdout=io.StringIO())
+        out = io.StringIO()
+        call_command("dosije", "--persona", "P-00001", "--pokazi", stdout=out)
+        tekst = out.getvalue()
+        assert "tekst za sliku" in tekst
+        assert "Žena u tridesetim" in tekst
+        assert "Radi kao" in tekst            # radno mesto se dodaje samo
+
+    def test_forbidden_description_is_refused(self, firma):
+        with pytest.raises(CommandError, match="odbijen"):
+            call_command("dosije", "--persona", "P-00001",
+                         "--izgled", "Lice poznatog glumca, sa logotipom Nike na majici.",
+                         stdout=io.StringIO())
+
+    def test_unknown_persona(self, firma):
+        with pytest.raises(CommandError, match="ne postoji"):
+            call_command("dosije", "--persona", "P-09999", "--pokazi",
+                         stdout=io.StringIO())
