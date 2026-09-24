@@ -64,3 +64,28 @@ agenta ne pogodi poštu drugih firmi.
 - Kad se broj agenata poveća, isti adapter radi i sa drugim Mailcow serverom
   (npr. u sopstvenoj serverskoj sobi). Adrese ostaju iste.
 - 404 testa (dodato 8).
+
+## Dopuna 24.09. — kvota domena je granica broja agenata
+
+Zapošljavanje prve ekipe (ADR-0028) prošlo je za svih 22 agenta, ali su
+poslednja četiri ostala **bez sandučića**: u auditu stoji
+`channel.mailbox.failed` umesto `provisioned`.
+
+Uzrok je aritmetika, ne kvar. Domen agenata ima **20 GB ukupno**, a kvota po
+sandučiću je bila **1 GB** — dvadeseti agent popuni domen, dvadeset prvi biva
+odbijen. Mila i Jovan plus osamnaest novih je tačno dvadeset.
+
+Tri izmene:
+
+- **`MAILBOX_QUOTA_MB` je sada 200**, ne 1024. Agent prima poštu, ne arhivira
+  je; 200 MB daje 100 agenata na istom domenu, koliko Pilot B i traži. Pre
+  stotog agenta kvota domena se podiže u Mailcow-u.
+- **Odbijanje zbog kvote dobija svoju poruku** (`MAILCOW_QUOTA`) umesto
+  Mailcow-ovog nejasnog teksta: kaže koji je domen pun i šta da se uradi.
+- **Ne prećutkuje se.** `manage.py mailbox bez` ispisuje ko nema sandučić,
+  `mailbox popuni` otvara svima kojima fali (svaki zasebno — pad jednog ne ruši
+  ostale), a `seed_ekipa` na kraju sam kaže koliko ih je ostalo bez.
+
+Ovo je prvo mesto na kom se videlo da neka granica ne skalira sa brojem
+agenata. Neće biti poslednje — zato je i zapisano ovde, a ne samo popravljeno.
+

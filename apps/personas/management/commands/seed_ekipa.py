@@ -78,6 +78,24 @@ class Command(BaseCommand):
             self.stdout.write(
                 "Svi su READY, sa L0 na svemu i bez ključa modela — dok im ne daš "
                 "ključ, nacrte bi im pisao lokalni šablon.")
+            self._bez_sanducica()
+
+    def _bez_sanducica(self) -> None:
+        """Sandučić se otvara sam na READY, ali može da padne (kvota domena).
+
+        Zapošljavanje se zbog toga ne prekida — ali se ne prećutkuje ni to ko je
+        ostao bez sandučića (nalaz 24.09.).
+        """
+        from apps.channels import mailbox
+
+        if not mailbox.enabled():
+            return
+        fale = [p for p in Persona.objects.order_by("public_id")
+                if mailbox.mailbox_of(p) is None]
+        if fale:
+            self.stdout.write(self.style.WARNING(
+                f"Bez sandučića: {len(fale)} ({', '.join(p.public_id for p in fale)}). "
+                "Proveri `manage.py mailbox bez`, pa `mailbox popuni`."))
 
     @staticmethod
     def _postoji(ime: str) -> bool:

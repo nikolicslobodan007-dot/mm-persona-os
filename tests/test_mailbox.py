@@ -136,3 +136,45 @@ def test_poll_uses_imap(mila, mc, monkeypatch):
 
 def test_agent_domain_is_still_primary_for_cold_mail(settings):
     assert is_primary_domain("webkorporacija.com")
+
+
+class TestPopuna:
+    """ADR-0015 (dopuna) — ko je ostao bez sandučića i kako se to popravlja."""
+
+    def test_lists_agents_without_a_mailbox(self, mila, mc):
+        import io
+
+        from django.core.management import call_command
+
+        out = io.StringIO()
+        call_command("mailbox", "bez", stdout=out)
+        tekst = out.getvalue()
+        assert "P-00001" in tekst and "Bez sandučića: 1" in tekst
+
+    def test_backfill_opens_what_is_missing(self, mila, mc):
+        import io
+
+        from django.core.management import call_command
+
+        from apps.channels import mailbox
+
+        call_command("mailbox", "popuni", stdout=io.StringIO())
+        assert mailbox.mailbox_of(mila) is not None
+        out = io.StringIO()
+        call_command("mailbox", "bez", stdout=out)
+        assert "Svi agenti imaju sandučić" in out.getvalue()
+
+    def test_quota_rejection_says_what_to_do(self, mila, settings, monkeypatch):
+        from apps.channels import mailbox
+
+        settings.MAILCOW_ENABLED = True
+        settings.MAILCOW_URL = "https://mail.primer.rs"
+        settings.AGENT_MAIL_DOMAIN = "webkorporacija.com"
+        monkeypatch.setenv("MAILCOW_API_KEY", "kljuc")
+        monkeypatch.setenv("MAILBOX_PASSWORD_SECRET", "tajna")
+        monkeypatch.setattr(mailbox, "_api", lambda path, body=None: [
+            {"type": "danger", "msg": ["mailbox_quota_exceeded"]}])
+        with pytest.raises(mailbox.MailboxError) as e:
+            mailbox.provision(mila, actor="user:boss")
+        assert e.value.code == "MAILCOW_QUOTA"
+        assert "popunjen" in str(e.value)

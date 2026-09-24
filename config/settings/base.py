@@ -216,7 +216,10 @@ MAILCOW_URL = os.environ.get("MAILCOW_URL", "")          # npr. https://mail.pri
 MAILCOW_IMAP_HOST = os.environ.get("MAILCOW_IMAP_HOST", "")  # prazno = host iz MAILCOW_URL
 MAILCOW_CREDENTIAL = "env:MAILCOW_API_KEY"
 MAILBOX_PASSWORD_CREDENTIAL = "env:MAILBOX_PASSWORD_SECRET"
-MAILBOX_QUOTA_MB = int(os.environ.get("MAILBOX_QUOTA_MB", "1024"))
+#: Kvota jednog sandučića. Domen agenata ima 20 GB ukupno, pa 1 GB po agentu
+#: znači da se posle dvadesetog agenta ne otvara više nijedan (nalaz 24.09.).
+#: 200 MB → 100 agenata; pre stotog treba podići kvotu domena u Mailcow-u.
+MAILBOX_QUOTA_MB = int(os.environ.get("MAILBOX_QUOTA_MB", "200"))
 MAIL_BODY_RETENTION_DAYS = int(os.environ.get("MAIL_BODY_RETENTION_DAYS", "90"))
 #: ADR-0016 — nacrt odgovora na pristiglu poštu (uvek uz odobrenje).
 MAIL_AUTOREPLY = os.environ.get("MAIL_AUTOREPLY", "true").lower() == "true"

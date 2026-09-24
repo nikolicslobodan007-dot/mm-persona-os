@@ -185,6 +185,14 @@ def provision(persona: Persona, *, actor: str) -> ChannelAccount:
         "password": pw, "password2": pw, "active": "1", "force_pw_update": "0",
         "tls_enforce_in": "1", "tls_enforce_out": "1"}))
     if not ok:
+        # Najčešći razlog na domenu sa mnogo agenata je popunjena kvota domena,
+        # a Mailcow to kaže nejasno. Prevodimo u rečenicu koja kaže šta da radiš.
+        if "quota" in msg.lower() or "kvot" in msg.lower():
+            raise MailboxError(
+                "MAILCOW_QUOTA",
+                f"Domen {dom} je popunjen: nema mesta za još jedan sandučić od "
+                f"{getattr(settings, 'MAILBOX_QUOTA_MB', 200)} MB. Podigni kvotu "
+                "domena u Mailcow-u ili smanji MAILBOX_QUOTA_MB.")
         raise MailboxError("MAILCOW_REJECTED", msg)
     try:
         acc = ChannelAccount.objects.create(
