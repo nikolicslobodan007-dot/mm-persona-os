@@ -448,3 +448,57 @@ class TestDelegationConsole:
         assert "zadato:" in sef and "P-00002" in sef
         izvrsilac = c.get("/console/personas/P-00002").content.decode()
         assert "zadao:" in izvrsilac and "Mila" in izvrsilac
+
+
+class TestSpisakAgenata:
+    """ADR-0025 — spisak sa pretragom; niko ne pamti 10.000 imena."""
+
+    @pytest.fixture
+    def dvoje(self, mila):
+        from apps.personas import hiring, org
+        from apps.personas.models import Position
+
+        with bind(actor_id="user:boss"):
+            call_command("seed_org", "--persona", "P-00001", stdout=io.StringIO())
+            org.assign(mila, Position.objects.get(code="SEF-MKT"), actor="user:boss")
+            jovan = hiring.hire(name="Jovan Ilić",
+                                position=Position.objects.get(code="URE-SR"),
+                                actor="user:boss")
+        return mila, jovan
+
+    def test_list_replaces_the_hardcoded_first_agent(self, boss, dvoje):
+        c = _login(Client(), boss)
+        html = c.get("/console/personas").content.decode()
+        assert "Mila Vuković (AI)" in html and "Jovan Ilić (AI)" in html
+        assert "P-00002" in html
+        assert 'href="/console/personas"' in html          # bočni meni vodi na spisak
+
+    def test_search_by_name_id_and_position(self, boss, dvoje):
+        c = _login(Client(), boss)
+        for upit in ("Jovan", "P-00002", "jovan-ilic", "Urednik"):
+            html = c.get("/console/personas", {"q": upit}).content.decode()
+            assert "Jovan Ilić (AI)" in html, upit
+            # Mila se pojavljuje samo kao njegov šef u koloni „Odgovara",
+            # ne kao sopstveni red — red se prepoznaje po broju agenta.
+            assert 'small">P-00001<' not in html, upit
+            assert 'small">P-00002<' in html, upit
+
+    def test_filter_by_sector_and_status(self, boss, dvoje):
+        c = _login(Client(), boss)
+        html = c.get("/console/personas", {"sektor": "PODRSKA"}).content.decode()
+        assert "ne odgovara pretrazi" in html
+        html = c.get("/console/personas", {"sektor": "MARKETING"}).content.decode()
+        assert "Jovan Ilić (AI)" in html and "Mila Vuković (AI)" in html
+        html = c.get("/console/personas", {"status": "PAUSED"}).content.decode()
+        assert "ne odgovara pretrazi" in html
+
+    def test_row_shows_seat_and_boss(self, boss, dvoje):
+        c = _login(Client(), boss)
+        html = c.get("/console/personas", {"q": "Jovan"}).content.decode()
+        assert "Urednik sadržaja" in html and "Marketing i sadržaj" in html
+        assert "Mila Vuković (AI)" in html          # kolona „Odgovara"
+
+    def test_persona_page_links_back_to_the_list(self, boss, dvoje):
+        c = _login(Client(), boss)
+        html = c.get("/console/personas/P-00002").content.decode()
+        assert "Svi agenti" in html

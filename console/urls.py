@@ -10,6 +10,7 @@ urlpatterns = [
     path("approvals", views.approvals, name="console-approvals"),
     path("approvals/<str:approval_id>/decide", views.approval_decide,
          name="console-approval-decide"),
+    path("personas", views.personas, name="console-personas"),
     path("personas/<str:public_id>", views.persona, name="console-persona"),
     path("personas/<str:public_id>/status", views.persona_status,
          name="console-persona-status"),

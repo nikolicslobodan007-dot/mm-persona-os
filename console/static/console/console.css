@@ -177,6 +177,13 @@ label.row input{width:auto}
 .avatar{width:52px;height:52px;border-radius:50%;object-fit:cover;object-position:50% 25%;
   background:var(--line);border:1px solid var(--line)}
 
+.who{display:flex;align-items:center;gap:10px;color:inherit}
+.who:hover{text-decoration:none}
+.who strong{color:var(--accent)}
+.who .dot{flex:none;width:34px;height:34px;border-radius:50%;background:var(--accent-bg);
+  color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:15px}
+.filter{width:auto;min-width:170px}
+
 /* ---------------------------------------------------------------- pomoćno */
 
 .mt8{margin-top:8px}.mt10{margin-top:10px}.mt12{margin-top:12px}.mt16{margin-top:20px}

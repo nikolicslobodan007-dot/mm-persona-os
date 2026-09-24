@@ -1,0 +1,53 @@
+{% extends "console/base.html" %}{% load console_tags %}
+{% block title %}Agenti{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Agenti</h1>
+  <div class="pills"><span class="pill">{{ ukupno }} od {{ svih }}</span></div>
+</div>
+<p class="page-sub">Ko radi u firmi, gde sedi i šta čeka na tebe. Pretraga gleda ime,
+  broj agenta, adresu sandučića, radno mesto i sektor.</p>
+
+<form method="get" class="row mb12">
+  <input type="text" name="q" value="{{ q }}" class="grow" placeholder="Ime, P-00002, adresa, radno mesto…">
+  <select name="sektor" class="filter">
+    <option value="">Svi sektori</option>
+    {% for d in sektori %}<option value="{{ d.code }}"{% if d.code == sektor %} selected{% endif %}>{{ d.name }}</option>{% endfor %}
+  </select>
+  <select name="status" class="filter">
+    <option value="">Svi statusi</option>
+    {% for st in statusi %}<option value="{{ st }}"{% if st == status %} selected{% endif %}>{{ st }}</option>{% endfor %}
+  </select>
+  <button class="primary">Traži</button>
+  {% if q or sektor or status %}<a class="btn" href="/console/personas">Poništi</a>{% endif %}
+</form>
+
+<div class="card">
+<table>
+  <tr><th>Agent</th><th>Radno mesto</th><th>Odgovara</th><th>Status</th><th>Čeka</th><th>Poslednji put</th></tr>
+  {% for r in agenti %}
+  <tr>
+    <td><a class="who" href="/console/personas/{{ r.p.public_id }}">
+      <span class="dot">{{ r.p.display_name|first }}</span>
+      <span><strong>{{ r.p.display_name }}</strong><br><span class="mono small">{{ r.p.public_id }}</span></span></a></td>
+    <td>{% if r.mesto %}{{ r.mesto.title }}<br><span class="sub small">{{ r.sektor.name }}</span>
+      {% else %}<span class="sub">nije raspoređen</span>{% endif %}</td>
+    <td class="small">{% if r.sef %}<a href="/console/personas/{{ r.sef.public_id }}">{{ r.sef.display_name }}</a>
+      {% else %}<span class="sub">čoveku</span>{% endif %}</td>
+    <td><span class="pill {{ r.p.status|status_tone }}">{{ r.p.status }}</span></td>
+    <td>{% if r.ceka %}<a href="/console/approvals"><span class="badge">{{ r.ceka }}</span></a>{% else %}<span class="sub">—</span>{% endif %}</td>
+    <td class="small">{% if r.kad %}{{ r.kad|date:"d.m. H:i" }}{% else %}<span class="sub">nije se budio</span>{% endif %}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="6" class="sub">Nijedan agent ne odgovara pretrazi.</td></tr>
+  {% endfor %}
+</table>
+</div>
+
+{% if strana.has_other_pages %}
+<div class="row mt16">
+  {% if strana.has_previous %}<a class="btn" href="?s={{ strana.previous_page_number }}{{ upit }}">← Prethodna</a>{% endif %}
+  <span class="sub">Strana {{ strana.number }} od {{ strana.paginator.num_pages }}</span>
+  {% if strana.has_next %}<a class="btn" href="?s={{ strana.next_page_number }}{{ upit }}">Sledeća →</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

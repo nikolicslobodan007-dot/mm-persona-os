@@ -12,7 +12,8 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login, logout
-from django.db.models import Count, Sum
+from django.core.paginator import Paginator
+from django.db.models import Count, Max, Q, Sum
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.utils import timezone
@@ -26,7 +27,7 @@ from apps.memory.models import MemoryItem
 from apps.observability.models import CostLedger
 from apps.orchestration.models import Action, AgentRun
 from apps.personas import lifecycle
-from apps.personas.models import Persona
+from apps.personas.models import Department, Persona
 from apps.policy import service as policy
 from apps.policy.models import ApprovalRequest, KillSwitch, PolicyIncident
 from apps.runtime.executor import runtime_overview
@@ -231,6 +232,94 @@ def _sync_content(action: Action) -> None:
     from apps.content.service import sync_from_action
 
     sync_from_action(action)
+
+
+# ---------------------------------------------------------------- spisak agenata
+
+#: Koliko agenata staje na jednu stranu. Firma ide do 10.000 — spisak se ne
+#: učitava ceo ni slučajno.
+PO_STRANI = 40
+
+
+@console_view
+def personas(request):
+    """Spisak svih agenata sa pretragom (ADR-0025).
+
+    Pretraga gleda ono po čemu čovek zaista traži: ime, broj agenta, adresu
+    sandučića, radno mesto i sektor. Filteri su odvojeni, da se „svi u
+    marketingu" ne mora kucati.
+    """
+    q = (request.GET.get("q") or "").strip()
+    sektor = (request.GET.get("sektor") or "").strip()
+    status = (request.GET.get("status") or "").strip()
+
+    qs = Persona.objects.all().order_by("public_id")
+    if q:
+        qs = qs.filter(
+            Q(display_name__icontains=q) | Q(public_id__icontains=q)
+            | Q(slug__icontains=q)
+            | Q(channel_accounts__persona_address__icontains=q)
+            | Q(channel_accounts__handle__icontains=q)
+            # Samo tekući raspored: ko je nekad bio urednik ne izlazi na „urednik".
+            | Q(assignments__ended_at__isnull=True,
+                assignments__position__title__icontains=q)
+            | Q(assignments__ended_at__isnull=True,
+                assignments__position__department__name__icontains=q)).distinct()
+    if sektor:
+        qs = qs.filter(assignments__ended_at__isnull=True,
+                       assignments__position__department__code=sektor).distinct()
+    if status:
+        qs = qs.filter(status=status)
+
+    strana = Paginator(qs, PO_STRANI).get_page(request.GET.get("s"))
+    red = list(strana.object_list)
+    ctx = _nav(request) | {
+        "strana": strana, "agenti": _red_spiska(red), "q": q,
+        "sektor": sektor, "status": status,
+        "sektori": Department.objects.order_by("sort_order"),
+        "statusi": [s.value for s in E.PersonaStatus],
+        "ukupno": qs.count(), "svih": Persona.objects.count(),
+        "upit": _upit(request),
+    }
+    return render(request, "console/personas.html", ctx)
+
+
+def _upit(request) -> str:
+    """Postojeći filteri kao query string, da se ne izgube pri listanju."""
+    delovi = [f"{k}={v}" for k in ("q", "sektor", "status")
+              if (v := request.GET.get(k, "").strip())]
+    return ("&" + "&".join(delovi)) if delovi else ""
+
+
+def _red_spiska(personas: list) -> list[dict]:
+    """Jedan upit po koloni, ne jedan po agentu — spisak mora da podnese 10.000."""
+    from apps.personas.models import Assignment
+
+    ids = [p.pk for p in personas]
+    mesta = {a.persona_id: a for a in Assignment.objects.filter(
+        persona_id__in=ids, ended_at__isnull=True, is_primary=True)
+        .select_related("position", "position__department")}
+    # Šef: ko drži radno mesto iznad. Opet u jednom upitu, za sva mesta odjednom.
+    iznad = {a.position.reports_to_id for a in mesta.values() if a.position.reports_to_id}
+    sefovi: dict = {}
+    if iznad:
+        for a in Assignment.objects.filter(position_id__in=iznad, ended_at__isnull=True
+                                           ).select_related("persona"):
+            sefovi.setdefault(a.position_id, a.persona)
+    ceka = dict(ApprovalRequest.objects.filter(
+        action__persona_id__in=ids, status=E.ApprovalStatus.PENDING.value)
+        .values_list("action__persona_id").annotate(n=Count("id")))
+    posao = dict(AgentRun.objects.filter(persona_id__in=ids)
+                 .values_list("persona_id").annotate(kad=Max("started_at")))
+    out = []
+    for p in personas:
+        a = mesta.get(p.pk)
+        sef = sefovi.get(a.position.reports_to_id) if a and a.position.reports_to_id else None
+        out.append({"p": p, "mesto": a.position if a else None,
+                    "sektor": a.position.department if a else None,
+                    "sef": sef if sef and sef.pk != p.pk else None,
+                    "ceka": ceka.get(p.pk, 0), "kad": posao.get(p.pk)})
+    return out
 
 
 # ---------------------------------------------------------------- persona

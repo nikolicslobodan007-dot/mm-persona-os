@@ -1,6 +1,7 @@
 {% extends "console/base.html" %}{% load console_tags l10n %}
 {% block title %}{{ p.display_name }}{% endblock %}
 {% block content %}
+<p class="sub mb12"><a href="/console/personas">← Svi agenti</a></p>
 <div class="page-head">
   {% if lik.portrait %}<img class="avatar" src="/console/assets/{{ lik.portrait.public_id }}" alt="Profilna slika" width="52" height="52">{% endif %}
   <div>
@@ -44,9 +45,7 @@
       </form>
       {% empty %}<p class="sub">Tvoja uloga nema dozvoljen prelaz iz ovog statusa.</p>{% endfor %}
     </div>
-  </div>
-
-  <div class="card mt16"><h2>Radno mesto</h2>
+  <div class="card"><h2>Radno mesto</h2>
   {% if org.position %}
   <p class="sub">{{ org.department.name }} · <strong>{{ org.position.title }}</strong>{% if org.position.specialty %} — {{ org.position.specialty }}{% endif %}.
     Odgovara: {% if org.boss %}<a href="/console/personas/{{ org.boss.public_id }}">{{ org.boss.display_name }}</a>{% else %}čoveku{% endif %} ·
@@ -56,12 +55,8 @@
     <select name="position" class="grow">{% for pos in org.choices %}<option value="{{ pos.code }}"{% if org.position and pos.code == org.position.code %} selected{% endif %}>{{ pos.department.name }} — {{ pos.title }}</option>{% endfor %}</select>
     <button>Rasporedi</button></form>{% endif %}
   </div>
+  </div>
 
-  <div class="card mt16"><h2>Buđenja</h2>
-  <table><tr><th>Kad</th><th>Povod</th><th>Odluka</th><th>Razlog</th></tr>
-  {% for r in runs %}<tr><td class="small">{{ r.started_at|date:"d.m. H:i" }}</td><td class="small">{{ r.wake_priority }}</td>
-  <td><span class="pill {{ r.decision|status_tone }}">{{ r.decision|default:"—" }}</span></td><td class="small">{{ r.reason_code }}</td></tr>
-  {% empty %}<tr><td colspan="4" class="sub">Još se nije budila.</td></tr>{% endfor %}</table></div>
 </section>
 
 <section data-tab="lik">
@@ -225,5 +220,10 @@
   <td><span class="pill {{ a.status|status_tone }}">{{ a.status }}</span> <span class="small muted">{{ a.error_code }}</span></td>
   <td class="small">{{ a.created_at|date:"d.m. H:i" }}</td></tr>
   {% empty %}<tr><td colspan="5" class="sub">Nema akcija.</td></tr>{% endfor %}</table></div>
+  <div class="card mt16"><h2>Buđenja</h2>
+  <table><tr><th>Kad</th><th>Povod</th><th>Odluka</th><th>Razlog</th></tr>
+  {% for r in runs %}<tr><td class="small">{{ r.started_at|date:"d.m. H:i" }}</td><td class="small">{{ r.wake_priority }}</td>
+  <td><span class="pill {{ r.decision|status_tone }}">{{ r.decision|default:"—" }}</span></td><td class="small">{{ r.reason_code }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="sub">Još se nije budila.</td></tr>{% endfor %}</table></div>
 </section>
 {% endblock %}
