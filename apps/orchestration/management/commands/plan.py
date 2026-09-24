@@ -92,7 +92,13 @@ class Command(BaseCommand):
         if child is not None:
             self.stdout.write(f"\n  izvršilac: {child.public_id}  {child.status}")
             for s in child.steps.order_by("sequence"):
-                tekst = (s.output_json or {}).get("tekst", "")
+                out = s.output_json or {}
                 self.stdout.write(f"  {s.sequence}. {s.description:36} {s.status}")
-                if tekst:
+                if model := out.get("model"):
+                    self.stdout.write(f"     model: {model}")
+                    if model.startswith("local/"):
+                        self.stdout.write(self.style.WARNING(
+                            "     ⚠ pisao je lokalni šablon, ne model — "
+                            "izvršilac nema ključ ili ruta za ovu svrhu nije uključena."))
+                if tekst := out.get("tekst"):
                     self.stdout.write(f"     {tekst[:300]}")

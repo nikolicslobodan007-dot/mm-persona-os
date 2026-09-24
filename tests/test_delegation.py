@@ -280,3 +280,13 @@ class TestPosao:
         plan.refresh_from_db()
         assert plan.status == PS.ABANDONED
         assert "nema nalog" in plan.steps.get(sequence=2).output_json["reason"]
+
+
+def test_draft_says_who_wrote_it(ekipa):
+    """Lokalni šablon je ispravna rezerva, ali mora da se vidi (ADR-0024)."""
+    mila, jovan, _ = ekipa
+    with bind(actor_id="user:slobodan"):
+        call_command("plan", "--persona", "P-00001", "--zadaj", "P-00002",
+                     "--tema", "Rokovi isporuke u B2B", stdout=io.StringIO())
+    nacrt = AgentPlan.objects.get(persona=jovan).steps.get(sequence=1).output_json
+    assert nacrt["model"] == "local/template-v1"        # bez ključa piše šablon

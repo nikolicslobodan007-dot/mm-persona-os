@@ -33,7 +33,22 @@ def _draft(step: plans.PlanStep, state: dict) -> plans.Outcome:
     except content.ContentError as e:
         return plans.Failed(str(e)[:300])
     return plans.Done({"item": str(item.id), "hash": item.content_hash[:16],
-                       "tema": tema, "tekst": (item.body or "")[:400]})
+                       "tema": tema, "tekst": (item.body or "")[:400],
+                       "model": _ko_je_pisao(item)})
+
+
+def _ko_je_pisao(item) -> str:
+    """`anthropic/claude-sonnet-5` ili `local/template-v1` — mora da se vidi.
+
+    Lokalni šablon je ispravna rezerva (ADR-0009), ali nacrt koji je napisao
+    šablon ne sme da izgleda kao nacrt koji je napisao model. Agent bez ključa
+    tiho piše šablonom; ovo je mesto gde se to primeti.
+    """
+    from apps.llm_gateway.models import PromptRecord
+
+    pr = (PromptRecord.objects.filter(run=item.run).select_related("route")
+          .order_by("-started_at").first())
+    return f"{pr.route.provider}/{pr.route.model_key}" if pr else "—"
 
 
 @plans.handler("content.submit")

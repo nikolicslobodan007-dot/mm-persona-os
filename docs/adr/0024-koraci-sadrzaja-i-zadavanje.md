@@ -58,6 +58,17 @@ operater dobije razlog odmah.
 - Otvoreno: tema se za sada zadaje rukom; kasnije je bira planer sadržaja
   (F7) ili šef-agent iz svog plana.
 
+## Dopuna — nacrt kaže ko ga je pisao
+
+Prva proba na serveru je prošla od kraja do kraja, ali je Jovan napisao
+šablonsku rečenicu, ne tekst iz modela: **novi agent nema svoj ključ**, pa je
+gateway pao na lokalni šablon. To je ispravna rezerva (ADR-0009) i nije kvar —
+ali je bila **nevidljiva**, a nacrt koji je napisao šablon ne sme da izgleda
+kao nacrt koji je napisao model.
+
+Zato `content.draft` sada upisuje i `model` (`anthropic/claude-sonnet-5` ili
+`local/template-v1`), a komanda ga ispisuje i upozorava kad je pisao šablon.
+
 ## Kod
 
 - `apps/content/steps.py` — `content.draft`, `content.submit`
