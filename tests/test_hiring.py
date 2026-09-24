@@ -170,3 +170,36 @@ class TestDosijeKomanda:
         with pytest.raises(CommandError, match="ne postoji"):
             call_command("dosije", "--persona", "P-09999", "--pokazi",
                          stdout=io.StringIO())
+
+
+class TestJezik:
+    """Tekst koji ide u prompt mora da bude pravilan srpski (ADR-0017 dopuna)."""
+
+    def test_numeral_agreement(self):
+        from apps.personas.org import godine
+
+        assert godine(32) == "32 godine"
+        assert godine(35) == "35 godina"
+        assert godine(21) == "21 godina"
+        assert godine(12) == "12 godina"      # 11–14 su izuzetak
+
+    def test_prompt_has_no_slash_forms(self, firma):
+        from datetime import date
+
+        from apps.personas import org
+
+        call_command("dosije", "--persona", "P-00001", "--rodjen", "Kragujevac",
+                     "--zivi", "Beograd", stdout=io.StringIO())
+        org.set_dossier(firma, actor="user:boss", birth_date=date(1994, 6, 12))
+        tekst = org.prompt_section(firma)
+        assert "rođena/rođen" not in tekst
+        assert "u mestu Kragujevac" not in tekst
+        assert "mesto rođenja: Kragujevac" in tekst
+
+    def test_image_text_keeps_abbreviations(self, firma):
+        from apps.personas import org
+        from apps.visuals import generator
+
+        org.set_dossier(firma, actor="user:boss",
+                        appearance_prompt="Žena u tridesetim, vitka.")
+        assert "b2b" not in generator.appearance_of(firma)

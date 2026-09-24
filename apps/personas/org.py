@@ -163,6 +163,22 @@ def _age_on(born: date, now: date) -> int:
     return now.year - born.year - ((now.month, now.day) < (born.month, born.day))
 
 
+def godine(n: int) -> str:
+    """„21 godina", „32 godine", „35 godina" — brojna imenica se slaže sa brojem.
+
+    Ovaj tekst ide u sistemski prompt svakog agenta. Agent koji čita loš
+    srpski piše loš srpski, pa se slaganje ne prepušta slučaju.
+    """
+    zadnje_dve, zadnja = n % 100, n % 10
+    if 11 <= zadnje_dve <= 14:
+        return f"{n} godina"
+    if zadnja == 1:
+        return f"{n} godina"
+    if zadnja in (2, 3, 4):
+        return f"{n} godine"
+    return f"{n} godina"
+
+
 @transaction.atomic
 def set_dossier(persona: Persona, *, actor: str, birth_date: date | None = None,
                 now: datetime | None = None, **fields) -> PersonaDossier:
@@ -217,11 +233,13 @@ def prompt_section(persona: Persona, *, now: datetime | None = None) -> str:
     if d is not None:
         bits = []
         if persona.birth_date_model:
-            bits.append(f"{_age_on(persona.birth_date_model, now.date())} godina")
+            bits.append(godine(_age_on(persona.birth_date_model, now.date())))
+        # Bez padeža: „rođen/rođena u mestu Kragujevac" je i nezgrapno i pogrešno,
+        # a menjanje po padežima za 10.000 imena mesta nije posao za šablon.
         if d.birth_place:
-            bits.append(f"rođena/rođen u mestu {d.birth_place}")
+            bits.append(f"mesto rođenja: {d.birth_place}")
         if d.residence:
-            bits.append(f"živi u mestu {d.residence}")
+            bits.append(f"živi u gradu: {d.residence}")
         if d.hobbies:
             bits.append("van posla: " + ", ".join(str(h) for h in d.hobbies[:3]))
         if bits:

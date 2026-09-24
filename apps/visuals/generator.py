@@ -113,7 +113,9 @@ def appearance_of(persona: Persona) -> str:
                          "Dosije nema opis izgleda — popuni ga pre slike.")
     pos = position_of(persona)
     if pos is not None:
-        base += f" Radi kao {pos.title.lower()}."
+        # Samo prvo slovo u malo: „B2B" i slične skraćenice ostaju kako jesu.
+        naziv = pos.title[:1].lower() + pos.title[1:]
+        base += f" Radi kao {naziv}."
     return base
 
 

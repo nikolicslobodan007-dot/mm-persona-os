@@ -99,3 +99,20 @@ Slike agenta (profilna i galerija): isti lik na svakoj slici, opis iz dosijea
 kao osnov, oznaka da je AI, čuvanje prompta i modela uz svaku sliku. Pre toga
 treba izabrati generator — cene i mogućnosti se proveravaju u trenutku odluke,
 ne pamte se iz ranije.
+
+## Dopuna 24.09. — jezik u promptu
+
+Ispis dosijea drugog agenta pokazao je tri greške u tekstu koji ide **pravo u
+sistemski prompt svakog agenta**:
+
+- „32 **godina**" — brojna imenica se ne slaže sa brojem. Uvedena je funkcija
+  `godine()`: 1 → godina, 2–4 → godine, 5–20 → godina, sa izuzetkom 11–14.
+- „rođena/rođen u **mestu** Kragujevac" — i nezgrapno i pogrešno, a menjanje po
+  padežima za deset hiljada imena mesta nije posao za šablon. Sada stoji
+  „mesto rođenja: Kragujevac", bez padeža i bez kose crte.
+- „Radi kao urednik sadržaja — **b2b**" u tekstu za sliku — celo malim slovima
+  je gutalo skraćenice. Sada se menja samo prvo slovo.
+
+Razlog zašto ovo nije sitnica: agent koji čita loš srpski piše loš srpski, a
+ovaj odeljak vidi svaki agent na svakom buđenju.
+
