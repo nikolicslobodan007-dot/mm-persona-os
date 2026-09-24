@@ -7,6 +7,10 @@ ostalo, ne izlazi napolje dok je `GLOBAL_EXTERNAL_ACTIONS_ENABLED=false`.
 Ne odgovara se na: automatske poruke (`Auto-Submitted`), liste (`List-Id`),
 pošiljaoce tipa `noreply@`, poruke starije od `MAIL_REPLY_MAX_AGE_HOURS`, i na
 istu poruku dvaput. Dnevni plafon je `MAIL_REPLIES_PER_DAY` po agentu.
+
+ADR-0021: odgovor je **plan od dva koraka** — „napiši" pa „pošalji uz
+odobrenje". Drugi korak pauzira plan dok čovek ne odluči; odobrenje ga
+nastavlja, odbijanje ga zaustavlja i upisuje razlog.
 """
 
 from __future__ import annotations
@@ -20,6 +24,7 @@ from django.utils import timezone
 
 from api import audit
 from apps.channels.models import ChannelAccount, MailMessage
+from apps.orchestration import plans
 from common import enums as E
 
 NO_REPLY = re.compile(r"(^|[.<])(no-?reply|do-?not-?reply|mailer-daemon|postmaster|bounce)@",
@@ -73,40 +78,18 @@ def subject_for(msg: MailMessage) -> str:
     return s[:250] if s.lower().startswith("re:") else f"Re: {s}"[:250]
 
 
-def draft_reply(msg: MailMessage, *, now: datetime | None = None):
-    """Vraća `Action` (čeka odobrenje) ili None ako se ne odgovara."""
-    from apps.content.service import clean_generated
+def _compose(msg: MailMessage, now: datetime) -> str:
+    """Tekst odgovora — memorija, radno mesto, model, čišćenje. Bez spoljnog efekta."""
+    from apps.content.service import clean_generated, operator_run
     from apps.llm_gateway import gateway
     from apps.memory import context as memory_context
-    from apps.policy import guards
-    from apps.policy import service as policy
+    from apps.personas.org import prompt_section as org_section
 
-    now = now or timezone.now()
-    why = skip_reason(msg, now=now)
-    if why:
-        return None
     persona = msg.persona
-    acc = ChannelAccount.objects.filter(pk=msg.channel_account_id).first()
-    if acc is None or acc.status != E.AccountStatus.ACTIVE.value:
-        return None
-    cap = getattr(settings, "MAIL_REPLIES_PER_DAY", 5)
-    from apps.orchestration.models import Action
-
-    used = Action.objects.filter(persona=persona, action_type="mail.reply",
-                                 created_at__gte=now - timedelta(days=1)).count()
-    if used >= cap:
-        audit.record("channel.mail.reply_skipped", persona=persona,
-                     details={"reason": "DAILY_CAP", "used": used})
-        return None
-
-    from apps.content.service import operator_run
-
     run = operator_run(persona, now)
     query = f"{msg.subject}\n{msg.body_text[:500]}"
     pack = memory_context.build(persona, run, E.RetrievalProfile.REPLY_CONTEXT, query=query,
                                 now=now)
-    from apps.personas.org import prompt_section as org_section
-
     who = org_section(persona, now=now)
     gen = gateway.generate(
         E.LLMPurpose.REPLY, _system_prompt(persona),
@@ -115,26 +98,99 @@ def draft_reply(msg: MailMessage, *, now: datetime | None = None):
         f"Naslov: {msg.subject}\n\n{msg.body_text[:4000]}\n\n## zadatak\nNapiši odgovor.",
         persona=persona, run=run, context_pack=pack.record, now=now,
         brief={"topic": msg.subject or "poruka", "language": persona.primary_locale})
-    text = clean_generated(gen.text, persona) if gen.provider != gateway.LOCAL_PROVIDER \
-        else gen.text
-    payload = {"to": _address(msg.from_addr), "subject": subject_for(msg), "text": text,
-               "in_reply_to": msg.provider_message_id, "mail_message_id": str(msg.id)}
+    return (clean_generated(gen.text, persona) if gen.provider != gateway.LOCAL_PROVIDER
+            else gen.text)
+
+
+@plans.handler("mail.draft")
+def _step_draft(step, state) -> plans.Outcome:
+    """Korak 1 — napiši odgovor. Ništa ne izlazi napolje."""
+    msg = MailMessage.objects.filter(pk=step.input_json.get("message")).first()
+    if msg is None:
+        return plans.Failed("Poruka više ne postoji.")
+    now = timezone.now()
+    text = _compose(msg, now)
+    if not text.strip():
+        return plans.Failed("Model nije vratio tekst.")
+    return plans.Done({"text": text, "to": _address(msg.from_addr),
+                       "subject": subject_for(msg),
+                       "in_reply_to": msg.provider_message_id,
+                       "mail_message_id": str(msg.id)})
+
+
+@plans.handler("mail.send")
+def _step_send(step, state) -> plans.Outcome:
+    """Korak 2 — predloži slanje. Čeka čoveka; ništa ne izlazi bez odobrenja."""
+    from apps.policy import guards
+    from apps.policy import service as policy
+
+    drafts = state.get("by_handler", {}).get("mail.draft") or []
+    if not drafts:
+        return plans.Failed("Nema nacrta iz prethodnog koraka.")
+    payload = {k: drafts[-1][k] for k in
+               ("to", "subject", "text", "in_reply_to", "mail_message_id")}
+    persona = step.plan.persona
+    msg = MailMessage.objects.filter(pk=payload["mail_message_id"]).first()
+    acc = ChannelAccount.objects.filter(pk=msg.channel_account_id).first() if msg else None
+    if acc is None or acc.status != E.AccountStatus.ACTIVE.value:
+        return plans.Failed("Sandučić više nije aktivan.")
     hits = guards.prohibitions("mail.reply", payload, "")
     if hits:
-        audit.record("channel.mail.reply_skipped", persona=persona,
-                     severity=E.AuditSeverity.WARNING,
-                     details={"reason": f"HARD_PROHIBITION:{hits[0]}", "message": str(msg.id)})
-        return None
-    pr = policy.propose(persona, "mail.reply", payload, channel=acc, run=run,
-                        intent=f"Odgovor na poruku {msg.provider_message_id}"[:200],
-                        target_ref=payload["to"], now=now)
-    with transaction.atomic():
-        MailMessage.objects.filter(pk=msg.pk).update(
-            metadata={**(msg.metadata or {}), REPLIED: pr.action.public_id})
+        return plans.Failed(f"Tvrda zabrana: {hits[0]}")
+    pr = policy.propose(persona, "mail.reply", payload, channel=acc, run=step.plan.run,
+                        plan_step=step, intent=f"Odgovor na {payload['in_reply_to']}"[:200],
+                        target_ref=payload["to"])
+    action = pr.action
     audit.record("channel.mail.reply_drafted", persona=persona,
-                 details={"action": pr.action.public_id, "message": str(msg.id),
-                          "status": pr.action.status, "provider": gen.provider})
-    return pr.action
+                 details={"action": action.public_id, "message": payload["mail_message_id"],
+                          "status": action.status, "plan": step.plan.public_id})
+    if action.status == E.ActionStatus.APPROVAL_PENDING:
+        return plans.Waiting(action, note="Odgovor čeka odobrenje.")
+    return plans.Done({"action": action.public_id, "status": action.status})
+
+
+def draft_reply(msg: MailMessage, *, now: datetime | None = None):
+    """Pravi plan „napiši pa pošalji" i vraća akciju koja čeka odobrenje.
+
+    ADR-0021: odgovor više nije usamljena akcija nego korak plana, pa odluka
+    čoveka nastavlja ili zaustavlja zadatak — i u oba slučaja ostaje zapisano.
+    """
+    from apps.orchestration.models import Action
+
+    now = now or timezone.now()
+    if skip_reason(msg, now=now):
+        return None
+    persona = msg.persona
+    acc = ChannelAccount.objects.filter(pk=msg.channel_account_id).first()
+    if acc is None or acc.status != E.AccountStatus.ACTIVE.value:
+        return None
+    cap = getattr(settings, "MAIL_REPLIES_PER_DAY", 5)
+    used = Action.objects.filter(persona=persona, action_type="mail.reply",
+                                 created_at__gte=now - timedelta(days=1)).count()
+    if used >= cap:
+        audit.record("channel.mail.reply_skipped", persona=persona,
+                     details={"reason": "DAILY_CAP", "used": used})
+        return None
+
+    plan = plans.start(persona, f"Odgovor na poruku: {msg.subject or '(bez naslova)'}"[:200],
+                       [{"handler": "mail.draft", "type": E.StepType.CREATE.value,
+                         "description": "Napiši odgovor", "input": {"message": str(msg.id)}},
+                        {"handler": "mail.send", "type": E.StepType.ACTION.value,
+                         "description": "Pošalji odgovor (uz odobrenje)"}],
+                       actor="service:mail-poll", now=now)
+    plans.advance(plan, now=now)
+
+    waiting = plan.steps.filter(status=E.StepStatus.RUNNING.value).first()
+    ref = (waiting.output_json or {}).get("waiting_for") if waiting else None
+    if ref is None:
+        last = plan.steps.filter(status=E.StepStatus.DONE.value).order_by("-sequence").first()
+        ref = (last.output_json or {}).get("action") if last else None
+    action = Action.objects.filter(public_id=ref).first() if ref else None
+    if action is not None:
+        with transaction.atomic():
+            MailMessage.objects.filter(pk=msg.pk).update(
+                metadata={**(msg.metadata or {}), REPLIED: action.public_id})
+    return action
 
 
 def draft_replies(messages, *, now: datetime | None = None) -> int:

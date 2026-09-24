@@ -453,7 +453,22 @@ def decide_approval(approval: ApprovalRequest, decision: E.ApprovalStatus, *, ac
         else:
             # Policy v0.1 §17.3 — posle odobrenja ponovna provera, pa tek onda red.
             _decide(action, now=now, approved=ap)
+        # ADR-0021 — ako akcija stoji kao korak plana, odluka nastavlja plan
+        # ili ga zaustavlja sa razlogom. Radi se posle transakcije, da kvar
+        # motora plana ne poništi samu odluku.
+        transaction.on_commit(lambda a=action, d=decision, r=reason: _resume_plan(a, d, r))
         return ap
+
+
+def _resume_plan(action: Action, decision: E.ApprovalStatus, reason: str) -> None:
+    from apps.orchestration import plans
+
+    try:
+        plans.on_action_decided(
+            action, approved=decision != E.ApprovalStatus.REJECTED, reason=reason)
+    except Exception as e:  # noqa: BLE001 — plan ne sme da obori odluku
+        audit.record("plan.resume_failed", persona=action.persona, action=action,
+                     severity=E.AuditSeverity.WARNING, details={"error": str(e)[:200]})
 
 
 def expire_approvals(now: datetime | None = None) -> int:

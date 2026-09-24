@@ -265,6 +265,7 @@ def persona(request, public_id: str):
         "mail": _mail(p),
         "org": _org(p),
         "lik": _lik(p),
+        "plans": _plans(p),
         "can_draft": bool(_roles(request.user) & _DRAFTERS)
         and p.status in {E.PersonaStatus.READY.value, E.PersonaStatus.ACTIVE.value},
         "manual_limit": _manual_limit(),
@@ -281,6 +282,16 @@ def _mail(p) -> dict:
             "enabled": mailbox.enabled(),
             "inbox": MailMessage.objects.filter(persona=p, direction="in")
             .order_by("-received_at")[:10] if acc else []}
+
+
+def _plans(p) -> list[dict]:
+    """Planovi agenta sa koracima (ADR-0021)."""
+    from apps.orchestration import plans as engine
+
+    out = []
+    for pl in engine.active_for(p):
+        out.append({"plan": pl, "steps": list(pl.steps.order_by("sequence"))})
+    return out
 
 
 def _memory_scopes(p) -> dict:
