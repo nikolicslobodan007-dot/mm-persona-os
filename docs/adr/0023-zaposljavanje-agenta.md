@@ -81,9 +81,26 @@ drži — polazna tačka za `--mesto`.
 - Otvoreno: niše se za sada zadaju rukom (`--nise`); kad ih bude previše,
   izvodiće se iz radnog mesta.
 
+## Dopuna 24.09. — premeštaj i mesto kartice
+
+Prvi pokušaj zapošljavanja na serveru odbijen je sa `URE-SR je popunjeno (1)`:
+Mila je sedela na uredničkom mestu, a mesto šefa marketinga je bilo prazno.
+To nije greška nego tačno ponašanje — ali je pokazalo dve rupe.
+
+1. **Nije postojala komanda za premeštaj.** Dodata:
+   `manage.py premesti --persona P-00001 --mesto SEF-MKT`. Stari raspored se
+   zatvara, ne briše (ADR-0017), a ispis odmah kaže kome agent odgovara i ko
+   odgovara njemu.
+2. **Kartica „Radno mesto" je u konzoli v2 završila pod karticom „Lik".**
+   Premeštena je u „Stanje", gde joj je mesto.
+
+Time je i uspostavljen pravi lanac: **čovek → Mila (šef marketinga) → Jovan
+(urednik)** — prvi na kom se delegiranje iz ADR-0022 proverava uživo.
+
 ## Kod
 
 - `apps/personas/hiring.py` — `hire()`, `next_public_id()`, `slugify_sr()`
 - `apps/personas/management/commands/zaposli.py`
 - `apps/personas/management/commands/seed_org.py` — `--spisak`
-- `tests/test_hiring.py` (9 provera)
+- `apps/personas/management/commands/premesti.py`
+- `tests/test_hiring.py` (12 provera)

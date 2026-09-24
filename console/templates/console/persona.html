@@ -46,15 +46,7 @@
     </div>
   </div>
 
-  <div class="card mt16"><h2>Buđenja</h2>
-  <table><tr><th>Kad</th><th>Povod</th><th>Odluka</th><th>Razlog</th></tr>
-  {% for r in runs %}<tr><td class="small">{{ r.started_at|date:"d.m. H:i" }}</td><td class="small">{{ r.wake_priority }}</td>
-  <td><span class="pill {{ r.decision|status_tone }}">{{ r.decision|default:"—" }}</span></td><td class="small">{{ r.reason_code }}</td></tr>
-  {% empty %}<tr><td colspan="4" class="sub">Još se nije budila.</td></tr>{% endfor %}</table></div>
-</section>
-
-<section data-tab="lik">
-  <div class="card"><h2>Radno mesto</h2>
+  <div class="card mt16"><h2>Radno mesto</h2>
   {% if org.position %}
   <p class="sub">{{ org.department.name }} · <strong>{{ org.position.title }}</strong>{% if org.position.specialty %} — {{ org.position.specialty }}{% endif %}.
     Odgovara: {% if org.boss %}<a href="/console/personas/{{ org.boss.public_id }}">{{ org.boss.display_name }}</a>{% else %}čoveku{% endif %} ·
@@ -65,7 +57,15 @@
     <button>Rasporedi</button></form>{% endif %}
   </div>
 
-  <div class="card mt16"><h2>Lik</h2>
+  <div class="card mt16"><h2>Buđenja</h2>
+  <table><tr><th>Kad</th><th>Povod</th><th>Odluka</th><th>Razlog</th></tr>
+  {% for r in runs %}<tr><td class="small">{{ r.started_at|date:"d.m. H:i" }}</td><td class="small">{{ r.wake_priority }}</td>
+  <td><span class="pill {{ r.decision|status_tone }}">{{ r.decision|default:"—" }}</span></td><td class="small">{{ r.reason_code }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="sub">Još se nije budila.</td></tr>{% endfor %}</table></div>
+</section>
+
+<section data-tab="lik">
+  <div class="card"><h2>Lik</h2>
   <p class="sub mb12">Profilna slika je sidro identiteta: svaka sledeća nastaje njenom izmenom, pa je na svima ista osoba.
     Sve je sintetičko i nosi oznaku da je AI.
     Model: <span class="mono">{{ lik.model }}</span> · ključ: <span class="pill">{{ lik.key }}</span>

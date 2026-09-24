@@ -25,11 +25,20 @@ pytestmark = [requires_db]
 
 
 @pytest.fixture
-def firma(mila):
+def firma_pre(mila):
+    """Stanje kakvo je na serveru: Mila je urednik, mesto šefa je prazno."""
     with bind(actor_id="user:slobodan"):
         call_command("seed_org", "--persona", "P-00001", stdout=io.StringIO())
-        org.assign(mila, Position.objects.get(code="SEF-MKT"), actor="user:slobodan")
     return mila
+
+
+@pytest.fixture
+def firma(firma_pre):
+    """Mila je šef marketinga, urednički stolica slobodna za novog agenta."""
+    with bind(actor_id="user:slobodan"):
+        org.assign(firma_pre, Position.objects.get(code="SEF-MKT"),
+                   actor="user:slobodan")
+    return firma_pre
 
 
 def _zaposli(ime="Jovan Ilić", mesto="URE-SR", **kw) -> Persona:
@@ -96,3 +105,31 @@ class TestOdbijanje:
     def test_minor_is_refused(self, firma):
         with pytest.raises(CommandError, match="odrasla"):
             _zaposli(ime="Ana Perić", mesto="POD-SR", **{"dob": "2015-01-01"})
+
+
+class TestPremestaj:
+    def test_move_frees_the_old_seat(self, firma_pre):
+        """Mila ide gore, njeno staro mesto se oslobađa za novog agenta."""
+        call_command("premesti", "--persona", "P-00001", "--mesto", "SEF-MKT",
+                     stdout=io.StringIO())
+        assert org.position_of(firma_pre).code == "SEF-MKT"
+        jovan = _zaposli()                       # URE-SR je sada slobodno
+        assert org.manager_of(jovan).public_id == "P-00001"
+        assert [p.pk for p in org.subordinates(firma_pre)] == [jovan.pk]
+
+    def test_history_is_kept(self, firma_pre):
+        from apps.personas.models import Assignment
+
+        call_command("premesti", "--persona", "P-00001", "--mesto", "SEF-MKT",
+                     stdout=io.StringIO())
+        rasporedi = Assignment.objects.filter(persona=firma_pre).order_by("started_at")
+        assert rasporedi.count() == 2
+        assert rasporedi.first().ended_at is not None      # staro zatvoreno
+        assert rasporedi.last().ended_at is None
+
+    def test_full_seat_is_refused(self, firma_pre):
+        """Dok Mila sedi na uredničkom mestu, niko drugi tamo ne može."""
+        ana = _zaposli(ime="Ana Perić", mesto="POD-SR")
+        with pytest.raises(CommandError, match="popunjeno"):
+            call_command("premesti", "--persona", ana.public_id, "--mesto", "URE-SR",
+                         stdout=io.StringIO())
