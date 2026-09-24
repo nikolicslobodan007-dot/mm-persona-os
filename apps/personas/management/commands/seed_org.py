@@ -95,8 +95,12 @@ class Command(BaseCommand):
                             help="Public ID persone koju treba rasporediti (npr. P-00001).")
         parser.add_argument("--actor", default="user:slobodan")
         parser.add_argument("--human-owner", default="user:slobodan")
+        parser.add_argument("--spisak", action="store_true",
+                            help="Samo ispiši radna mesta i ko ih drži.")
 
     def handle(self, *args, persona, actor, human_owner, **opts):
+        if opts.get("spisak"):
+            return self._spisak()
         if not actor.startswith("user:"):
             raise CommandError("--actor mora biti čovek (user:…).")
         now = timezone.now()
@@ -137,3 +141,13 @@ class Command(BaseCommand):
             self.stdout.write(
                 f"{p.public_id} · {pos.department.name} / {pos.title} · "
                 f"dosije v{d.dossier_version}, {d.residence}.")
+
+    def _spisak(self) -> None:
+        """Ko gde radi — polazna tačka za `manage.py zaposli --mesto …`."""
+        from apps.personas import org
+
+        for d in Department.objects.order_by("sort_order"):
+            self.stdout.write(f"\n{d.code}  {d.name}")
+            for p in Position.objects.filter(department=d).order_by("code"):
+                ko = ", ".join(x.display_name for x in org.holders(p)) or "slobodno"
+                self.stdout.write(f"  {p.code:10} {p.title:34} {ko}")
