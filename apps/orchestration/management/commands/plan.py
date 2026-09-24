@@ -36,7 +36,13 @@ class Command(BaseCommand):
         for pl in found:
             self.stdout.write(f"\n{pl.public_id}  {pl.status}  {pl.created_at:%d.%m %H:%M}")
             self.stdout.write(f"  cilj: {pl.goal}")
+            parent = plans.parent_of(pl)
+            if parent is not None:
+                self.stdout.write(f"  zadao: {parent.persona.public_id} ({parent.public_id})")
             for s in pl.steps.order_by("sequence"):
-                extra = (s.output_json or {}).get("waiting_for") or \
-                    (s.output_json or {}).get("reason", "")
+                out = s.output_json or {}
+                if out.get("waiting_for_plan"):
+                    extra = f"→ {out.get('worker', '')} {out['waiting_for_plan']}"
+                else:
+                    extra = out.get("waiting_for") or out.get("reason", "")
                 self.stdout.write(f"  {s.sequence}. {s.description:44} {s.status:8} {extra}")

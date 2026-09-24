@@ -410,3 +410,41 @@ class TestKonzolaV2:
         for tab in ("stanje", "lik", "sadrzaj", "posta", "pravila", "akcije"):
             assert f'<section data-tab="{tab}">' in html
             assert f'href="#{tab}"' in html
+
+
+class TestDelegationConsole:
+    """ADR-0022 — zadat posao vidi se sa obe strane."""
+
+    @pytest.fixture
+    def zadato(self, mila):
+        from apps.orchestration import plans
+        from apps.personas import org
+        from apps.personas.models import Persona, Position
+
+        @plans.handler("proba.stoji")
+        def _stoji(step, state):
+            return plans.Done({})
+
+        with bind(actor_id="user:boss"):
+            call_command("seed_org", "--persona", "P-00001", stdout=io.StringIO())
+            org.assign(mila, Position.objects.get(code="SEF-MKT"), actor="user:boss")
+            jovan = Persona.objects.create(
+                public_id="P-00002", slug="p-00002", display_name="Jovan Ilić (AI)",
+                persona_type=E.PersonaType.AI_CREATOR, status=E.PersonaStatus.READY,
+                disclosure_mode=E.DisclosureMode.ALWAYS_VISIBLE, primary_locale="sr-Latn",
+                timezone="Europe/Belgrade")
+            org.assign(jovan, Position.objects.get(code="URE-SR"), actor="user:boss")
+            plan = plans.start(mila, "Vodim posao", [
+                {"handler": "org.delegate", "description": "Zadaj tekst",
+                 "input": {"to": "P-00002", "goal": "Napiši tekst",
+                           "steps": [{"handler": "proba.stoji"}]}},
+            ], actor="user:boss")
+            plans.advance(plan)
+        return jovan
+
+    def test_boss_page_shows_the_worker_and_worker_page_shows_the_boss(self, boss, zadato):
+        c = _login(Client(), boss)
+        sef = c.get("/console/personas/P-00001").content.decode()
+        assert "zadato:" in sef and "P-00002" in sef
+        izvrsilac = c.get("/console/personas/P-00002").content.decode()
+        assert "zadao:" in izvrsilac and "Mila" in izvrsilac

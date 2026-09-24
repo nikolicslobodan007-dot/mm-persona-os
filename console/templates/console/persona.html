@@ -195,17 +195,23 @@
 <section data-tab="akcije">
   <div class="card mb12"><h2>Planovi</h2>
   <p class="sub mb12">Zadatak koji traje više koraka. Korak koji traži odobrenje pauzira plan;
-    tvoja odluka ga nastavlja ili zaustavlja — i u oba slučaja ostaje zapisano zašto.</p>
+    tvoja odluka ga nastavlja ili zaustavlja — i u oba slučaja ostaje zapisano zašto.
+    Korak može biti i zadat saradniku: tada plan stoji dok saradnik ne završi.</p>
   {% for pl in plans %}
     <div class="row mb12"><b>{{ pl.plan.goal }}</b>
       <span class="pill {{ pl.plan.status|status_tone }}">{{ pl.plan.status }}</span>
-      <span class="sub small">{{ pl.plan.created_at|date:"d.m. H:i" }}</span></div>
+      <span class="sub small">{{ pl.plan.created_at|date:"d.m. H:i" }}</span>
+      {% if pl.from %}<span class="sub small">zadao:
+        <a href="/console/personas/{{ pl.from.public_id }}">{{ pl.from.display_name }}</a></span>{% endif %}</div>
     <table class="mb12"><tr><th>#</th><th>Korak</th><th>Stanje</th><th>Ishod</th></tr>
     {% for s in pl.steps %}<tr><td class="small">{{ s.sequence }}</td>
       <td>{{ s.description }}</td>
       <td><span class="pill {{ s.status|status_tone }}">{{ s.status }}</span></td>
       <td class="small">{% if s.output_json.waiting_for %}čeka odobrenje
         <a href="/console/actions/{{ s.output_json.waiting_for }}">{{ s.output_json.waiting_for|slice:":14" }}…</a>
+        {% elif s.output_json.waiting_for_plan %}zadato:
+        <a href="/console/personas/{{ s.output_json.worker }}">{{ s.output_json.worker }}</a>
+        {% if s.output_json.reason %} — {{ s.output_json.reason|truncatechars:70 }}{% endif %}
         {% elif s.output_json.reason %}{{ s.output_json.reason|truncatechars:90 }}
         {% elif s.output_json.decision %}{{ s.output_json.decision }}{% endif %}</td></tr>
     {% endfor %}</table>

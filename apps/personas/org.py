@@ -127,6 +127,35 @@ def escalation_target(persona: Persona) -> str:
     return (dep.human_owner if dep and dep.human_owner else "user:slobodan")
 
 
+def subordinates(persona: Persona) -> list[Persona]:
+    """Ko odgovara ovoj personi — sva radna mesta čiji je `reports_to` njeno."""
+    pos = position_of(persona)
+    if pos is None:
+        return []
+    out: list[Persona] = []
+    for below in Position.objects.filter(reports_to=pos):
+        out += [p for p in holders(below) if p.pk != persona.pk]
+    return out
+
+
+def can_delegate(boss: Persona, worker: Persona) -> str:
+    """Prazan string = sme. Inače kratak razlog zašto ne sme (ADR-0022).
+
+    Posao se zadaje **samo nadole po organizaciji**: šef svom neposrednom
+    izvršiocu. Radno mesto i dalje ne daje nijednu dozvolu — izvršilac radi sa
+    svojim poverenjem i svojim sposobnostima (ADR-0017).
+    """
+    if boss.pk == worker.pk:
+        return "Niko ne zadaje posao sam sebi."
+    if worker.status not in (E.PersonaStatus.READY.value, E.PersonaStatus.ACTIVE.value):
+        return f"Izvršilac je {worker.status}."
+    if position_of(boss) is None:
+        return "Nalogodavac nije raspoređen ni na jedno radno mesto."
+    if worker.pk not in {p.pk for p in subordinates(boss)}:
+        return f"{worker.public_id} ne odgovara personi {boss.public_id}."
+    return ""
+
+
 # ---------------------------------------------------------------- dosije
 
 

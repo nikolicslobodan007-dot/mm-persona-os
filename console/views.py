@@ -290,7 +290,9 @@ def _plans(p) -> list[dict]:
 
     out = []
     for pl in engine.active_for(p):
-        out.append({"plan": pl, "steps": list(pl.steps.order_by("sequence"))})
+        parent = engine.parent_of(pl)
+        out.append({"plan": pl, "steps": list(pl.steps.order_by("sequence")),
+                    "from": parent.persona if parent else None})
     return out
 
 

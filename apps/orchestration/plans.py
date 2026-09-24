@@ -42,6 +42,8 @@ PS, SS = E.PlanStatus, E.StepStatus
 MAX_STEPS = 24
 #: Koliko koraka motor izvrši u jednom prolazu, pre nego što stane.
 MAX_PER_PASS = 12
+#: Koliko duboko sme lanac „šef → izvršilac → njegov izvršilac" (ADR-0022).
+MAX_DELEGATION_DEPTH = 3
 
 
 class PlanError(Exception):
@@ -69,13 +71,21 @@ class Waiting:
 
 
 @dataclass(frozen=True)
+class Delegated:
+    """Korak je predat drugom agentu. Čeka se njegov plan (ADR-0022)."""
+
+    plan: AgentPlan
+    note: str = ""
+
+
+@dataclass(frozen=True)
 class Failed:
     """Korak ne može da se završi. Plan staje, razlog se zapisuje."""
 
     reason: str
 
 
-Outcome = Done | Waiting | Failed
+Outcome = Done | Waiting | Delegated | Failed
 Handler = Callable[[PlanStep, dict], Outcome]
 _HANDLERS: dict[str, Handler] = {}
 
@@ -173,6 +183,29 @@ def _finish(plan: AgentPlan, status: E.PlanStatus, *, reason: str = "") -> None:
     audit.record("plan.finished", persona=plan.persona,
                  details={"plan": plan.public_id, "status": status.value,
                           "reason": reason[:200]})
+    _resume_parent(plan, status, reason)
+
+
+def _resume_parent(child: AgentPlan, status: E.PlanStatus, reason: str) -> None:
+    """Zadatak predat drugom agentu vraća se onome ko ga je zadao (ADR-0022)."""
+    step = PlanStep.objects.filter(
+        status=SS.RUNNING.value, output_json__waiting_for_plan=child.public_id).first()
+    if step is None:
+        return
+    done = status == E.PlanStatus.COMPLETED
+    reason = reason or failure_reason(child)
+    out = {**(step.output_json or {}), "child_status": status.value, "reason": reason[:300]}
+    PlanStep.objects.filter(pk=step.pk).update(
+        status=SS.DONE.value if done else SS.FAILED.value, output_json=out)
+    parent = step.plan
+    audit.record("plan.handback", persona=parent.persona,
+                 details={"plan": parent.public_id, "child": child.public_id,
+                          "status": status.value})
+    if done:
+        advance(parent)
+    else:
+        _finish(parent, E.PlanStatus.ABANDONED,
+                reason=f"Izvršilac nije završio: {reason}"[:300])
 
 
 def advance(plan: AgentPlan, *, now: datetime | None = None) -> AgentPlan:
@@ -204,6 +237,19 @@ def advance(plan: AgentPlan, *, now: datetime | None = None) -> AgentPlan:
         if isinstance(result, Done):
             PlanStep.objects.filter(pk=step.pk).update(
                 status=SS.DONE.value, output_json=result.output)
+        elif isinstance(result, Delegated):
+            # Veza se upisuje **pre** nego što izvršilac krene: po njoj se meri
+            # dubina lanca i po njoj se posao vraća nalogodavcu (ADR-0022).
+            PlanStep.objects.filter(pk=step.pk).update(
+                status=SS.RUNNING.value,
+                output_json={"waiting_for_plan": result.plan.public_id,
+                             "worker": result.plan.persona.public_id, "note": result.note})
+            audit.record("plan.delegated", persona=plan.persona,
+                         details={"plan": plan.public_id, "step": step.sequence,
+                                  "child": result.plan.public_id,
+                                  "worker": result.plan.persona.public_id})
+            advance(result.plan, now=now)
+            return plan
         elif isinstance(result, Waiting):
             PlanStep.objects.filter(pk=step.pk).update(
                 status=SS.RUNNING.value,
@@ -247,6 +293,61 @@ def on_action_decided(action: Action, *, approved: bool, reason: str = "",
     PlanStep.objects.filter(pk=step.pk).update(status=SS.FAILED.value, output_json=out)
     _finish(plan, PS.ABANDONED, reason=reason or "Odbijeno bez razloga.")
     return plan
+
+
+def failure_reason(plan: AgentPlan) -> str:
+    """Razlog iz koraka koji je pao — da se do nalogodavca vrati šta je stvarno bilo."""
+    step = plan.steps.filter(status=SS.FAILED.value).order_by("sequence").first()
+    return (step.output_json or {}).get("reason", "") if step else ""
+
+
+def parent_of(plan: AgentPlan) -> AgentPlan | None:
+    """Plan nalogodavca, ako je ovaj plan nekome zadat (ADR-0022)."""
+    step = PlanStep.objects.filter(
+        output_json__waiting_for_plan=plan.public_id).select_related(
+        "plan", "plan__persona").first()
+    return step.plan if step else None
+
+
+def depth_of(plan: AgentPlan, limit: int = 10) -> int:
+    """Koliko je puta ovaj plan predat nadole. Plan bez nalogodavca je dubina 0."""
+    depth, current = 0, plan
+    while depth < limit:
+        parent = parent_of(current)
+        if parent is None:
+            return depth
+        depth += 1
+        current = parent
+    return depth
+
+
+@handler("org.delegate")
+def _step_delegate(step: PlanStep, state: dict) -> Outcome:
+    """Zadaje korak izvršiocu iz organizacije i čeka njegov plan.
+
+    Delegiranje ne daje nikakvu dozvolu: izvršilac radi sa svojim poverenjem,
+    svojim sposobnostima i svojim odobrenjima (ADR-0017).
+    """
+    from apps.personas.models import Persona
+    from apps.personas.org import can_delegate
+
+    spec = step.input_json or {}
+    worker = Persona.objects.filter(public_id=spec.get("to", "")).first()
+    if worker is None:
+        return Failed(f"Nema agenta {spec.get('to', '')}.")
+    why = can_delegate(step.plan.persona, worker)
+    if why:
+        return Failed(why)
+    if depth_of(step.plan) + 1 >= MAX_DELEGATION_DEPTH:
+        return Failed(f"Lanac delegiranja je dublji od {MAX_DELEGATION_DEPTH} nivoa.")
+    sub = spec.get("steps") or []
+    if not sub:
+        return Failed("Zadatak bez koraka.")
+    child = start(worker, spec.get("goal", step.description)[:2000], sub,
+                  actor=f"agent:{step.plan.persona.public_id}", run=step.plan.run)
+    # Motor pokreće izvršioca tek pošto upiše vezu; kad ovaj završi, posao se
+    # sam vraća na ovaj korak (`_resume_parent`).
+    return Delegated(child, note=f"Zadato: {worker.display_name}")
 
 
 def active_for(persona, limit: int = 10) -> list[AgentPlan]:
