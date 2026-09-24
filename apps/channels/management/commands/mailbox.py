@@ -6,6 +6,10 @@
     manage.py mailbox poll   [--persona P-00001] čita pristiglu poštu
     manage.py mailbox bez                        ko nema sandučić
     manage.py mailbox popuni                     otvara svima kojima fali
+    manage.py mailbox kvota --na 200             menja kvotu svim sandučićima
+
+Kvota domena je ukupna, pa zbir sandučića određuje koliko agenata staje:
+20 GB / 200 MB = 100 agenata. Sam domen se podiže u Mailcow-u.
 """
 
 from __future__ import annotations
@@ -22,11 +26,14 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("op", choices=["status", "plan", "open", "poll",
-                                          "bez", "popuni"])
+                                          "bez", "popuni", "kvota"])
+        parser.add_argument("--na", type=int, default=0, help="Nova kvota u MB.")
         parser.add_argument("--persona")
         parser.add_argument("--actor", default="user:slobodan")
 
     def handle(self, *args, op, persona, actor, **opts):
+        if op == "kvota":
+            return self._kvota(opts.get("na") or 0, persona, actor)
         if op == "status":
             st = mailbox.mailcow_status()
             self.stdout.write(f"domen {mailbox.domain()} · {'OK' if st['ok'] else st['reason']}"
@@ -89,3 +96,36 @@ class Command(BaseCommand):
         for red in palo:
             self.stdout.write(self.style.WARNING(f"  {red}"))
         self.stdout.write(f"\nOtvoreno: {otvoreno}, nije uspelo: {len(palo)}.")
+
+    def _kvota(self, megabajta: int, persona: str, actor: str) -> None:
+        """Nova kvota za jedan sandučić ili za sve. Svaki zasebno — pad ne ruši red."""
+        from apps.channels.models import ChannelAccount
+        from common import enums as E
+
+        if not megabajta:
+            raise CommandError("Zadaj --na <MB>, npr. --na 200.")
+        qs = ChannelAccount.objects.filter(
+            channel_type=E.ChannelType.EMAIL.value,
+            credential_ref=mailbox.MAILBOX_REF).select_related("persona")
+        if persona:
+            qs = qs.filter(persona__public_id=persona)
+        nalozi = list(qs.order_by("persona__public_id"))
+        if not nalozi:
+            self.stdout.write("Nema nijednog sandučića.")
+            return
+        promenjeno, palo = 0, []
+        for acc in nalozi:
+            try:
+                with bind(actor_id=actor):
+                    mailbox.set_quota(acc, megabajta, actor=actor)
+            except mailbox.MailboxError as e:
+                palo.append(f"{acc.persona_address}: {e}")
+                continue
+            promenjeno += 1
+        self.stdout.write(self.style.SUCCESS(
+            f"Kvota {megabajta} MB: promenjeno {promenjeno} od {len(nalozi)}."))
+        for red in palo:
+            self.stdout.write(self.style.WARNING(f"  {red}"))
+        if promenjeno:
+            self.stdout.write("Oslobođeno mesta za još sandučića; proveri "
+                              "`manage.py mailbox popuni`.")

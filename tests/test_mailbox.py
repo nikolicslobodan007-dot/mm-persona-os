@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from datetime import UTC, datetime
 
 import pytest
@@ -138,6 +139,16 @@ def test_agent_domain_is_still_primary_for_cold_mail(settings):
     assert is_primary_domain("webkorporacija.com")
 
 
+@contextlib.contextmanager
+def monkeypatched(obj, ime, vrednost):
+    staro = getattr(obj, ime)
+    setattr(obj, ime, vrednost)
+    try:
+        yield
+    finally:
+        setattr(obj, ime, staro)
+
+
 class TestPopuna:
     """ADR-0015 (dopuna) — ko je ostao bez sandučića i kako se to popravlja."""
 
@@ -178,3 +189,30 @@ class TestPopuna:
             mailbox.provision(mila, actor="user:boss")
         assert e.value.code == "MAILCOW_QUOTA"
         assert "popunjen" in str(e.value)
+
+    def test_quota_change_goes_through_the_api(self, mila, mc):
+        import io
+
+        from django.core.management import call_command
+
+        from apps.channels import mailbox
+
+        pozivi: list = []
+
+        mailbox.provision(mila, actor="user:boss")
+        with monkeypatched(mailbox, "_api",
+                           lambda path, body=None: (pozivi.append((path, body))
+                                                    or [{"type": "success",
+                                                         "msg": ["quota_changed"]}])):
+            call_command("mailbox", "kvota", "--na", "200", stdout=io.StringIO())
+        assert pozivi and pozivi[0][0] == "/api/v1/edit/mailbox"
+        assert pozivi[0][1]["attr"] == {"quota": "200"}
+
+    def test_quota_out_of_range_is_refused(self, mila, mc):
+        from apps.channels import mailbox
+
+        acc = mailbox.provision(mila, actor="user:boss")
+        with pytest.raises(mailbox.MailboxError):
+            mailbox.set_quota(acc, 5, actor="user:boss")
+        with pytest.raises(mailbox.MailboxError):
+            mailbox.set_quota(acc, 999999, actor="user:boss")

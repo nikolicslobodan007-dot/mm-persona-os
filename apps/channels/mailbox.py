@@ -166,6 +166,26 @@ def mailcow_status() -> dict:
 # ---------------------------------------------------------------- otvaranje
 
 
+def set_quota(account: ChannelAccount, megabajta: int, *, actor: str) -> None:
+    """Menja kvotu postojećeg sandučića na Mailcow-u (ADR-0015, dopuna).
+
+    Domen ima ukupnu kvotu, pa zbir sandučića određuje koliko agenata staje.
+    Menjanje kvote dvadeset postojećih sandučića rukom je posao za jedan dan;
+    na deset hiljada je nemoguće. Zato ide kroz API, kao i otvaranje.
+    """
+    if not enabled():
+        raise MailboxError("MAILCOW_DISABLED", "MAILCOW_ENABLED=false ili nema MAILCOW_URL.")
+    if not 10 <= megabajta <= 51200:
+        raise MailboxError("VALIDATION_ERROR", "Kvota mora biti između 10 MB i 50 GB.")
+    ok, msg = _mailcow_ok(_api("/api/v1/edit/mailbox", {
+        "items": [account.persona_address], "attr": {"quota": str(megabajta)}}))
+    if not ok:
+        raise MailboxError("MAILCOW_REJECTED", msg)
+    audit.record("channel.mailbox.quota_changed", persona=account.persona,
+                 details={"account": account.persona_address, "quota_mb": megabajta,
+                          "actor": actor})
+
+
 @transaction.atomic
 def provision(persona: Persona, *, actor: str) -> ChannelAccount:
     """Otvara sandučić (idempotentno). Bez `MAILCOW_ENABLED` — greška, ništa se ne upisuje."""

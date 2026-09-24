@@ -89,3 +89,13 @@ Tri izmene:
 Ovo je prvo mesto na kom se videlo da neka granica ne skalira sa brojem
 agenata. Neće biti poslednje — zato je i zapisano ovde, a ne samo popravljeno.
 
+Nova kvota važi samo za **nove** sandučiće — postojećih dvadeset je i dalje
+držalo po 1 GB, pa je domen ostao pun. Zato i menjanje kvote ide kroz API:
+
+    manage.py mailbox kvota --na 200            (svi sandučići)
+    manage.py mailbox kvota --na 200 --persona P-00001
+
+Svaki sandučić se menja zasebno; pad jednog ne ruši ostale. Kvota samog domena
+se i dalje podiže u Mailcow-u — to je odluka o tome koliko domen ukupno sme,
+ne nešto što ova firma menja sama sebi.
+
