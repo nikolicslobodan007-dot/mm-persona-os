@@ -65,11 +65,12 @@ class EntityKind:
     APPROVAL_REQUEST = "ApprovalRequest"
     MEDIA_ASSET = "MediaAsset"
     POLICY_INCIDENT = "PolicyIncident"
+    CODE_TASK = "CodeTask"  # ADR-0035 — deseti oblik, o zadatku se razgovara
 
 
 _ULID_RE = "[0-9A-HJKMNP-TV-Z]{26}"
 
-#: Canon §2.2 — devet entiteta, devet oblika.
+#: Canon §2.2 — devet entiteta iz Canon-a + `CodeTask` kroz ADR-0035.
 SPECS: dict[str, IdSpec] = {
     EntityKind.PERSONA: IdSpec(
         "P-", re.compile(r"^P-\d{5}$"), "P- + 5 cifara sa vodećim nulama"
@@ -98,6 +99,9 @@ SPECS: dict[str, IdSpec] = {
     EntityKind.POLICY_INCIDENT: IdSpec(
         "INC-", re.compile(r"^INC-\d{8}-\d{3}$"), "INC- + YYYYMMDD + 3 cifre"
     ),
+    EntityKind.CODE_TASK: IdSpec(
+        "TSK-", re.compile(rf"^TSK-{_ULID_RE}$"), "TSK- + ULID"
+    ),
 }
 
 #: ULID-ovani entiteti — svi osim Persona, MediaAsset i PolicyIncident.
@@ -109,6 +113,7 @@ _ULID_KINDS: frozenset[str] = frozenset(
         EntityKind.WORLD_EVENT,
         EntityKind.POLICY_DECISION,
         EntityKind.APPROVAL_REQUEST,
+        EntityKind.CODE_TASK,
     }
 )
 

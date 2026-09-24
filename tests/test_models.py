@@ -73,6 +73,8 @@ class TestAppOwnership:
         },
         "orchestration": {
             "AgentRun", "AgentPlan", "PlanStep", "Action", "ActionAttempt",
+            # ADR-0035 — zadatak programerskog sektora
+            "CodeTask", "GateResult", "ReviewFinding",
         },
         "policy": {
             "PolicyRule", "PolicyDecision", "ApprovalRequest", "CapabilityGrant",

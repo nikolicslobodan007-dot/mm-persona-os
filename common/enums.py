@@ -1346,3 +1346,62 @@ __all__ += [
     "RECONCILE_DELAY_SECONDS",
     "READ_ACTION_TYPES",
 ]
+
+
+# ------------------------------------------------------- ADR-0035 (zadatak)
+
+
+class TaskStatus(CanonEnum):
+    """Životni tok jednog `CodeTask`-a (ADR-0035 §1)."""
+
+    DRAFT = "DRAFT"
+    READY = "READY"
+    ASSIGNED = "ASSIGNED"
+    IN_PROGRESS = "IN_PROGRESS"
+    IN_REVIEW = "IN_REVIEW"
+    BLOCKED = "BLOCKED"
+    DONE = "DONE"
+    CANCELLED = "CANCELLED"
+
+
+class Gate(CanonEnum):
+    """Kapija koja mora da bude zelena da bi zadatak bio gotov (ADR-0035 §3)."""
+
+    TESTS = "pytest"
+    LINT = "ruff"
+    CANON = "canon_lint"
+    MIGRATIONS = "migrations"
+    REVIEW = "review"
+
+
+class FindingSeverity(CanonEnum):
+    """Težina nalaza recenzenta (ADR-0035 §4). `BLOCKER` zadržava zadatak."""
+
+    BLOCKER = "BLOCKER"
+    MAJOR = "MAJOR"
+    MINOR = "MINOR"
+    NIT = "NIT"
+
+
+class FindingStatus(CanonEnum):
+    OPEN = "OPEN"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+    FIXED = "FIXED"
+
+
+#: Kapije koje svaki zadatak dobija dok se izričito ne skinu (ADR-0035 §3).
+DEFAULT_GATES: tuple[str, ...] = (
+    Gate.TESTS.value,
+    Gate.LINT.value,
+    Gate.CANON.value,
+    Gate.MIGRATIONS.value,
+)
+
+__all__ += [
+    "TaskStatus",
+    "Gate",
+    "FindingSeverity",
+    "FindingStatus",
+    "DEFAULT_GATES",
+]

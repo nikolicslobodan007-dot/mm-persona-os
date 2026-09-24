@@ -27,7 +27,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from common import enums as E
-from common.models import JSON_DICT, UUIDModel, risk_score_field
+from common.models import JSON_DICT, JSON_LIST, UUIDModel, risk_score_field
 
 #: Canon §6.2 — statusi u kojima akcija već sme da dodirne spoljni svet.
 #: Od `QUEUED` nadalje `policy_decision` mora postojati.
@@ -374,3 +374,127 @@ class ActionAttempt(UUIDModel):
 
     def __str__(self) -> str:
         return f"{self.action_id}#{self.attempt_number} {self.outcome or 'pending'}"
+
+
+def default_gates() -> list[str]:
+    """Podrazumevane kapije zadatka. Funkcija, ne lambda — migracije je serijalizuju."""
+    return list(E.DEFAULT_GATES)
+
+
+class CodeTask(UUIDModel):
+    """Jedinica posla programerskog sektora. ADR-0034 §3, ADR-0035.
+
+    Četiri obaveze u jednom redu: šta, zašto, koje fajlove sme da dira i šta
+    znači gotovo. Dve stvari stoje u bazi a ne u servisu, jer se servis
+    zaobilazi jednim `objects.create()`:
+
+      - `allowed_paths` ne sme biti prazan — prazno bi značilo „svuda";
+      - recenzent ne sme biti autor (ADR-0034 §5.2, nema samoodobravanja).
+    """
+
+    public_id = models.CharField(max_length=32, unique=True)  # TSK- + ULID
+    title = models.CharField(max_length=200)
+    why = models.TextField(help_text="Poslovni razlog, ne rešenje (ADR-0034 §4).")
+    adr = models.CharField(max_length=80, blank=True)
+
+    #: Prefiksi putanja koje ovaj zadatak sme da dira. Normalizovani, bez vodeće
+    #: kose crte. Zaštićena zona ovde ne može da se nađe — `zadaci.create` odbija.
+    allowed_paths = JSON_LIST()
+    required_gates = JSON_LIST(default=default_gates)
+
+    requested_by = models.ForeignKey(
+        "personas.Persona", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="tasks_requested",
+    )
+    assignee = models.ForeignKey(
+        "personas.Persona", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="tasks_assigned",
+    )
+    reviewer = models.ForeignKey(
+        "personas.Persona", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="tasks_reviewing",
+    )
+
+    status = models.CharField(
+        max_length=24, choices=E.TaskStatus.choices(), default=E.TaskStatus.DRAFT
+    )
+    plan = models.ForeignKey(
+        AgentPlan, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="tasks",
+    )
+    run = models.ForeignKey(
+        AgentRun, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="tasks",
+    )
+    commit_sha = models.CharField(max_length=40, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "orchestration_code_task"
+        indexes = [
+            models.Index(fields=["status", "created_at"]),
+            models.Index(fields=["assignee", "status"]),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=~models.Q(reviewer=models.F("assignee"))
+                | models.Q(reviewer__isnull=True)
+                | models.Q(assignee__isnull=True),
+                name="code_task_reviewer_is_not_author",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.public_id} {self.status} · {self.title[:40]}"
+
+
+class GateResult(UUIDModel):
+    """Jedan pokušaj jedne kapije nad jednim zadatkom. ADR-0035 §3.
+
+    Čuva se svaki pokušaj, ne samo poslednji: „prošla iz prvog puta" je mera
+    iz ADR-0034 §6 i bez istorije se ne može izračunati.
+    """
+
+    task = models.ForeignKey(CodeTask, on_delete=models.CASCADE, related_name="gates")
+    gate = models.CharField(max_length=24, choices=E.Gate.choices())
+    passed = models.BooleanField()
+    detail = models.TextField(blank=True)
+    commit_sha = models.CharField(max_length=40, blank=True)
+
+    class Meta:
+        db_table = "orchestration_gate_result"
+        indexes = [models.Index(fields=["task", "gate", "-created_at"])]
+
+    def __str__(self) -> str:
+        return f"{self.task_id} {self.gate} {'OK' if self.passed else 'PAO'}"
+
+
+class ReviewFinding(UUIDModel):
+    """Nalaz recenzenta: fajl, linija, tvrdnja, težina. ADR-0034 §3, ADR-0035 §4.
+
+    Proza se ne broji, pa se ne može meriti. Ovo može.
+    """
+
+    task = models.ForeignKey(
+        CodeTask, on_delete=models.CASCADE, related_name="findings"
+    )
+    reviewer = models.ForeignKey(
+        "personas.Persona", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="findings_written",
+    )
+    file = models.CharField(max_length=300)
+    line = models.PositiveIntegerField(null=True, blank=True)
+    claim = models.TextField()
+    severity = models.CharField(max_length=16, choices=E.FindingSeverity.choices())
+    status = models.CharField(
+        max_length=16, choices=E.FindingStatus.choices(), default=E.FindingStatus.OPEN
+    )
+    #: Ko ga je našao — `open-code-review`, model, čovek (ADR-0032).
+    source = models.CharField(max_length=40, default="agent")
+
+    class Meta:
+        db_table = "orchestration_review_finding"
+        indexes = [models.Index(fields=["task", "status", "severity"])]
+
+    def __str__(self) -> str:
+        return f"{self.severity} {self.file}:{self.line or '-'}"

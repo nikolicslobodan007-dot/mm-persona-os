@@ -57,8 +57,16 @@ class TestPublicIds:
         kinds = {
             v for k, v in vars(I.EntityKind).items() if not k.startswith("_")
         }
-        assert kinds == set(I.SPECS), "Canon §2.2 — devet entiteta, devet oblika"
-        assert len(I.SPECS) == 9
+        assert kinds == set(I.SPECS), "Canon §2.2 — svaki entitet ima tačno jedan oblik"
+        # Devet iz Canon §2.2 mora da ostane; novi se dodaju samo kroz ADR
+        # (§2.2: „public_id se dodaje… i tada kroz ADR"), pa ovde nema brojke.
+        assert {
+            I.EntityKind.PERSONA, I.EntityKind.AGENT_RUN, I.EntityKind.AGENT_PLAN,
+            I.EntityKind.ACTION, I.EntityKind.WORLD_EVENT, I.EntityKind.POLICY_DECISION,
+            I.EntityKind.APPROVAL_REQUEST, I.EntityKind.MEDIA_ASSET,
+            I.EntityKind.POLICY_INCIDENT,
+        } <= set(I.SPECS)
+        assert len({s.prefix for s in I.SPECS.values()}) == len(I.SPECS), "prefiks je jedinstven"
 
     @pytest.mark.parametrize("kind", sorted(I._ULID_KINDS))
     def test_ulid_oblik(self, kind):
