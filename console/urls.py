@@ -24,6 +24,8 @@ urlpatterns = [
          name="console-persona-dossier"),
     path("personas/<str:public_id>/portrait", views.persona_portrait,
          name="console-persona-portrait"),
+    path("personas/<str:public_id>/upload", views.persona_upload,
+         name="console-persona-upload"),
     path("assets/<str:public_id>", views.asset, name="console-asset"),
     path("personas/<str:public_id>/mailbox", views.persona_mailbox,
          name="console-persona-mailbox"),

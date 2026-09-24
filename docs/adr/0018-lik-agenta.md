@@ -102,3 +102,33 @@ prijavljenom operateru, bez javnog linka ka storage-u. Komandna linija:
   pre prve objave.
 - Izbor između kvaliteta `low`/`medium`/`high` posle prvih slika: razlika u
   ceni je desetostruka, pa se odlučuje gledanjem, ne pretpostavkom.
+
+## Dopuna 24.09.2026. — ručno napravljene slike
+
+Slobodan je odlučio da za **prvih stotinak agenata slike pravi ručno**, u
+ChatGPT prozoru, umesto preko API-ja. (Ispravka broja koja je pratila odluku:
+2.500 $ je procena za svih 10.000 agenata; za sto agenata je oko 25 $.)
+
+Zato `IMAGE_ENABLED` ostaje `false`, a dodat je put za **otpremanje**:
+
+- `generator.import_image(persona, data, as_portrait=…, label=…)` — upisuje
+  sliku koju je napravio čovek. Ne zove nijedan provajder, **ne troši ništa** i
+  ne dodiruje dnevni plafon.
+- Tip fajla se čita iz sadržaja (PNG, JPEG, WebP), ne iz imena; najviše 12 MB;
+  isti fajl se ne upisuje dvaput (`sha256`).
+- Slika i dalje nosi sve što nosi i generisana: zapis u `MediaAsset`, oznaku da
+  je sintetička (`rights_note`), audit. Umesto imena modela stoji `ručno`, pa
+  se u svakom trenutku zna šta je nastalo kako.
+- Otpremljena slika sa oznakom „kao profilna" postaje
+  `VisualProfile.reference_asset` — isto sidro identiteta kao da je generisana,
+  pa kasniji prelazak na API ne traži nikakvu prepravku.
+- Konzola: forma za otpremanje u kartici **Lik** (uvek vidljiva); dugmad za
+  generisanje se pokazuju samo kada je `IMAGE_ENABLED=true`.
+- Komandna linija: `manage.py portrait --persona P-00001 --upload lik.png
+  --kao-profilnu` i `--upload sajam.png --opis "na sajmu"`.
+
+Za doslednost lika pri ručnom radu važi isto pravilo kao kod API-ja: **uz svaku
+novu sliku priložiti profilnu** i tražiti istu osobu. Razlika je samo u tome ko
+pritiska dugme.
+
+459 testova (dodato 8).

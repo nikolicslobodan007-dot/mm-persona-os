@@ -94,7 +94,7 @@
 <p class="sub mb12">Profilna slika je sidro identiteta: svaka sledeća slika nastaje njenom izmenom,
   pa je na svima ista osoba. Sve je sintetičko i nosi oznaku da je AI.
   Model: <span class="mono">{{ lik.model }}</span> · ključ: <span class="pill">{{ lik.key }}</span>
-  {% if not lik.enabled %}<span class="pill warn">generator isključen</span>{% endif %}</p>
+  {% if not lik.enabled %}<span class="pill">slike se otpremaju ručno</span>{% endif %}</p>
 <div class="face">
   {% if lik.portrait %}<figure class="portrait"><img src="/console/assets/{{ lik.portrait.public_id }}" alt="Profilna slika">
     <figcaption class="sub small">{{ lik.portrait.public_id }}</figcaption></figure>
@@ -103,11 +103,20 @@
     <figcaption class="sub small">{{ a.public_id }}</figcaption></figure>{% endfor %}
 </div>
 {% if can_draft %}
-<form method="post" action="/console/personas/{{ p.public_id }}/portrait" class="row mt8">{% csrf_token %}
+<form method="post" action="/console/personas/{{ p.public_id }}/upload" class="row mt16" enctype="multipart/form-data">{% csrf_token %}
+  <input type="file" name="slika" accept="image/png,image/jpeg,image/webp" required>
+  <input type="text" name="opis" maxlength="80" placeholder="Opis (za galeriju)">
+  <label class="row small"><input type="checkbox" name="kao_profilna" value="1"> kao profilna</label>
+  <button>Otpremi sliku</button></form>
+<p class="sub small mt8">Ručno napravljene slike (ChatGPT prozor) otpremaju se ovde — ne koštaju ništa.
+  Da isti lik ostane isti, u ChatGPT-u uz svaku novu sliku priloži profilnu i traži istu osobu.</p>
+{% if lik.enabled %}
+<form method="post" action="/console/personas/{{ p.public_id }}/portrait" class="row mt16">{% csrf_token %}
   <button>{% if lik.portrait %}Napravi profilnu iznova{% else %}Napravi profilnu{% endif %}</button></form>
 <form method="post" action="/console/personas/{{ p.public_id }}/portrait" class="row mt8">{% csrf_token %}
   <input type="text" name="scene" class="grow" maxlength="200" placeholder="Scena za novu sliku, npr. „u magacinu pored paleta sa drvenim sanducima”" required>
   <button>Dodaj sliku</button></form>
+{% endif %}
 {% endif %}
 </div>
 

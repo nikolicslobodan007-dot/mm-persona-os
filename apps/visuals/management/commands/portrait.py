@@ -4,11 +4,17 @@
     manage.py portrait --persona P-00001 --force         (nova profilna)
     manage.py portrait --persona P-00001 --scene "u magacinu, pored paleta"
     manage.py portrait --persona P-00001 --show          (šta postoji)
+    manage.py portrait --persona P-00001 --upload lik.png --kao-profilnu
+    manage.py portrait --persona P-00001 --upload sajam.png --opis "na sajmu"
 
-Ne radi dok je `IMAGE_ENABLED=false`. Svaka slika se knjiži u troškove.
+Generisanje ne radi dok je `IMAGE_ENABLED=false` i svaka generisana slika se
+knjiži u troškove. **Otpremanje ručno napravljene slike radi uvek i ne košta
+ništa** (ADR-0018, dopuna 24.09.).
 """
 
 from __future__ import annotations
+
+import pathlib
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -26,8 +32,12 @@ class Command(BaseCommand):
         parser.add_argument("--actor", default="user:slobodan")
         parser.add_argument("--force", action="store_true")
         parser.add_argument("--show", action="store_true")
+        parser.add_argument("--upload", default="", help="Putanja do ručno napravljene slike.")
+        parser.add_argument("--kao-profilnu", action="store_true", dest="kao_profilnu")
+        parser.add_argument("--opis", default="", help="Opis slike za galeriju.")
 
-    def handle(self, *args, persona, scene, actor, force, show, **opts):
+    def handle(self, *args, persona, scene, actor, force, show, upload, kao_profilnu,
+               opis, **opts):
         p = Persona.objects.filter(public_id=persona).first()
         if p is None:
             raise CommandError(f"Persona {persona} ne postoji.")
@@ -39,6 +49,19 @@ class Command(BaseCommand):
             return
         if not actor.startswith("user:"):
             raise CommandError("--actor mora biti čovek (user:…).")
+        if upload:
+            path = pathlib.Path(upload)
+            if not path.is_file():
+                raise CommandError(f"Nema fajla: {upload}")
+            try:
+                with bind(actor_id=actor):
+                    r = generator.import_image(p, path.read_bytes(), actor=actor,
+                                               as_portrait=kao_profilnu, label=opis)
+            except generator.ImageError as e:
+                raise CommandError(f"{e.code}: {e.detail}") from e
+            self.stdout.write(self.style.SUCCESS(
+                f"{r.asset.public_id} · {r.asset.kind} · otpremljeno, bez troška"))
+            return
         try:
             with bind(actor_id=actor):
                 r = (generator.make_photo(p, scene, actor=actor) if scene

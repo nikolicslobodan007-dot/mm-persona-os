@@ -150,3 +150,59 @@ class TestPhoto:
             with pytest.raises(generator.ImageError) as e:
                 generator.make_photo(_p(), "na sajmu", actor="user:slobodan", now=NOW)
         assert e.value.code == "THROTTLED"
+
+
+class TestUpload:
+    """Dopuna ADR-0018 (24.09.) — slike napravljene ručno, bez API-ja."""
+
+    JPEG = b"\xff\xd8\xff\xe0" + b"rucna slika"
+
+    def test_upload_works_without_generator(self, slike, settings):
+        settings.IMAGE_ENABLED = False
+        with bind(actor_id="user:slobodan"):
+            r = generator.import_image(_p(), PNG, actor="user:slobodan",
+                                       as_portrait=True, now=NOW)
+        assert not slike                      # provajder nije pozvan
+        assert r.cost_eur_cents == 0 and not CostLedger.objects.exists()
+        assert r.asset.kind == E.AssetKind.FACE_REFERENCE
+        assert r.asset.generation_model == generator.MANUAL_MODEL
+        assert "AI" in r.asset.rights_note and r.asset.origin == "generated"
+        assert generator.reference_of(_p()).pk == r.asset.pk
+
+    def test_uploaded_photo_goes_to_gallery(self, slike):
+        with bind(actor_id="user:slobodan"):
+            generator.import_image(_p(), PNG, actor="user:slobodan", as_portrait=True,
+                                   now=NOW)
+            r = generator.import_image(_p(), self.JPEG, actor="user:slobodan",
+                                       label="na sajmu", now=NOW)
+        assert r.asset.kind == E.AssetKind.PHOTO
+        assert r.asset.mime_type == "image/jpeg"
+        assert generator.gallery_of(_p()) == [r.asset]
+
+    def test_same_file_is_not_stored_twice(self, slike):
+        with bind(actor_id="user:slobodan"):
+            a = generator.import_image(_p(), PNG, actor="user:slobodan", now=NOW)
+            b = generator.import_image(_p(), PNG, actor="user:slobodan", now=NOW)
+        assert a.asset.pk == b.asset.pk and MediaAsset.objects.count() == 1
+
+    @pytest.mark.parametrize("data,why", [
+        (b"", "prazan"),
+        (b"%PDF-1.7 nije slika", "nije slika"),
+    ])
+    def test_bad_file_refused(self, slike, data, why):
+        with bind(actor_id="user:slobodan"), pytest.raises(generator.ImageError) as e:
+            generator.import_image(_p(), data, actor="user:slobodan", now=NOW)
+        assert e.value.code == "VALIDATION_ERROR", why
+
+    def test_too_big_refused(self, slike):
+        big = PNG + b"x" * (generator.MAX_UPLOAD_BYTES + 1)
+        with bind(actor_id="user:slobodan"), pytest.raises(generator.ImageError) as e:
+            generator.import_image(_p(), big, actor="user:slobodan", now=NOW)
+        assert e.value.code == "VALIDATION_ERROR"
+
+    def test_upload_does_not_spend_daily_cap(self, slike, settings):
+        settings.IMAGES_PER_DAY = 1
+        with bind(actor_id="user:slobodan"):
+            generator.import_image(_p(), PNG, actor="user:slobodan", now=NOW)
+            generator.import_image(_p(), self.JPEG, actor="user:slobodan", now=NOW)
+        assert MediaAsset.objects.count() == 2

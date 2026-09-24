@@ -347,3 +347,28 @@ class TestLikConsole:
         img = c.get(f"/console/assets/{r.asset.public_id}")
         assert img.status_code == 200 and img["Content-Type"] == "image/png"
         assert img.content.startswith(b"\x89PNG")
+
+
+class TestUploadConsole:
+    """Dopuna ADR-0018 — otpremanje ručno napravljene slike iz konzole."""
+
+    def test_upload_from_console(self, boss, mila, settings, monkeypatch):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.visuals import generator, storage
+
+        settings.IMAGE_ENABLED = False          # generator ugašen, otpremanje radi
+        files = {}
+        monkeypatch.setattr(storage, "put",
+                            lambda data, *, key, mime: files.__setitem__(key, data) or key)
+        monkeypatch.setattr(storage, "get", lambda key: files[key])
+        png = b"\x89PNG\r\n\x1a\n" + b"0" * 32
+
+        c = _login(Client(), boss)
+        r = c.post("/console/personas/P-00001/upload",
+                   {"slika": SimpleUploadedFile("mila.png", png, "image/png"),
+                    "kao_profilna": "1"})
+        assert r.status_code == 302
+        asset = generator.reference_of(mila)
+        assert asset is not None and asset.generation_model == generator.MANUAL_MODEL
+        assert c.get(f"/console/assets/{asset.public_id}").status_code == 200

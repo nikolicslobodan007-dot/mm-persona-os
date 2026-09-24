@@ -211,25 +211,51 @@ def _cost(persona: Persona, now: datetime) -> int:
     return cents
 
 
+NOTE = ("Sintetička slika. Ne prikazuje stvarnu osobu. Objavljuje se uz oznaku "
+        "da je AI (Canon §17).")
+#: Slika koju je čovek napravio ručno (ChatGPT prozor) i otpremio (ADR-0018 dopuna).
+MANUAL_MODEL = "ručno"
+#: Najviše što se prima pri otpremanju — veće slike nam ne trebaju.
+MAX_UPLOAD_BYTES = 12 * 1024 * 1024
+_MAGIC = ((b"\x89PNG\r\n\x1a\n", "image/png"), (b"\xff\xd8\xff", "image/jpeg"))
+
+
+def sniff_mime(data: bytes) -> str:
+    """Tip se čita iz sadržaja, ne iz imena fajla."""
+    for magic, mime in _MAGIC:
+        if data.startswith(magic):
+            return mime
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    raise ImageError("VALIDATION_ERROR", "Nije PNG, JPEG ni WebP.")
+
+
+def _png_size(data: bytes) -> tuple[int | None, int | None]:
+    if not data.startswith(_MAGIC[0][0]) or len(data) < 24:
+        return None, None
+    return (int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big"))
+
+
 @transaction.atomic
 def _store(persona: Persona, data: bytes, *, kind: str, prompt: str, now: datetime,
-           actor: str) -> MediaAsset:
+           actor: str, mime: str = "image/png", model: str = "") -> MediaAsset:
     digest = storage.sha256(data)
     existing = MediaAsset.objects.filter(persona=persona, sha256=digest).first()
     if existing is not None:
         return existing
-    key = storage.key_for(persona.public_id, digest, "image/png")
-    storage.put(data, key=key, mime="image/png")
+    key = storage.key_for(persona.public_id, digest, mime)
+    storage.put(data, key=key, mime=mime)
+    w, h = _png_size(data)
+    model = model or settings.IMAGE_MODEL
     asset = MediaAsset.objects.create(
         public_id=I.media_asset_public_id(persona.public_id, _next_sequence(persona)),
-        persona=persona, kind=kind, storage_key=key, mime_type="image/png",
-        sha256=digest, origin="generated", generation_model=settings.IMAGE_MODEL,
-        generation_prompt_hash=storage.sha256(prompt.encode()),
-        rights_note=("Sintetička slika, napravljena modelom. Ne prikazuje stvarnu "
-                     "osobu. Objavljuje se uz oznaku da je AI (Canon §17)."))
+        persona=persona, kind=kind, storage_key=key, mime_type=mime,
+        sha256=digest, width=w, height=h, origin="generated", generation_model=model,
+        generation_prompt_hash=storage.sha256(prompt.encode()) if prompt else "",
+        rights_note=NOTE)
     audit.record("visual.asset.created", persona=persona,
                  details={"asset": asset.public_id, "kind": kind, "actor": actor,
-                          "model": settings.IMAGE_MODEL})
+                          "model": model})
     return asset
 
 
@@ -295,6 +321,11 @@ def make_photo(persona: Persona, scene: str, *, actor: str,
                  storage.get(ref.storage_key), persona)
     asset = _store(persona, data, kind=E.AssetKind.PHOTO.value, prompt=prompt, now=now,
                    actor=actor)
+    _to_gallery(persona, asset, scene)
+    return Result(asset, prompt, settings.IMAGE_MODEL, _cost(persona, now))
+
+
+def _to_gallery(persona: Persona, asset: MediaAsset, label: str) -> None:
     col, _ = AssetCollection.objects.get_or_create(
         persona=persona, name=GALLERY,
         defaults={"purpose": "Slike za objave", "is_public_pool": True})
@@ -302,8 +333,36 @@ def make_photo(persona: Persona, scene: str, *, actor: str,
         AssetCollectionItem.objects.create(
             collection=col, asset=asset,
             position=AssetCollectionItem.objects.filter(collection=col).count() + 1,
-            labels=[scene.strip()[:80]])
-    return Result(asset, prompt, settings.IMAGE_MODEL, _cost(persona, now))
+            labels=[label.strip()[:80]] if label.strip() else [])
+
+
+def import_image(persona: Persona, data: bytes, *, actor: str, as_portrait: bool = False,
+                 label: str = "", now: datetime | None = None) -> Result:
+    """Upisuje sliku koju je čovek napravio ručno (ADR-0018, dopuna 24.09.).
+
+    Ne zove nijedan provajder i ništa ne košta, pa ne traži `IMAGE_ENABLED` niti
+    dnevni plafon. Sve ostalo je isto kao kod generisane slike: fajl u storage,
+    zapis u bazi, oznaka da je sintetička, audit.
+    """
+    now = now or timezone.now()
+    if not data:
+        raise ImageError("VALIDATION_ERROR", "Prazan fajl.")
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise ImageError("VALIDATION_ERROR",
+                         f"Slika je veća od {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.")
+    mime = sniff_mime(data)
+    kind = E.AssetKind.FACE_REFERENCE.value if as_portrait else E.AssetKind.PHOTO.value
+    asset = _store(persona, data, kind=kind, prompt="", now=now, actor=actor, mime=mime,
+                   model=MANUAL_MODEL)
+    if as_portrait:
+        vp, _ = VisualProfile.objects.get_or_create(persona=persona,
+                                                    defaults={"style_prompt": ""})
+        vp.reference_asset = asset
+        vp.consistency_version += 1
+        vp.save(update_fields=["reference_asset", "consistency_version", "updated_at"])
+    else:
+        _to_gallery(persona, asset, label)
+    return Result(asset, "", MANUAL_MODEL, 0)
 
 
 def gallery_of(persona: Persona, limit: int = 12) -> list[MediaAsset]:

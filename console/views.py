@@ -507,6 +507,33 @@ def persona_portrait(request, public_id: str):
 
 
 @console_view
+@require_POST
+def persona_upload(request, public_id: str):
+    """Otprema sliku koju je čovek napravio ručno (ADR-0018, dopuna)."""
+    from apps.visuals import generator
+
+    p = Persona.objects.filter(public_id=public_id).first()
+    if p is None:
+        raise Http404
+    if not (_roles(request.user) & _DRAFTERS):
+        messages.error(request, "Tvoja uloga ne menja slike.")
+        return redirect(f"/console/personas/{public_id}")
+    f = request.FILES.get("slika")
+    if f is None:
+        messages.error(request, "Izaberi fajl.")
+        return redirect(f"/console/personas/{public_id}")
+    try:
+        r = generator.import_image(
+            p, f.read(), actor=principal_of(request.user),
+            as_portrait=request.POST.get("kao_profilna") == "1",
+            label=request.POST.get("opis", "")[:80])
+        messages.success(request, f"Slika {r.asset.public_id} otpremljena.")
+    except generator.ImageError as e:
+        messages.error(request, f"{e.code}: {e.detail}")
+    return redirect(f"/console/personas/{public_id}")
+
+
+@console_view
 def asset(request, public_id: str):
     """Prikaz slike iz storage-a — samo prijavljenom operateru."""
     from django.http import HttpResponse
