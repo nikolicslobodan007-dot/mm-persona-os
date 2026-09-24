@@ -68,10 +68,16 @@
     {% if not lik.enabled %}<span class="pill">slike se otpremaju ručno</span>{% endif %}</p>
   <div class="face">
     {% if lik.portrait %}<figure class="portrait"><img src="/console/assets/{{ lik.portrait.public_id }}" alt="Profilna slika" width="164" height="164">
-      <figcaption class="sub small">profilna · {{ lik.portrait.public_id }}</figcaption></figure>
+      <figcaption class="sub small">profilna · {{ lik.portrait.public_id }}</figcaption>
+      {% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/ukloni-sliku">{% csrf_token %}
+        <input type="hidden" name="slika" value="{{ lik.portrait.public_id }}">
+        <button>Ukloni sliku</button></form>{% endif %}</figure>
     {% else %}<p class="sub">Još nema profilne slike.</p>{% endif %}
     {% for a in lik.gallery %}<figure class="shot"><img src="/console/assets/{{ a.public_id }}" alt="Slika {{ a.public_id }}" width="120" height="120">
-      <figcaption class="sub small">{{ a.public_id }}</figcaption></figure>{% endfor %}
+      <figcaption class="sub small">{{ a.public_id }}</figcaption>
+      {% if can_draft %}<form method="post" action="/console/personas/{{ p.public_id }}/ukloni-sliku">{% csrf_token %}
+        <input type="hidden" name="slika" value="{{ a.public_id }}">
+        <button>Ukloni sliku</button></form>{% endif %}</figure>{% endfor %}
   </div>
   {% if can_draft %}
   <form method="post" action="/console/personas/{{ p.public_id }}/upload" class="row mt16" enctype="multipart/form-data">{% csrf_token %}

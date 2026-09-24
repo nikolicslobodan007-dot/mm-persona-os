@@ -68,6 +68,16 @@ def put(data: bytes, *, key: str, mime: str) -> str:
     return key
 
 
+def drop(key: str) -> None:
+    """Briše fajl. Fajla kog nema nije greška — cilj je da ga posle poziva nema."""
+    try:
+        _client().delete_object(Bucket=settings.S3_BUCKET, Key=key)
+    except Exception as e:  # noqa: BLE001
+        if "NoSuchKey" in str(e) or "NoSuchBucket" in str(e):
+            return
+        raise StorageError("STORAGE_DELETE", str(e)[:200]) from e
+
+
 def get(key: str) -> bytes:
     try:
         return _client().get_object(Bucket=settings.S3_BUCKET, Key=key)["Body"].read()

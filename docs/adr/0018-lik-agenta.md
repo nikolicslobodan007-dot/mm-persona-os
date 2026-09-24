@@ -147,3 +147,35 @@ imenom, pa je pregledač držao staru verziju i nove veličine slika nisu važil
 Rešeno u produkciji `ManifestStaticFilesStorage`-om — fajl dobija hash sadržaja
 u imenu (`console.a1b2c3.css`), pa promena stila uvek stiže bez „hard refresh"-a.
 U razvoju i testovima ostaje obično serviranje, jer tamo nema `collectstatic`-a.
+
+## Dopuna 24.09. — uklanjanje slike
+
+Na koga slika liči ne može da presudi nijedna provera u kodu. `check_input`
+gleda **tekst** koji je čovek uneo — zabranjene reči, imena stvarnih osoba — a
+lice na gotovoj slici vidi samo čovek. Zabrana `REAL_PERSON_LIKENESS`
+(Canon §9.4 t.7) zato mora da ima i put unazad, a konzola ga dotad nije imala:
+umela je da otpremi sliku, ne i da je skloni.
+
+**Odluka:** dugme **„Ukloni sliku"** ispod svake slike u kartici Lik, i za
+profilnu i za svaku iz galerije. Uklanja zapis iz baze, mesto u galeriji i
+fajl iz storage-a, i upisuje `visual.asset.removed` u audit — ko je i šta
+uklonio, i da li je to bila profilna.
+
+Uklanjanje profilne skida **sidro identiteta**: nove slike scene se posle toga
+odbijaju sa `NO_REFERENCE` dok se ne postavi nova. Već napravljene slike ostaju
+— one su nastale od starog lica i njihovo brisanje je zasebna odluka čoveka,
+ne posledica.
+
+**Šta je odbačeno:** potvrda „ne liči ni na jednu stvarnu osobu" pre nego što
+slika postane profilna. Ideja stoji, ali dodaje korak na svaku sliku zarad
+slučaja koji čovek ionako mora da vidi — a dugme za ispravku sada postoji.
+
+**Nađeno usput:** redni broj slike (`IMG-P00001-0002`) i mesto u galeriji
+računali su se **brojanjem** postojećih. Posle uklanjanja jedne iz sredine
+brojanje vraća zauzet broj i sledeći upis pada na jedinstvenosti. Oba se sada
+računaju od najvećeg postojećeg, koji je uvek slobodan.
+
+- `apps/visuals/generator.py` — `remove_asset()`, `_next_sequence()`, `_to_gallery()`
+- `apps/visuals/storage.py` — `drop()`
+- `console/views.py` — `persona_asset_remove`
+- `tests/test_visuals.py::TestUklanjanje` (5 provera)

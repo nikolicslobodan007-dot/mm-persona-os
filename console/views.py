@@ -808,6 +808,40 @@ def persona_upload(request, public_id: str):
 
 
 @console_view
+@require_POST
+def persona_asset_remove(request, public_id: str):
+    """Uklanja sliku iz lika agenta (ADR-0018, dopuna).
+
+    Na koga slika liči vidi samo čovek, pa mora da postoji i dugme kojim je
+    skida — konzola je dotad umela samo da otprema.
+    """
+    from apps.visuals import generator
+    from apps.visuals.models import MediaAsset
+
+    p = Persona.objects.filter(public_id=public_id).first()
+    if p is None:
+        raise Http404
+    if not (_roles(request.user) & _DRAFTERS):
+        messages.error(request, "Tvoja uloga ne menja slike.")
+        return redirect(f"/console/personas/{public_id}")
+    a = MediaAsset.objects.filter(public_id=request.POST.get("slika", ""),
+                                  persona=p).first()
+    if a is None:
+        messages.error(request, "Slika ne postoji.")
+        return redirect(f"/console/personas/{public_id}")
+    bila_profilna = generator.reference_of(p) == a
+    try:
+        uklonjena = generator.remove_asset(p, a, actor=principal_of(request.user))
+    except generator.ImageError as e:
+        messages.error(request, f"{e.code}: {e.detail}")
+        return redirect(f"/console/personas/{public_id}")
+    messages.success(request, f"Slika {uklonjena} je uklonjena." + (
+        " Postavi novu profilnu — bez nje nema od čega da nastane nova slika."
+        if bila_profilna else ""))
+    return redirect(f"/console/personas/{public_id}")
+
+
+@console_view
 def asset(request, public_id: str):
     """Prikaz slike iz storage-a — samo prijavljenom operateru."""
     from django.http import HttpResponse

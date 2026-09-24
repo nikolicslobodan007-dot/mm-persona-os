@@ -28,6 +28,8 @@ urlpatterns = [
          name="console-persona-portrait"),
     path("personas/<str:public_id>/upload", views.persona_upload,
          name="console-persona-upload"),
+    path("personas/<str:public_id>/ukloni-sliku", views.persona_asset_remove,
+         name="console-persona-asset-remove"),
     path("assets/<str:public_id>", views.asset, name="console-asset"),
     path("personas/<str:public_id>/mailbox", views.persona_mailbox,
          name="console-persona-mailbox"),

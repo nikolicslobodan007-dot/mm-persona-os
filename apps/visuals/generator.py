@@ -195,7 +195,17 @@ def _multipart(fields: dict, image: bytes) -> tuple[bytes, str]:
 
 
 def _next_sequence(persona: Persona) -> int:
-    return MediaAsset.objects.filter(persona=persona).count() + 1
+    """Sledeći redni broj — od najvećeg postojećeg, ne od broja slika.
+
+    Brojanje bi posle uklanjanja slike (ADR-0018, dopuna) vratilo broj koji je
+    već zauzet: obriši drugu od tri i brojanje daje 3, a `IMG-…-0003` postoji.
+    Najveći + 1 je uvek slobodan.
+    """
+    from django.db.models import Max
+
+    zadnji = MediaAsset.objects.filter(persona=persona).aggregate(
+        m=Max("public_id"))["m"]
+    return int(zadnji[-4:]) + 1 if zadnji else 1
 
 
 def _cost(persona: Persona, now: datetime) -> int:
@@ -332,9 +342,14 @@ def _to_gallery(persona: Persona, asset: MediaAsset, label: str) -> None:
         persona=persona, name=GALLERY,
         defaults={"purpose": "Slike za objave", "is_public_pool": True})
     if not AssetCollectionItem.objects.filter(collection=col, asset=asset).exists():
+        from django.db.models import Max
+
+        # Mesto u galeriji se broji od poslednjeg, ne od količine: posle
+        # uklanjanja slike (ADR-0018, dopuna) brojanje daje zauzeto mesto.
+        zadnje = AssetCollectionItem.objects.filter(collection=col).aggregate(
+            m=Max("position"))["m"] or 0
         AssetCollectionItem.objects.create(
-            collection=col, asset=asset,
-            position=AssetCollectionItem.objects.filter(collection=col).count() + 1,
+            collection=col, asset=asset, position=zadnje + 1,
             labels=[label.strip()[:80]] if label.strip() else [])
 
 
@@ -365,6 +380,44 @@ def import_image(persona: Persona, data: bytes, *, actor: str, as_portrait: bool
     else:
         _to_gallery(persona, asset, label)
     return Result(asset, "", MANUAL_MODEL, 0)
+
+
+@transaction.atomic
+def remove_asset(persona: Persona, asset: MediaAsset, *, actor: str) -> str:
+    """Uklanja sliku — iz galerije, iz baze i iz storage-a. ADR-0018, dopuna.
+
+    Lice ne može da proveri nijedna mašina: na koga slika liči vidi samo čovek
+    (Canon §9.4 t.7). Zato mora da postoji i put unazad — dotad je konzola umela
+    da otpremi sliku, ali ne i da je skloni.
+
+    Uklanjanje profilne skida i sidro identiteta: nove slike scene se posle toga
+    odbijaju sa `NO_REFERENCE`, dok se ne postavi nova profilna. Već napravljene
+    slike ostaju kakve jesu — one su nastale od starog lica.
+    """
+    if asset.persona_id != persona.pk:
+        raise ImageError("VALIDATION_ERROR",
+                         f"{asset.public_id} nije slika persone {persona.public_id}.")
+    bila_profilna = False
+    vp = VisualProfile.objects.filter(persona=persona).first()
+    if vp is not None and vp.reference_asset_id == asset.pk:
+        bila_profilna = True
+        vp.reference_asset = None
+        vp.consistency_version += 1
+        vp.save(update_fields=["reference_asset", "consistency_version", "updated_at"])
+    public_id, key = asset.public_id, asset.storage_key
+    AssetCollectionItem.objects.filter(asset=asset).delete()
+    asset.delete()
+    try:
+        storage.drop(key)
+    except storage.StorageError as e:
+        # Zapis je već obrisan; fajl koji je ostao u storage-u nije dostupan ni
+        # iz konzole ni iz koda, pa se posao ne ruši zbog njega — samo se zapiše.
+        audit.record("visual.asset.orphan", persona=persona,
+                     details={"asset": public_id, "key": key, "why": e.code})
+    audit.record("visual.asset.removed", persona=persona,
+                 details={"asset": public_id, "actor": actor,
+                          "was_portrait": bila_profilna})
+    return public_id
 
 
 def gallery_of(persona: Persona, limit: int = 12) -> list[MediaAsset]:

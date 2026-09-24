@@ -206,3 +206,84 @@ class TestUpload:
             generator.import_image(_p(), PNG, actor="user:slobodan", now=NOW)
             generator.import_image(_p(), self.JPEG, actor="user:slobodan", now=NOW)
         assert MediaAsset.objects.count() == 2
+
+
+class TestUklanjanje:
+    """Dopuna ADR-0018 (24.09.) — slika mora da može i da se skloni.
+
+    Na koga lice liči ne vidi nijedna provera, nego čovek; put unazad je zato
+    deo postupka, a ne ispravka.
+    """
+
+    JPEG = b"\xff\xd8\xff\xe0" + b"scena"
+
+    @pytest.fixture
+    def obrisano(self, monkeypatch):
+        kljucevi: list[str] = []
+        monkeypatch.setattr(storage, "drop", kljucevi.append)
+        return kljucevi
+
+    def test_gallery_image_disappears_everywhere(self, slike, obrisano):
+        from apps.visuals.models import AssetCollectionItem
+
+        with bind(actor_id="user:slobodan"):
+            generator.import_image(_p(), PNG, actor="user:slobodan", as_portrait=True,
+                                   now=NOW)
+            a = generator.import_image(_p(), self.JPEG, actor="user:slobodan",
+                                       label="na sajmu", now=NOW).asset
+            kljuc, oznaka = a.storage_key, a.public_id
+            assert generator.remove_asset(_p(), a, actor="user:slobodan") == oznaka
+        assert not MediaAsset.objects.filter(public_id=oznaka).exists()
+        assert not AssetCollectionItem.objects.exists()
+        assert generator.gallery_of(_p()) == []
+        assert obrisano == [kljuc]                     # i fajl je sklonjen
+
+    def test_removing_portrait_drops_the_anchor(self, slike, obrisano):
+        with bind(actor_id="user:slobodan"):
+            a = generator.import_image(_p(), PNG, actor="user:slobodan",
+                                       as_portrait=True, now=NOW).asset
+            generator.remove_asset(_p(), a, actor="user:slobodan")
+        assert generator.reference_of(_p()) is None
+        vp = VisualProfile.objects.get(persona=_p())
+        assert vp.consistency_version == 3                # 1 pri upisu, +1, +1
+        with bind(actor_id="user:slobodan"), pytest.raises(generator.ImageError) as e:
+            generator.make_photo(_p(), "u magacinu", actor="user:slobodan", now=NOW)
+        assert e.value.code == "NO_REFERENCE"
+
+    def test_number_of_the_next_image_is_free(self, slike, obrisano):
+        """Posle uklanjanja iz sredine broj se ne sme vratiti na zauzet."""
+        with bind(actor_id="user:slobodan"):
+            generator.import_image(_p(), PNG, actor="user:slobodan", now=NOW)
+            druga = generator.import_image(_p(), self.JPEG, actor="user:slobodan",
+                                           now=NOW).asset
+            generator.import_image(_p(), PNG + b"treca", actor="user:slobodan", now=NOW)
+            assert druga.public_id.endswith("-0002")
+            generator.remove_asset(_p(), druga, actor="user:slobodan")
+            cetvrta = generator.import_image(_p(), PNG + b"cetvrta",
+                                             actor="user:slobodan", now=NOW).asset
+        assert cetvrta.public_id.endswith("-0004")
+
+    def test_other_personas_image_is_refused(self, slike, obrisano):
+        from apps.personas.models import Position
+
+        with bind(actor_id="user:slobodan"):
+            from apps.personas import hiring
+
+            tudja = hiring.hire(name="Ana Perić", position=Position.objects.get(
+                code="POD-SR"), actor="user:slobodan")
+            a = generator.import_image(_p(), PNG, actor="user:slobodan", now=NOW).asset
+            with pytest.raises(generator.ImageError) as e:
+                generator.remove_asset(tudja, a, actor="user:slobodan")
+        assert e.value.code == "VALIDATION_ERROR"
+        assert MediaAsset.objects.filter(pk=a.pk).exists()
+        assert not obrisano
+
+    def test_removal_is_written_in_audit(self, slike, obrisano):
+        from apps.observability.models import AuditEvent
+
+        with bind(actor_id="user:slobodan"):
+            a = generator.import_image(_p(), PNG, actor="user:slobodan",
+                                       as_portrait=True, now=NOW).asset
+            generator.remove_asset(_p(), a, actor="user:slobodan")
+        e = AuditEvent.objects.filter(event_key="visual.asset.removed").first()
+        assert e is not None and e.payload["details"]["was_portrait"] is True
