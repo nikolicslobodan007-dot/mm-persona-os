@@ -35,6 +35,8 @@ DEPARTMENTS: tuple[tuple[str, str, str], ...] = (
     ("ISTRAZIVANJE", "Istraživanje tržišta", "Konkurencija, cene i kretanja u branši."),
     ("KVALITET", "Kvalitet i usklađenost",
      "Pravila platformi, AI oznake, incidenti i provera pre objave."),
+    ("RAZVOJ", "Razvoj i održavanje sistema",
+     "Kod, testovi, puštanje i održavanje same korporacije (ADR-0034)."),
 )
 
 #: (code, sektor, naziv, nivo, specijalnost, odgovara, poslovi, koliko ljudi)
@@ -90,6 +92,30 @@ POSITIONS: tuple[tuple[str, str, str, str, str, str | None, list[str], int], ...
      ["prati pravila platformi i AI oznake", "vodi incidente"], 1),
     ("KVA-KON", "KVALITET", "Kontrolor usklađenosti", L.MEDIOR, "provera pre objave",
      "SEF-KVA", ["proverava oznake i tvrdnje pre objave", "prijavljuje odstupanja"], 2),
+
+    # ADR-0034. Jedini sektor čiji se rezultat proverava mašinski — i jedini koji
+    # dira ono što ostale ograničava. Zato su recenzent i testolog odvojena mesta.
+    ("SEF-RAZ", "RAZVOJ", "Šef razvoja", L.HEAD, "vođenje razvoja", "DIR-00",
+     ["prima zahteve za izmenu i deli ih na zadatke",
+      "prima eskalaciju iz sektora"], 1),
+    ("RAZ-ARH", "RAZVOJ", "Arhitekta sistema", L.SENIOR, "odluke i ADR", "SEF-RAZ",
+     ["piše predlog ADR-a sa posledicama i onim što se odbacuje",
+      "ne prihvata sopstveni predlog"], 2),
+    ("RAZ-PRO", "RAZVOJ", "Programer", L.MEDIOR, "izmene u kodu", "SEF-RAZ",
+     ["piše izmenu po zadatku, u granicama dozvoljenih fajlova",
+      "predaje tek kad su kapije zelene"], 6),
+    ("RAZ-REC", "RAZVOJ", "Recenzent koda", L.SENIOR, "pregled izmena", "SEF-RAZ",
+     ["pušta determinističke provere pre modela",
+      "piše nalaz sa fajlom, linijom i težinom", "nikad ne pregleda svoj rad"], 2),
+    ("RAZ-TES", "RAZVOJ", "Testolog", L.MEDIOR, "testovi i regresije", "SEF-RAZ",
+     ["piše test koji obara grešku pre nego što je neko popravi",
+      "čuva zlatne skupove"], 2),
+    ("RAZ-DEZ", "RAZVOJ", "Dežurni inženjer", L.MEDIOR, "puštanje i incidenti",
+     "SEF-RAZ", ["pušta izmene i vraća ih unazad kad zatreba",
+                 "prati logove, trošak i incidente"], 2),
+    ("RAZ-BIB", "RAZVOJ", "Bibliotekar koda", L.MEDIOR, "zavisnosti i licence",
+     "SEF-RAZ", ["prati licence i bezbednosne zakrpe zavisnosti",
+                 "odbija zavisnost bez licence (ADR-0032)"], 1),
 )
 
 #: Modelovani dosije referentne persone (ADR-0017). Izmišljeno i dosledno.

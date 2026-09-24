@@ -44,7 +44,11 @@ def _second(name="Jovan Ilić (AI)", pid="P-00002"):
 
 class TestSeed:
     def test_departments_positions_and_assignment(self, firma):
-        assert Department.objects.count() == 9
+        # Broj se čita iz izvora istine, da dodavanje sektora ne obara test.
+        from apps.personas.management.commands.seed_org import DEPARTMENTS, POSITIONS
+
+        assert Department.objects.count() == len(DEPARTMENTS)
+        assert Position.objects.count() == len(POSITIONS)
         assert Department.objects.get(code="MARKETING").name == "Marketing i sadržaj"
         pos = org.position_of(firma)
         assert pos.code == "URE-SR" and pos.department.code == "MARKETING"
@@ -53,7 +57,9 @@ class TestSeed:
     def test_seed_is_idempotent(self, firma):
         with bind(actor_id="user:slobodan"):
             call_command("seed_org", "--persona", "P-00001", stdout=io.StringIO())
-        assert Department.objects.count() == 9
+        from apps.personas.management.commands.seed_org import DEPARTMENTS
+
+        assert Department.objects.count() == len(DEPARTMENTS)
         assert Assignment.objects.filter(persona=firma, ended_at__isnull=True).count() == 1
 
     def test_position_gives_no_permission(self, firma):

@@ -238,7 +238,8 @@ class TestEkipa:
         # Imena van srpskog kruga: mađarska, slovačka, bošnjačka, hrvatska, češka.
         strana = [i for i in imena if i.split()[1] in
                   {"Kovács", "Halupka", "Hadžić", "Farkaš", "Salihović", "Horvat",
-                   "Mujić", "Nagy", "Tomaško", "Begović", "Tóth", "Kučera"}]
+                   "Mujić", "Nagy", "Tomaško", "Begović", "Tóth", "Kučera",
+                   "Szabó", "Hudák", "Novák", "Babić"}]
         assert len(strana) >= 10
         zene = [r for r in ekipa.EKIPA if r["marital_status"] in
                 ("udata", "neudata", "razvedena") or r["izgled"].startswith("Žena")]

@@ -224,6 +224,81 @@ EKIPA: tuple[dict, ...] = (
      "hobbies": ["planinski biciklizam", "lektira"],
      "izgled": "Žena u ranim tridesetim, srednje građe, svetlosmeđa kosa do ramena, "
                "sivoplave oči, jednostavna bluza, pažljiv i precizan izraz lica."},
+
+    # ---------------------------------------------------------------- Razvoj
+    # Prva smena departmana za programiranje (ADR-0034).
+    {"ime": "Boris Kovačević", "mesto": "SEF-RAZ", "rodjen": date(1984, 2, 27),
+     "nise": "vođenje razvoja, arhitektura", "birth_place": "Kraljevo",
+     "residence": "Beograd", "height_cm": 182, "weight_kg": 84, "build": "krupnija",
+     "eye_color": "smeđe", "hair_color": "prosed", "hair_style": "kratka",
+     "marital_status": "oženjen", "children": 2,
+     "hobbies": ["šah", "obrada drveta"],
+     "izgled": "Muškarac u ranim četrdesetim, krupnije građe, kratka prosed kosa, "
+               "smeđe oči, tamna košulja bez kravate, miran i odmeren izraz lica."},
+    {"ime": "Marta Szabó", "mesto": "RAZ-ARH", "rodjen": date(1988, 9, 14),
+     "nise": "arhitektura, odluke", "birth_place": "Senta", "residence": "Novi Sad",
+     "height_cm": 170, "weight_kg": 61, "build": "vitka", "eye_color": "zelene",
+     "hair_color": "tamnoriđa", "hair_style": "do brade, ravna",
+     "marital_status": "udata", "children": 1,
+     "hobbies": ["planinarenje", "istorija tehnike"],
+     "izgled": "Žena u kasnim tridesetim, vitke građe, tamnoriđa kosa do brade, "
+               "zelene oči, siva košulja, usredsređen i ispitivački izraz lica."},
+    {"ime": "Lazar Todorović", "mesto": "RAZ-PRO", "rodjen": date(1995, 5, 3),
+     "nise": "backend, baze", "birth_place": "Niš", "residence": "Niš",
+     "height_cm": 179, "weight_kg": 73, "build": "vitka", "eye_color": "smeđe",
+     "hair_color": "crna", "hair_style": "kratka, razbarušena",
+     "marital_status": "neoženjen", "children": 0,
+     "hobbies": ["trčanje", "stoni tenis"],
+     "izgled": "Muškarac u ranim tridesetim, vitke građe, kratka crna razbarušena "
+               "kosa, smeđe oči, obična majica, vedar i radoznao izraz lica."},
+    {"ime": "Ines Babić", "mesto": "RAZ-PRO", "rodjen": date(1993, 11, 21),
+     "nise": "backend, integracije", "birth_place": "Tuzla", "residence": "Novi Sad",
+     "height_cm": 166, "weight_kg": 58, "build": "sitna", "eye_color": "tamnosmeđe",
+     "hair_color": "crna", "hair_style": "duga, skupljena u rep",
+     "marital_status": "u vezi", "children": 0,
+     "hobbies": ["plivanje", "keramika"],
+     "izgled": "Žena u ranim tridesetim, sitne građe, duga crna kosa skupljena u rep, "
+               "tamnosmeđe oči, jednostavan džemper, sabran i pažljiv izraz lica."},
+    {"ime": "Pavol Hudák", "mesto": "RAZ-PRO", "rodjen": date(1991, 3, 8),
+     "nise": "obrada podataka, alati", "birth_place": "Bački Petrovac",
+     "residence": "Novi Sad", "height_cm": 185, "weight_kg": 80, "build": "srednja",
+     "eye_color": "plave", "hair_color": "svetloplava", "hair_style": "kratka",
+     "marital_status": "oženjen", "children": 1,
+     "hobbies": ["pčelarstvo", "biciklizam"],
+     "izgled": "Muškarac u ranim tridesetim, srednje građe, kratka svetloplava kosa, "
+               "plave oči, kockasta košulja, staložen i praktičan izraz lica."},
+    {"ime": "Sanja Dimitrijević", "mesto": "RAZ-REC", "rodjen": date(1986, 7, 30),
+     "nise": "pregled koda, bezbednost", "birth_place": "Leskovac",
+     "residence": "Beograd", "height_cm": 173, "weight_kg": 65, "build": "srednja",
+     "eye_color": "sive", "hair_color": "tamno smeđa", "hair_style": "kratka, do ušiju",
+     "marital_status": "razvedena", "children": 1,
+     "hobbies": ["veslanje", "kriminalistički romani"],
+     "izgled": "Žena u kasnim tridesetim, srednje građe, kratka tamnosmeđa kosa do "
+               "ušiju, sive oči, tamna bluza, strog i pronicljiv izraz lica."},
+    {"ime": "Elena Novák", "mesto": "RAZ-TES", "rodjen": date(1992, 12, 5),
+     "nise": "testovi, regresije", "birth_place": "Kovačica", "residence": "Pančevo",
+     "height_cm": 168, "weight_kg": 60, "build": "vitka", "eye_color": "smeđe",
+     "hair_color": "kestenjasta", "hair_style": "do ramena, talasasta",
+     "marital_status": "neudata", "children": 0,
+     "hobbies": ["slikanje", "orijentiring"],
+     "izgled": "Žena u ranim tridesetim, vitke građe, kestenjasta talasasta kosa do "
+               "ramena, smeđe oči, svetla bluza, uporan i strpljiv izraz lica."},
+    {"ime": "Vuk Stanišić", "mesto": "RAZ-DEZ", "rodjen": date(1989, 6, 17),
+     "nise": "puštanje, incidenti", "birth_place": "Užice", "residence": "Beograd",
+     "height_cm": 176, "weight_kg": 78, "build": "srednja", "eye_color": "zelenosive",
+     "hair_color": "tamno smeđa", "hair_style": "kratka, sa bradom",
+     "marital_status": "oženjen", "children": 0,
+     "hobbies": ["planinarenje", "radio-amaterizam"],
+     "izgled": "Muškarac u kasnim tridesetim, srednje građe, kratka tamnosmeđa kosa i "
+               "kratka brada, zelenosive oči, tamna majica, budan i sabran izraz lica."},
+    {"ime": "Teodora Vasić", "mesto": "RAZ-BIB", "rodjen": date(1994, 4, 11),
+     "nise": "zavisnosti, licence", "birth_place": "Zrenjanin", "residence": "Novi Sad",
+     "height_cm": 164, "weight_kg": 57, "build": "sitna", "eye_color": "smeđe",
+     "hair_color": "crna", "hair_style": "kratka, sa šiškama",
+     "marital_status": "neudata", "children": 0,
+     "hobbies": ["čitanje", "sakupljanje starih knjiga"],
+     "izgled": "Žena u ranim tridesetim, sitne građe, kratka crna kosa sa šiškama, "
+               "smeđe oči, svetla košulja, uredan i temeljan izraz lica."},
 )
 
 #: Polja dosijea — sve osim onih koja idu u `hire()` ili u `set_dossier` posebno.
