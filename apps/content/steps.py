@@ -32,6 +32,9 @@ def _draft(step: plans.PlanStep, state: dict) -> plans.Outcome:
         item = content.draft(step.plan.persona, topic=tema, run=step.plan.run)
     except content.ContentError as e:
         return plans.Failed(str(e)[:300])
+    if item.status != E.ContentStatus.DRAFT.value:
+        # Odbijen nacrt (ponavljanje, tvrda zabrana) nije obavljen posao.
+        return plans.Failed(f"Nacrt odbijen: {item.status_reason or item.status}")
     return plans.Done({"item": str(item.id), "hash": item.content_hash[:16],
                        "tema": tema, "tekst": (item.body or "")[:400],
                        "model": _ko_je_pisao(item)})

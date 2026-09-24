@@ -69,6 +69,11 @@ kao nacrt koji je napisao model.
 Zato `content.draft` sada upisuje i `model` (`anthropic/claude-sonnet-5` ili
 `local/template-v1`), a komanda ga ispisuje i upozorava kad je pisao šablon.
 
+Isto važi za odbijen nacrt: ako `content.draft` vrati stavku koja nije
+`DRAFT` (ponavljanje, tvrda zabrana), korak **pada sa razlogom** umesto da
+prijavi `DONE`. Odbijen nacrt nije obavljen posao, i nalogodavac to mora da
+vidi.
+
 ## Kod
 
 - `apps/content/steps.py` — `content.draft`, `content.submit`

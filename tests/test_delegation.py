@@ -290,3 +290,18 @@ def test_draft_says_who_wrote_it(ekipa):
                      "--tema", "Rokovi isporuke u B2B", stdout=io.StringIO())
     nacrt = AgentPlan.objects.get(persona=jovan).steps.get(sequence=1).output_json
     assert nacrt["model"] == "local/template-v1"        # bez ključa piše šablon
+
+
+def test_rejected_draft_is_not_reported_as_done(ekipa):
+    """Ponovljen nacrt je odbijen — korak to mora da kaže, ne da ćuti."""
+    mila, jovan, _ = ekipa
+    with bind(actor_id="user:slobodan"):
+        call_command("plan", "--persona", "P-00001", "--zadaj", "P-00002",
+                     "--tema", "Rokovi isporuke u B2B", stdout=io.StringIO())
+        call_command("plan", "--persona", "P-00001", "--zadaj", "P-00002",
+                     "--tema", "Rokovi isporuke u B2B", stdout=io.StringIO())
+    drugi = AgentPlan.objects.filter(persona=jovan).order_by("-created_at").first()
+    assert drugi.status == PS.ABANDONED
+    assert "REPETITION" in drugi.steps.get(sequence=1).output_json["reason"]
+    sefov = AgentPlan.objects.filter(persona=mila).order_by("-created_at").first()
+    assert sefov.status == PS.ABANDONED           # i šef vidi da posao nije obavljen
