@@ -63,10 +63,13 @@ border-radius:12px;padding:28px}
 .mt8{margin-top:8px}.mt10{margin-top:10px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mb12{margin-bottom:12px}
 .grow{flex:1}.h-id{font-size:18px}.w55{width:55%}.stoplink{color:#fff;text-decoration:underline}
 meter{width:100%;height:10px}
-/* ADR-0018 — kartica „Lik”: profilna i galerija. */
-.face{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start}
-.face figure{margin:0}
-.face img{border-radius:8px;display:block;background:var(--line)}
-.face .portrait img{width:150px;height:auto}
-.face .shot img{width:110px;height:auto}
-.avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--line)}
+/* ADR-0018 — kartica „Lik”: profilna i galerija u ravnomernoj mreži. */
+.face{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;margin:4px 0 4px}
+.face figure{margin:0;width:110px}
+.face figure.portrait{width:150px}
+.face img{display:block;width:100%;height:110px;object-fit:cover;object-position:50% 25%;
+border-radius:10px;background:var(--line);border:1px solid var(--line)}
+.face figure.portrait img{height:150px}
+.face figcaption{margin-top:4px;word-break:break-all;line-height:1.3}
+.avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;object-position:50% 25%;
+background:var(--line);border:1px solid var(--line);margin-right:10px}

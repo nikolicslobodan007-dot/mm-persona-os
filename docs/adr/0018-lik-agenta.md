@@ -141,3 +141,9 @@ pritiska dugme.
   agenta i kao sličica u kartici „Lik" — ne u punoj veličini. Veličina je
   zadata i atributom na `img`, ne samo u CSS-u, da keširan stil ne može da je
   poništi.
+
+**Zašto stil nije odmah stizao (24.09.):** `console.css` se servirao pod istim
+imenom, pa je pregledač držao staru verziju i nove veličine slika nisu važile.
+Rešeno u produkciji `ManifestStaticFilesStorage`-om — fajl dobija hash sadržaja
+u imenu (`console.a1b2c3.css`), pa promena stila uvek stiže bez „hard refresh"-a.
+U razvoju i testovima ostaje obično serviranje, jer tamo nema `collectstatic`-a.

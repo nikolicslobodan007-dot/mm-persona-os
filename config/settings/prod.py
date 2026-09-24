@@ -45,6 +45,15 @@ SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 # Ako se Caddy ikad zameni, ova dva podešavanja se uključuju ovde.
 
 STATIC_ROOT = "/app/staticfiles"
+#: Ime fajla dobija hash sadržaja (`console.a1b2c3.css`), pa pregledač posle
+#: izmene stila više ne servira stari iz keša (nalaz 24.09.). Samo u produkciji —
+#: u razvoju i testovima nema `collectstatic`, pa nema ni manifesta.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+    },
+}
 STATIC_URL = "/static/"
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},

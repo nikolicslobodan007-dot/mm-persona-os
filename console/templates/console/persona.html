@@ -97,10 +97,10 @@
   Model: <span class="mono">{{ lik.model }}</span> · ključ: <span class="pill">{{ lik.key }}</span>
   {% if not lik.enabled %}<span class="pill">slike se otpremaju ručno</span>{% endif %}</p>
 <div class="face">
-  {% if lik.portrait %}<figure class="portrait"><img src="/console/assets/{{ lik.portrait.public_id }}" alt="Profilna slika" width="150">
+  {% if lik.portrait %}<figure class="portrait"><img src="/console/assets/{{ lik.portrait.public_id }}" alt="Profilna slika" width="150" height="150">
     <figcaption class="sub small">profilna · {{ lik.portrait.public_id }}</figcaption></figure>
   {% else %}<p class="sub">Još nema profilne slike.</p>{% endif %}
-  {% for a in lik.gallery %}<figure class="shot"><img src="/console/assets/{{ a.public_id }}" alt="Slika {{ a.public_id }}" width="110">
+  {% for a in lik.gallery %}<figure class="shot"><img src="/console/assets/{{ a.public_id }}" alt="Slika {{ a.public_id }}" width="110" height="110">
     <figcaption class="sub small">{{ a.public_id }}</figcaption></figure>{% endfor %}
 </div>
 {% if can_draft %}
