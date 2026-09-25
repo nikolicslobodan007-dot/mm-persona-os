@@ -982,7 +982,13 @@ paths:
   /api/v1/tasks/queued:
     get:
       operationId: tasks_queued
-      description: Zadaci koji imaju prihvaćenu zakrpu, a nisu zatvoreni.
+      description: |-
+        Zadaci sa prihvaćenom zakrpom koja **još nije merena**.
+
+        Red drži NEMEREN posao, ne „nezatvoren". Poslušnik namerno ne zatvara
+        zadatak (ADR-0039 §3), pa bi red po statusu zadatka vraćao isti posao
+        zauvek — to se 25.09. i desilo, osam prolaza za pola sata. Zakrpa koja ima
+        makar jedan ishod kapije je izmerena i izlazi iz reda; nova zakrpa ulazi.
       tags:
       - tasks
       security:
@@ -1178,6 +1184,10 @@ components:
       properties:
         gate:
           $ref: '#/components/schemas/GateEnum'
+        patch:
+          type: string
+          format: uuid
+          nullable: true
         passed:
           type: boolean
         detail:

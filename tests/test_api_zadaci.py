@@ -226,3 +226,74 @@ class TestNalog:
         from django.core.management import CommandError, call_command
         with pytest.raises(CommandError, match="ne ispisuje"):
             call_command("poslusnik", "--napravi", stdout=io.StringIO())
+
+
+class TestRedNeVrtiUKrug:
+    """ADR-0040 — red drži NEMEREN posao.
+
+    25.09. je poslušnik osam puta zaredom izmerio istu zakrpu, pola sata
+    procesora, jer je red vraćao zadatke po statusu zadatka. Poslušnik namerno
+    ne zatvara zadatak (ADR-0039 §3), pa nešto drugo mora da izbaci posao iz
+    reda — i to je ishod merenja nad tom zakrpom.
+    """
+
+    def _izmeri(self, poslusnik, zad, patch_id, kapije=None):
+        for g in (kapije or zad.required_gates):
+            poslusnik.post(reverse("task-gate", args=[zad.public_id]),
+                           {"gate": g, "passed": True, "patch": patch_id},
+                           format="json")
+
+    def _red(self, poslusnik):
+        return poslusnik.get(reverse("tasks-queued")).json()["data"]["tasks"]
+
+    def test_izmerena_zakrpa_izlazi_iz_reda(self, poslusnik, zad, mila):
+        _predaj(zad, DIFF, mila)
+        pid = poslusnik.get(
+            reverse("task-work", args=[zad.public_id])).json()["data"]["patch_id"]
+        assert self._red(poslusnik) == [zad.public_id]
+        self._izmeri(poslusnik, zad, pid)
+        assert self._red(poslusnik) == []
+
+    def test_dovoljna_je_jedna_kapija(self, poslusnik, zad, mila):
+        """Merenje je počelo — posao više nije nemeren, pa ne kruži."""
+        _predaj(zad, DIFF, mila)
+        pid = poslusnik.get(
+            reverse("task-work", args=[zad.public_id])).json()["data"]["patch_id"]
+        self._izmeri(poslusnik, zad, pid, kapije=["pytest"])
+        assert self._red(poslusnik) == []
+
+    def test_pale_kapije_takodje_izbacuju(self, poslusnik, zad, mila):
+        """Neuspeh je ishod. Zadatak koji pada ne sme da se vrti u krug."""
+        _predaj(zad, DIFF, mila)
+        pid = poslusnik.get(
+            reverse("task-work", args=[zad.public_id])).json()["data"]["patch_id"]
+        poslusnik.post(reverse("task-gate", args=[zad.public_id]),
+                       {"gate": "pytest", "passed": False, "patch": pid},
+                       format="json")
+        assert self._red(poslusnik) == []
+
+    def test_nova_zakrpa_ponovo_ulazi(self, poslusnik, zad, mila):
+        _predaj(zad, DIFF, mila)
+        pid = poslusnik.get(
+            reverse("task-work", args=[zad.public_id])).json()["data"]["patch_id"]
+        self._izmeri(poslusnik, zad, pid)
+        assert self._red(poslusnik) == []
+        _predaj(zad, DIFF.replace("+b", "+c"), mila)
+        assert self._red(poslusnik) == [zad.public_id]
+
+    def test_work_izdaje_neizmerenu_zakrpu(self, poslusnik, zad, mila):
+        _predaj(zad, DIFF, mila)
+        pid = poslusnik.get(
+            reverse("task-work", args=[zad.public_id])).json()["data"]["patch_id"]
+        self._izmeri(poslusnik, zad, pid)
+        assert poslusnik.get(
+            reverse("task-work", args=[zad.public_id])).status_code == 404
+
+    def test_tudja_zakrpa_se_odbija(self, poslusnik, zad, mila, db):
+        """`patch` koji ne pripada zadatku ne sme da prođe."""
+        _predaj(zad, DIFF, mila)
+        import uuid
+        o = poslusnik.post(reverse("task-gate", args=[zad.public_id]),
+                           {"gate": "pytest", "passed": True,
+                            "patch": str(uuid.uuid4())}, format="json")
+        assert o.status_code == 404

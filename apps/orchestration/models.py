@@ -456,6 +456,12 @@ class GateResult(UUIDModel):
     """
 
     task = models.ForeignKey(CodeTask, on_delete=models.CASCADE, related_name="gates")
+    #: Koju zakrpu ovaj ishod meri. Bez ovoga red ne zna šta je već izmereno,
+    #: pa isti posao kruži zauvek — videno uživo 25.09. (ADR-0040).
+    patch = models.ForeignKey(
+        "orchestration.TaskPatch", on_delete=models.CASCADE, null=True, blank=True,
+        related_name="gates",
+    )
     gate = models.CharField(max_length=24, choices=E.Gate.choices())
     passed = models.BooleanField()
     detail = models.TextField(blank=True)

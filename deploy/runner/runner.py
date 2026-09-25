@@ -157,10 +157,12 @@ def obradi(task_id: str) -> None:
         return
     posao = api(f"/tasks/{task_id}/work")
     zakrpa, baza = posao.get("diff", ""), posao.get("base_sha", "")
+    zakrpa_id = posao.get("patch_id", "")
     if not zakrpa:
         log(task_id, "nema zakrpe")
         return
 
+    zakrpa_id = zakrpa_id or ""
     rad = Path(tempfile.mkdtemp(prefix="rad-"))
     izvestaj = Path(tempfile.mkdtemp(prefix="izv-"))
     try:
@@ -170,7 +172,7 @@ def obradi(task_id: str) -> None:
         log(task_id, "kapije:", ishod)
         for kapija, ok in ishod.items():
             api(f"/tasks/{task_id}/gate", {
-                "gate": kapija, "passed": ok, "commit": baza,
+                "gate": kapija, "passed": ok, "commit": baza, "patch": zakrpa_id,
                 "detail": (izvestaj / f"{kapija}.log").read_text(errors="replace")[-4000:]
                 if (izvestaj / f"{kapija}.log").exists() else "",
             })
@@ -178,7 +180,10 @@ def obradi(task_id: str) -> None:
             log(task_id, "sve zeleno")
     except Exception as e:  # noqa: BLE001 — poslušnik ne sme da padne na jednom zadatku
         log(task_id, "greška:", str(e)[:300])
+        # I neuspeh se prijavljuje sa zakrpom: bez toga posao ostaje nemeren
+        # i red ga vraća u krug (ADR-0040).
         api(f"/tasks/{task_id}/gate", {"gate": "pytest", "passed": False,
+                                       "patch": zakrpa_id or None,
                                        "detail": str(e)[:2000]})
     finally:
         shutil.rmtree(rad, ignore_errors=True)

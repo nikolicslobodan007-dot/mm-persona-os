@@ -44,12 +44,14 @@ def _zadatak(task_id: str) -> CodeTask:
 
 
 def _poslednja_prihvacena(zad: CodeTask) -> TaskPatch | None:
-    return (zad.patches.filter(status=E.PatchStatus.ACCEPTED.value)
+    """Najnovija prihvaćena a još neizmerena zakrpa."""
+    return (zad.patches.filter(status=E.PatchStatus.ACCEPTED.value, gates__isnull=True)
             .order_by("-created_at").first())
 
 
 class GateIn(serializers.Serializer):
     gate = serializers.ChoiceField(choices=E.Gate.values())
+    patch = serializers.UUIDField(required=False, allow_null=True, default=None)
     passed = serializers.BooleanField()
     detail = serializers.CharField(required=False, allow_blank=True, default="",
                                    max_length=8000)
@@ -58,15 +60,23 @@ class GateIn(serializers.Serializer):
 
 
 class QueuedTasksView(PersonaOSView):
-    """Zadaci koji imaju prihvaćenu zakrpu, a nisu zatvoreni."""
+    """Zadaci sa prihvaćenom zakrpom koja **još nije merena**.
+
+    Red drži NEMEREN posao, ne „nezatvoren". Poslušnik namerno ne zatvara
+    zadatak (ADR-0039 §3), pa bi red po statusu zadatka vraćao isti posao
+    zauvek — to se 25.09. i desilo, osam prolaza za pola sata. Zakrpa koja ima
+    makar jedan ishod kapije je izmerena i izlazi iz reda; nova zakrpa ulazi.
+    """
 
     allow_runner = True
 
     @extend_schema(operation_id="tasks_queued", responses={200: dict})
     def get(self, request):
+        nemereno = TaskPatch.objects.filter(
+            status=E.PatchStatus.ACCEPTED.value, gates__isnull=True)
         redovi = (
             CodeTask.objects
-            .filter(patches__status=E.PatchStatus.ACCEPTED.value)
+            .filter(patches__in=nemereno)
             .exclude(status__in=[E.TaskStatus.DONE.value, E.TaskStatus.CANCELLED.value])
             .order_by("created_at")
             .values_list("public_id", flat=True)
@@ -89,6 +99,7 @@ class TaskWorkView(PersonaOSView):
                            "Zadatak nema prihvaćenu zakrpu.")
         return ok({
             "task_id": zad.public_id,
+            "patch_id": str(zakrpa.pk),
             "diff": zakrpa.diff,
             "base_sha": zakrpa.base_sha,
             "paths": zakrpa.paths,
@@ -107,8 +118,14 @@ class TaskGateView(PersonaOSView):
         ulaz = GateIn(data=request.data)
         ulaz.is_valid(raise_exception=True)
         v = ulaz.validated_data
+        zakrpa = None
+        if v.get("patch"):
+            zakrpa = TaskPatch.objects.filter(pk=v["patch"], task=zad).first()
+            if zakrpa is None:
+                raise ApiError(E.ErrorCode.NOT_FOUND,
+                               "Zakrpa ne pripada ovom zadatku.")
         try:
-            red = zadaci.record_gate(zad, v["gate"], v["passed"],
+            red = zadaci.record_gate(zad, v["gate"], v["passed"], patch=zakrpa,
                                      detail=v["detail"], commit_sha=v["commit"])
         except zadaci.TaskError as e:
             raise ApiError(E.ErrorCode.VALIDATION_ERROR, str(e)) from e

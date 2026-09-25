@@ -194,14 +194,14 @@ def may_touch(zadatak: CodeTask, path: str, *, persona: Persona | None = None,
 
 @transaction.atomic
 def record_gate(zadatak: CodeTask, gate: str, passed: bool, *, detail: str = "",
-                commit_sha: str = "") -> GateResult:
+                commit_sha: str = "", patch=None) -> GateResult:
     """Upisuje jedan pokušaj jedne kapije. Svaki pokušaj ostaje — i pali."""
     g = E.Gate(gate).value if gate in E.Gate.values() else None
     if g is None:
         raise TaskError("UNKNOWN_GATE", f"Nepoznata kapija {gate!r}.")
     red = GateResult.objects.create(
         task=zadatak, gate=g, passed=bool(passed), detail=detail[:4000],
-        commit_sha=commit_sha,
+        commit_sha=commit_sha, patch=patch,
     )
     audit.record(
         "task.gate.recorded",
