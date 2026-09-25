@@ -929,6 +929,72 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/tasks/{task_id}/gate:
+    post:
+      operationId: tasks_gate
+      description: Ishod jedne kapije. Svaki pokušaj se pamti (ADR-0035 §3).
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GateInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/tasks/{task_id}/work:
+    get:
+      operationId: tasks_work
+      description: Zakrpa za rad — samo ona koja je prošla proveru putanja.
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - tasks
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/tasks/queued:
+    get:
+      operationId: tasks_queued
+      description: Zadaci koji imaju prihvaćenu zakrpu, a nisu zatvoreni.
+      tags:
+      - tasks
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
 components:
   schemas:
     AssertionInRequest:
@@ -1093,6 +1159,38 @@ components:
         * `reply` - reply
         * `video_script` - video_script
         * `thread` - thread
+    GateEnum:
+      enum:
+      - pytest
+      - ruff
+      - canon_lint
+      - migrations
+      - review
+      type: string
+      description: |-
+        * `pytest` - pytest
+        * `ruff` - ruff
+        * `canon_lint` - canon_lint
+        * `migrations` - migrations
+        * `review` - review
+    GateInRequest:
+      type: object
+      properties:
+        gate:
+          $ref: '#/components/schemas/GateEnum'
+        passed:
+          type: boolean
+        detail:
+          type: string
+          default: ''
+          maxLength: 8000
+        commit:
+          type: string
+          default: ''
+          maxLength: 40
+      required:
+      - gate
+      - passed
     KillSwitchInRequest:
       type: object
       properties:

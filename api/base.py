@@ -26,6 +26,13 @@ from common import enums as E
 
 SERVICE_PREFIX = "svc_"
 
+#: ADR-0039 — grupa poslušnika. Nije Canon uloga (§15.1 ih ima šest i ostaje
+#: šest) nego **sistemski nalog** sa jednim poslom. Nalog u ovoj grupi ne
+#: prolazi nigde osim na pogledima koji izričito nose `allow_runner = True`:
+#: podrazumevano je zatvoreno, jer token na mašini koja vrti tuđi kod ne sme
+#: da otvara ništa drugo.
+RUNNER_GROUP = "runner"
+
 #: Uloge koje smeju da čitaju audit. `viewer` ne sme — audit nosi
 #: identitete ljudi i sadržaj odluka, a viewer je uloga za prikaz stanja.
 AUDIT_READERS: frozenset[E.Role] = frozenset(set(E.Role) - {E.Role.VIEWER})
@@ -41,6 +48,13 @@ def principal_of(user) -> str:
     if name.startswith(SERVICE_PREFIX):
         return f"service:{name[len(SERVICE_PREFIX):]}"
     return f"user:{name}"
+
+
+def is_runner(user) -> bool:
+    """Da li je pozivalac poslušnik (ADR-0039 §1)."""
+    if user is None or not user.is_authenticated:
+        return False
+    return RUNNER_GROUP in set(user.groups.values_list("name", flat=True))
 
 
 def roles_of(user) -> set[E.Role]:
@@ -65,6 +79,11 @@ class HasAnyRole(BasePermission):
     def has_permission(self, request, view) -> bool:
         if not (request.user and request.user.is_authenticated):
             return False
+        # Poslušnik je zatvoren svuda osim tamo gde je izričito pušten. Ovo stoji
+        # PRE provere uloga: i kad bi neko nalogu dodao ulogu, poslušnik i dalje
+        # ne bi mogao nigde drugde (ADR-0039 §2).
+        if is_runner(request.user) and not getattr(view, "allow_runner", False):
+            return False
         needed: Iterable[E.Role] | None = getattr(view, "required_roles", {}).get(
             request.method
         )
@@ -78,6 +97,8 @@ class PersonaOSView(APIView):
 
     permission_classes = [HasAnyRole]
     required_roles: dict[str, frozenset[E.Role]] = {}
+    #: ADR-0039 §2 — samo pogledi koji ovo nose vide poslušnika.
+    allow_runner: bool = False
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)

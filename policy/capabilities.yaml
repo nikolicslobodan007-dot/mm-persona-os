@@ -145,6 +145,7 @@ action_types:
 protected_paths:
   - apps/policy/                    # policy engine, poverenje, odobrenja
   - api/audit.py                    # pisač audita
+  - api/base.py                     # kapija dozvola (ADR-0039 §5)
   - apps/observability/models.py    # tabela audita
   - apps/runtime/transport.py       # jedino mesto gde bajt izlazi napolje
   - apps/runtime/control.py         # kill-switch

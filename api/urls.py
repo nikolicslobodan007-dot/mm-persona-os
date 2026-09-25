@@ -41,6 +41,7 @@ from api.views.runtime import (
     SuppressionView,
     unsubscribe,
 )
+from api.views.zadaci import QueuedTasksView, TaskGateView, TaskWorkView
 
 urlpatterns = [
     path("personas", PersonaListView.as_view(), name="personas"),
@@ -65,6 +66,9 @@ urlpatterns = [
     path("actions/<str:action_id>", ActionDetailView.as_view(), name="action-detail"),
     path("actions/<str:action_id>/policy-trace", ActionPolicyTraceView.as_view(),
          name="action-policy-trace"),
+    path("tasks/queued", QueuedTasksView.as_view(), name="tasks-queued"),
+    path("tasks/<str:task_id>/work", TaskWorkView.as_view(), name="task-work"),
+    path("tasks/<str:task_id>/gate", TaskGateView.as_view(), name="task-gate"),
     path("audit", AuditListView.as_view(), name="audit"),
     path("policy/evaluate", PolicyEvaluateView.as_view(), name="policy-evaluate"),
     path("policy/evaluate/batch", PolicyEvaluateBatchView.as_view(),

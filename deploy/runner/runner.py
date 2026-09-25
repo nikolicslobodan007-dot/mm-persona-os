@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import secrets
 import shutil
 import subprocess
 import sys
@@ -46,12 +47,27 @@ def log(*delovi) -> None:
     print(time.strftime("%H:%M:%S"), *delovi, flush=True)
 
 
+def zaglavlja() -> dict[str, str]:
+    """Canon §8.5 — svaki POST nosi svoj trag i imenovanog pokretača.
+
+    Radnja bez traga i bez pokretača ne sme ni da počne, pa se ovi header-i
+    prave ovde, a ne nadaju se da će ih neko drugi dodati.
+    """
+    trag = secrets.token_hex(16)
+    return {
+        "Authorization": f"Token {TOKEN}",
+        "Content-Type": "application/json",
+        "X-Request-ID": f"runner-{secrets.token_hex(8)}",
+        "traceparent": f"00-{trag}-{secrets.token_hex(8)}-01",
+        "X-Actor-ID": "service:runner",
+    }
+
+
 def api(putanja: str, telo: dict | None = None) -> dict:
     zahtev = urllib.request.Request(
         f"{API}{putanja}",
         data=json.dumps(telo).encode() if telo is not None else None,
-        headers={"Authorization": f"Token {TOKEN}",
-                 "Content-Type": "application/json"},
+        headers=zaglavlja(),
         method="POST" if telo is not None else "GET",
     )
     with urllib.request.urlopen(zahtev, timeout=30) as odgovor:
