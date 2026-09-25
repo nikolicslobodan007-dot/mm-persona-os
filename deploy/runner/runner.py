@@ -63,6 +63,19 @@ def zaglavlja() -> dict[str, str]:
     }
 
 
+def raspakuj(odgovor) -> dict:
+    """Vadi `data` iz Canon omotača `{"data": …, "meta": …}` (Canon §8.1).
+
+    Ovo je 25.09. bio tihi kvar: poslušnik je čitao `tasks` sa vrha odgovora,
+    dobijao praznu listu i ćutao satima. Odgovor bez omotača se prosleđuje kakav
+    jeste, da promena oblika ne obori poslušnika drugi put na isti način.
+    """
+    if not isinstance(odgovor, dict):
+        return {}
+    podaci = odgovor.get("data")
+    return podaci if isinstance(podaci, dict) else odgovor
+
+
 def api(putanja: str, telo: dict | None = None) -> dict:
     zahtev = urllib.request.Request(
         f"{API}{putanja}",
@@ -71,7 +84,7 @@ def api(putanja: str, telo: dict | None = None) -> dict:
         method="POST" if telo is not None else "GET",
     )
     with urllib.request.urlopen(zahtev, timeout=30) as odgovor:
-        return json.loads(odgovor.read() or b"{}")
+        return raspakuj(json.loads(odgovor.read() or b"{}"))
 
 
 def trci(*argv: str, cwd: Path | None = None, rok: int = 120) -> subprocess.CompletedProcess:
