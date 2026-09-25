@@ -18,12 +18,14 @@ Type=simple
 User=mm
 Group=mm
 SupplementaryGroups=docker
-WorkingDirectory=/srv/mm-persona-os
-Environment=PERSONA_API=http://127.0.0.1:8000/api/v1
-Environment=PERSONA_REPO=/srv/mm-persona-os
+WorkingDirectory=/home/mm/apps/mm-persona-os
+# `web` ne objavljuje port na host — ispred njega je Caddy. Poslušnik zato
+# ide istim putem kao svaki drugi klijent, kroz TLS.
+Environment=PERSONA_API=https://os.webkorporacija.com/api/v1
+Environment=PERSONA_REPO=/home/mm/apps/mm-persona-os
 # Token NIKAD ovde: stoji u fajlu 0600, kao i ključevi agenata (ADR-0026).
 EnvironmentFile=/etc/mm-persona-os/runner.env
-ExecStart=/usr/bin/python3 /srv/mm-persona-os/deploy/runner/runner.py
+ExecStart=/usr/bin/python3 /home/mm/apps/mm-persona-os/deploy/runner/runner.py
 Restart=on-failure
 RestartSec=15
 
@@ -31,7 +33,7 @@ RestartSec=15
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
-ReadWritePaths=/srv/mm-persona-os
+ReadWritePaths=/home/mm/apps/mm-persona-os
 NoNewPrivileges=true
 
 [Install]

@@ -31,9 +31,9 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-API = os.environ.get("PERSONA_API", "http://127.0.0.1:8000/api/v1")
+API = os.environ.get("PERSONA_API", "https://os.webkorporacija.com/api/v1")
 TOKEN = os.environ.get("PERSONA_TOKEN", "")
-REPO = Path(os.environ.get("PERSONA_REPO", "/srv/mm-persona-os")).resolve()
+REPO = Path(os.environ.get("PERSONA_REPO", "/home/mm/apps/mm-persona-os")).resolve()
 COMPOSE = Path(__file__).resolve().parent / "docker-compose.zadatak.yml"
 PAUZA = int(os.environ.get("PERSONA_POLL_SECONDS", "20"))
 #: Koliko sme da traje jedan prolaz kapija. Pun `pytest` je oko 2,5 minuta.

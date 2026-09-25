@@ -28,6 +28,15 @@ volumena `secrets`. Nijedan port ne izlazi na host.
 Kapije koje se vrte su iste četiri koje vrtimo rukom: `pytest`, `ruff`,
 `canon_lint`, `makemigrations --check`. Gotovo = sve četiri zelene (ADR-0035 §3).
 
+## Dve vrednosti koje se moraju proveriti pre puštanja
+
+`PERSONA_REPO` mora da pokazuje na pravi repozitorijum na serveru
+(`/home/mm/apps/mm-persona-os`), a `PERSONA_API` na adresu koja se sa hosta
+zaista vidi. Servis `web` **ne objavljuje port na host** — ispred njega je Caddy,
+pa poslušnik ide kroz `https://os.webkorporacija.com/api/v1` kao i svaki drugi
+klijent. Obe vrednosti su 25.09. prvo bile napisane po pretpostavci i obe bi
+oborile poslušnika (ADR-0033).
+
 ## Instalacija
 
 ```
@@ -35,9 +44,18 @@ sudo mkdir -p /etc/mm-persona-os
 sudo install -m 600 /dev/null /etc/mm-persona-os/runner.env
 ```
 
-U taj fajl ide jedan red — `PERSONA_TOKEN=…`. Token se **ne kuca u ćaskanje i ne ide
-u `.env.prod`**; čita se iz baze istom komandom kojom se čita za API (vidi
-`stanje-rada.md`).
+U taj fajl ide jedan red — `PERSONA_TOKEN=…`, i ne piše se rukom. Pravi ga
+`manage.py poslusnik --napravi --u <fajl>` unutar kontejnera, pa se prenosi na host:
+
+```
+docker compose -f docker-compose.prod.yml --env-file .env.prod exec web python manage.py poslusnik --napravi --u /tmp/runner.env
+docker compose -f docker-compose.prod.yml cp web:/tmp/runner.env /tmp/runner.env
+sudo install -m 600 -o root -g root /tmp/runner.env /etc/mm-persona-os/runner.env
+rm -f /tmp/runner.env
+docker compose -f docker-compose.prod.yml --env-file .env.prod exec web rm -f /tmp/runner.env
+```
+
+Token se nigde ne ispisuje na ekran (ADR-0026, ADR-0039 §4).
 
 ```
 sudo cp deploy/runner/mm-runner.service /etc/systemd/system/
