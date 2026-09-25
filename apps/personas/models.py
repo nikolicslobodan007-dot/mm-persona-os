@@ -424,6 +424,10 @@ class Position(UUIDModel):
         "self", on_delete=models.PROTECT, null=True, blank=True, related_name="reports"
     )
     duties = JSON_LIST(help_text="Šta radi, jednom rečenicom po stavci.")
+    #: ADR-0037 — šta posao TRAŽI: `[{"capability": …, "level": "L1", "scope": …}]`.
+    #: Ovo NIJE dozvola i motor pravila ga ne čita; odluka se i dalje donosi
+    #: isključivo po `TrustState` (ADR-0017: radno mesto nije dozvola).
+    needs = JSON_LIST(help_text="Šta posao traži da bi se radio — opis, ne dozvola.")
     headcount_max = models.PositiveSmallIntegerField(default=1)
     is_open = models.BooleanField(default=True)
 

@@ -140,6 +140,34 @@ MILA_DOSSIER = dict(
 MILA_BIRTH = date(1991, 4, 17)
 
 
+#: ADR-0037 — šta koje radno mesto TRAŽI da bi se posao radio. Ovo NIJE dozvola:
+#: motor pravila i dalje gleda samo `TrustState`, a agent premešten na mesto ne
+#: dobija ništa (ADR-0017). Služi da se izmeri manjak i da se dodela ne kuca
+#: capability po capability za svakog od 10.000 agenata.
+#:
+#: Oblik: "capability@nivo" ili "capability@nivo:opseg" (opseg samo za kod).
+POSITION_NEEDS: dict[str, list[str]] = {
+    # Sadržaj i publika
+    "URE-SR": ["content.publish_approved@L1", "web.read_public@L0"],
+    "POD-SR": ["email.reply_inbound@L2", "social.reply_inbound@L2"],
+    "PRO-REF": ["email.reply_inbound@L2", "email.outbound_approved@L2"],
+    "NAB-REF": ["email.reply_inbound@L2", "email.outbound_approved@L2",
+                "web.read_public@L0"],
+    "IST-ANA": ["web.read_public@L0", "social.read_public@L0"],
+
+    # Razvoj (ADR-0034). Opseg je namerno uzak: niko ne traži ceo repozitorijum.
+    "SEF-RAZ": ["code.read@L0", "review.comment@L1"],
+    "RAZ-ARH": ["code.read@L0", "review.comment@L1"],
+    "RAZ-PRO": ["code.read@L0", "test.run@L0",
+                "code.write@L1:apps/content", "code.write@L1:apps/channels",
+                "code.write@L1:console", "deploy.stage@L1"],
+    "RAZ-REC": ["code.read@L0", "review.comment@L1", "test.run@L0"],
+    "RAZ-TES": ["code.read@L0", "test.run@L0", "code.write@L1:tests"],
+    "RAZ-DEZ": ["code.read@L0", "deploy.stage@L1"],
+    "RAZ-BIB": ["code.read@L0", "dependency.add@L2"],
+}
+
+
 class Command(BaseCommand):
     help = "Postavlja sektore i radna mesta korporacije (ADR-0017)."
 
@@ -171,6 +199,7 @@ class Command(BaseCommand):
                     code=code,
                     defaults={"department": deps[dep], "title": title, "level": level,
                               "specialty": specialty, "duties": duties,
+                              "needs": POSITION_NEEDS.get(code, []),
                               "headcount_max": koliko})
                 made[code] = p
             for code, _dep, _t, _l, _s, boss, _d, _k in POSITIONS:

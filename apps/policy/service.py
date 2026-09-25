@@ -608,6 +608,26 @@ def _set_trust(persona: Persona, capability: str, level: E.TrustLevel, *, actor:
     return changed
 
 
+def granting_ceiling(actor: str, capability: str, scope: str = "") -> E.TrustLevel | None:
+    """Najviši nivo koji ovaj pozivalac sme da dodeli, ili `None` ako je bez granice.
+
+    ADR-0037 §4 — **niko ne daje ono što sam nema.** Kad poverenje daje agent,
+    granica je njegov sopstveni nivo za taj capability na tom opsegu; šef sa `L1`
+    ne pravi podređenog sa `L2`, niti sebi diže nivo preko sebe.
+
+    Čovek (`user:…`) je koren: samo tu poverenje ulazi u sistem, pa je bez granice
+    do najvišeg dodeljivog nivoa. Ostali oblici pozivaoca ostaju kako su bili —
+    granica je namerno uža od „proveri svakog" (obrazloženje u ADR-0037 §4).
+    """
+    if not actor.startswith("agent:"):
+        return None
+    davalac = Persona.objects.filter(public_id=actor.split(":", 1)[1]).first()
+    if davalac is None:
+        raise PolicyError("UNKNOWN_GRANTOR",
+                          f"Pozivalac {actor!r} nije agent koji postoji.")
+    return trust_for(davalac, capability, scope)
+
+
 def change_trust(persona: Persona, capability: str, level: E.TrustLevel, *, actor: str,
                  reason: str, evidence: str = "", scope: str = "") -> bool:
     """Canon §3.11 — L3/L4 se ne dodeljuju; capability mora postojati u katalogu."""
@@ -623,6 +643,15 @@ def change_trust(persona: Persona, capability: str, level: E.TrustLevel, *, acto
         raise PolicyError("PROTECTED_PATH",
                           f"`{zona}` je zaštićena zona (ADR-0034): tu se poverenje ne "
                           "dodeljuje ni na jednom nivou.")
+    plafon = granting_ceiling(actor, capability, scope)
+    if plafon is not None and not config.trust_at_least(plafon, level):
+        raise PolicyError(
+            "GRANTOR_TOO_LOW",
+            f"{actor} ima {plafon.value} za {capability}"
+            f"{' na ' + scope if scope else ''} i ne može da dodeli {level.value} — "
+            f"niko ne daje ono što sam nema (ADR-0037 §4).",
+            {"grantor": actor, "grantor_level": plafon.value, "requested": level.value},
+        )
     with transaction.atomic():
         return _set_trust(persona, capability, level, actor=actor, reason=reason,
                           evidence=evidence, scope=scope)
