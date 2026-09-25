@@ -52,6 +52,8 @@ class Command(BaseCommand):
             self.stdout.write(f"  već postoji:   {stanje['vec_postoji']}")
         if stanje["bez_putanje"]:
             self.stdout.write(f"  bez lokacije:  {stanje['bez_putanje']}")
+        if stanje["bez_teksta"]:
+            self.stdout.write(f"  bez tvrdnje:   {stanje['bez_teksta']}")
         for naziv, kljuc in (("van zadatka", "van_zadatka"),
                              ("ZAŠTIĆENA ZONA", "zasticena_zona")):
             putanje = sorted(set(stanje[kljuc]))

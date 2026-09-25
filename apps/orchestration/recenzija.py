@@ -28,7 +28,7 @@ from apps.policy import service as policy
 from common import enums as E
 
 from .models import CodeTask, ReviewFinding
-from .zadaci import TaskError
+from .zadaci import TaskError, under_any
 
 __all__ = ["import_sarif", "load_sarif", "SARIF_TO_SEVERITY"]
 
@@ -107,11 +107,6 @@ def _fingerprint(res: dict[str, Any]) -> str:
     return ""
 
 
-def _under(path: str, prefixes) -> bool:
-    return any(path == p.rstrip("/") or path.startswith(p.rstrip("/") + "/")
-               for p in prefixes)
-
-
 @transaction.atomic
 def import_sarif(zadatak: CodeTask, report: dict[str, Any], *, source: str = "",
                  reviewer: Persona | None = None) -> dict[str, Any]:
@@ -121,7 +116,7 @@ def import_sarif(zadatak: CodeTask, report: dict[str, Any], *, source: str = "",
       `uvezeno` — novi nalazi na ovom zadatku;
       `vec_postoji` — isti otisak je već uvezen (ponovljena recenzija);
       `van_zadatka` / `zasticena_zona` — putanje koje ovaj zadatak ne pokriva;
-      `bez_putanje` — nalaz bez lokacije, pa se ne može vezati za fajl;
+      `bez_putanje` / `bez_teksta` — nalaz bez lokacije ili bez tvrdnje;
       `bezbednost` — `security` nalazi najviše težine, za ljudsko oko.
     """
     report = _validate(report, "izveštaj")
@@ -132,7 +127,7 @@ def import_sarif(zadatak: CodeTask, report: dict[str, Any], *, source: str = "",
 
     stanje: dict[str, Any] = {
         "uvezeno": 0, "vec_postoji": 0, "van_zadatka": [], "zasticena_zona": [],
-        "bez_putanje": 0, "bezbednost": 0, "izvor": izvor,
+        "bez_putanje": 0, "bez_teksta": 0, "bezbednost": 0, "izvor": izvor,
     }
     postojeci = set(
         zadatak.findings.exclude(fingerprint="").values_list("fingerprint", flat=True)
@@ -157,10 +152,11 @@ def import_sarif(zadatak: CodeTask, report: dict[str, Any], *, source: str = "",
             if zona:
                 stanje["zasticena_zona"].append(putanja)
                 continue
-            if not _under(putanja, zadatak.allowed_paths):
+            if not under_any(putanja, zadatak.allowed_paths):
                 stanje["van_zadatka"].append(putanja)
                 continue
             if not tekst:
+                stanje["bez_teksta"] += 1
                 continue
 
             otisak = _fingerprint(res)
@@ -188,7 +184,8 @@ def import_sarif(zadatak: CodeTask, report: dict[str, Any], *, source: str = "",
             "imported": stanje["uvezeno"], "duplicates": stanje["vec_postoji"],
             "outside_task": sorted(set(stanje["van_zadatka"])),
             "protected_zone": sorted(set(stanje["zasticena_zona"])),
-            "without_path": stanje["bez_putanje"], "security": stanje["bezbednost"],
+            "without_path": stanje["bez_putanje"], "without_text": stanje["bez_teksta"],
+            "security": stanje["bezbednost"],
         },
     )
     return stanje

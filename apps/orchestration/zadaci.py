@@ -101,13 +101,15 @@ def create(*, title: str, why: str, allowed_paths, adr: str = "",
     if assignee and reviewer and assignee.pk == reviewer.pk:
         raise TaskError("SELF_REVIEW", "Recenzent ne sme biti autor (ADR-0034 §5.2).")
 
+    # Izvršilac se NE upisuje ovde. Dodela ima svoju proveru poverenja, a da je
+    # `create` zaobilazi, cela provera iz ADR-0035 §2 bi se gasila time što se
+    # izvršilac prosledi pri pravljenju umesto posle. Jedan put, ne dva.
     zadatak = CodeTask.objects.create(
         public_id=ulid_public_id(EntityKind.CODE_TASK),
         title=title.strip(), why=why.strip(), adr=adr.strip(),
         allowed_paths=putanje, required_gates=kapije,
-        requested_by=requested_by, assignee=assignee, reviewer=reviewer,
-        plan=plan, run=run,
-        status=E.TaskStatus.ASSIGNED if assignee else E.TaskStatus.DRAFT,
+        requested_by=requested_by, reviewer=reviewer, plan=plan, run=run,
+        status=E.TaskStatus.DRAFT,
     )
     audit.record("task.created", persona=assignee or requested_by, details={
         "task": zadatak.public_id, "title": zadatak.title, "adr": zadatak.adr,
@@ -115,6 +117,8 @@ def create(*, title: str, why: str, allowed_paths, adr: str = "",
         "assignee": getattr(assignee, "public_id", None),
         "reviewer": getattr(reviewer, "public_id", None),
     })
+    if assignee:
+        assign(zadatak, assignee=assignee, reviewer=reviewer)
     return zadatak
 
 
@@ -156,6 +160,14 @@ def assign(zadatak: CodeTask, *, assignee: Persona, reviewer: Persona | None = N
 # --------------------------------------------------------------------- granica
 
 
+def under_any(path: str, prefixes) -> bool:
+    """Da li je putanja pod nekim od prefiksa. Jedno mesto, jer se pravilo
+    poklapanja postavlja i pri izmeni fajla i pri uvozu recenzije."""
+    p = policy.normalize_path(path)
+    return any(p == d.rstrip("/") or p.startswith(d.rstrip("/") + "/")
+               for d in prefixes)
+
+
 def may_touch(zadatak: CodeTask, path: str, *, persona: Persona | None = None,
               capability: str = "code.write") -> str | None:
     """Vraća razlog zašto se putanja NE sme dirati, ili `None` ako sme.
@@ -166,8 +178,7 @@ def may_touch(zadatak: CodeTask, path: str, *, persona: Persona | None = None,
     zona = policy.path_is_protected(p)
     if zona:
         return f"zaštićena zona ({zona})"
-    if not any(p == d.rstrip("/") or p.startswith(d.rstrip("/") + "/")
-               for d in zadatak.allowed_paths):
+    if not under_any(p, zadatak.allowed_paths):
         return "van dozvoljenih putanja ovog zadatka"
     agent = persona or zadatak.assignee
     if agent is None:

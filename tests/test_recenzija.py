@@ -244,3 +244,30 @@ class TestKomanda:
         with pytest.raises(CommandError, match="ne postoji"):
             call_command("recenzija", "--zadatak", "TSK-nema", "--sarif", str(p),
                          stdout=io.StringIO())
+
+
+class TestPopravkePosleRecenzije:
+    """Nalazi mašinske recenzije nad ADR-0035/0036 (25.09.), popravljeni."""
+
+    def test_nalaz_bez_tvrdnje_se_broji(self, z):
+        """ADR-0036 §1: tiho ispuštenih nalaza nema — ni onih bez teksta."""
+        res = _nalaz("apps/content/steps.py", tekst="")
+        stanje = _uvezi(z, _izvestaj(res))
+        assert stanje["bez_teksta"] == 1 and stanje["uvezeno"] == 0
+
+    def test_create_sa_izvrsiocem_proverava_poverenje(self, mila):
+        """Dodela ima proveru poverenja; `create` je ne sme zaobići."""
+        with pytest.raises(zadaci.TaskError) as e, bind(actor_id="user:slobodan"):
+            zadaci.create(title="x", why="y", allowed_paths=["apps/content"],
+                          assignee=mila)
+        assert e.value.code == "TRUST_TOO_LOW"
+
+    def test_create_sa_izvrsiocem_prolazi_kad_poverenje_postoji(self, mila):
+        from apps.policy import service as policy
+        with bind(actor_id="user:slobodan"):
+            policy.change_trust(mila, "code.write", E.TrustLevel.L1,
+                                actor="user:slobodan", reason="proba",
+                                scope="apps/content")
+            z = zadaci.create(title="x", why="y", allowed_paths=["apps/content"],
+                              assignee=mila)
+        assert z.status == E.TaskStatus.ASSIGNED and z.assignee_id == mila.pk
