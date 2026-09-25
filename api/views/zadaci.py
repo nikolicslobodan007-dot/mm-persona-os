@@ -1,8 +1,9 @@
-"""Tri tačke za poslušnika. ADR-0039.
+"""Tačke za poslušnika. ADR-0039, ADR-0043.
 
     GET  /api/v1/tasks/queued            → samo spisak `task_id`
     GET  /api/v1/tasks/{task_id}/work    → zakrpa koja je VEĆ prošla proveru
     POST /api/v1/tasks/{task_id}/gate    → ishod jedne kapije
+    POST /api/v1/tasks/{task_id}/result  → grana i commit, kad su kapije zelene
 
 Ovo su jedine tačke koje poslušnik vidi (`allow_runner`), i namerno su uske:
 
@@ -13,6 +14,8 @@ Ovo su jedine tačke koje poslušnik vidi (`allow_runner`), i namerno su uske:
   - `gate` upisuje ishod i ništa više. Poslušnik ne zatvara zadatak, ne menja
     putanje i ne dodeljuje poverenje; „gotovo" ostaje odluka koju donosi
     `zadaci.finish` nad zelenim kapijama (ADR-0035 §3).
+  - `result` beleži **granu**, ne `main`. Ni ovde poslušnik ne zatvara ništa:
+    grana je ponuda na sto, a spajanje je ljudska ruka (ADR-0043).
 """
 
 from __future__ import annotations
@@ -22,7 +25,7 @@ from rest_framework import serializers
 
 from api.base import PersonaOSView, ok
 from api.errors import ApiError
-from apps.orchestration import brif, zadaci
+from apps.orchestration import brif, rezultat, zadaci
 from apps.orchestration.models import CodeTask, TaskPatch
 from common import enums as E
 from common import ids as I
@@ -57,6 +60,12 @@ class GateIn(serializers.Serializer):
                                    max_length=8000)
     commit = serializers.CharField(required=False, allow_blank=True, default="",
                                    max_length=40)
+
+
+class ResultIn(serializers.Serializer):
+    patch = serializers.UUIDField()
+    branch = serializers.CharField(max_length=80)
+    commit = serializers.CharField(max_length=40)
 
 
 class QueuedTasksView(PersonaOSView):
@@ -112,6 +121,10 @@ class TaskWorkView(PersonaOSView):
         if zakrpa is None:
             raise ApiError(E.ErrorCode.NOT_FOUND,
                            "Zadatak nema prihvaćenu zakrpu.")
+        try:
+            priprema = rezultat.priprema(zad, zakrpa)
+        except zadaci.TaskError as e:
+            raise ApiError(E.ErrorCode.VALIDATION_ERROR, str(e)) from e
         return ok({
             "task_id": zad.public_id,
             "patch_id": str(zakrpa.pk),
@@ -119,7 +132,38 @@ class TaskWorkView(PersonaOSView):
             "base_sha": zakrpa.base_sha,
             "paths": zakrpa.paths,
             "required_gates": zad.required_gates,
+            # ADR-0043 — ime grane i poruka commita stižu gotovi. Poslušnik ih ne
+            # sastavlja, pa agentov naslov nikad ne postaje argument komande.
+            **priprema,
         })
+
+
+class TaskResultView(PersonaOSView):
+    """Grana i commit kao rezultat jedne zakrpe. ADR-0043.
+
+    Prima se tek kad su sve tražene kapije zelene **nad tom zakrpom**. Zadatak
+    se ovde ne zatvara: `main` menja ljudska ruka (ADR-0038 §6).
+    """
+
+    allow_runner = True
+
+    @extend_schema(operation_id="tasks_result", request=ResultIn, responses={200: dict})
+    def post(self, request, task_id: str):
+        zad = _zadatak(task_id)
+        ulaz = ResultIn(data=request.data)
+        ulaz.is_valid(raise_exception=True)
+        v = ulaz.validated_data
+        zakrpa = TaskPatch.objects.filter(pk=v["patch"], task=zad).first()
+        if zakrpa is None:
+            raise ApiError(E.ErrorCode.NOT_FOUND, "Zakrpa ne pripada ovom zadatku.")
+        try:
+            zakrpa = rezultat.zabelezi(zad, zakrpa, branch=v["branch"],
+                                       commit_sha=v["commit"])
+        except zadaci.TaskError as e:
+            raise ApiError(E.ErrorCode.VALIDATION_ERROR, str(e)) from e
+        return ok({"task_id": zad.public_id, "patch_id": str(zakrpa.pk),
+                   "branch": rezultat.ime_grane(zad), "commit": zakrpa.applied_sha,
+                   "status": zakrpa.status})
 
 
 class TaskGateView(PersonaOSView):

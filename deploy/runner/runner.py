@@ -41,6 +41,11 @@ ROK = int(os.environ.get("PERSONA_TIMEOUT_SECONDS", "900"))
 
 #: `task_id` je jedino što ulazi spolja — i jedino čemu se veruje posle ove provere.
 TSK = re.compile(r"^TSK-[0-9A-HJKMNP-TV-Z]{26}$")
+#: Ime grane i potpis stižu gotovi iz aplikacije (ADR-0043), ali se ipak proveravaju:
+#: poslušnik ne veruje ni svom API-ju više nego što mora.
+GRANA = re.compile(r"^zadatak/TSK-[0-9A-HJKMNP-TV-Z]{26}$")
+POTPIS = re.compile(r"^[^<>\n]{1,80} <[a-z0-9][a-z0-9._-]*@[a-z0-9.-]+>$")
+SHA = re.compile(r"^[0-9a-f]{40}$")
 
 
 def log(*delovi) -> None:
@@ -126,6 +131,59 @@ def primeni(zakrpa: str, rad: Path) -> None:
     put.unlink(missing_ok=True)
 
 
+def zapamti(rad: Path, autor: str, poruka: str) -> str:
+    """Commit nad čistim stablom, PRE kapija. ADR-0043.
+
+    Redosled nije kozmetika. Kapije za sobom ostavljaju keš i artefakte, pa bi
+    commit posle njih hvatao i njih. Ovako commit sadrži tačno ono što je zakrpa
+    donela — i njegov `sha` je ono što su kapije zaista merile, pa se upisuje uz
+    svaki ishod umesto osnove (do 25.09. se slala osnova, a to nije bila istina).
+
+    Autor je agent, pošiljalac je sistem: ko je napisao i ko je pustio su dva
+    pitanja. Poruka ide kroz fajl, nikad kroz argument — u njoj je agentov tekst.
+    """
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".poruka",
+                                     delete=False) as f:
+        f.write(poruka)
+        put = f.name
+    try:
+        r = trci("git", "add", "-A", cwd=rad, rok=120)
+        if r.returncode:
+            raise RuntimeError(f"git add: {r.stderr[:400]}")
+        r = trci("git",
+                 "-c", "user.name=MM Persona OS",
+                 "-c", "user.email=poslusnik@agenti.webkorporacija.com",
+                 "-c", "commit.gpgsign=false",
+                 "commit", "--no-verify", f"--author={autor}", "-F", put,
+                 cwd=rad, rok=120)
+        if r.returncode:
+            raise RuntimeError(f"git commit: {(r.stderr or r.stdout)[:400]}")
+    finally:
+        Path(put).unlink(missing_ok=True)
+    r = trci("git", "rev-parse", "HEAD", cwd=rad, rok=60)
+    sha = r.stdout.strip()
+    if not SHA.match(sha):
+        raise RuntimeError(f"rev-parse: {sha[:80]!r}")
+    return sha
+
+
+def gurni(rad: Path, grana: str, ocekivano: str) -> None:
+    """Gura commit u granu lokalnog repozitorijuma — i nigde dalje.
+
+    `--force-with-lease` sa izričitom vrednošću: grana sme da se pomeri samo sa
+    onoga što aplikacija misli da tamo stoji. Ako se razlikuje, neko ju je dirao
+    rukom i poslušnik staje. Bez očekivane vrednosti guranje je obično, pa pada
+    ako grana već postoji — i to je ispravno.
+    """
+    argv = ["git", "push"]
+    if ocekivano:
+        argv.append(f"--force-with-lease=refs/heads/{grana}:{ocekivano}")
+    argv += [str(REPO), f"HEAD:refs/heads/{grana}"]
+    r = trci(*argv, cwd=rad, rok=180)
+    if r.returncode:
+        raise RuntimeError(f"git push: {(r.stderr or r.stdout)[:400]}")
+
+
 def kapije(task_id: str, rad: Path, izvestaj: Path) -> tuple[bool, dict]:
     ime = "zad-" + task_id.lower().replace("tsk-", "")[:20]
     okolina = {
@@ -163,21 +221,38 @@ def obradi(task_id: str) -> None:
         return
 
     zakrpa_id = zakrpa_id or ""
+    grana = str(posao.get("branch") or "")
+    ocekivano = str(posao.get("branch_expected_sha") or "")
+    autor = f"{posao.get('author_name', '')} <{posao.get('author_email', '')}>"
+    poruka = str(posao.get("commit_message") or "")
+    # Ovo aplikacija šalje gotovo (ADR-0043). Ako oblik nije tačan, commit se ne
+    # pravi — bolje nego da naslov koji je pisao agent postane deo komande.
+    u_granu = bool(GRANA.match(grana) and POTPIS.match(autor) and poruka.strip()
+                   and (not ocekivano or SHA.match(ocekivano)))
+    if not u_granu:
+        log(task_id, "grana se ne otvara: aplikacija nije poslala ispravan potpis")
+
     rad = Path(tempfile.mkdtemp(prefix="rad-"))
     izvestaj = Path(tempfile.mkdtemp(prefix="izv-"))
     try:
         radni_primerak(baza, rad)
         primeni(zakrpa, rad)
+        sha = zapamti(rad, autor, poruka) if u_granu else baza
         zelene, ishod = kapije(task_id, rad, izvestaj)
         log(task_id, "kapije:", ishod)
         for kapija, ok in ishod.items():
             api(f"/tasks/{task_id}/gate", {
-                "gate": kapija, "passed": ok, "commit": baza, "patch": zakrpa_id,
+                "gate": kapija, "passed": ok, "commit": sha, "patch": zakrpa_id,
                 "detail": (izvestaj / f"{kapija}.log").read_text(errors="replace")[-4000:]
                 if (izvestaj / f"{kapija}.log").exists() else "",
             })
-        if zelene:
-            log(task_id, "sve zeleno")
+        if zelene and u_granu:
+            gurni(rad, grana, ocekivano)
+            api(f"/tasks/{task_id}/result",
+                {"patch": zakrpa_id, "branch": grana, "commit": sha})
+            log(task_id, "sve zeleno →", grana, sha[:12])
+        elif zelene:
+            log(task_id, "sve zeleno, ali bez grane")
     except Exception as e:  # noqa: BLE001 — poslušnik ne sme da padne na jednom zadatku
         log(task_id, "greška:", str(e)[:300])
         # I neuspeh se prijavljuje sa zakrpom: bez toga posao ostaje nemeren

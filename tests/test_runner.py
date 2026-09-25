@@ -90,3 +90,45 @@ class TestZaglavlja:
         prvi, drugi = runner.zaglavlja(), runner.zaglavlja()
         assert prvi["traceparent"] != drugi["traceparent"]
         assert prvi["X-Request-ID"] != drugi["X-Request-ID"]
+
+
+class TestGrana:
+    """ADR-0043 — oblik onoga što poslušnik dobije pre nego što napravi commit.
+
+    Ime grane i potpis autora prave se u aplikaciji, ali ih poslušnik ipak
+    proverava. Razlog je isti kao kod `task_id`: kad bi prelom reda ili `<`
+    prošli kroz potpis, agentov naslov bi birao ime autora commita.
+    """
+
+    def test_ispravna_grana(self, runner):
+        assert runner.GRANA.match("zadatak/TSK-01M3C15CJ999KE2FX8PG6KHMZE")
+
+    @pytest.mark.parametrize("losa", [
+        "main",
+        "zadatak/TSK-01M3C15CJ999KE2FX8PG6KHMZ",      # kratak
+        "zadatak/TSK-01M3C15CJ999KE2FX8PG6KHMZEE",    # dug
+        "zadatak/TSK-01M3C15CJ999KE2FX8PG6KHMZI",     # I nije u Crockford base32
+        "zadatak/TSK-01M3C15CJ999KE2FX8PG6KHMZE/../main",
+        "../main",
+        "",
+    ])
+    def test_odbijena_grana(self, runner, losa):
+        assert not runner.GRANA.match(losa)
+
+    def test_ispravan_potpis(self, runner):
+        assert runner.POTPIS.match("Lazar Todorović (AI) <p-00027@agenti.example.com>")
+
+    @pytest.mark.parametrize("los", [
+        "Zli <root@host> <p-1@x.com>",
+        "Prvi red\nSubject: lažni <p-1@x.com>",
+        "Bez adrese",
+        "<p-1@x.com>",
+        "",
+    ])
+    def test_odbijen_potpis(self, runner, los):
+        assert not runner.POTPIS.match(los)
+
+    def test_sha_je_cetrdeset_malih_cifara(self, runner):
+        assert runner.SHA.match("a" * 40)
+        assert not runner.SHA.match("A" * 40)
+        assert not runner.SHA.match("a" * 39)

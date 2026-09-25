@@ -44,6 +44,9 @@ class Ucinak:
     zavrsenih: int = 0
     zakrpa: int = 0
     prihvacenih: int = 0
+    #: Koliko ih je stiglo do grane `zadatak/TSK-…` (ADR-0043). Prihvaćena zakrpa
+    #: je prošla proveru putanja; ova je prošla i kapije, i ima commit.
+    u_grani: int = 0
     odbijenih: int = 0
     odbijenih_zbog_zone: int = 0
     kapija_mereno: int = 0
@@ -99,7 +102,12 @@ def za_agenta(persona: Persona) -> Ucinak:
 
     zakrpe = TaskPatch.objects.filter(author=persona)
     u.zakrpa = zakrpe.count()
-    u.prihvacenih = zakrpe.filter(status=E.PatchStatus.ACCEPTED.value).count()
+    # `APPLIED` je prihvaćena zakrpa koja je i otišla u granu (ADR-0043). Da se
+    # broji samo `ACCEPTED`, agentu bi uspeh smanjivao broj prihvaćenih — mera bi
+    # kažnjavala upravo ono što meri.
+    u.prihvacenih = zakrpe.filter(status__in=(E.PatchStatus.ACCEPTED.value,
+                                              E.PatchStatus.APPLIED.value)).count()
+    u.u_grani = zakrpe.filter(status=E.PatchStatus.APPLIED.value).count()
     u.odbijenih = zakrpe.filter(status=E.PatchStatus.REJECTED.value).count()
     u.odbijenih_zbog_zone = zakrpe.filter(
         status=E.PatchStatus.REJECTED.value, reason__icontains="zaštićena zona").count()

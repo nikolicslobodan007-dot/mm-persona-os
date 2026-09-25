@@ -45,6 +45,7 @@ from api.views.zadaci import (
     QueuedTasksView,
     TaskBriefView,
     TaskGateView,
+    TaskResultView,
     TaskWorkView,
 )
 
@@ -75,6 +76,7 @@ urlpatterns = [
     path("tasks/<str:task_id>/brief", TaskBriefView.as_view(), name="task-brief"),
     path("tasks/<str:task_id>/work", TaskWorkView.as_view(), name="task-work"),
     path("tasks/<str:task_id>/gate", TaskGateView.as_view(), name="task-gate"),
+    path("tasks/<str:task_id>/result", TaskResultView.as_view(), name="task-result"),
     path("audit", AuditListView.as_view(), name="audit"),
     path("policy/evaluate", PolicyEvaluateView.as_view(), name="policy-evaluate"),
     path("policy/evaluate/batch", PolicyEvaluateBatchView.as_view(),

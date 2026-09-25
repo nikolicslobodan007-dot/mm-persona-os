@@ -37,7 +37,7 @@ class Command(BaseCommand):
             return
 
         self.stdout.write(
-            f"{'AGENT':10} {'ZADACI':>7} {'GOTOVO':>7} {'ZAKRPE':>7} "
+            f"{'AGENT':10} {'ZADACI':>7} {'GOTOVO':>7} {'ZAKRPE':>7} {'GRANA':>6} "
             f"{'ODBIJ.':>7} {'ZONA':>5} {'1. PUT':>7} {'NALAZI':>7}  IME")
         for r in redovi:
             prvi = "—" if r.iz_prvog_puta is None else f"{r.iz_prvog_puta:.0%}"
@@ -45,7 +45,8 @@ class Command(BaseCommand):
                 if r.odbijenih_zbog_zone else f"{r.odbijenih_zbog_zone:>5}"
             self.stdout.write(
                 f"{r.persona:10} {r.zadataka:>7} {r.zavrsenih:>7} {r.zakrpa:>7} "
-                f"{r.odbijenih:>7} {zona} {prvi:>7} {r.nalaza_na_rad:>7}  {r.ime}")
+                f"{r.u_grani:>6} {r.odbijenih:>7} {zona} {prvi:>7} "
+                f"{r.nalaza_na_rad:>7}  {r.ime}")
 
         blokeri = sum(r.blokera_na_rad for r in redovi)
         if blokeri:

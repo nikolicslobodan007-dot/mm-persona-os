@@ -64,6 +64,22 @@ sudo systemctl enable --now mm-runner
 journalctl -u mm-runner -f
 ```
 
+## Rezultat: grana, ne `main` (ADR-0043)
+
+Kad su sve četiri kapije zelene, poslušnik pravi commit i gura ga u granu
+`zadatak/TSK-…` **lokalnog** repozitorijuma na serveru. Commit se pravi pre nego
+što kapije krenu, nad čistim stablom; autor je agent, pošiljalac je sistem.
+
+Server ne gura nikuda dalje i ne treba mu ključ sa pravom pisanja. Grane se dovlače
+sa radne mašine:
+
+```
+git fetch persona:apps/mm-persona-os 'refs/heads/zadatak/*:refs/remotes/agent/*'
+```
+
+Šta čeka pregled pokazuje `manage.py grane` (u kontejneru `web`). U `main` se spaja
+ljudskom rukom (ADR-0038 §6).
+
 ## Šta ovde NIJE pokriveno testovima
 
 Logika provere zakrpe jeste — `tests/test_zakrpa.py`. Ovaj direktorijum je

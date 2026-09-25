@@ -297,3 +297,87 @@ class TestRedNeVrtiUKrug:
                            {"gate": "pytest", "passed": True,
                             "patch": str(uuid.uuid4())}, format="json")
         assert o.status_code == 404
+
+
+class TestRezultat:
+    """ADR-0043 — četvrta tačka: grana, i samo grana.
+
+    Poslušnik i dalje ne zatvara zadatak. Sve što sme jeste da kaže gde je
+    ostavio commit, i to tek pošto su kapije nad tom zakrpom zelene.
+    """
+
+    SHA = "c" * 40
+
+    def _zeleno(self, poslusnik, zad, zk):
+        for g in zad.required_gates:
+            poslusnik.post(reverse("task-gate", args=[zad.public_id]),
+                           {"gate": g, "passed": True, "patch": str(zk.pk)},
+                           format="json")
+
+    def test_work_nosi_granu_i_poruku(self, poslusnik, zad, mila):
+        _predaj(zad, DIFF, mila)
+        podaci = poslusnik.get(
+            reverse("task-work", args=[zad.public_id])).json()["data"]
+        assert podaci["branch"] == f"zadatak/{zad.public_id}"
+        assert podaci["branch_expected_sha"] == ""
+        assert podaci["author_email"].endswith("@agenti.webkorporacija.com")
+        assert zad.public_id in podaci["commit_message"]
+
+    def test_zeleno_upisuje_granu(self, poslusnik, zad, mila):
+        zk = _predaj(zad, DIFF, mila)
+        self._zeleno(poslusnik, zad, zk)
+        odgovor = poslusnik.post(
+            reverse("task-result", args=[zad.public_id]),
+            {"patch": str(zk.pk), "branch": f"zadatak/{zad.public_id}",
+             "commit": self.SHA}, format="json")
+        assert odgovor.status_code == 200
+        zad.refresh_from_db()
+        assert zad.commit_sha == self.SHA
+        assert zad.status != E.TaskStatus.DONE.value
+
+    def test_bez_zelenih_kapija_se_odbija(self, poslusnik, zad, mila):
+        zk = _predaj(zad, DIFF, mila)
+        odgovor = poslusnik.post(
+            reverse("task-result", args=[zad.public_id]),
+            {"patch": str(zk.pk), "branch": f"zadatak/{zad.public_id}",
+             "commit": self.SHA}, format="json")
+        assert odgovor.status_code == 400
+
+    def test_tudja_grana_se_odbija(self, poslusnik, zad, mila):
+        zk = _predaj(zad, DIFF, mila)
+        self._zeleno(poslusnik, zad, zk)
+        assert poslusnik.post(
+            reverse("task-result", args=[zad.public_id]),
+            {"patch": str(zk.pk), "branch": "main", "commit": self.SHA},
+            format="json").status_code == 400
+
+    def test_tudja_zakrpa_se_odbija(self, poslusnik, zad, mila, db):
+        with bind(actor_id="user:slobodan"):
+            drugi = zadaci.create(title="Drugi", why="Drugi razlog.",
+                                  allowed_paths=["apps/content"], assignee=mila)
+        zk = _predaj(drugi, DIFF, mila)
+        self._zeleno(poslusnik, drugi, zk)
+        assert poslusnik.post(
+            reverse("task-result", args=[zad.public_id]),
+            {"patch": str(zk.pk), "branch": f"zadatak/{zad.public_id}",
+             "commit": self.SHA}, format="json").status_code == 404
+
+    def test_operater_takodje_sme(self, operater, zad, mila, poslusnik):
+        zk = _predaj(zad, DIFF, mila)
+        self._zeleno(poslusnik, zad, zk)
+        assert operater.post(
+            reverse("task-result", args=[zad.public_id]),
+            {"patch": str(zk.pk), "branch": f"zadatak/{zad.public_id}",
+             "commit": self.SHA}, format="json").status_code == 200
+
+    def test_druga_zakrpa_nosi_ocekivanu_vrednost(self, poslusnik, zad, mila):
+        """`--force-with-lease` dobija ono što aplikacija zna da na grani stoji."""
+        zk = _predaj(zad, DIFF, mila)
+        self._zeleno(poslusnik, zad, zk)
+        poslusnik.post(reverse("task-result", args=[zad.public_id]),
+                       {"patch": str(zk.pk), "branch": f"zadatak/{zad.public_id}",
+                        "commit": self.SHA}, format="json")
+        _predaj(zad, DIFF.replace("+b", "+c"), mila)
+        podaci = poslusnik.get(
+            reverse("task-work", args=[zad.public_id])).json()["data"]
+        assert podaci["branch_expected_sha"] == self.SHA

@@ -984,6 +984,38 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/tasks/{task_id}/result:
+    post:
+      operationId: tasks_result
+      description: |-
+        Grana i commit kao rezultat jedne zakrpe. ADR-0043.
+
+        Prima se tek kad su sve tražene kapije zelene **nad tom zakrpom**. Zadatak
+        se ovde ne zatvara: `main` menja ljudska ruka (ADR-0038 §6).
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResultInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/tasks/{task_id}/work:
     get:
       operationId: tasks_work
@@ -1530,6 +1562,24 @@ components:
         * `COMPLAINT` - COMPLAINT
         * `HARD_BOUNCE` - HARD_BOUNCE
         * `MANUAL` - MANUAL
+    ResultInRequest:
+      type: object
+      properties:
+        patch:
+          type: string
+          format: uuid
+        branch:
+          type: string
+          minLength: 1
+          maxLength: 80
+        commit:
+          type: string
+          minLength: 1
+          maxLength: 40
+      required:
+      - branch
+      - commit
+      - patch
     ScheduleInRequest:
       type: object
       properties:
