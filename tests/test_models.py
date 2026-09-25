@@ -75,6 +75,7 @@ class TestAppOwnership:
             "AgentRun", "AgentPlan", "PlanStep", "Action", "ActionAttempt",
             # ADR-0035 — zadatak programerskog sektora
             "CodeTask", "GateResult", "ReviewFinding",
+            "TaskPatch",   # ADR-0038 — predata izmena i ishod provere
         },
         "policy": {
             "PolicyRule", "PolicyDecision", "ApprovalRequest", "CapabilityGrant",

@@ -1,0 +1,67 @@
+# Radno okruženje jednog zadatka. ADR-0038 §1.
+#
+# Pokreće se SAMO iz `runner.py`, sa `COMPOSE_PROJECT_NAME=zad-<TSK>`, pa svaki
+# zadatak dobija svoju mrežu, svoju bazu i svoje ime.
+#
+#   docker compose -f docker-compose.zadatak.yml up --abort-on-container-exit
+#
+# Tri stvari koje ovde NE postoje, i to je cela poenta:
+#   - ruta ka internetu (`internal: true`),
+#   - produkcijska baza, Redis, MinIO i volume `secrets`,
+#   - ijedan port objavljen na host.
+
+name: ${COMPOSE_PROJECT_NAME:-zad-bezimeni}
+
+services:
+
+  baza:
+    # Ista slika kao u produkciji — kapije koje prolaze ovde moraju da prolaze i tamo.
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: persona_os
+      POSTGRES_USER: persona
+      POSTGRES_PASSWORD: zadatak
+    # Podaci u memoriji: baza nestaje sa zadatkom i ništa ne ostaje na disku.
+    tmpfs: ["/var/lib/postgresql/data"]
+    command: >
+      postgres -c fsync=off -c synchronous_commit=off -c full_page_writes=off
+      -c shared_buffers=256MB -c max_connections=30
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U persona -d persona_os"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks: [zadatak]
+
+  kapije:
+    # Slika aplikacije već ima Python i zavisnosti; nova se ne gradi po zadatku.
+    image: mm-persona-os-web:latest
+    depends_on:
+      baza: {condition: service_healthy}
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      POSTGRES_HOST: baza
+      POSTGRES_DB: persona_os
+      POSTGRES_USER: persona
+      POSTGRES_PASSWORD: zadatak
+      # Ništa ne sme napolje ni greškom (GLOBAL_EXTERNAL_ACTIONS_ENABLED).
+      GLOBAL_EXTERNAL_ACTIONS_ENABLED: "false"
+      PYTHONDONTWRITEBYTECODE: "1"
+    # Radni primerak ubacuje `runner.py`; ovde se samo montira.
+    volumes:
+      - ${RADNI_PRIMERAK:?treba putanja do radnog primerka}:/rad
+      - ${IZVESTAJ:?treba putanja za izveštaj}:/izvestaj
+    working_dir: /rad
+    user: "${UID:-1000}:${GID:-1000}"
+    read_only: false
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    mem_limit: 2g
+    pids_limit: 512
+    command: ["/bin/sh", "/rad/deploy/runner/kapije.sh"]
+    networks: [zadatak]
+
+networks:
+  zadatak:
+    # Ovo je jedina stavka bez koje ceo ADR-0038 §1 ne važi.
+    internal: true

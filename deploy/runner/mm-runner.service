@@ -1,0 +1,38 @@
+# Poslušnik za zadatke programerskog departmana. ADR-0038 §2.
+#
+# Instalacija:
+#   sudo cp deploy/runner/mm-runner.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now mm-runner
+#
+# Korisnik `mm` mora biti u grupi `docker`. To je i razlog zašto ovo NIJE u
+# aplikaciji: članstvo u toj grupi je root na hostu, pa ga nosi jedan mali
+# proces koji ne izvršava ništa što je agent napisao.
+
+[Unit]
+Description=MM Persona OS — poslušnik za zadatke (ADR-0038)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=mm
+Group=mm
+SupplementaryGroups=docker
+WorkingDirectory=/srv/mm-persona-os
+Environment=PERSONA_API=http://127.0.0.1:8000/api/v1
+Environment=PERSONA_REPO=/srv/mm-persona-os
+# Token NIKAD ovde: stoji u fajlu 0600, kao i ključevi agenata (ADR-0026).
+EnvironmentFile=/etc/mm-persona-os/runner.env
+ExecStart=/usr/bin/python3 /srv/mm-persona-os/deploy/runner/runner.py
+Restart=on-failure
+RestartSec=15
+
+# Poslušnik ne piše nigde osim u svoj privremeni direktorijum.
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/srv/mm-persona-os
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

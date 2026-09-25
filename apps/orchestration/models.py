@@ -510,3 +510,32 @@ class ReviewFinding(UUIDModel):
 
     def __str__(self) -> str:
         return f"{self.severity} {self.file}:{self.line or '-'}"
+
+
+class TaskPatch(UUIDModel):
+    """Izmena koju je agent predao, i ishod provere. ADR-0038 §3.
+
+    Odbijena zakrpa se **takođe** pamti: po njoj se vidi da li agent stalno
+    pokušava izvan svog dela koda, a to je merenje koje ADR-0034 §6 traži.
+    """
+
+    task = models.ForeignKey(CodeTask, on_delete=models.CASCADE, related_name="patches")
+    author = models.ForeignKey(
+        "personas.Persona", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="patches_written",
+    )
+    base_sha = models.CharField(max_length=40, blank=True)
+    diff = models.TextField()
+    paths = JSON_LIST()
+    status = models.CharField(
+        max_length=16, choices=E.PatchStatus.choices(), default=E.PatchStatus.PROPOSED
+    )
+    reason = models.TextField(blank=True)
+    applied_sha = models.CharField(max_length=40, blank=True)
+
+    class Meta:
+        db_table = "orchestration_task_patch"
+        indexes = [models.Index(fields=["task", "status", "-created_at"])]
+
+    def __str__(self) -> str:
+        return f"{self.task_id} {self.status} ({len(self.paths)} putanja)"

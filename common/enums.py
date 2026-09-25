@@ -1405,3 +1405,15 @@ __all__ += [
     "FindingStatus",
     "DEFAULT_GATES",
 ]
+
+
+class PatchStatus(CanonEnum):
+    """Ishod predate zakrpe (ADR-0038 §3)."""
+
+    PROPOSED = "PROPOSED"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+    APPLIED = "APPLIED"
+
+
+__all__ += ["PatchStatus"]
