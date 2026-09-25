@@ -491,10 +491,22 @@ class ReviewFinding(UUIDModel):
     )
     #: Ko ga je našao — `open-code-review`, model, čovek (ADR-0032).
     source = models.CharField(max_length=40, default="agent")
+    #: Otisak nalaza iz alata (SARIF `partialFingerprints`). ADR-0036 §4 —
+    #: recenzija se vrti više puta, a isti nalaz sme da postoji samo jednom.
+    fingerprint = models.CharField(max_length=120, blank=True, default="")
+    #: Kategorija alata: bug, security, performance… (ADR-0036 §1).
+    category = models.CharField(max_length=40, blank=True, default="")
 
     class Meta:
         db_table = "orchestration_review_finding"
         indexes = [models.Index(fields=["task", "status", "severity"])]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["task", "fingerprint"],
+                condition=~models.Q(fingerprint=""),
+                name="review_finding_unique_fingerprint",
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.severity} {self.file}:{self.line or '-'}"
