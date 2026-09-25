@@ -22,7 +22,7 @@ from rest_framework import serializers
 
 from api.base import PersonaOSView, ok
 from api.errors import ApiError
-from apps.orchestration import zadaci
+from apps.orchestration import brif, zadaci
 from apps.orchestration.models import CodeTask, TaskPatch
 from common import enums as E
 from common import ids as I
@@ -83,6 +83,21 @@ class QueuedTasksView(PersonaOSView):
             .distinct()[:MAX_U_REDU]
         )
         return ok({"tasks": list(redovi)})
+
+
+class TaskBriefView(PersonaOSView):
+    """Građa za pisca zakrpe: zadatak, dozvoljene putanje i sadržaj tih fajlova.
+
+    `work` daje zakrpu koja **postoji**; `brief` daje ono od čega se zakrpa tek
+    pravi. Brif nosi `sha256` po fajlu umesto commita, jer slika aplikacije nema
+    `.git` — obećanje koje ne može da se ispuni se ne daje (ADR-0041 §1).
+    """
+
+    allow_runner = True
+
+    @extend_schema(operation_id="tasks_brief", responses={200: dict})
+    def get(self, request, task_id: str):
+        return ok(brif.build(_zadatak(task_id)))
 
 
 class TaskWorkView(PersonaOSView):

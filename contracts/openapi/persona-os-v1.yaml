@@ -929,6 +929,33 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/tasks/{task_id}/brief:
+    get:
+      operationId: tasks_brief
+      description: |-
+        Građa za pisca zakrpe: zadatak, dozvoljene putanje i sadržaj tih fajlova.
+
+        `work` daje zakrpu koja **postoji**; `brief` daje ono od čega se zakrpa tek
+        pravi. Brif nosi `sha256` po fajlu umesto commita, jer slika aplikacije nema
+        `.git` — obećanje koje ne može da se ispuni se ne daje (ADR-0041 §1).
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - tasks
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/tasks/{task_id}/gate:
     post:
       operationId: tasks_gate
