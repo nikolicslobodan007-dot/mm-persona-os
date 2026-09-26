@@ -259,3 +259,48 @@ class TestKomanda:
 
         with pytest.raises(CommandError, match="tačno jedno"):
             call_command("pisac", stdout=io.StringIO())
+
+
+BEZ_GIT = ("--- a/apps/content/x.py\n+++ b/apps/content/x.py\n"
+           "@@ -1 +1 @@\n-a\n+b\n")
+
+
+class TestDiffBezGitZaglavlja:
+    """ADR-0048 — `diff --git` nije deo unified diff formata.
+
+    26.09. je Lazar vratio ispravnu zakrpu bez tog reda, a `izvuci_diff` ju je
+    odbacio kao „nije diff". Neuspeh je upisan kao njegov, iako je bio naš.
+    """
+
+    def test_ograda_bez_git_zaglavlja(self):
+        izvuceno = pisac.izvuci_diff(f"```diff\n{BEZ_GIT}```")
+        assert izvuceno is not None and izvuceno.startswith("--- a/")
+
+    def test_bez_ograde_bez_git_zaglavlja(self):
+        izvuceno = pisac.izvuci_diff("Evo izmene:\n" + BEZ_GIT)
+        assert izvuceno.startswith("--- a/") and "Evo izmene" not in izvuceno
+
+    def test_zakrpa_naseg_parsera_prolazi(self, z, mila, model, ruta):
+        """Ono što `izvuci_diff` propusti, `zakrpa.check` mora da ume da pročita."""
+        model["odgovor"] = f"```diff\n{BEZ_GIT}```"
+        ishod = pisac.pokusaj(z)
+        assert ishod.napisano, ishod.razlog
+        assert ishod.putanje == ["apps/content/x.py"]
+
+    def test_git_zaglavlje_i_dalje_radi(self):
+        assert pisac.izvuci_diff(f"```diff\n{DIFF}```").startswith("diff --git")
+
+    @pytest.mark.parametrize("smece", [
+        "NE MOGU: u dozvoljenim putanjama nema tog fajla.",
+        "naslov\n---\npodnaslov",            # markdown crta, ne zakrpa
+        "--- samo jedan red bez para",
+        "+++ samo drugi red bez para",
+        "```python\nprint('---')\n```",
+    ])
+    def test_proza_i_dalje_nije_zakrpa(self, smece):
+        assert pisac.izvuci_diff(smece) is None
+
+    def test_uzima_se_ranije_od_dva_znaka(self):
+        """Ako ima i `diff --git` i par, seče se od onoga što je prvo."""
+        tekst = f"uvod\n{DIFF}"
+        assert pisac.izvuci_diff(tekst).startswith("diff --git")

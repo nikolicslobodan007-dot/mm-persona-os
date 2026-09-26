@@ -57,7 +57,13 @@ NAJVISE_POKUSAJA = 3
 MAX_DIFF_ZNAKOVA = 20_000
 
 _OGRADA = re.compile(r"```[a-zA-Z]*\s*\n(.*?)```", re.S)
-_POCETAK = re.compile(r"^diff --git ", re.M)
+#: `diff --git` je `git`-ov dodatak, ne deo unified diff formata. Zakrpa bez njega
+#: je i dalje zakrpa: `git apply` je prima, a `zakrpa.paths_in` je čita preko
+#: `---` i `+++` redova. Traženje baš tog reda bacalo je ispravan rad (ADR-0048).
+_GIT = re.compile(r"^diff --git ", re.M)
+#: Par `--- <put>` pa odmah `+++ <put>`. Traži se **par**, da običan `---` u
+#: proznom tekstu ili markdown crta ne prođu kao zakrpa.
+_PAR = re.compile(r"^--- \S+.*\n\+\+\+ \S+", re.M)
 
 SISTEM = """Ti si programer u firmi Web Korporacija i radiš po pravilima koja se ne pregovaraju.
 
@@ -162,19 +168,27 @@ def zasto_ne(zadatak: CodeTask, *, plafon_centi: int = PLAFON_CENTI,
 # --------------------------------------------------------------------- čitanje
 
 
+def _pocetak(tekst: str) -> int | None:
+    """Gde počinje zakrpa — po `diff --git` ili po paru `---`/`+++`, šta je ranije."""
+    mesta = [m.start() for m in (_GIT.search(tekst or ""), _PAR.search(tekst or ""))
+             if m is not None]
+    return min(mesta) if mesta else None
+
+
 def izvuci_diff(tekst: str) -> str | None:
     """Vadi unified diff iz odgovora modela, ili `None` ako ga nema.
 
     Model ume da doda uvod i zaključak ma šta pisalo u uputstvu. Uzima se prvi
-    blok koji stvarno liči na diff; ako ograde nema, seče se od prvog
-    `diff --git`. Ono što ne liči na diff se ne nagađa — vraća se `None`.
+    blok koji stvarno liči na diff, i seče se od mesta gde zakrpa počinje. Ono
+    što ne liči na diff se ne nagađa — vraća se `None`.
     """
     for telo in _OGRADA.findall(tekst or ""):
-        if _POCETAK.search(telo):
-            return telo.strip() + "\n"
-    m = _POCETAK.search(tekst or "")
-    if m:
-        return (tekst[m.start():]).strip() + "\n"
+        p = _pocetak(telo)
+        if p is not None:
+            return telo[p:].strip() + "\n"
+    p = _pocetak(tekst or "")
+    if p is not None:
+        return tekst[p:].strip() + "\n"
     return None
 
 
