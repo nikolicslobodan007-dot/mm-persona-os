@@ -3,6 +3,7 @@
     manage.py nalaz --zadatak TSK-... --spisak
     manage.py nalaz --zadatak TSK-... --fajl apps/content/lessons.py --linija 131 \\
         --tvrdnja "Odseca pouke bez ijedne reči da je odsekao." --tezina BLOCKER
+    manage.py nalaz --zadatak TSK-... --izmeni 1a2b3c4d --tvrdnja "ispravljen tekst"
     manage.py nalaz --zadatak TSK-... --zatvori 1a2b3c4d --kako FIXED
 
 `manage.py recenzija` uvozi ono što je našao alat. Ovo je druga strana: ADR-0036
@@ -38,6 +39,8 @@ class Command(BaseCommand):
         parser.add_argument("--tvrdnja", default="")
         parser.add_argument("--tezina", default=E.FindingSeverity.MAJOR.value,
                             choices=E.FindingSeverity.values())
+        parser.add_argument("--izmeni", default="",
+                            help="Početak identifikatora — ispravlja tvrdnju.")
         parser.add_argument("--zatvori", default="", help="Početak identifikatora nalaza.")
         parser.add_argument("--kako", default=E.FindingStatus.FIXED.value,
                             choices=[s for s in E.FindingStatus.values()
@@ -46,7 +49,7 @@ class Command(BaseCommand):
         parser.add_argument("--actor", default="user:slobodan")
 
     def handle(self, *args, zadatak, spisak, fajl, linija, tvrdnja, tezina,
-               zatvori, kako, napomena, actor, **opts):
+               izmeni, zatvori, kako, napomena, actor, **opts):
         z = CodeTask.objects.filter(public_id=zadatak).first()
         if z is None:
             raise CommandError(f"Zadatak {zadatak} ne postoji.")
@@ -60,6 +63,8 @@ class Command(BaseCommand):
             try:
                 if spisak:
                     self._spisak(z)
+                elif izmeni:
+                    self._izmeni(z, izmeni, tvrdnja, actor)
                 elif zatvori:
                     self._zatvori(z, zatvori, kako, napomena, actor)
                 else:
@@ -104,17 +109,33 @@ class Command(BaseCommand):
             self.stdout.write("Zadatak od sada ne može da se zatvori niti da otvori "
                               "granu dok ovaj nalaz stoji.")
 
+    # ----------------------------------------------------------------- ispravka
+
+    def _izmeni(self, z: CodeTask, prefiks: str, tvrdnja: str, actor: str) -> None:
+        if not tvrdnja.strip():
+            raise CommandError("Uz `--izmeni` ide `--tvrdnja` sa novim tekstom.")
+        n = self._nadji(z, prefiks)
+        staro = n.claim
+        zadaci.amend_finding(n, tvrdnja, actor=actor)
+        self.stdout.write(f"{str(n.pk)[:PREFIKS]}  {n.severity}  tvrdnja ispravljena")
+        self.stdout.write(f"  pre:   {staro[:120]}")
+        self.stdout.write(f"  posle: {n.claim[:120]}")
+
     # -------------------------------------------------------------- zatvaranje
 
-    def _zatvori(self, z: CodeTask, prefiks: str, kako: str, napomena: str,
-                 actor: str) -> None:
+    def _nadji(self, z: CodeTask, prefiks: str) -> ReviewFinding:
+        """Nalaz po početku identifikatora. Dvosmislen prefiks se odbija, ne pogađa."""
         pogodak = [n for n in z.findings.all() if str(n.pk).startswith(prefiks)]
         if not pogodak:
             raise CommandError(f"Nijedan nalaz ovog zadatka ne počinje sa {prefiks!r}.")
         if len(pogodak) > 1:
             raise CommandError(
                 f"{prefiks!r} pogađa {len(pogodak)} nalaza — daj više znakova.")
-        n: ReviewFinding = pogodak[0]
+        return pogodak[0]
+
+    def _zatvori(self, z: CodeTask, prefiks: str, kako: str, napomena: str,
+                 actor: str) -> None:
+        n = self._nadji(z, prefiks)
         zadaci.close_finding(n, kako, actor=actor, note=napomena)
         self.stdout.write(self.style.SUCCESS(
             f"{str(n.pk)[:PREFIKS]}  {n.severity}  → {kako}"))

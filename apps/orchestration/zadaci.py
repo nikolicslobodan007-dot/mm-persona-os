@@ -33,6 +33,7 @@ __all__ = [
     "may_touch",
     "record_gate",
     "add_finding",
+    "amend_finding",
     "close_finding",
     "finish",
     "gate_report",
@@ -269,6 +270,49 @@ def add_finding(zadatak: CodeTask, *, reviewer: Persona | None, file: str,
     audit.record("task.finding.added", persona=reviewer, details={
         "task": zadatak.public_id, "file": nalaz.file, "line": line,
         "severity": severity, "source": source,
+    })
+    return nalaz
+
+
+@transaction.atomic
+def amend_finding(nalaz: ReviewFinding, claim: str, *, actor: str = "") -> ReviewFinding:
+    """Ispravlja **tvrdnju** nalaza. Težina i status se ovuda ne diraju.
+
+    Greška u kucanju ne sme da tera na lažno zatvaranje nalaza — a dupliranje
+    nalaza zbog pravopisa kvari meru, jer `ucinak` broji nalaze po agentu.
+
+    Tri granice, i sve tri su o tome da ispravka ne postane prepravljanje:
+
+      - **samo otvoren nalaz.** Zatvoren je presuđen; njegov tekst je deo te
+        presude i ne menja se naknadno;
+      - **težina se ne menja.** Naknadno podizanje na `BLOCKER` je nova odluka o
+        tuđem radu, a ne ispravka — to ide kao nov nalaz;
+      - **izvršilac ne dira nalaz na sopstveni rad**, isto kao kod zatvaranja.
+
+    Stara tvrdnja ostaje u auditu, pa se ispravka vidi.
+    """
+    if not claim.strip():
+        raise TaskError("EMPTY_CLAIM", "Nalaz bez tvrdnje nije nalaz.")
+    if nalaz.status != E.FindingStatus.OPEN.value:
+        raise TaskError(
+            "CLOSED_FINDING",
+            f"Nalaz je {nalaz.status}; presuđen nalaz se ne prepravlja. Ako je "
+            f"presuda pogrešna, ide nov nalaz.",
+        )
+    izvrsilac = getattr(nalaz.task.assignee, "public_id", None)
+    if izvrsilac and actor == f"agent:{izvrsilac}":
+        raise TaskError(
+            "SELF_AMEND",
+            f"{izvrsilac} ne dira nalaz na sopstveni rad (ADR-0034 §5.2).",
+        )
+
+    pre = nalaz.claim
+    nalaz.claim = claim.strip()
+    nalaz.save(update_fields=["claim", "updated_at"])
+    audit.record("task.finding.amended", persona=nalaz.task.assignee, details={
+        "task": nalaz.task.public_id, "finding": str(nalaz.pk),
+        "file": nalaz.file, "severity": nalaz.severity,
+        "pre": pre[:1000], "posle": nalaz.claim[:1000],
     })
     return nalaz
 

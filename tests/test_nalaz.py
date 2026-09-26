@@ -219,3 +219,67 @@ def test_stranac_kao_recenzent_sme(z, db):
         n = zadaci.add_finding(z, reviewer=drugi, file="apps/content/x.py",
                                claim="x", severity="MINOR", source="open-code-review")
     assert isinstance(n, ReviewFinding)
+
+
+class TestIspravka:
+    """ADR-0046 — greška u kucanju ne sme da tera na lažno zatvaranje nalaza."""
+
+    def test_covek_ispravlja_tvrdnju(self, z):
+        n = _upisi(z, tvrdnja="Ceti o secenju.")
+        with bind(actor_id="user:slobodan"):
+            zadaci.amend_finding(n, "Ćuti o sečenju.", actor="user:slobodan")
+        n.refresh_from_db()
+        assert n.claim == "Ćuti o sečenju."
+
+    def test_tezina_i_status_ostaju(self, z):
+        n = _upisi(z)
+        with bind(actor_id="user:slobodan"):
+            zadaci.amend_finding(n, "drugi tekst", actor="user:slobodan")
+        n.refresh_from_db()
+        assert n.severity == "BLOCKER" and n.status == "OPEN"
+
+    def test_zatvoren_nalaz_se_ne_prepravlja(self, z):
+        """Presuđen nalaz je deo presude; ispravka bi bila prepravljanje istorije."""
+        n = _upisi(z)
+        with bind(actor_id="user:slobodan"):
+            zadaci.close_finding(n, "FIXED", actor="user:slobodan")
+            with pytest.raises(zadaci.TaskError, match="ne prepravlja"):
+                zadaci.amend_finding(n, "novo", actor="user:slobodan")
+
+    def test_izvrsilac_ne_dira_svoj(self, z, mila):
+        n = _upisi(z)
+        with bind(actor_id=f"agent:{mila.public_id}"), \
+             pytest.raises(zadaci.TaskError, match="sopstveni rad"):
+            zadaci.amend_finding(n, "nema problema", actor=f"agent:{mila.public_id}")
+
+    def test_prazna_tvrdnja_se_odbija(self, z):
+        n = _upisi(z)
+        with bind(actor_id="user:slobodan"), \
+             pytest.raises(zadaci.TaskError, match="nije nalaz"):
+            zadaci.amend_finding(n, "   ", actor="user:slobodan")
+
+    def test_stara_tvrdnja_ostaje_u_auditu(self, z):
+        from apps.observability.models import AuditEvent
+
+        n = _upisi(z, tvrdnja="prva verzija")
+        with bind(actor_id="user:slobodan"):
+            zadaci.amend_finding(n, "druga verzija", actor="user:slobodan")
+        red = AuditEvent.objects.filter(event_key="task.finding.amended").first()
+        assert red.payload["details"]["pre"] == "prva verzija"
+        assert red.payload["details"]["posle"] == "druga verzija"
+
+    def test_komanda_ispravlja(self, z):
+        n = _upisi(z, tvrdnja="Ceti o secenju.")
+        out = io.StringIO()
+        call_command("nalaz", "--zadatak", z.public_id, "--izmeni", str(n.pk)[:8],
+                     "--tvrdnja", "Ćuti o sečenju.", stdout=out)
+        ispis = out.getvalue()
+        assert "ispravljena" in ispis and "Ćuti o sečenju." in ispis
+        n.refresh_from_db()
+        assert n.claim == "Ćuti o sečenju."
+
+    def test_komanda_trazi_tvrdnju(self, z):
+        n = _upisi(z)
+        with pytest.raises(CommandError, match="ide `--tvrdnja`"):
+            call_command("nalaz", "--zadatak", z.public_id, "--izmeni",
+                         str(n.pk)[:8], stdout=io.StringIO())
