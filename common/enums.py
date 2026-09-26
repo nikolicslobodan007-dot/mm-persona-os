@@ -876,6 +876,9 @@ class LLMPurpose(CanonEnum):
     CLASSIFY = "classify"
     EMBED = "embed"
     EVALUATE = "evaluate"
+    #: Pisanje zakrpe nad kodom (ADR-0044). Svoja svrha, a ne `content_draft`,
+    #: jer traži drugu rutu, drugi plafon izlaza i svoj budžet (Canon §13.2).
+    CODE_PATCH = "code_patch"
 
 
 class OutboxStatus(CanonEnum):

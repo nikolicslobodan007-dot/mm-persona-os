@@ -32,7 +32,8 @@ from common import enums as E
 from .models import CodeTask, TaskPatch
 from .zadaci import TaskError, may_touch
 
-__all__ = ["Izmena", "Nalaz", "paths_in", "check", "submit", "MAX_DIFF_BYTES"]
+__all__ = ["Izmena", "Nalaz", "paths_in", "check", "submit", "zabelezi_neuspeh",
+           "MAX_DIFF_BYTES"]
 
 #: Gornja granica veličine zakrpe. Zakrpa preko ove mere nije izmena nego prepis,
 #: i traži da se zadatak podeli.
@@ -234,7 +235,7 @@ def check(zadatak: CodeTask, diff: str, *, persona: Persona | None = None) -> Na
 
 @transaction.atomic
 def submit(zadatak: CodeTask, diff: str, *, persona: Persona | None = None,
-           base_sha: str = "") -> TaskPatch:
+           base_sha: str = "", cena_centi: int = 0) -> TaskPatch:
     """Upisuje zakrpu i njen ishod. Odbijena zakrpa se **takođe** pamti.
 
     Odbijena zakrpa je podatak: po njoj se vidi da li agent stalno pokušava izvan
@@ -243,7 +244,7 @@ def submit(zadatak: CodeTask, diff: str, *, persona: Persona | None = None,
     nalaz = check(zadatak, diff, persona=persona)
     red = TaskPatch.objects.create(
         task=zadatak, author=persona, base_sha=base_sha, diff=diff,
-        paths=nalaz.putanje,
+        paths=nalaz.putanje, cost_eur_cents=max(0, int(cena_centi)),
         status=E.PatchStatus.ACCEPTED if nalaz.ok else E.PatchStatus.REJECTED,
         reason="; ".join(nalaz.greske + [f"{p}: {r}" for p, r in nalaz.odbijeno])[:2000],
     )
@@ -253,6 +254,29 @@ def submit(zadatak: CodeTask, diff: str, *, persona: Persona | None = None,
         persona=persona or zadatak.assignee,
         details={"task": zadatak.public_id, "status": red.status,
                  "paths": nalaz.putanje, "reason": red.reason,
-                 "base": base_sha},
+                 "base": base_sha, "cena_centi": red.cost_eur_cents},
     )
+    return red
+
+
+@transaction.atomic
+def zabelezi_neuspeh(zadatak: CodeTask, *, persona: Persona | None, tekst: str,
+                     razlog: str, cena_centi: int = 0) -> TaskPatch:
+    """Pokušaj koji nije ni stigao do zakrpe — model nije vratio upotrebljiv diff.
+
+    Upisuje se kao odbijena zakrpa iz dva razloga, i oba su o poštenju brojeva
+    (ADR-0044): poziv je **plaćen**, pa trošak mora negde da stoji; i pokušaj se
+    **desio**, pa mora da se broji u plafon pokušaja. Prećutan neuspeh bi značio
+    besplatan i beskonačan krug.
+    """
+    red = TaskPatch.objects.create(
+        task=zadatak, author=persona, diff=tekst[:20_000], paths=[],
+        status=E.PatchStatus.REJECTED, reason=razlog[:2000],
+        cost_eur_cents=max(0, int(cena_centi)),
+    )
+    audit.record("task.patch.submitted", severity=E.AuditSeverity.WARNING,
+                 persona=persona or zadatak.assignee,
+                 details={"task": zadatak.public_id, "status": red.status,
+                          "paths": [], "reason": red.reason,
+                          "cena_centi": red.cost_eur_cents})
     return red

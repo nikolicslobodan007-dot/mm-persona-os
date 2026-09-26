@@ -538,6 +538,9 @@ class TaskPatch(UUIDModel):
     )
     reason = models.TextField(blank=True)
     applied_sha = models.CharField(max_length=40, blank=True)
+    #: Koliko je model koštao da bi ova zakrpa nastala (ADR-0044). Canon §13.1 —
+    #: EUR u centima, nikada float. Zakrpa koju je kucao čovek ostaje na nuli.
+    cost_eur_cents = models.BigIntegerField(default=0)
 
     class Meta:
         db_table = "orchestration_task_patch"

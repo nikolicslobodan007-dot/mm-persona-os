@@ -29,7 +29,6 @@ __all__ = ["Ucinak", "za_agenta", "za_sve", "NE_MERI_SE"]
 #: Ono što ADR-0034 §6 traži, a za šta izvor još ne postoji. Stoji ovde da se ne
 #: bi zaboravilo da je izostavljeno namerno.
 NE_MERI_SE: tuple[str, ...] = (
-    "trošak po zadatku — LLM poziv po zadatku još ne postoji (ADR-0041, druga polovina)",
     "greške kasnije vraćene na njegov commit — nema praćenja vraćanja",
 )
 
@@ -53,6 +52,8 @@ class Ucinak:
     kapija_iz_prvog: int = 0
     nalaza_na_rad: int = 0
     blokera_na_rad: int = 0
+    #: Koliko je model koštao na zakrpama ovog agenta (ADR-0044). `None` znači
+    #: „nijedna njegova zakrpa nije prošla kroz model" — ne nulu.
     trosak_centi: int | None = None
     ne_meri_se: tuple[str, ...] = field(default=NE_MERI_SE)
 
@@ -108,6 +109,11 @@ def za_agenta(persona: Persona) -> Ucinak:
     u.prihvacenih = zakrpe.filter(status__in=(E.PatchStatus.ACCEPTED.value,
                                               E.PatchStatus.APPLIED.value)).count()
     u.u_grani = zakrpe.filter(status=E.PatchStatus.APPLIED.value).count()
+    # Trošak je od ADR-0044 stvaran podatak, ne `ne_meri_se`. Zbir nula nad
+    # zakrpama koje je kucao čovek ostaje `None`: nula bi tvrdila da je model
+    # pozvan i da je bio besplatan (ADR-0033).
+    cene = [p.cost_eur_cents for p in zakrpe]
+    u.trosak_centi = sum(cene) if any(cene) else None
     u.odbijenih = zakrpe.filter(status=E.PatchStatus.REJECTED.value).count()
     u.odbijenih_zbog_zone = zakrpe.filter(
         status=E.PatchStatus.REJECTED.value, reason__icontains="zaštićena zona").count()

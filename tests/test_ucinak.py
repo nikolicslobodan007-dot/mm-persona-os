@@ -127,13 +127,14 @@ class TestNalazi:
 
 class TestSteNeMeri:
     def test_trosak_je_none_a_ne_nula(self, z, mila):
-        """Nula bi tvrdila da je mereno i ispalo nula. Nije mereno."""
+        """Zakrpa koju je kucao čovek nije koštala model — to nije nula (ADR-0044)."""
         assert U.za_agenta(mila).trosak_centi is None
 
     def test_spisak_neizmerenog_ide_uz_rezultat(self, mila):
+        """Trošak je od ADR-0044 izmeren i **izašao** je sa ovog spiska."""
         r = U.za_agenta(mila)
-        assert r.ne_meri_se and any("trošak" in s for s in r.ne_meri_se)
-        assert any("vraćene" in s for s in r.ne_meri_se)
+        assert r.ne_meri_se and any("vraćene" in s for s in r.ne_meri_se)
+        assert not any("trošak" in s for s in r.ne_meri_se)
 
 
 class TestKomanda:

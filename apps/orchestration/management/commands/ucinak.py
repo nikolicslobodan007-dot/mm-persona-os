@@ -38,15 +38,16 @@ class Command(BaseCommand):
 
         self.stdout.write(
             f"{'AGENT':10} {'ZADACI':>7} {'GOTOVO':>7} {'ZAKRPE':>7} {'GRANA':>6} "
-            f"{'ODBIJ.':>7} {'ZONA':>5} {'1. PUT':>7} {'NALAZI':>7}  IME")
+            f"{'ODBIJ.':>7} {'ZONA':>5} {'1. PUT':>7} {'NALAZI':>7} {'CENT':>6}  IME")
         for r in redovi:
             prvi = "—" if r.iz_prvog_puta is None else f"{r.iz_prvog_puta:.0%}"
             zona = self.style.ERROR(f"{r.odbijenih_zbog_zone:>5}") \
                 if r.odbijenih_zbog_zone else f"{r.odbijenih_zbog_zone:>5}"
+            cena = "—" if r.trosak_centi is None else str(r.trosak_centi)
             self.stdout.write(
                 f"{r.persona:10} {r.zadataka:>7} {r.zavrsenih:>7} {r.zakrpa:>7} "
                 f"{r.u_grani:>6} {r.odbijenih:>7} {zona} {prvi:>7} "
-                f"{r.nalaza_na_rad:>7}  {r.ime}")
+                f"{r.nalaza_na_rad:>7} {cena:>6}  {r.ime}")
 
         blokeri = sum(r.blokera_na_rad for r in redovi)
         if blokeri:
