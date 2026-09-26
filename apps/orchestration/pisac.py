@@ -202,7 +202,18 @@ def _prompt(zadatak: CodeTask) -> tuple[str, dict]:
         for n in b["open_findings"]:
             delovi.append(f"  · [{n.get('severity')}] {n.get('file')}:"
                           f"{n.get('line') or '-'} — {n.get('claim')}")
-    delovi += ["", "FAJLOVI (trenutno stanje):"]
+    if b.get("previous_patch"):
+        pz = b["previous_patch"]
+        delovi += [
+            "", "TVOJA RANIJA ZAKRPA NA OVOM ZADATKU (stoji na grani, NIJE spojena "
+            "u glavnu granu, pa je u fajlovima ispod nema):",
+            pz["diff"],
+        ]
+        if pz["truncated"]:
+            delovi.append("  [zakrpa je odsečena zbog dužine]")
+        if b["open_findings"]:
+            delovi.append("Nalazi iznad odnose se na OVU zakrpu, ne na fajlove ispod.")
+    delovi += ["", f"FAJLOVI. {b.get('files_from', '')}"]
     for f in b["files"]:
         delovi += [f"--- {f['path']} ---", f["content"], ""]
     return "\n".join(delovi), b

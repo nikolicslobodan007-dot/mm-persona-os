@@ -19,7 +19,7 @@ import pytest
 from django.urls import reverse
 
 from api.context import bind
-from apps.orchestration import brif, zadaci
+from apps.orchestration import brif, zadaci, zakrpa
 from common import enums as E
 from tests.conftest import requires_db
 
@@ -207,3 +207,89 @@ class TestZakrpaIzBrifa:
         assert brif.build(z)["files"], "prazan brif ne dokazuje ništa"
         for f in brif.build(z)["files"]:
             assert zadaci.may_touch(z, f["path"]) is None, f["path"]
+
+
+DIFF = ("diff --git a/apps/content/x.py b/apps/content/x.py\n"
+        "--- a/apps/content/x.py\n+++ b/apps/content/x.py\n@@ -1 +1 @@\n-a\n+b\n")
+
+
+@pytest.fixture
+def z(mila):
+    """Zadatak sa izvršiocem koji sme u `apps/content`."""
+    from apps.policy import service as policy
+
+    with bind(actor_id="user:slobodan"):
+        policy.change_trust(mila, "code.write", E.TrustLevel.L1,
+                            actor="user:slobodan", reason="p", scope="apps/content")
+        return zadaci.create(title="Ranija zakrpa", why="Provera ADR-0047.",
+                             allowed_paths=["apps/content"], assignee=mila)
+
+
+class TestRanijaZakrpa:
+    """ADR-0047 — brif kaže iz kog stabla su fajlovi i nosi ranije predatu zakrpu.
+
+    Bez toga je brif protivrečan: nalaz opisuje kod koji u priloženim fajlovima
+    ne postoji, jer grana nije u slici aplikacije.
+    """
+
+    def test_bez_zakrpe_nema_polja(self, z):
+        b = brif.build(z)
+        assert b["previous_patch"] is None
+
+    def test_nemerena_zakrpa_se_ne_salje(self, z, mila):
+        """Zakrpa koju poslušnik još nije izmerio nije ono o čemu su nalazi."""
+        with bind(actor_id="user:slobodan"):
+            zakrpa.submit(z, DIFF, persona=mila)
+        assert brif.build(z)["previous_patch"] is None
+
+    def test_merena_zakrpa_ulazi_u_brif(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            p = zakrpa.submit(z, DIFF, persona=mila)
+            zadaci.record_gate(z, "pytest", True, patch=p)
+        pz = brif.build(z)["previous_patch"]
+        assert pz is not None and pz["diff"] == DIFF
+        assert pz["patch_id"] == str(p.pk) and not pz["truncated"]
+
+    def test_poslednja_merena_pobedjuje(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            p1 = zakrpa.submit(z, DIFF, persona=mila)
+            zadaci.record_gate(z, "pytest", False, patch=p1)
+            p2 = zakrpa.submit(z, DIFF.replace("+b", "+c"), persona=mila)
+            zadaci.record_gate(z, "pytest", True, patch=p2)
+        assert brif.build(z)["previous_patch"]["patch_id"] == str(p2.pk)
+
+    def test_duga_zakrpa_se_sece_i_kaze(self, z, mila):
+        ogromna = DIFF + "".join(f"+red {i}\n" for i in range(9000))
+        with bind(actor_id="user:slobodan"):
+            p = zakrpa.submit(z, ogromna, persona=mila)
+            zadaci.record_gate(z, "pytest", True, patch=p)
+        pz = brif.build(z)["previous_patch"]
+        assert pz["truncated"] is True
+        assert len(pz["diff"].encode("utf-8")) <= brif.MAX_PATCH_BYTES
+
+    def test_zakrpa_ulazi_u_isti_plafon(self, z, mila):
+        """Plafon se ne podiže tiho — zakrpa troši isti budžet kao i fajlovi."""
+        bez = brif.build(z)["bytes"]
+        with bind(actor_id="user:slobodan"):
+            p = zakrpa.submit(z, DIFF, persona=mila)
+            zadaci.record_gate(z, "pytest", True, patch=p)
+        sa = brif.build(z)
+        assert sa["bytes"] == bez + len(DIFF.encode("utf-8"))
+        assert sa["bytes"] <= brif.MAX_TOTAL_BYTES
+
+    def test_brif_kaze_iz_kog_stabla_su_fajlovi(self, z):
+        poruka = brif.build(z)["files_from"]
+        assert "glavnoj grani" in poruka and "NIJE" in poruka
+
+    def test_prompt_nosi_zakrpu_i_upozorenje(self, z, mila):
+        from apps.orchestration import pisac
+
+        with bind(actor_id="user:slobodan"):
+            p = zakrpa.submit(z, DIFF, persona=mila)
+            zadaci.record_gate(z, "pytest", True, patch=p)
+            zadaci.add_finding(z, reviewer=None, file="apps/content/x.py",
+                               claim="ćuti o sečenju", severity="BLOCKER",
+                               source=zadaci.IZVOR_COVEK)
+        tekst, _ = pisac._prompt(z)
+        assert "TVOJA RANIJA ZAKRPA" in tekst and DIFF.splitlines()[0] in tekst
+        assert "odnose se na OVU zakrpu" in tekst

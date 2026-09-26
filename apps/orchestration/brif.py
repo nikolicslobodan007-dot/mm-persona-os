@@ -23,6 +23,7 @@ import hashlib
 from pathlib import Path
 
 from django.conf import settings
+from django.db.models import Q
 
 from apps.policy import service as policy
 from common import enums as E
@@ -106,16 +107,63 @@ def _pale_kapije(zadatak: CodeTask) -> list[dict]:
     ]
 
 
+#: Koliko ranije zakrpe staje u brif. Ista mera kao plafon diff-a kod pisca.
+MAX_PATCH_BYTES = 20_000
+
+#: Rečenica koja stoji uz svaki brif. Fajlovi dolaze sa diska ove slike, a slika
+#: je sagrađena iz `main` — grane sa nespojenim radom u njoj NEMA (ADR-0047).
+IZVOR_FAJLOVA = (
+    "Fajlovi ispod su trenutno stanje u glavnoj grani, onako kako ih vidi ova "
+    "slika aplikacije. Rad koji stoji na granama zadataka, uključujući tvoje "
+    "ranije zakrpe, NIJE u njima. Novu zakrpu pišeš nad ovim fajlovima."
+)
+
+
+def _prethodna(zadatak: CodeTask) -> dict | None:
+    """Poslednja zakrpa **koja je već gledana** — merena kapijama ili primenjena.
+
+    Bez nje je brif protivrečan: nalazi govore o kodu koji u fajlovima ne postoji,
+    jer grana nije u slici. Aplikacija nema `.git` (ADR-0041 §2) i ne može da
+    pročita granu, ali zakrpu ima u bazi — pa se šalje ona.
+    """
+    red = (zadatak.patches.filter(status__in=(E.PatchStatus.ACCEPTED.value,
+                                              E.PatchStatus.APPLIED.value))
+           .filter(Q(gates__isnull=False) | ~Q(applied_sha=""))
+           .order_by("-created_at").first())
+    if red is None:
+        return None
+    diff = red.diff or ""
+    odsecen = len(diff.encode("utf-8")) > MAX_PATCH_BYTES
+    if odsecen:
+        diff = diff.encode("utf-8")[:MAX_PATCH_BYTES].decode("utf-8", "ignore")
+    return {
+        "patch_id": str(red.pk),
+        "status": red.status,
+        "applied_sha": red.applied_sha,
+        "paths": list(red.paths),
+        "diff": diff,
+        "truncated": odsecen,
+    }
+
+
 def build(zadatak: CodeTask) -> dict:
     """Sve što piscu zakrpe treba, i ništa više.
 
     `odsečeno` nije kozmetika: pisac mora da zna da nije video sve, inače piše
-    zakrpu nad pretpostavkom (ADR-0033).
+    zakrpu nad pretpostavkom (ADR-0033). Iz istog razloga brif kaže **iz kog
+    stabla** su fajlovi i nosi **ranije predatu zakrpu** kad je ima: nalaz koji
+    opisuje kod kog u priloženim fajlovima nema je protivrečan brif (ADR-0047).
     """
     koren = _koren()
     fajlovi: list[dict] = []
     odsečeno: list[dict] = []
     ukupno = 0
+
+    # Ranija zakrpa ulazi u isti plafon kao i fajlovi. Kad zbog nje fajl ispadne,
+    # to se kaže u `truncated` — plafon se ne podiže tiho (ADR-0041 §1).
+    prethodna = _prethodna(zadatak)
+    zauzeto = len(prethodna["diff"].encode("utf-8")) if prethodna else 0
+    plafon = MAX_TOTAL_BYTES - zauzeto
 
     for f in _kandidati(zadatak):
         rel = f.relative_to(koren).as_posix()
@@ -134,8 +182,12 @@ def build(zadatak: CodeTask) -> dict:
         if velicina > MAX_FILE_BYTES:
             odsečeno.append({"path": rel, "reason": f"fajl veći od {MAX_FILE_BYTES} B"})
             continue
-        if ukupno + velicina > MAX_TOTAL_BYTES:
-            odsečeno.append({"path": rel, "reason": "preko ukupnog plafona"})
+        if ukupno + velicina > plafon:
+            odsečeno.append({
+                "path": rel,
+                "reason": "preko ukupnog plafona"
+                          + (" (deo zauzela ranija zakrpa)" if zauzeto else ""),
+            })
             continue
         ukupno += velicina
         fajlovi.append({"path": rel, "sha256": otisak, "content": tekst})
@@ -149,8 +201,10 @@ def build(zadatak: CodeTask) -> dict:
         "required_gates": list(zadatak.required_gates),
         "protected_paths": list(policy.config.protected_paths()),
         "files": fajlovi,
+        "files_from": IZVOR_FAJLOVA,
+        "previous_patch": prethodna,
         "truncated": odsečeno,
         "open_findings": _nalazi(zadatak),
         "failed_gates": _pale_kapije(zadatak),
-        "bytes": ukupno,
+        "bytes": ukupno + zauzeto,
     }
