@@ -225,7 +225,7 @@ class TestNalazi:
                 zadaci.record_gate(z, g, True)
             zadaci.add_finding(z, reviewer=drugi, file="apps/content/steps.py",
                                line=40, claim="gubi se navodnik na kraju",
-                               severity="BLOCKER")
+                               severity="BLOCKER", source=zadaci.IZVOR_COVEK)
             with pytest.raises(zadaci.TaskError) as e:
                 zadaci.finish(z)
         assert e.value.code == "OPEN_BLOCKERS"
@@ -235,7 +235,8 @@ class TestNalazi:
             for g in z.required_gates:
                 zadaci.record_gate(z, g, True)
             n = zadaci.add_finding(z, reviewer=drugi, file="apps/content/steps.py",
-                                   claim="gubi se navodnik", severity="BLOCKER")
+                                   claim="gubi se navodnik", severity="BLOCKER",
+                                   source=zadaci.IZVOR_COVEK)
             n.status = E.FindingStatus.FIXED
             n.save(update_fields=["status"])
             zadaci.finish(z)

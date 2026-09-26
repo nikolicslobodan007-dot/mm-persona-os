@@ -156,7 +156,8 @@ class TestZabelezi:
             persona_type=E.PersonaType.ASSISTANT, status=E.PersonaStatus.ACTIVE)
         with bind(actor_id="user:slobodan"):
             zadaci.add_finding(z, reviewer=recenzent, file="apps/content/x.py",
-                               claim="puca", severity="BLOCKER")
+                               claim="puca", severity="BLOCKER",
+                               source=zadaci.IZVOR_COVEK)
         with pytest.raises(zadaci.TaskError, match="BLOCKER"):
             rezultat.zabelezi(z, zk, branch=rezultat.ime_grane(z), commit_sha=SHA)
 

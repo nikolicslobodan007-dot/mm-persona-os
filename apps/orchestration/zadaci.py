@@ -33,9 +33,15 @@ __all__ = [
     "may_touch",
     "record_gate",
     "add_finding",
+    "close_finding",
     "finish",
     "gate_report",
+    "IZVOR_COVEK",
 ]
+
+#: Izvor nalaza koji je napisao čovek. Jedini izvor kome je dozvoljen `BLOCKER`
+#: (ADR-0036 §2, sprovedeno od ADR-0045). Mašinski izvori nose ime alata.
+IZVOR_COVEK = "covek"
 
 
 class TaskError(Exception):
@@ -235,7 +241,13 @@ def blocking_findings(zadatak: CodeTask):
 def add_finding(zadatak: CodeTask, *, reviewer: Persona | None, file: str,
                 claim: str, severity: str, line: int | None = None,
                 source: str = "agent") -> ReviewFinding:
-    """Nalaz recenzenta. Autor ne recenzira sopstveni rad."""
+    """Nalaz recenzenta. Autor ne recenzira sopstveni rad.
+
+    `BLOCKER` sme da postavi **samo čovek** (ADR-0036 §2). Do ADR-0045 je to
+    pravilo živelo jedino kao tabela preslikavanja u uvozniku SARIF-a — dakle
+    kao nešto što se može zaobići time što se doda drugi put do ove funkcije.
+    Pravilo koje je moguće zaobići nije pravilo, pa sada stoji ovde.
+    """
     if reviewer and zadatak.assignee_id and reviewer.pk == zadatak.assignee_id:
         raise TaskError("SELF_REVIEW", "Autor ne piše nalaz na sopstveni rad "
                                        "(ADR-0034 §5.2).")
@@ -243,6 +255,12 @@ def add_finding(zadatak: CodeTask, *, reviewer: Persona | None, file: str,
         raise TaskError("UNKNOWN_SEVERITY", f"Nepoznata težina {severity!r}.")
     if not claim.strip():
         raise TaskError("EMPTY_CLAIM", "Nalaz bez tvrdnje nije nalaz.")
+    if severity == E.FindingSeverity.BLOCKER.value and source != IZVOR_COVEK:
+        raise TaskError(
+            "MACHINE_BLOCKER",
+            f"`BLOCKER` postavlja samo čovek; izvor {source!r} ne sme "
+            f"(ADR-0036 §2).", {"source": source},
+        )
 
     nalaz = ReviewFinding.objects.create(
         task=zadatak, reviewer=reviewer, file=policy.normalize_path(file),
@@ -252,6 +270,42 @@ def add_finding(zadatak: CodeTask, *, reviewer: Persona | None, file: str,
         "task": zadatak.public_id, "file": nalaz.file, "line": line,
         "severity": severity, "source": source,
     })
+    return nalaz
+
+
+@transaction.atomic
+def close_finding(nalaz: ReviewFinding, status: str, *, actor: str = "",
+                  note: str = "") -> ReviewFinding:
+    """Zatvara nalaz. Izvršilac ne zatvara nalaz na sopstveni rad.
+
+    Kad bi smeo, `BLOCKER` bi bio ukras: agent koji ne sme da odobri svoj kod
+    (ADR-0034 §5.2) ne sme ni da skloni prigovor na njega. Proverava se
+    `actor`, jer se ovuda ne prolazi kao persona nego kao pozivalac.
+    """
+    if status not in E.FindingStatus.values():
+        raise TaskError("UNKNOWN_STATUS", f"Nepoznat status {status!r}; poznati: "
+                                          f"{sorted(E.FindingStatus.values())}")
+    if status == E.FindingStatus.OPEN.value:
+        raise TaskError("NOT_A_CLOSE", "`OPEN` nije zatvaranje.")
+
+    izvrsilac = getattr(nalaz.task.assignee, "public_id", None)
+    if izvrsilac and actor == f"agent:{izvrsilac}":
+        raise TaskError(
+            "SELF_CLOSE",
+            f"{izvrsilac} ne zatvara nalaz na sopstveni rad (ADR-0034 §5.2).",
+        )
+
+    pre = nalaz.status
+    nalaz.status = status
+    nalaz.save(update_fields=["status", "updated_at"])
+    audit.record("task.finding.closed",
+                 severity=E.AuditSeverity.WARNING
+                 if nalaz.severity == E.FindingSeverity.BLOCKER.value
+                 else E.AuditSeverity.INFO,
+                 persona=nalaz.task.assignee,
+                 details={"task": nalaz.task.public_id, "finding": str(nalaz.pk),
+                          "file": nalaz.file, "severity": nalaz.severity,
+                          "iz": pre, "u": status, "note": note[:500]})
     return nalaz
 
 

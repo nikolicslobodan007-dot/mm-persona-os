@@ -118,7 +118,8 @@ class TestNalazi:
     def test_broji_nalaze_na_njegov_rad(self, z, mila, recenzent):
         with bind(actor_id="user:slobodan"):
             zadaci.add_finding(z, reviewer=recenzent, file="apps/content/x.py",
-                               claim="puca na praznom", severity="BLOCKER")
+                               claim="puca na praznom", severity="BLOCKER",
+                               source=zadaci.IZVOR_COVEK)
             zadaci.add_finding(z, reviewer=recenzent, file="apps/content/x.py",
                                claim="ime promenljive", severity="NIT")
         r = U.za_agenta(mila)
@@ -142,7 +143,8 @@ class TestKomanda:
         with bind(actor_id="user:slobodan"):
             zakrpa.submit(z, ZONA, persona=mila)
             zadaci.add_finding(z, reviewer=recenzent, file="apps/content/x.py",
-                               claim="puca", severity="BLOCKER")
+                               claim="puca", severity="BLOCKER",
+                               source=zadaci.IZVOR_COVEK)
         out = io.StringIO()
         call_command("ucinak", stdout=out)
         ispis = out.getvalue()
