@@ -32,8 +32,8 @@ from common import enums as E
 from .models import CodeTask, TaskPatch
 from .zadaci import TaskError, may_touch
 
-__all__ = ["Izmena", "Nalaz", "paths_in", "check", "submit", "zabelezi_neuspeh",
-           "odbij_posle_provere", "MAX_DIFF_BYTES"]
+__all__ = ["Izmena", "Ispravka", "Nalaz", "paths_in", "prebroj_hunkove", "check",
+           "submit", "zabelezi_neuspeh", "odbij_posle_provere", "MAX_DIFF_BYTES"]
 
 #: Gornja granica veličine zakrpe. Zakrpa preko ove mere nije izmena nego prepis,
 #: i traži da se zadatak podeli.
@@ -51,9 +51,11 @@ _RENAME = re.compile(r"^rename (?:from|to) (?P<put>.+)$")
 _MINUS = re.compile(r"^--- (?P<put>.+)$")
 _PLUS = re.compile(r"^\+\+\+ (?P<put>.+)$")
 
-#: Zaglavlje hunka: `@@ -stara,koliko +nova,koliko @@`. Broj posle zareza sme da
-#: izostane i tada je 1.
-_HUNK = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
+#: Zaglavlje hunka: `@@ -stara,koliko +nova,koliko @@ [naslov]`. Broj posle zareza
+#: sme da izostane i tada je 1. Rep iza drugog `@@` je oznaka odeljka koju `git`
+#: dodaje radi čitljivosti — prenosi se netaknut.
+_HUNK = re.compile(
+    r"^@@ -(?P<sp>\d+)(?:,(?P<sk>\d+))? \+(?P<np>\d+)(?:,(?P<nk>\d+))? @@(?P<rep>.*)$")
 
 #: C-escape sekvence iz `git` citiranja putanja.
 _ESC = {"a": 7, "b": 8, "f": 12, "n": 10, "r": 13, "t": 9, "v": 11,
@@ -72,12 +74,30 @@ class Izmena:
     kind: str = "izmena"          # izmena · nova · brisanje · preimenovanje
 
 
+@dataclass(frozen=True)
+class Ispravka:
+    """Jedno `@@` zaglavlje čije smo brojeve prebrojali umesto pisca. ADR-0052."""
+
+    red: int                       # redni broj reda sa `@@`, od 1
+    pre: tuple[int, int]           # šta je pisalo: (staro, novo)
+    posle: tuple[int, int]         # šta je izbrojano
+
+    def __str__(self) -> str:
+        return (f"red {self.red}: -{self.pre[0]} +{self.pre[1]} → "
+                f"-{self.posle[0]} +{self.posle[1]}")
+
+
 @dataclass
 class Nalaz:
     """Ishod provere: šta zakrpa dira i zašto sme ili ne sme."""
 
     izmene: list[Izmena] = field(default_factory=list)
     odbijeno: list[tuple[str, str]] = field(default_factory=list)   # (putanja, razlog)
+    #: Zaglavlja hunkova koja smo prebrojali (ADR-0052). Ne obara zakrpu, ali se
+    #: **uvek** vidi: ide u `reason` i pred recenzenta.
+    ispravke: list[Ispravka] = field(default_factory=list)
+    #: Zakrpa sa ispravljenim zaglavljima — ona koja se čuva i primenjuje.
+    diff: str = ""
     greske: list[str] = field(default_factory=list)                 # zakrpa kao celina
 
     @property
@@ -138,30 +158,43 @@ def _nov_fajl(redovi: list[str], j: int) -> bool:
             and redovi[j + 1].startswith("+++ "))
 
 
-def _proveri_hunkove(diff: str) -> None:
-    """Broji redove svakog hunka i poredi sa onim što zaglavlje tvrdi.
+def prebroj_hunkove(diff: str) -> tuple[str, list[Ispravka]]:
+    """Ispravlja brojeve u `@@` zaglavljima po telu hunka. ADR-0052.
 
-    Ovo je čista aritmetika i ne traži `git`. Bez nje zakrpa sa pogrešnim `@@`
-    prolazi kao prihvaćena, ulazi u red, i pada tek u poslušniku kao
-    `corrupt patch` — daleko od onoga ko ju je napisao i bez poruke koja mu
-    kaže šta da popravi (ADR-0049).
+    Vraća `(zakrpa, ispravke)`. Telo hunka je samodovoljno — završava se na
+    sledećem `@@`, na sledećem fajlu ili na kraju — pa za dato telo postoji
+    **tačno jedan** ispravan par brojeva. Ovde se ništa ne nagađa; prebrojava se.
 
-    Proverava se **samo ono što piše**: zakrpa bez ijednog `@@` ovde prolazi, jer
-    preimenovanje i izmena moda hunk ni ne nose. Da je ovde stajao uslov „mora
-    postojati hunk", pao bi valjan `rename from`/`rename to`.
+    Šta se **ne** dira: početni brojevi reda (`-6`, `+22`) i oznaka odeljka iza
+    drugog `@@`. Oni nose nameru i nisu izvedivi iz tela; da ih računamo, to bi
+    bilo pogađanje šta je pisac hteo, a to ADR-0049 s pravom odbija.
+
+    Šta ostaje greška: red u telu koji ne počinje razmakom, `+`, `-` ni `\\`. Takav
+    red se ne može ni prebrojati, pa se ne može ni ispraviti.
+
+    Zakrpa bez ijednog `@@` prolazi netaknuta: preimenovanje i izmena moda hunk ni
+    ne nose (ADR-0049).
+
+    Ispravka **nije tiha** — vraća se pozivaocu, upisuje se u `reason` zakrpe i
+    stoji pred recenzentom. To je jedina odbrana od slučaja u kom je pisac hteo
+    duži hunk pa ga je odsekao: zaglavlje je tada jedini trag te namere, a mi
+    bismo bez zapisa ćutke prihvatili osakaćenu verziju.
     """
-    redovi = diff.splitlines()
+    redovi = diff.splitlines(keepends=True)
+    goli = diff.splitlines()
+    ispravke: list[Ispravka] = []
     i = 0
-    while i < len(redovi):
-        m = _HUNK.match(redovi[i])
+    while i < len(goli):
+        m = _HUNK.match(goli[i])
         if m is None:
             i += 1
             continue
-        trazeno_s, trazeno_n = int(m.group(2) or 1), int(m.group(4) or 1)
+        trazeno_s = int(m.group("sk") or 1)
+        trazeno_n = int(m.group("nk") or 1)
         j, s, n = i + 1, 0, 0
-        while j < len(redovi):
-            red = redovi[j]
-            if _HUNK.match(red) or red.startswith("diff --git ") or _nov_fajl(redovi, j):
+        while j < len(goli):
+            red = goli[j]
+            if _HUNK.match(red) or red.startswith("diff --git ") or _nov_fajl(goli, j):
                 break
             z = red[:1]
             if z in (" ", ""):
@@ -176,17 +209,17 @@ def _proveri_hunkove(diff: str) -> None:
                 raise PatchError(
                     "BAD_HUNK",
                     f"Red {j + 1} u hunku ne počinje razmakom, `+`, `-` ni `\\`: "
-                    f"{red[:60]!r}.",
+                    f"{red[:60]!r}. Ovakav red se ne može ni prebrojati.",
                 )
             j += 1
         if (s, n) != (trazeno_s, trazeno_n):
-            raise PatchError(
-                "BAD_HUNK",
-                f"Zaglavlje u redu {i + 1} kaže -{trazeno_s} +{trazeno_n}, a hunk "
-                f"ima -{s} +{n}. `git apply` ovo odbija kao pokvarenu zakrpu; "
-                f"prebroj redove i ispravi `@@`.",
-            )
+            kraj = "\n" if redovi[i].endswith("\n") else ""
+            redovi[i] = (f"@@ -{m.group('sp')},{s} +{m.group('np')},{n} @@"
+                         f"{m.group('rep')}{kraj}")
+            ispravke.append(Ispravka(red=i + 1, pre=(trazeno_s, trazeno_n),
+                                     posle=(s, n)))
         i = j
+    return ("".join(redovi) if ispravke else diff), ispravke
 
 
 def _strip_prefix(put: str) -> str:
@@ -275,7 +308,7 @@ def paths_in(diff: str) -> list[Izmena]:
                          "Zakrpa ne dira nijednu putanju — nije unified diff.")
     # Aritmetika hunkova ide POSLE čitanja putanja, ne pre: preimenovanje i izmena
     # moda su valjane zakrpe bez ijednog `@@`, a binarna zakrpa ima svoju poruku.
-    _proveri_hunkove(diff)
+    prebroj_hunkove(diff)          # diže BAD_HUNK na telo koje se ne da čitati
     return [Izmena(p, nadjene[p]) for p in sorted(nadjene)]
 
 
@@ -287,9 +320,12 @@ def check(zadatak: CodeTask, diff: str, *, persona: Persona | None = None) -> Na
 
     Svaka putanja — i stara i nova kod preimenovanja — prolazi `may_touch`.
     """
-    nalaz = Nalaz()
+    nalaz = Nalaz(diff=diff)
     try:
         nalaz.izmene = paths_in(diff)
+        # ADR-0052 — zaglavlja se prebrojavaju, i ispravljena zakrpa je ona koja
+        # se dalje čuva i primenjuje. Ispravka se ne gubi: ide u `reason`.
+        nalaz.diff, nalaz.ispravke = prebroj_hunkove(diff)
     except PatchError as e:
         nalaz.greske.append(f"{e.code}: {e}")
         return nalaz
@@ -311,12 +347,21 @@ def submit(zadatak: CodeTask, diff: str, *, persona: Persona | None = None,
     svog dela koda, a to je merenje koje ADR-0034 §6 traži.
     """
     nalaz = check(zadatak, diff, persona=persona)
+    # ADR-0052 — čuva se zakrpa sa prebrojanim zaglavljima, jer je to ona koja će
+    # se primeniti. Ono što je pisac napisao ostaje vidljivo kroz `reason`.
+    upis = nalaz.diff or diff
+    razlozi = [f"{p}: {r}" for p, r in nalaz.odbijeno]
+    if nalaz.ispravke:
+        razlozi.append(
+            "zaglavlja hunkova prebrojana (ADR-0052): "
+            + "; ".join(str(i) for i in nalaz.ispravke)
+            + " — proveri da hunk nije odsečen")
     red = TaskPatch.objects.create(
-        task=zadatak, author=persona, base_sha=base_sha, diff=diff,
+        task=zadatak, author=persona, base_sha=base_sha, diff=upis,
         paths=nalaz.putanje, cost_eur_cents=max(0, int(cena_centi)),
         from_model=bool(od_modela),
         status=E.PatchStatus.ACCEPTED if nalaz.ok else E.PatchStatus.REJECTED,
-        reason="; ".join(nalaz.greske + [f"{p}: {r}" for p, r in nalaz.odbijeno])[:2000],
+        reason="; ".join(nalaz.greske + razlozi)[:2000],
     )
     audit.record(
         "task.patch.submitted",
@@ -324,6 +369,7 @@ def submit(zadatak: CodeTask, diff: str, *, persona: Persona | None = None,
         persona=persona or zadatak.assignee,
         details={"task": zadatak.public_id, "status": red.status,
                  "paths": nalaz.putanje, "reason": red.reason,
+                 "ispravke": [str(i) for i in nalaz.ispravke],
                  "base": base_sha, "cena_centi": red.cost_eur_cents},
     )
     return red

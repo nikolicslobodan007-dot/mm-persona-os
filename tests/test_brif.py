@@ -348,16 +348,22 @@ class TestIshodRanijeZakrpe:
         assert "ODBIJENA" in pz["ishod"]
         assert "nije vratio diff" in pz["ishod"] and "nije vratio diff" in pz["reason"]
 
-    def test_bad_hunk_razlog_stize_do_pisca(self, z, mila):
-        """Poruka o pogrešnom `@@` (ADR-0049) je bezvredna ako je pisac ne vidi."""
+    def test_ispravka_zaglavlja_stize_do_pisca(self, z, mila):
+        """ADR-0052 — pisac mora da zna da smo mu prebrojali zaglavlje.
+
+        Do ADR-0052 je ovo bilo odbijanje sa porukom; sada je ispravka. U oba
+        slučaja važi isto: ono što smo uradili njegovom radu mora da mu se kaže,
+        inače sledeći put ponavlja istu grešku uverenim da je sve bilo u redu.
+        """
         pokvarena = ("diff --git a/apps/content/x.py b/apps/content/x.py\n"
                      "--- a/apps/content/x.py\n+++ b/apps/content/x.py\n"
                      "@@ -1,1 +1,9 @@\n-a\n+b\n")
         with bind(actor_id="user:slobodan"):
-            zakrpa.submit(z, pokvarena, persona=mila, od_modela=True)
+            p = zakrpa.submit(z, pokvarena, persona=mila, od_modela=True)
+            zadaci.record_gate(z, "pytest", True, patch=p)
         pz = brif.build(z)["previous_patch"]
-        assert "BAD_HUNK" in pz["reason"]
-        assert "prebroj redove" in pz["ishod"]
+        assert "ADR-0052" in pz["reason"] and "-1 +9 → -1 +1" in pz["reason"]
+        assert "@@ -1,1 +1,1 @@" in pz["diff"]
 
     def test_neizmerena_i_dalje_ne_ulazi(self, z, mila):
         """Prihvaćena a nemerena zakrpa je posao koji poslušnik tek uzima."""

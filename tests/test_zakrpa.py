@@ -168,16 +168,15 @@ class TestZamke:
 
 
 class TestAritmetikaHunkova:
-    """ADR-0049 — `@@` zaglavlje se proverava prebrojavanjem, bez `git`-a.
+    """ADR-0049 + ADR-0052 — `@@` zaglavlje se prebrojava iz tela hunka.
 
-    27.09. je Lazar vratio zakrpu sa oba `@@` zaglavlja pogrešna:
+    27.09. je Lazar tri puta vratio zakrpu sa pogrešnim zaglavljem:
 
-        red 3  : prijavljeno -6  +20 | izbrojano -6  +18
-        red 22 : prijavljeno -14 +45 | izbrojano -17 +45
+        prijavljeno -6 +20, pa -6 +19 | izbrojano -6 +18
 
-    Naš lanac ju je pustio kao `ACCEPTED`, poslušnik ju je odbio kao
-    `corrupt patch at line 22` i — do ovog ADR-a — upisao lažnu palu kapiju
-    `pytest`. Aritmetika koju umemo da uradimo sami ne čeka `git apply`.
+    Pomerao se za jedan — to je pogađanje, ne brojanje. ADR-0049 je takvu zakrpu
+    odbijao; ADR-0052 je ispravlja, jer za dato telo postoji tačno jedan ispravan
+    par brojeva, pa se ništa ne nagađa. Ispravka nije tiha: ide u `reason`.
     """
 
     def _d(self, zaglavlje: str, telo: str) -> str:
@@ -185,91 +184,144 @@ class TestAritmetikaHunkova:
                 "--- a/apps/content/x.py\n+++ b/apps/content/x.py\n"
                 f"{zaglavlje}\n{telo}")
 
-    def test_tacno_zaglavlje_prolazi(self):
+    def test_tacno_zaglavlje_ostaje_netaknuto(self):
         d = self._d("@@ -2,3 +2,4 @@", " prvi\n-drugi\n+drugi red\n+novi\n treci\n")
-        assert [i.path for i in zakrpa.paths_in(d)] == ["apps/content/x.py"]
+        izlaz, ispravke = zakrpa.prebroj_hunkove(d)
+        assert not ispravke and izlaz == d
 
     def test_izostavljen_broj_znaci_jedan(self):
-        """`@@ -1 +1 @@` je isto što i `-1,1 +1,1` — ne sme da padne."""
-        assert zakrpa.paths_in(self._d("@@ -1 +1 @@", "-a\n+b\n"))
+        """`@@ -1 +1 @@` je isto što i `-1,1 +1,1` — ne sme da se dira."""
+        izlaz, ispravke = zakrpa.prebroj_hunkove(self._d("@@ -1 +1 @@", "-a\n+b\n"))
+        assert not ispravke and "@@ -1 +1 @@" in izlaz
 
-    @pytest.mark.parametrize("zaglavlje,telo,greska", [
-        # premalo dodatih redova nego što zaglavlje tvrdi
-        ("@@ -1,1 +1,3 @@", "-a\n+b\n", "-1 +1"),
-        # premalo skinutih
-        ("@@ -1,3 +1,1 @@", "-a\n+b\n", "-1 +1"),
-        # kontekstni red se broji na OBE strane — ko ga zaboravi, promaši oba zbira
-        ("@@ -1,2 +1,3 @@", " prvi\n-a\n+b\n", "-2 +2"),
+    @pytest.mark.parametrize("zaglavlje,telo,ocekivano", [
+        ("@@ -1,1 +1,3 @@", "-a\n+b\n", "@@ -1,1 +1,1 @@"),
+        ("@@ -1,3 +1,1 @@", "-a\n+b\n", "@@ -1,1 +1,1 @@"),
+        # kontekstni red se broji na OBE strane
+        ("@@ -1,2 +1,3 @@", " prvi\n-a\n+b\n", "@@ -1,2 +1,2 @@"),
+        # tačno slučaj sa proizvodnje: telo ima 18 dodatih, zaglavlje tvrdilo 20
+        ("@@ -6,20 +22,45 @@", "-a\n" + "+r\n" * 18, "@@ -6,1 +22,18 @@"),
     ])
-    def test_pogresno_zaglavlje_pada(self, zaglavlje, telo, greska):
-        with pytest.raises(zakrpa.PatchError) as e:
-            zakrpa.paths_in(self._d(zaglavlje, telo))
-        assert e.value.code == "BAD_HUNK"
-        assert greska in str(e.value), str(e.value)
+    def test_pogresno_zaglavlje_se_prebroji(self, zaglavlje, telo, ocekivano):
+        izlaz, ispravke = zakrpa.prebroj_hunkove(self._d(zaglavlje, telo))
+        assert ocekivano in izlaz, izlaz
+        assert len(ispravke) == 1
 
-    def test_poruka_kaze_koji_red_i_koliko(self):
-        """Pisac mora da zna gde da gleda, inače popravlja naslepo (ADR-0033)."""
-        with pytest.raises(zakrpa.PatchError) as e:
-            zakrpa.paths_in(self._d("@@ -1,1 +1,9 @@", "-a\n+b\n"))
-        poruka = str(e.value)
-        assert "redu 4" in poruka, poruka          # `@@` je četvrti red ove zakrpe
-        assert "-1 +9" in poruka and "-1 +1" in poruka
-        assert "prebroj redove" in poruka
+    def test_pocetni_brojevi_reda_se_ne_diraju(self):
+        """Oni nose nameru i nisu izvedivi iz tela — računati ih bilo bi nagađanje."""
+        izlaz, _ = zakrpa.prebroj_hunkove(self._d("@@ -6,20 +22,45 @@", "-a\n+b\n"))
+        assert "@@ -6,1 +22,1 @@" in izlaz
 
-    def test_drugi_hunk_pada_i_kad_je_prvi_dobar(self):
-        """Poslušnik je 27.09. prijavio red 22 — dakle drugi hunk, ne prvi."""
+    def test_oznaka_odeljka_ostaje(self):
+        """`git` iza drugog `@@` piše ime funkcije; to se prenosi netaknuto."""
+        d = self._d("@@ -1,9 +1,9 @@ def prompt_section(self):", "-a\n+b\n")
+        izlaz, _ = zakrpa.prebroj_hunkove(d)
+        assert "@@ -1,1 +1,1 @@ def prompt_section(self):" in izlaz
+
+    def test_ispravka_kaze_red_i_oba_broja(self):
+        _, ispravke = zakrpa.prebroj_hunkove(self._d("@@ -1,1 +1,9 @@", "-a\n+b\n"))
+        assert str(ispravke[0]) == "red 4: -1 +9 → -1 +1"
+
+    def test_drugi_hunk_se_prebroji_i_kad_je_prvi_dobar(self):
         d = (self._d("@@ -1 +1 @@", "-a\n+b\n")
              + "@@ -10,2 +10,5 @@\n konteks\n+dodato\n")
-        with pytest.raises(zakrpa.PatchError) as e:
-            zakrpa.paths_in(d)
-        assert "-2 +5" in str(e.value) and "-1 +2" in str(e.value)
+        izlaz, ispravke = zakrpa.prebroj_hunkove(d)
+        assert len(ispravke) == 1 and ispravke[0].red == 7
+        assert "@@ -10,1 +10,2 @@" in izlaz and "@@ -1 +1 @@" in izlaz
 
     def test_hunk_drugog_fajla_se_ne_slepljuje(self):
-        """Bez granice po fajlu bi se redovi drugog fajla brojali u prvi hunk."""
         d = (self._d("@@ -1 +1 @@", "-a\n+b\n")
              + "diff --git a/apps/content/y.py b/apps/content/y.py\n"
                "--- a/apps/content/y.py\n+++ b/apps/content/y.py\n"
                "@@ -1 +1 @@\n-c\n+d\n")
+        izlaz, ispravke = zakrpa.prebroj_hunkove(d)
+        assert not ispravke and izlaz == d
         assert len(zakrpa.paths_in(d)) == 2
 
     def test_granica_i_bez_diff_git_reda(self):
         """ADR-0048 — zakrpa bez `diff --git`; par `---`/`+++` je granica fajla."""
         d = ("--- a/apps/content/x.py\n+++ b/apps/content/x.py\n@@ -1 +1 @@\n-a\n+b\n"
              "--- a/apps/content/y.py\n+++ b/apps/content/y.py\n@@ -1 +1 @@\n-c\n+d\n")
-        assert len(zakrpa.paths_in(d)) == 2
+        _, ispravke = zakrpa.prebroj_hunkove(d)
+        assert not ispravke and len(zakrpa.paths_in(d)) == 2
 
     def test_bez_novog_reda_na_kraju_se_ne_broji(self):
         r"""`\ No newline at end of file` nije ni dodat ni skinut red."""
         d = self._d("@@ -1 +1 @@", "-a\n+b\n\\ No newline at end of file\n")
-        assert zakrpa.paths_in(d)
+        _, ispravke = zakrpa.prebroj_hunkove(d)
+        assert not ispravke
 
     def test_prazan_red_je_kontekst(self):
         """Uređivači seku prateći razmak, pa prazan red u hunku znači ` `."""
-        d = self._d("@@ -1,2 +1,2 @@", "-a\n+b\n\n")
-        assert zakrpa.paths_in(d)
+        _, ispravke = zakrpa.prebroj_hunkove(self._d("@@ -1,2 +1,2 @@", "-a\n+b\n\n"))
+        assert not ispravke
 
-    def test_proza_u_hunku_pada(self):
+    def test_proza_u_hunku_i_dalje_pada(self):
+        """Red koji se ne može prebrojati ne može ni da se ispravi."""
         d = self._d("@@ -1 +1 @@", "-a\n+b\nevo, ovo bi trebalo da radi\n")
         with pytest.raises(zakrpa.PatchError) as e:
-            zakrpa.paths_in(d)
+            zakrpa.prebroj_hunkove(d)
         assert e.value.code == "BAD_HUNK"
         assert "ne počinje razmakom" in str(e.value)
 
     def test_preimenovanje_bez_hunka_prolazi(self):
-        """Valjana zakrpa ume da nema ni jedan `@@` — prvo mesto provere je grešilo."""
+        """Valjana zakrpa ume da nema ni jedan `@@`."""
         d = ("diff --git a/apps/content/a.py b/apps/content/b.py\n"
              "similarity index 100%\n"
              "rename from apps/content/a.py\n"
              "rename to apps/content/b.py\n")
+        izlaz, ispravke = zakrpa.prebroj_hunkove(d)
+        assert not ispravke and izlaz == d
         assert len(zakrpa.paths_in(d)) == 2
 
-    def test_pokvarena_zakrpa_se_pamti_kao_odbijena(self, z, mila):
-        """Agentov promašaj ostaje agentov — ali sa porukom koja se može pročitati."""
+
+class TestIspravkaSeVidi:
+    """ADR-0052 — tiha ispravka je opasna; ova se upisuje i stoji pred recenzentom.
+
+    Ako je pisac hteo duži hunk pa ga je odsekao, zaglavlje je jedini trag te
+    namere. Prebrojavanje bi tu nameru izbrisalo — osim ako se ne zapiše.
+    """
+
+    POKVARENA = ("diff --git a/apps/content/x.py b/apps/content/x.py\n"
+                 "--- a/apps/content/x.py\n+++ b/apps/content/x.py\n"
+                 "@@ -1,1 +1,9 @@\n-a\n+b\n")
+
+    def test_zakrpa_je_prihvacena(self, z, mila):
         with bind(actor_id="user:slobodan"):
-            red = zakrpa.submit(z, self._d("@@ -1,1 +1,4 @@", "-a\n+b\n"),
-                                persona=mila)
+            red = zakrpa.submit(z, self.POKVARENA, persona=mila)
+        assert red.status == E.PatchStatus.ACCEPTED
+
+    def test_cuva_se_ispravljena_zakrpa(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            red = zakrpa.submit(z, self.POKVARENA, persona=mila)
+        assert "@@ -1,1 +1,1 @@" in red.diff and "+1,9" not in red.diff
+
+    def test_razlog_nosi_ispravku(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            red = zakrpa.submit(z, self.POKVARENA, persona=mila)
+        assert "ADR-0052" in red.reason
+        assert "-1 +9 → -1 +1" in red.reason
+        assert "odsečen" in red.reason
+
+    def test_ispravna_zakrpa_nema_sta_da_prijavi(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            red = zakrpa.submit(z, _diff(), persona=mila)
+        assert red.reason == "" and red.status == E.PatchStatus.ACCEPTED
+
+    def test_ispravka_ide_u_zapis(self, z, mila):
+        from apps.observability.models import AuditEvent
+        with bind(actor_id="user:slobodan"):
+            zakrpa.submit(z, self.POKVARENA, persona=mila)
+        red = AuditEvent.objects.filter(event_key="task.patch.submitted").last()
+        assert red.payload["details"]["ispravke"] == ["red 4: -1 +9 → -1 +1"]
+
+    def test_zona_se_ne_prasta_zbog_ispravke(self, z, mila):
+        """Prebrojavanje ne sme da spere proveru putanja."""
+        losa = self.POKVARENA.replace("apps/content/x.py", "apps/policy/service.py")
+        with bind(actor_id="user:slobodan"):
+            red = zakrpa.submit(z, losa, persona=mila)
         assert red.status == E.PatchStatus.REJECTED
-        assert "BAD_HUNK" in red.reason
+        assert "zaštićena zona" in red.reason
 
 
 class TestNeprimenjenaZakrpa:
