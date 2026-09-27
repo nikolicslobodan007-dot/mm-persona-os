@@ -333,3 +333,59 @@ class TestDiffBezGitZaglavlja:
         """Ako ima i `diff --git` i par, seče se od onoga što je prvo."""
         tekst = f"uvod\n{DIFF}"
         assert pisac.izvuci_diff(tekst).startswith("diff --git")
+
+
+class TestPromptNosiIshod:
+    """ADR-0051 — ono što ADR-0050 dodaje u brif mora da stigne DO MODELA.
+
+    ADR-0050 je `ishod` dodao u `brif.build`, a `_prompt` ga nije čitao: tekst koji
+    model vidi i dalje je za svaku raniju zakrpu tvrdio da „stoji na grani". Za
+    odbijenu zakrpu je to neistina, i model je tri puta zaredom, plaćeno, vratio
+    isti diff. Provera izlaza `brif.build` to nije mogla da uhvati — zato se ovde
+    gleda sam prompt.
+    """
+
+    def _tekst(self, z):
+        return pisac._prompt(z)[0]
+
+    def test_odbijena_zakrpa_ne_tvrdi_da_stoji_na_grani(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            zakrpa.zabelezi_neuspeh(z, persona=mila, tekst=DIFF,
+                                    razlog="model nije vratio diff", cena_centi=7,
+                                    od_modela=True)
+        tekst = self._tekst(z)
+        assert "stoji na grani" not in tekst
+        assert "ODBIJENA" in tekst
+        assert "nije vratio diff" in tekst
+
+    def test_kaze_mu_da_je_ne_salje_ponovo(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            zakrpa.zabelezi_neuspeh(z, persona=mila, tekst=DIFF, razlog="razlog",
+                                    cena_centi=7, od_modela=True)
+        assert "Ne šalji je ponovo" in self._tekst(z)
+
+    def test_neprimenjena_zakrpa_to_kaze(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            p = zakrpa.submit(z, DIFF, persona=mila, od_modela=True)
+            zadaci.record_gate(z, "pytest", False, patch=p)
+        tekst = self._tekst(z)
+        assert "NIJE primenjena" in tekst and "Ne šalji je ponovo" in tekst
+
+    def test_primenjena_zakrpa_ne_dobija_opomenu(self, z, mila):
+        """Zakrpa koja jeste na grani se ne proglašava nepostojećom."""
+        with bind(actor_id="user:slobodan"):
+            p = zakrpa.submit(z, DIFF, persona=mila, od_modela=True)
+            zadaci.record_gate(z, "pytest", True, patch=p)
+        p.applied_sha = "a" * 40
+        p.save(update_fields=["applied_sha"])
+        tekst = self._tekst(z)
+        assert "primenjena i zapamćena" in tekst
+        assert "Ne šalji je ponovo" not in tekst
+
+    def test_nalazi_i_dalje_ulaze(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            zadaci.add_finding(z, reviewer=None, file="apps/content/x.py",
+                               claim="Zaglavlje hunka ne odgovara telu.",
+                               severity=E.FindingSeverity.MAJOR.value,
+                               source=zadaci.IZVOR_COVEK)
+        assert "Zaglavlje hunka ne odgovara telu." in self._tekst(z)

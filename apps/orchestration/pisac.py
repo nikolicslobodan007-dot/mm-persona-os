@@ -224,11 +224,17 @@ def _prompt(zadatak: CodeTask) -> tuple[str, dict]:
                           f"{n.get('line') or '-'} — {n.get('claim')}")
     if b.get("previous_patch"):
         pz = b["previous_patch"]
-        delovi += [
-            "", "TVOJA RANIJA ZAKRPA NA OVOM ZADATKU (stoji na grani, NIJE spojena "
-            "u glavnu granu, pa je u fajlovima ispod nema):",
-            pz["diff"],
-        ]
+        # `ishod` je ono zbog čega je ADR-0050 i napisan, i mora da stoji IZNAD
+        # teksta zakrpe. Do 27.09. je ovde pisalo „stoji na grani" bez obzira na
+        # sudbinu zakrpe — pa je odbijenoj zakrpi prompt tvrdio da je na mestu, i
+        # model je tri puta zaredom, plaćeno, vratio isti tekst.
+        delovi += ["", "TVOJA RANIJA ZAKRPA NA OVOM ZADATKU — " + pz["ishod"]]
+        if not pz["applied_sha"]:
+            delovi.append(
+                "Ova zakrpa NIJE nigde primenjena. Ne šalji je ponovo: ista zakrpa "
+                "se odbija bez merenja. Napiši novu, koja otklanja ono što piše "
+                "iznad. Tekst ispod ti služi samo da vidiš šta si ranije napisao.")
+        delovi.append(pz["diff"])
         if pz["truncated"]:
             delovi.append("  [zakrpa je odsečena zbog dužine]")
         if b["open_findings"]:
