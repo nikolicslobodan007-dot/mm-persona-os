@@ -143,3 +143,58 @@ def test_persona_page_shows_lessons_and_adds_rule(boss, mila):
     c.post("/console/personas/P-00001/lessons", {"text": "Kraće rečenice.", "everyone": "1"})
     page = c.get("/console/personas/P-00001").content.decode()
     assert "Pouke urednika" in page and "Kraće rečenice." in page
+
+
+class TestBudzetPouka:
+    """ADR-0014 — ceo odeljak pouka ima gornju granicu u znakovima.
+
+    Granica po broju pouka ne hvata trošak: trideset pouka po 500 znakova ide
+    doslovno u svaki poziv modela. Kad se seče, ispada kućni stil, a pouke samog
+    agenta ostaju — nastale su iz odbijanja baš njegovog rada.
+    """
+
+    def _pouka(self, tekst, **kw):
+        return EditorialLesson.objects.create(text=tekst, is_active=True, **kw)
+
+    def test_kratak_spisak_nije_dirnut(self, db, mila):
+        self._pouka("Piši ijekavicom.", persona=mila)
+        odeljak = lessons.prompt_section(mila)
+        assert "Piši ijekavicom." in odeljak
+        assert "odsečeno" not in odeljak
+
+    def test_prazan_spisak_daje_prazan_odeljak(self, db, mila):
+        assert lessons.prompt_section(mila) == ""
+
+    def test_budzet_se_postuje(self, db, mila):
+        for i in range(10):
+            self._pouka(f"P{i} " + "x" * 400, persona=mila)
+        odeljak = lessons.prompt_section(mila, budzet=1200)
+        assert len(odeljak) <= 1200 + len(lessons.ODSECENO.format(broj=99)) + 1
+
+    def test_odsecanje_se_kaze(self, db, mila):
+        for i in range(10):
+            self._pouka(f"P{i} " + "x" * 400, persona=mila)
+        odeljak = lessons.prompt_section(mila, budzet=1200)
+        assert "odsečeno" in odeljak
+        assert "pouka nije stalo u prompt" in odeljak
+
+    def test_broj_odsecenih_je_tacan(self, db, mila):
+        for i in range(10):
+            self._pouka(f"P{i} " + "x" * 400, persona=mila)
+        odeljak = lessons.prompt_section(mila, budzet=1200)
+        koliko = sum(1 for r in odeljak.splitlines() if r.startswith("- ")
+                     and "odsečeno" not in r)
+        assert f"još {10 - koliko} pouka" in odeljak
+
+    def test_pouke_agenta_prezivljavaju_kucni_stil(self, db, mila):
+        """Kad se seče, ispada kućni stil — ne ono što je agent lično zaradio."""
+        self._pouka("KUCNI " + "x" * 400)
+        self._pouka("MOJA " + "x" * 400, persona=mila)
+        odeljak = lessons.prompt_section(mila, budzet=500)
+        assert "MOJA" in odeljak and "KUCNI" not in odeljak
+        assert "odsečeno" in odeljak
+
+    def test_naslov_ulazi_u_budzet(self, db, mila):
+        """Naslov je deo onoga što se plaća — ne sme da se broji kao besplatan."""
+        self._pouka("x" * 300, persona=mila)
+        assert lessons.prompt_section(mila, budzet=100).count("\n") == 1

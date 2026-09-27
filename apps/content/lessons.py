@@ -26,6 +26,17 @@ from apps.personas.models import Persona
 PROMPT_LIMIT_PERSONA = 10
 PROMPT_LIMIT_GLOBAL = 10
 PROMPT_LIMIT_DEPARTMENT = 10
+
+#: Ukupan budžet znakova za ceo odeljak pouka u promptu. Trideset pouka po 500
+#: znakova ide doslovno u svaki poziv modela — to plaćamo po pozivu i to seče
+#: prostor za sam zadatak. Granica po broju pouka to ne hvata, jer pouka nema
+#: ograničenu dužinu.
+PROMPT_BUDGET_CHARS = 4000
+
+#: Rečenica koja stoji umesto odsečenih pouka. Pisac mora da zna da nije video
+#: sve — inače radi po pretpostavci da je spisak potpun (ADR-0033).
+ODSECENO = "- [odsečeno: još {broj} pouka nije stalo u prompt]"
+
 _EXCERPT = 120
 
 
@@ -110,15 +121,38 @@ def active_for(persona: Persona) -> tuple[list[EditorialLesson], list[EditorialL
             list(qs.filter(persona=persona)[:PROMPT_LIMIT_PERSONA]))
 
 
-def prompt_section(persona: Persona) -> str:
+def prompt_section(persona: Persona, *, budzet: int = PROMPT_BUDGET_CHARS) -> str:
+    """Odeljak pouka za prompt, sa gornjom granicom u znakovima.
+
+    Redosled je namerno obrnut od budžeta: kad se seče, prvo ispadaju **kućni
+    stil i pravila sektora**, a pouke samog agenta ostaju do kraja. One su
+    nastale iz odbijanja baš njegovog rada i njemu su najpreče.
+
+    Ako nešto ispadne, to se **kaže** u samom promptu. Ćutke skraćen spisak je
+    gori od kratkog: pisac po njemu radi kao da je potpun.
+    """
     firm, dep, own = active_for(persona)
     if not firm and not dep and not own:
         return ""
-    lines = ["## pouke urednika (obavezno poštuj; novije imaju prednost)"]
-    lines += [f"- [svi] {x.text}" for x in firm]
-    lines += [f"- [{x.department.code}] {x.text}" for x in dep]
-    lines += [f"- {x.text}" for x in own]
-    return "\n".join(lines)
+
+    naslov = "## pouke urednika (obavezno poštuj; novije imaju prednost)"
+    # Najpreče prvo — tim redom se i puni budžet.
+    redom = ([f"- {x.text}" for x in own]
+             + [f"- [{x.department.code}] {x.text}" for x in dep]
+             + [f"- [svi] {x.text}" for x in firm])
+
+    stalo: list[str] = []
+    zauzeto = len(naslov)
+    for red in redom:
+        if zauzeto + 1 + len(red) > budzet:
+            break
+        stalo.append(red)
+        zauzeto += 1 + len(red)
+
+    odseceno = len(redom) - len(stalo)
+    if odseceno:
+        stalo.append(ODSECENO.format(broj=odseceno))
+    return "\n".join([naslov, *stalo])
 
 
 def visible(persona: Persona):
