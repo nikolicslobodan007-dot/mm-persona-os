@@ -1016,6 +1016,38 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/tasks/{task_id}/unapplied:
+    post:
+      operationId: tasks_unapplied
+      description: |-
+        Zakrpa je prošla proveru putanja, ali se kod izvršioca nije primenila.
+
+        Postoji da poslušnik ne bi izmišljao palu kapiju samo da posao izađe iz reda
+        (ADR-0049). Test koji nije pokrenut se ne upisuje kao pao.
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnappliedInRequest'
+        required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/tasks/{task_id}/work:
     get:
       operationId: tasks_work
@@ -1703,6 +1735,19 @@ components:
       required:
       - capability
       - level
+      - reason
+    UnappliedInRequest:
+      type: object
+      properties:
+        patch:
+          type: string
+          format: uuid
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+      - patch
       - reason
   securitySchemes:
     tokenAuth:

@@ -234,6 +234,7 @@ def obradi(task_id: str) -> None:
 
     rad = Path(tempfile.mkdtemp(prefix="rad-"))
     izvestaj = Path(tempfile.mkdtemp(prefix="izv-"))
+    prijavljeno = False
     try:
         radni_primerak(baza, rad)
         primeni(zakrpa, rad)
@@ -246,6 +247,7 @@ def obradi(task_id: str) -> None:
                 "detail": (izvestaj / f"{kapija}.log").read_text(errors="replace")[-4000:]
                 if (izvestaj / f"{kapija}.log").exists() else "",
             })
+        prijavljeno = True
         if zelene and u_granu:
             gurni(rad, grana, ocekivano)
             api(f"/tasks/{task_id}/result",
@@ -255,11 +257,19 @@ def obradi(task_id: str) -> None:
             log(task_id, "sve zeleno, ali bez grane")
     except Exception as e:  # noqa: BLE001 — poslušnik ne sme da padne na jednom zadatku
         log(task_id, "greška:", str(e)[:300])
-        # I neuspeh se prijavljuje sa zakrpom: bez toga posao ostaje nemeren
-        # i red ga vraća u krug (ADR-0040).
-        api(f"/tasks/{task_id}/gate", {"gate": "pytest", "passed": False,
-                                       "patch": zakrpa_id or None,
-                                       "detail": str(e)[:2000]})
+        # Do ADR-0049 je ovde išla izmišljena pala kapija `pytest`, samo da posao
+        # izađe iz reda (ADR-0040). Test koji nije pokrenut se ne upisuje kao pao:
+        # zakrpa koja nije stigla do kapija prijavljuje se kao **neprimenjiva**, a
+        # to je takođe izbacuje iz reda, jer red gleda `ACCEPTED`.
+        if prijavljeno:
+            log(task_id, "kapije su već upisane; neuspeh posle njih se ne upisuje "
+                         "kao kapija")
+        elif zakrpa_id:
+            try:
+                api(f"/tasks/{task_id}/unapplied",
+                    {"patch": zakrpa_id, "reason": str(e)[:2000]})
+            except Exception as e2:  # noqa: BLE001
+                log(task_id, "prijava neprimenjive zakrpe nije prošla:", str(e2)[:200])
     finally:
         shutil.rmtree(rad, ignore_errors=True)
         shutil.rmtree(izvestaj, ignore_errors=True)
@@ -278,7 +288,13 @@ def main() -> int:
             red = []
         # Jedan zadatak u isto vreme — ADR-0038 §5. CX23 nema za više.
         for task_id in red[:1]:
-            obradi(str(task_id))
+            # `obradi` hvata sve unutar svog posla, ali `GET /work` stoji pre tog
+            # `try` — dok ovoga nije bilo, jedan neuspeo poziv je gasio poslušnika
+            # i red je ćutao do sledećeg ručnog pokretanja (ADR-0049).
+            try:
+                obradi(str(task_id))
+            except Exception as e:  # noqa: BLE001
+                log(task_id, "zadatak prekinut, poslušnik nastavlja:", str(e)[:300])
         time.sleep(PAUZA)
 
 

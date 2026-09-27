@@ -167,6 +167,176 @@ class TestZamke:
         assert e.value.code == "BINARY_PATCH"
 
 
+class TestAritmetikaHunkova:
+    """ADR-0049 — `@@` zaglavlje se proverava prebrojavanjem, bez `git`-a.
+
+    27.09. je Lazar vratio zakrpu sa oba `@@` zaglavlja pogrešna:
+
+        red 3  : prijavljeno -6  +20 | izbrojano -6  +18
+        red 22 : prijavljeno -14 +45 | izbrojano -17 +45
+
+    Naš lanac ju je pustio kao `ACCEPTED`, poslušnik ju je odbio kao
+    `corrupt patch at line 22` i — do ovog ADR-a — upisao lažnu palu kapiju
+    `pytest`. Aritmetika koju umemo da uradimo sami ne čeka `git apply`.
+    """
+
+    def _d(self, zaglavlje: str, telo: str) -> str:
+        return ("diff --git a/apps/content/x.py b/apps/content/x.py\n"
+                "--- a/apps/content/x.py\n+++ b/apps/content/x.py\n"
+                f"{zaglavlje}\n{telo}")
+
+    def test_tacno_zaglavlje_prolazi(self):
+        d = self._d("@@ -2,3 +2,4 @@", " prvi\n-drugi\n+drugi red\n+novi\n treci\n")
+        assert [i.path for i in zakrpa.paths_in(d)] == ["apps/content/x.py"]
+
+    def test_izostavljen_broj_znaci_jedan(self):
+        """`@@ -1 +1 @@` je isto što i `-1,1 +1,1` — ne sme da padne."""
+        assert zakrpa.paths_in(self._d("@@ -1 +1 @@", "-a\n+b\n"))
+
+    @pytest.mark.parametrize("zaglavlje,telo,greska", [
+        # premalo dodatih redova nego što zaglavlje tvrdi
+        ("@@ -1,1 +1,3 @@", "-a\n+b\n", "-1 +1"),
+        # premalo skinutih
+        ("@@ -1,3 +1,1 @@", "-a\n+b\n", "-1 +1"),
+        # kontekstni red se broji na OBE strane — ko ga zaboravi, promaši oba zbira
+        ("@@ -1,2 +1,3 @@", " prvi\n-a\n+b\n", "-2 +2"),
+    ])
+    def test_pogresno_zaglavlje_pada(self, zaglavlje, telo, greska):
+        with pytest.raises(zakrpa.PatchError) as e:
+            zakrpa.paths_in(self._d(zaglavlje, telo))
+        assert e.value.code == "BAD_HUNK"
+        assert greska in str(e.value), str(e.value)
+
+    def test_poruka_kaze_koji_red_i_koliko(self):
+        """Pisac mora da zna gde da gleda, inače popravlja naslepo (ADR-0033)."""
+        with pytest.raises(zakrpa.PatchError) as e:
+            zakrpa.paths_in(self._d("@@ -1,1 +1,9 @@", "-a\n+b\n"))
+        poruka = str(e.value)
+        assert "redu 4" in poruka, poruka          # `@@` je četvrti red ove zakrpe
+        assert "-1 +9" in poruka and "-1 +1" in poruka
+        assert "prebroj redove" in poruka
+
+    def test_drugi_hunk_pada_i_kad_je_prvi_dobar(self):
+        """Poslušnik je 27.09. prijavio red 22 — dakle drugi hunk, ne prvi."""
+        d = (self._d("@@ -1 +1 @@", "-a\n+b\n")
+             + "@@ -10,2 +10,5 @@\n konteks\n+dodato\n")
+        with pytest.raises(zakrpa.PatchError) as e:
+            zakrpa.paths_in(d)
+        assert "-2 +5" in str(e.value) and "-1 +2" in str(e.value)
+
+    def test_hunk_drugog_fajla_se_ne_slepljuje(self):
+        """Bez granice po fajlu bi se redovi drugog fajla brojali u prvi hunk."""
+        d = (self._d("@@ -1 +1 @@", "-a\n+b\n")
+             + "diff --git a/apps/content/y.py b/apps/content/y.py\n"
+               "--- a/apps/content/y.py\n+++ b/apps/content/y.py\n"
+               "@@ -1 +1 @@\n-c\n+d\n")
+        assert len(zakrpa.paths_in(d)) == 2
+
+    def test_granica_i_bez_diff_git_reda(self):
+        """ADR-0048 — zakrpa bez `diff --git`; par `---`/`+++` je granica fajla."""
+        d = ("--- a/apps/content/x.py\n+++ b/apps/content/x.py\n@@ -1 +1 @@\n-a\n+b\n"
+             "--- a/apps/content/y.py\n+++ b/apps/content/y.py\n@@ -1 +1 @@\n-c\n+d\n")
+        assert len(zakrpa.paths_in(d)) == 2
+
+    def test_bez_novog_reda_na_kraju_se_ne_broji(self):
+        r"""`\ No newline at end of file` nije ni dodat ni skinut red."""
+        d = self._d("@@ -1 +1 @@", "-a\n+b\n\\ No newline at end of file\n")
+        assert zakrpa.paths_in(d)
+
+    def test_prazan_red_je_kontekst(self):
+        """Uređivači seku prateći razmak, pa prazan red u hunku znači ` `."""
+        d = self._d("@@ -1,2 +1,2 @@", "-a\n+b\n\n")
+        assert zakrpa.paths_in(d)
+
+    def test_proza_u_hunku_pada(self):
+        d = self._d("@@ -1 +1 @@", "-a\n+b\nevo, ovo bi trebalo da radi\n")
+        with pytest.raises(zakrpa.PatchError) as e:
+            zakrpa.paths_in(d)
+        assert e.value.code == "BAD_HUNK"
+        assert "ne počinje razmakom" in str(e.value)
+
+    def test_preimenovanje_bez_hunka_prolazi(self):
+        """Valjana zakrpa ume da nema ni jedan `@@` — prvo mesto provere je grešilo."""
+        d = ("diff --git a/apps/content/a.py b/apps/content/b.py\n"
+             "similarity index 100%\n"
+             "rename from apps/content/a.py\n"
+             "rename to apps/content/b.py\n")
+        assert len(zakrpa.paths_in(d)) == 2
+
+    def test_pokvarena_zakrpa_se_pamti_kao_odbijena(self, z, mila):
+        """Agentov promašaj ostaje agentov — ali sa porukom koja se može pročitati."""
+        with bind(actor_id="user:slobodan"):
+            red = zakrpa.submit(z, self._d("@@ -1,1 +1,4 @@", "-a\n+b\n"),
+                                persona=mila)
+        assert red.status == E.PatchStatus.REJECTED
+        assert "BAD_HUNK" in red.reason
+
+
+class TestNeprimenjenaZakrpa:
+    """ADR-0049 — zakrpa koja je prošla proveru, a nije se primenila.
+
+    Do ovog ADR-a je poslušnik na svaku grešku van kapija upisivao `pytest: False`,
+    jer je to bio jedini način da posao izađe iz reda. Time je `ucinak` brojao pale
+    testove koji nikad nisu pokrenuti.
+    """
+
+    def test_status_i_razlog(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            red = zakrpa.submit(z, _diff(), persona=mila)
+            red = zakrpa.odbij_posle_provere(z, red, "apply --check: corrupt patch")
+        assert red.status == E.PatchStatus.REJECTED
+        assert "nije se primenila" in red.reason and "corrupt patch" in red.reason
+
+    def test_nijedna_kapija_se_ne_upisuje(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            red = zakrpa.submit(z, _diff(), persona=mila)
+            zakrpa.odbij_posle_provere(z, red, "nema mesta na disku")
+        assert not red.gates.exists()
+        # `gate_report` nabraja tražene kapije; nijedna ne sme da ima ishod
+        assert set(zadaci.gate_report(z).values()) == {None}
+
+    def test_izlazi_iz_reda_poslusnika(self, z, mila):
+        """Red gleda `ACCEPTED` bez kapija — odbijena zakrpa iz njega izlazi."""
+        from apps.orchestration.models import CodeTask
+        with bind(actor_id="user:slobodan"):
+            red = zakrpa.submit(z, _diff(), persona=mila)
+        nemereno = TaskPatch.objects.filter(status=E.PatchStatus.ACCEPTED.value,
+                                            gates__isnull=True)
+        assert CodeTask.objects.filter(patches__in=nemereno, pk=z.pk).exists()
+        with bind(actor_id="user:slobodan"):
+            zakrpa.odbij_posle_provere(z, red, "corrupt patch")
+        nemereno = TaskPatch.objects.filter(status=E.PatchStatus.ACCEPTED.value,
+                                            gates__isnull=True)
+        assert not CodeTask.objects.filter(patches__in=nemereno, pk=z.pk).exists()
+
+    def test_izmerena_zakrpa_se_ne_prepravlja(self, z, mila):
+        """Kapije su zapis; ne brišu se time što je nešto posle njih puklo."""
+        with bind(actor_id="user:slobodan"):
+            red = zakrpa.submit(z, _diff(), persona=mila)
+            zadaci.record_gate(z, "pytest", True, patch=red)
+            with pytest.raises(zadaci.TaskError) as e:
+                zakrpa.odbij_posle_provere(z, red, "push je pao")
+        assert e.value.code == "ALREADY_MEASURED"
+        red.refresh_from_db()
+        assert red.status == E.PatchStatus.ACCEPTED
+
+    def test_tudja_zakrpa_se_odbija(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            drugi = zadaci.create(title="Drugi", why="Provera vlasništva.",
+                                  allowed_paths=["apps/content"], assignee=mila)
+            red = zakrpa.submit(z, _diff(), persona=mila)
+            with pytest.raises(zadaci.TaskError) as e:
+                zakrpa.odbij_posle_provere(drugi, red, "greška")
+        assert e.value.code == "WRONG_TASK"
+
+    def test_upisuje_se_u_zapis(self, z, mila):
+        from apps.observability.models import AuditEvent
+        with bind(actor_id="user:slobodan"):
+            red = zakrpa.submit(z, _diff(), persona=mila)
+            zakrpa.odbij_posle_provere(z, red, "corrupt patch at line 22")
+        assert AuditEvent.objects.filter(event_key="task.patch.unapplied").exists()
+
+
 class TestProvera:
     def test_zakrpa_u_svom_delu_prolazi(self, z):
         assert zakrpa.check(z, _diff()).ok

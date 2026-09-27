@@ -213,6 +213,19 @@ DIFF = ("diff --git a/apps/content/x.py b/apps/content/x.py\n"
         "--- a/apps/content/x.py\n+++ b/apps/content/x.py\n@@ -1 +1 @@\n-a\n+b\n")
 
 
+def _ogroman(n: int = 9000) -> str:
+    """Zakrpa preko plafona, sa **ispravnim** `@@`.
+
+    Do ADR-0049 je ovde stajalo `DIFF + 9000 dodatih redova`, pa je zaglavlje
+    tvrdilo `+1` nad telom od 9001 reda. Provera hunkova to sad odbija, a plafon
+    se i dalje testira — samo zakrpom koju `git apply` ne bi odbio.
+    """
+    return ("diff --git a/apps/content/x.py b/apps/content/x.py\n"
+            "--- a/apps/content/x.py\n+++ b/apps/content/x.py\n"
+            f"@@ -1 +1,{n + 1} @@\n-a\n+b\n"
+            + "".join(f"+red {i}\n" for i in range(n)))
+
+
 @pytest.fixture
 def z(mila):
     """Zadatak sa izvršiocem koji sme u `apps/content`."""
@@ -259,7 +272,7 @@ class TestRanijaZakrpa:
         assert brif.build(z)["previous_patch"]["patch_id"] == str(p2.pk)
 
     def test_duga_zakrpa_se_sece_i_kaze(self, z, mila):
-        ogromna = DIFF + "".join(f"+red {i}\n" for i in range(9000))
+        ogromna = _ogroman()
         with bind(actor_id="user:slobodan"):
             p = zakrpa.submit(z, ogromna, persona=mila)
             zadaci.record_gate(z, "pytest", True, patch=p)

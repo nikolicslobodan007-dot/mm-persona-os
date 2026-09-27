@@ -4,6 +4,7 @@
     GET  /api/v1/tasks/{task_id}/work    → zakrpa koja je VEĆ prošla proveru
     POST /api/v1/tasks/{task_id}/gate    → ishod jedne kapije
     POST /api/v1/tasks/{task_id}/result  → grana i commit, kad su kapije zelene
+    POST /api/v1/tasks/{task_id}/unapplied → zakrpa se nije primenila (ADR-0049)
 
 Ovo su jedine tačke koje poslušnik vidi (`allow_runner`), i namerno su uske:
 
@@ -26,6 +27,7 @@ from rest_framework import serializers
 from api.base import PersonaOSView, ok
 from api.errors import ApiError
 from apps.orchestration import brif, rezultat, zadaci
+from apps.orchestration import zakrpa as zakrpe
 from apps.orchestration.models import CodeTask, TaskPatch
 from common import enums as E
 from common import ids as I
@@ -60,6 +62,11 @@ class GateIn(serializers.Serializer):
                                    max_length=8000)
     commit = serializers.CharField(required=False, allow_blank=True, default="",
                                    max_length=40)
+
+
+class UnappliedIn(serializers.Serializer):
+    patch = serializers.UUIDField()
+    reason = serializers.CharField(max_length=2000)
 
 
 class ResultIn(serializers.Serializer):
@@ -190,3 +197,30 @@ class TaskGateView(PersonaOSView):
             raise ApiError(E.ErrorCode.VALIDATION_ERROR, str(e)) from e
         return ok({"task_id": zad.public_id, "gate": red.gate, "passed": red.passed,
                    "gates": zadaci.gate_report(zad)})
+
+
+class TaskUnappliedView(PersonaOSView):
+    """Zakrpa je prošla proveru putanja, ali se kod izvršioca nije primenila.
+
+    Postoji da poslušnik ne bi izmišljao palu kapiju samo da posao izađe iz reda
+    (ADR-0049). Test koji nije pokrenut se ne upisuje kao pao.
+    """
+
+    allow_runner = True
+
+    @extend_schema(operation_id="tasks_unapplied", request=UnappliedIn,
+                   responses={200: dict})
+    def post(self, request, task_id: str):
+        zad = _zadatak(task_id)
+        ulaz = UnappliedIn(data=request.data)
+        ulaz.is_valid(raise_exception=True)
+        v = ulaz.validated_data
+        red = TaskPatch.objects.filter(pk=v["patch"], task=zad).first()
+        if red is None:
+            raise ApiError(E.ErrorCode.NOT_FOUND, "Zakrpa ne pripada ovom zadatku.")
+        try:
+            red = zakrpe.odbij_posle_provere(zad, red, v["reason"])
+        except zadaci.TaskError as e:
+            raise ApiError(E.ErrorCode.VALIDATION_ERROR, str(e)) from e
+        return ok({"task_id": zad.public_id, "patch_id": str(red.pk),
+                   "status": red.status, "reason": red.reason})

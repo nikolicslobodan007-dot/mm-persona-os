@@ -33,7 +33,7 @@ from .models import CodeTask, TaskPatch
 from .zadaci import TaskError, may_touch
 
 __all__ = ["Izmena", "Nalaz", "paths_in", "check", "submit", "zabelezi_neuspeh",
-           "MAX_DIFF_BYTES"]
+           "odbij_posle_provere", "MAX_DIFF_BYTES"]
 
 #: Gornja granica veličine zakrpe. Zakrpa preko ove mere nije izmena nego prepis,
 #: i traži da se zadatak podeli.
@@ -50,6 +50,10 @@ _MODE = re.compile(r"^(?:new file mode|deleted file mode|old mode|new mode) (?P<
 _RENAME = re.compile(r"^rename (?:from|to) (?P<put>.+)$")
 _MINUS = re.compile(r"^--- (?P<put>.+)$")
 _PLUS = re.compile(r"^\+\+\+ (?P<put>.+)$")
+
+#: Zaglavlje hunka: `@@ -stara,koliko +nova,koliko @@`. Broj posle zareza sme da
+#: izostane i tada je 1.
+_HUNK = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 
 #: C-escape sekvence iz `git` citiranja putanja.
 _ESC = {"a": 7, "b": 8, "f": 12, "n": 10, "r": 13, "t": 9, "v": 11,
@@ -122,6 +126,67 @@ def _unquote(raw: str) -> str:
         return out.decode("utf-8")
     except UnicodeDecodeError as e:
         raise PatchError("BAD_PATH", f"Putanja {raw!r} nije ispravan UTF-8.") from e
+
+
+def _nov_fajl(redovi: list[str], j: int) -> bool:
+    """Par `--- `/`+++ ` u dva reda — početak novog fajla, ne telo hunka.
+
+    Sam `--- ` nije dovoljan: red koji briše sadržaj `-- x` izgleda isto tako.
+    Par se u kodu ne pojavljuje slučajno.
+    """
+    return (redovi[j].startswith("--- ") and j + 1 < len(redovi)
+            and redovi[j + 1].startswith("+++ "))
+
+
+def _proveri_hunkove(diff: str) -> None:
+    """Broji redove svakog hunka i poredi sa onim što zaglavlje tvrdi.
+
+    Ovo je čista aritmetika i ne traži `git`. Bez nje zakrpa sa pogrešnim `@@`
+    prolazi kao prihvaćena, ulazi u red, i pada tek u poslušniku kao
+    `corrupt patch` — daleko od onoga ko ju je napisao i bez poruke koja mu
+    kaže šta da popravi (ADR-0049).
+
+    Proverava se **samo ono što piše**: zakrpa bez ijednog `@@` ovde prolazi, jer
+    preimenovanje i izmena moda hunk ni ne nose. Da je ovde stajao uslov „mora
+    postojati hunk", pao bi valjan `rename from`/`rename to`.
+    """
+    redovi = diff.splitlines()
+    i = 0
+    while i < len(redovi):
+        m = _HUNK.match(redovi[i])
+        if m is None:
+            i += 1
+            continue
+        trazeno_s, trazeno_n = int(m.group(2) or 1), int(m.group(4) or 1)
+        j, s, n = i + 1, 0, 0
+        while j < len(redovi):
+            red = redovi[j]
+            if _HUNK.match(red) or red.startswith("diff --git ") or _nov_fajl(redovi, j):
+                break
+            z = red[:1]
+            if z in (" ", ""):
+                s, n = s + 1, n + 1
+            elif z == "-":
+                s += 1
+            elif z == "+":
+                n += 1
+            elif z == "\\":
+                pass                      # „\ No newline at end of file"
+            else:
+                raise PatchError(
+                    "BAD_HUNK",
+                    f"Red {j + 1} u hunku ne počinje razmakom, `+`, `-` ni `\\`: "
+                    f"{red[:60]!r}.",
+                )
+            j += 1
+        if (s, n) != (trazeno_s, trazeno_n):
+            raise PatchError(
+                "BAD_HUNK",
+                f"Zaglavlje u redu {i + 1} kaže -{trazeno_s} +{trazeno_n}, a hunk "
+                f"ima -{s} +{n}. `git apply` ovo odbija kao pokvarenu zakrpu; "
+                f"prebroj redove i ispravi `@@`.",
+            )
+        i = j
 
 
 def _strip_prefix(put: str) -> str:
@@ -208,6 +273,9 @@ def paths_in(diff: str) -> list[Izmena]:
     if not nadjene:
         raise PatchError("NO_PATHS",
                          "Zakrpa ne dira nijednu putanju — nije unified diff.")
+    # Aritmetika hunkova ide POSLE čitanja putanja, ne pre: preimenovanje i izmena
+    # moda su valjane zakrpe bez ijednog `@@`, a binarna zakrpa ima svoju poruku.
+    _proveri_hunkove(diff)
     return [Izmena(p, nadjene[p]) for p in sorted(nadjene)]
 
 
@@ -257,6 +325,36 @@ def submit(zadatak: CodeTask, diff: str, *, persona: Persona | None = None,
                  "base": base_sha, "cena_centi": red.cost_eur_cents},
     )
     return red
+
+
+@transaction.atomic
+def odbij_posle_provere(zadatak: CodeTask, zakrpa: TaskPatch, razlog: str) -> TaskPatch:
+    """Zakrpa je prošla proveru putanja, ali se **nije primenila** kod izvršioca.
+
+    Poslušnik ovo prijavljuje umesto da izmisli palu kapiju. Do ADR-0049 je
+    svaka greška van kapija upisivana kao `pytest: False` — jedini način da
+    posao izađe iz reda (ADR-0040), ali i upis testa koji nikada nije pokrenut.
+    Lažna mera je gora od posla koji stoji.
+
+    Status ide na `REJECTED`: zakrpa jeste odbijena, samo kasnije nego obično.
+    Time izlazi i iz reda, jer red gleda `ACCEPTED`.
+    """
+    if zakrpa.task_id != zadatak.pk:
+        raise TaskError("WRONG_TASK", "Zakrpa ne pripada ovom zadatku.")
+    if zakrpa.gates.exists():
+        raise TaskError(
+            "ALREADY_MEASURED",
+            "Zakrpa već ima ishod kapije; ono što je mereno se ne proglašava "
+            "neprimenjivim.",
+        )
+    zakrpa.status = E.PatchStatus.REJECTED
+    zakrpa.reason = (f"nije se primenila: {razlog}".strip())[:2000]
+    zakrpa.save(update_fields=["status", "reason", "updated_at"])
+    audit.record("task.patch.unapplied", severity=E.AuditSeverity.WARNING,
+                 persona=zakrpa.author or zadatak.assignee,
+                 details={"task": zadatak.public_id, "patch": str(zakrpa.pk),
+                          "reason": zakrpa.reason})
+    return zakrpa
 
 
 @transaction.atomic

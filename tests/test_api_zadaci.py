@@ -381,3 +381,78 @@ class TestRezultat:
         podaci = poslusnik.get(
             reverse("task-work", args=[zad.public_id])).json()["data"]
         assert podaci["branch_expected_sha"] == self.SHA
+
+
+class TestNeprimenjenaTacka:
+    """ADR-0049 — `POST /tasks/{id}/unapplied`.
+
+    Postoji da poslušnik ne bi izmišljao palu kapiju samo da posao izađe iz reda.
+    Do nje je svaka greška van kapija stizala kao `pytest: False`, pa je `ucinak`
+    brojao testove koji nisu pokrenuti.
+    """
+
+    def test_poslusnik_sme(self, poslusnik, zad, mila):
+        zk = _predaj(zad, DIFF, mila)
+        o = poslusnik.post(reverse("task-unapplied", args=[zad.public_id]),
+                           {"patch": str(zk.pk), "reason": "corrupt patch at line 22"},
+                           format="json")
+        assert o.status_code == 200, o.content
+        podaci = o.json()["data"]
+        assert podaci["status"] == E.PatchStatus.REJECTED.value
+        assert "corrupt patch" in podaci["reason"]
+
+    def test_zakrpa_izlazi_iz_reda(self, poslusnik, zad, mila):
+        zk = _predaj(zad, DIFF, mila)
+        assert poslusnik.get(reverse("tasks-queued")).json()["data"]["tasks"] == [
+            zad.public_id]
+        poslusnik.post(reverse("task-unapplied", args=[zad.public_id]),
+                       {"patch": str(zk.pk), "reason": "nije se primenila"},
+                       format="json")
+        assert poslusnik.get(reverse("tasks-queued")).json()["data"]["tasks"] == []
+
+    def test_nijedna_kapija_nije_upisana(self, poslusnik, zad, mila):
+        zk = _predaj(zad, DIFF, mila)
+        poslusnik.post(reverse("task-unapplied", args=[zad.public_id]),
+                       {"patch": str(zk.pk), "reason": "corrupt patch"}, format="json")
+        assert not zk.gates.exists()
+
+    def test_izmerena_zakrpa_se_ne_prepravlja(self, poslusnik, zad, mila):
+        zk = _predaj(zad, DIFF, mila)
+        poslusnik.post(reverse("task-gate", args=[zad.public_id]),
+                       {"gate": "pytest", "passed": True, "patch": str(zk.pk)},
+                       format="json")
+        o = poslusnik.post(reverse("task-unapplied", args=[zad.public_id]),
+                           {"patch": str(zk.pk), "reason": "push je pao"},
+                           format="json")
+        assert o.status_code == 400
+        zk.refresh_from_db()
+        assert zk.status == E.PatchStatus.ACCEPTED.value
+
+    def test_tudja_zakrpa_se_odbija(self, poslusnik, zad, mila):
+        with bind(actor_id="user:slobodan"):
+            drugi = zadaci.create(title="Drugi", why="Provera vlasništva.",
+                                  allowed_paths=["apps/content"], assignee=mila)
+        zk = _predaj(drugi, DIFF, mila)
+        assert poslusnik.post(
+            reverse("task-unapplied", args=[zad.public_id]),
+            {"patch": str(zk.pk), "reason": "greška"},
+            format="json").status_code == 404
+
+    def test_razlog_je_obavezan(self, poslusnik, zad, mila):
+        zk = _predaj(zad, DIFF, mila)
+        assert poslusnik.post(
+            reverse("task-unapplied", args=[zad.public_id]),
+            {"patch": str(zk.pk)}, format="json").status_code == 400
+
+    def test_bez_prijave_nista(self, zad, mila):
+        """Neprijavljen zahtev se odbija i **ništa ne menja** — status ostaje kakav je.
+
+        Koji je tačno kod (401, 403 ili 400 zbog `X-Actor-ID`) zavisi od toga koja
+        provera prva stigne; ono što ovaj test brani je da zapis ostane nedirnut.
+        """
+        zk = _predaj(zad, DIFF, mila)
+        o = APIClient().post(reverse("task-unapplied", args=[zad.public_id]),
+                             {"patch": str(zk.pk), "reason": "greška"}, format="json")
+        assert o.status_code >= 400, o.content
+        zk.refresh_from_db()
+        assert zk.status == E.PatchStatus.ACCEPTED.value

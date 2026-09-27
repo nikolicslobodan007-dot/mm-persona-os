@@ -36,6 +36,18 @@ ZONA = ("diff --git a/apps/policy/service.py b/apps/policy/service.py\n"
         "--- a/apps/policy/service.py\n+++ b/apps/policy/service.py\n@@ -1 +1 @@\n-a\n+b\n")
 
 
+def _ogroman(n: int = 9000) -> str:
+    """Zakrpa preko `MAX_DIFF_ZNAKOVA`, sa **ispravnim** `@@` zaglavljem.
+
+    Plafon se meri nad zakrpom koju bi `git apply` primio — inače test ne bi
+    dokazivao plafon nego proveru hunkova iz ADR-0049.
+    """
+    return ("diff --git a/apps/content/x.py b/apps/content/x.py\n"
+            "--- a/apps/content/x.py\n+++ b/apps/content/x.py\n"
+            f"@@ -1 +1,{n + 1} @@\n-a\n+b\n"
+            + "".join(f"+red {i}\n" for i in range(n)))
+
+
 @dataclass
 class LazniOdgovor:
     text: str
@@ -134,7 +146,7 @@ class TestPokusaj:
         assert pisac.potroseno(z) == 7
 
     def test_predugacak_diff_se_odbija(self, z, model, ruta):
-        ogroman = DIFF + "".join(f"+red {i}\n" for i in range(9000))
+        ogroman = _ogroman()
         model["odgovor"] = f"```diff\n{ogroman}```"
         assert not pisac.pokusaj(z).napisano
         assert "podeli zadatak" in z.patches.get().reason

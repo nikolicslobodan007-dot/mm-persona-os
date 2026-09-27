@@ -132,3 +132,126 @@ class TestGrana:
         assert runner.SHA.match("a" * 40)
         assert not runner.SHA.match("A" * 40)
         assert not runner.SHA.match("a" * 39)
+
+
+class TestNeuspehBezLazneKapije:
+    """ADR-0049 — greška pre kapija se prijavljuje kao neprimenjena zakrpa.
+
+    27.09. je zakrpa pala na `apply --check: corrupt patch at line 22`, a poslušnik
+    je upisao `pytest: False` — jedini način koji je imao da posao izađe iz reda
+    (ADR-0040). U `ucinak`-u je tako stajao pali test koji nije pokrenut. Test koji
+    nije pokrenut se ne upisuje kao pao.
+    """
+
+    TASK = "TSK-01M3C15CJ999KE2FX8PG6KHMZE"
+    RAD = {
+        "diff": "--- a/x\n+++ b/x\n@@ -1 +1 @@\n-a\n+b\n",
+        "base_sha": "b" * 40,
+        "patch_id": "3f1c9f2a-0000-4000-8000-000000000001",
+        "branch": f"zadatak/{TASK}",
+        "branch_expected_sha": "",
+        "author_name": "Lazar Todorović (AI)",
+        "author_email": "p-00027@agenti.example.com",
+        "commit_message": "zadatak: proba\n",
+    }
+
+    @pytest.fixture
+    def zvao(self, runner, monkeypatch):
+        """Beleži svaki poziv API-ja, bez mreže."""
+        pozivi: list[tuple[str, dict | None]] = []
+
+        def lazni_api(putanja, telo=None):
+            pozivi.append((putanja, telo))
+            return self.RAD if putanja.endswith("/work") else {}
+
+        monkeypatch.setattr(runner, "api", lazni_api)
+        monkeypatch.setattr(runner, "radni_primerak", lambda *a, **k: None)
+        monkeypatch.setattr(runner, "zapamti", lambda *a, **k: "c" * 40)
+        monkeypatch.setattr(runner, "gurni", lambda *a, **k: None)
+        monkeypatch.setattr(runner, "primeni", lambda *a, **k: None)
+        monkeypatch.setattr(runner, "kapije", lambda *a, **k: (True, {"pytest": True}))
+        return pozivi
+
+    def _putanje(self, pozivi):
+        return [p for p, _ in pozivi]
+
+    def test_neprimenjiva_zakrpa_ne_daje_kapiju(self, runner, monkeypatch, zvao):
+        def pukni(*a, **k):
+            raise RuntimeError("apply --check: corrupt patch at line 22")
+
+        monkeypatch.setattr(runner, "primeni", pukni)
+        runner.obradi(self.TASK)
+        putanje = self._putanje(zvao)
+        assert not any(p.endswith("/gate") for p in putanje), putanje
+        assert any(p.endswith("/unapplied") for p in putanje), putanje
+        telo = next(t for p, t in zvao if p.endswith("/unapplied"))
+        assert telo["patch"] == self.RAD["patch_id"]
+        assert "corrupt patch at line 22" in telo["reason"]
+
+    def test_neuspeh_posle_kapija_ne_prijavljuje_neprimenjivost(
+            self, runner, monkeypatch, zvao):
+        """Kapije su izmerene i ostaju; `push` koji posle padne nije stvar zakrpe."""
+        def pukni(*a, **k):
+            raise RuntimeError("force-with-lease odbijen")
+
+        monkeypatch.setattr(runner, "gurni", pukni)
+        runner.obradi(self.TASK)
+        putanje = self._putanje(zvao)
+        assert any(p.endswith("/gate") for p in putanje), putanje
+        assert not any(p.endswith("/unapplied") for p in putanje), putanje
+
+    def test_uspesan_prolaz_ne_diras(self, runner, zvao):
+        runner.obradi(self.TASK)
+        putanje = self._putanje(zvao)
+        assert any(p.endswith("/gate") for p in putanje)
+        assert any(p.endswith("/result") for p in putanje)
+        assert not any(p.endswith("/unapplied") for p in putanje)
+
+    def test_bez_identifikatora_zakrpe_se_ne_prijavljuje_nista(
+            self, runner, monkeypatch, zvao):
+        """Bez `patch_id` nema šta da se odbije — greška ostaje samo u dnevniku."""
+        rad = dict(self.RAD, patch_id="")
+        monkeypatch.setattr(runner, "api",
+                            lambda p, t=None: (zvao.append((p, t)) or
+                                               (rad if p.endswith("/work") else {})))
+
+        def pukni(*a, **k):
+            raise RuntimeError("nema mesta na disku")
+
+        monkeypatch.setattr(runner, "primeni", pukni)
+        runner.obradi(self.TASK)
+        assert not any(p.endswith("/unapplied") for p in self._putanje(zvao))
+
+    def test_petlja_prezivljava_pao_zadatak(self, runner, monkeypatch, zvao):
+        """`GET /work` stoji pre `try` u `obradi`; petlja mora da ga preživi.
+
+        Bez ovoga je jedan neuspeo poziv gasio ceo proces, a red je posle ćutao —
+        isto ponašanje kao 25.09., samo iz drugog razloga.
+        """
+        def pukni(*a, **k):
+            raise RuntimeError("API nedostupan")
+
+        monkeypatch.setattr(runner, "api", pukni)
+        with pytest.raises(RuntimeError):
+            runner.obradi(self.TASK)      # `obradi` sam ovo ne hvata
+
+        red = {"tasks": [self.TASK]}
+        koraci = []
+
+        def api_koji_pada_na_radu(putanja, telo=None):
+            koraci.append(putanja)
+            if putanja.endswith("/queued"):
+                return red
+            raise RuntimeError("API nedostupan")
+
+        monkeypatch.setattr(runner, "api", api_koji_pada_na_radu)
+        monkeypatch.setattr(runner, "TOKEN", "t")
+        monkeypatch.setattr(runner, "PAUZA", 0)
+
+        def stani(_):
+            raise KeyboardInterrupt
+
+        monkeypatch.setattr(runner.time, "sleep", stani)
+        with pytest.raises(KeyboardInterrupt):
+            runner.main()                 # do `sleep` se stiglo → pad je uhvaćen
+        assert any(p.endswith("/work") for p in koraci), koraci
