@@ -34,6 +34,7 @@ __all__ = [
     "record_gate",
     "add_finding",
     "amend_finding",
+    "reopen_finding",
     "close_finding",
     "finish",
     "gate_report",
@@ -314,6 +315,57 @@ def amend_finding(nalaz: ReviewFinding, claim: str, *, actor: str = "") -> Revie
         "file": nalaz.file, "severity": nalaz.severity,
         "pre": pre[:1000], "posle": nalaz.claim[:1000],
     })
+    return nalaz
+
+
+@transaction.atomic
+def reopen_finding(nalaz: ReviewFinding, *, actor: str, razlog: str) -> ReviewFinding:
+    """Vraća zatvoren nalaz na `OPEN`. Samo čovek, i samo sa razlogom. ADR-0050.
+
+    `close_finding` s pravom odbija `OPEN` kao cilj — zatvaranje je odluka, ne
+    prekidač. Ali 26.09. sam **ja** zatvorio dva nalaza kao `FIXED` nad zakrpom
+    koja se nikad nije primenila (ADR-0048), i posle toga nije postojao nijedan
+    put da se to ispravi: recenzija je za pisca bila prazna, pa je pisao naslepo.
+    Vrata koja fale nisu strogost nego rupa.
+
+    Tri granice, iste kao kod ispravke tvrdnje:
+
+      - **samo čovek.** Ponovno otvaranje je odluka o tuđem radu, a ne merenje;
+      - **izvršilac ne dira nalaz na sopstveni rad** (ADR-0034 §5.2) — ni da ga
+        zatvori, ni da ga otvori;
+      - **razlog je obavezan.** Bez njega bi zapis rekao da se status vratio, a
+        ne zašto — a upravo zašto je ono što sledeća recenzija mora da vidi.
+
+    Tvrdnja, težina i izvor se ne diraju: ovo vraća nalaz u igru, ne piše nov.
+    """
+    if not actor.startswith("user:"):
+        raise TaskError(
+            "NOT_HUMAN",
+            f"Nalaz ponovo otvara čovek, a {actor!r} to nije. Ako je mašina "
+            f"našla nešto novo, to ide kao nov nalaz.",
+        )
+    if not razlog.strip():
+        raise TaskError("NO_REASON",
+                        "Ponovno otvaranje bez razloga je prepravljanje zapisa.")
+    if nalaz.status == E.FindingStatus.OPEN.value:
+        raise TaskError("ALREADY_OPEN", "Nalaz je već otvoren.")
+    izvrsilac = getattr(nalaz.task.assignee, "public_id", None)
+    if izvrsilac and actor == f"agent:{izvrsilac}":
+        raise TaskError(
+            "SELF_REOPEN",
+            f"{izvrsilac} ne dira nalaz na sopstveni rad (ADR-0034 §5.2).",
+        )
+
+    pre = nalaz.status
+    nalaz.status = E.FindingStatus.OPEN.value
+    nalaz.save(update_fields=["status", "updated_at"])
+    audit.record("task.finding.reopened",
+                 severity=E.AuditSeverity.WARNING,
+                 persona=nalaz.task.assignee,
+                 details={"task": nalaz.task.public_id, "finding": str(nalaz.pk),
+                          "file": nalaz.file, "severity": nalaz.severity,
+                          "iz": pre, "u": E.FindingStatus.OPEN.value,
+                          "razlog": razlog.strip()[:1000], "actor": actor})
     return nalaz
 
 

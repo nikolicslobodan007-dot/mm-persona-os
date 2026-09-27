@@ -119,16 +119,42 @@ IZVOR_FAJLOVA = (
 )
 
 
+def _ishod(red) -> str:
+    """Šta se sa zakrpom **stvarno** desilo, rečenicom koju pisac može da pročita.
+
+    `status` sam po sebi obmanjuje. `ACCEPTED` znači samo „prošla je proveru
+    putanja" — a 27.09. je pisac dobio brif u kome je njegova pokvarena zakrpa
+    stajala kao `ACCEPTED`, pa je razumno zaključio da je sve u redu i vratio je
+    istu. To je koštalo jedan poziv i poslednji pokušaj (ADR-0050).
+    """
+    if red.status == E.PatchStatus.REJECTED.value:
+        return "ODBIJENA je i nije ušla u kod. Razlog: " + (
+            red.reason or "nije zabeležen").strip()
+    if red.applied_sha:
+        return f"primenjena i zapamćena na grani zadatka (commit {red.applied_sha[:12]})."
+    if red.status == E.PatchStatus.APPLIED.value:
+        return "primenjena, ali commit nije zabeležen."
+    return ("prošla je proveru putanja, ali NIJE primenjena — u kodu je nema. "
+            "Pogledaj pale kapije ispod i napiši je iznova.")
+
+
 def _prethodna(zadatak: CodeTask) -> dict | None:
-    """Poslednja zakrpa **koja je već gledana** — merena kapijama ili primenjena.
+    """Poslednja zakrpa **čija je sudbina poznata**, i ta sudbina uz nju.
 
     Bez nje je brif protivrečan: nalazi govore o kodu koji u fajlovima ne postoji,
     jer grana nije u slici. Aplikacija nema `.git` (ADR-0041 §2) i ne može da
     pročita granu, ali zakrpu ima u bazi — pa se šalje ona.
+
+    Odbijena zakrpa ulazi **bez uslova**: njen razlog je jedino po čemu pisac može
+    da ispravi rad, a do ADR-0050 do njega nije stizao nijedan — ni „nije vratio
+    diff", ni „ista zakrpa", ni `BAD_HUNK`. Prihvaćena a neizmerena ne ulazi: nju
+    poslušnik tek uzima, pa se o njoj još ništa ne zna.
     """
-    red = (zadatak.patches.filter(status__in=(E.PatchStatus.ACCEPTED.value,
-                                              E.PatchStatus.APPLIED.value))
-           .filter(Q(gates__isnull=False) | ~Q(applied_sha=""))
+    red = (zadatak.patches
+           .filter(Q(status=E.PatchStatus.REJECTED.value)
+                   | (Q(status__in=(E.PatchStatus.ACCEPTED.value,
+                                    E.PatchStatus.APPLIED.value))
+                      & (Q(gates__isnull=False) | ~Q(applied_sha=""))))
            .order_by("-created_at").first())
     if red is None:
         return None
@@ -138,7 +164,11 @@ def _prethodna(zadatak: CodeTask) -> dict | None:
         diff = diff.encode("utf-8")[:MAX_PATCH_BYTES].decode("utf-8", "ignore")
     return {
         "patch_id": str(red.pk),
+        # `ishod` stoji PRE `status`-a namerno: to je ono što pisac treba da
+        # pročita, a `status` je interna reč koja se lako pogrešno razume.
+        "ishod": _ishod(red),
         "status": red.status,
+        "reason": (red.reason or "")[:2000],
         "applied_sha": red.applied_sha,
         "paths": list(red.paths),
         "diff": diff,

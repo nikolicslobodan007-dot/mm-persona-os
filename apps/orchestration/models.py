@@ -541,6 +541,12 @@ class TaskPatch(UUIDModel):
     #: Koliko je model koštao da bi ova zakrpa nastala (ADR-0044). Canon §13.1 —
     #: EUR u centima, nikada float. Zakrpa koju je kucao čovek ostaje na nuli.
     cost_eur_cents = models.BigIntegerField(default=0)
+    #: Da li je ovu zakrpu napisao model, kroz `pisac` (ADR-0050). Plafon pokušaja
+    #: se broji po OVOM polju, ne po redovima u tabeli i ne po ceni: zakrpa koju je
+    #: predao čovek — a naročito ponovna predaja teksta koji je model već napisao —
+    #: nije agentov pokušaj. Cena ne služi kao zamena, jer bi model koji ne košta
+    #: (sopstveni, lokalni) time dobio beskonačno pokušaja.
+    from_model = models.BooleanField(default=False)
 
     class Meta:
         db_table = "orchestration_task_patch"

@@ -302,3 +302,85 @@ class TestKomanda:
         with pytest.raises(CommandError, match="tačno jedno"):
             call_command("zadatak", "--zadatak", z.public_id, "--kapija", "pytest",
                          "--prosla", "--pala", stdout=io.StringIO())
+
+
+class TestPonovnoOtvaranje:
+    """ADR-0050 — zatvoren nalaz se vraća u igru, ali samo ljudskom rukom.
+
+    26.09. su dva nalaza zatvorena kao `FIXED` nad zakrpom koja se nikad nije
+    primenila (ADR-0048). `close_finding` s pravom odbija `OPEN` kao cilj, pa
+    posle toga nije bilo nijednog puta da se greška ispravi: recenzija je za
+    pisca ostala prazna i on je pisao naslepo. Vrata koja fale nisu strogost.
+    """
+
+    @pytest.fixture
+    def z(self, mila):
+        _poverenje(mila, E.TrustLevel.L1, "apps/content")
+        return _zadatak(assignee=mila)
+
+    @pytest.fixture
+    def nalaz(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            n = zadaci.add_finding(z, reviewer=None, file="apps/content/x.py",
+                                   claim="Odseca pouke bez ijedne reči.",
+                                   severity=E.FindingSeverity.BLOCKER.value,
+                                   source=zadaci.IZVOR_COVEK)
+            zadaci.close_finding(n, E.FindingStatus.FIXED.value,
+                                 actor="user:slobodan", note="pogrešno zatvoren")
+        return n
+
+    def test_vraca_na_otvoren(self, nalaz):
+        with bind(actor_id="user:slobodan"):
+            zadaci.reopen_finding(nalaz, actor="user:slobodan",
+                                  razlog="zatvoren nad zakrpom koja se nije primenila")
+        nalaz.refresh_from_db()
+        assert nalaz.status == E.FindingStatus.OPEN.value
+
+    def test_ponovo_zaustavlja_zadatak(self, nalaz, z):
+        """Otvoren `BLOCKER` opet drži zadatak — inače otvaranje ništa ne znači."""
+        with bind(actor_id="user:slobodan"):
+            zadaci.reopen_finding(nalaz, actor="user:slobodan", razlog="greška u presudi")
+        assert zadaci.blocking_findings(z).exists()
+
+    def test_tvrdnja_i_tezina_ostaju(self, nalaz):
+        with bind(actor_id="user:slobodan"):
+            zadaci.reopen_finding(nalaz, actor="user:slobodan", razlog="greška u presudi")
+        nalaz.refresh_from_db()
+        assert nalaz.severity == E.FindingSeverity.BLOCKER.value
+        assert "Odseca pouke" in nalaz.claim
+
+    def test_masina_ne_otvara(self, nalaz):
+        with bind(actor_id="user:slobodan"), pytest.raises(zadaci.TaskError) as e:
+            zadaci.reopen_finding(nalaz, actor="service:runner", razlog="hoću")
+        assert e.value.code == "NOT_HUMAN"
+
+    def test_izvrsilac_ne_otvara_svoj(self, nalaz, z, mila):
+        with bind(actor_id="user:slobodan"), pytest.raises(zadaci.TaskError) as e:
+            zadaci.reopen_finding(nalaz, actor=f"agent:{mila.public_id}",
+                                  razlog="meni ovo ne odgovara")
+        assert e.value.code in ("NOT_HUMAN", "SELF_REOPEN")
+
+    def test_razlog_je_obavezan(self, nalaz):
+        with bind(actor_id="user:slobodan"), pytest.raises(zadaci.TaskError) as e:
+            zadaci.reopen_finding(nalaz, actor="user:slobodan", razlog="   ")
+        assert e.value.code == "NO_REASON"
+
+    def test_vec_otvoren_se_ne_otvara(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            n = zadaci.add_finding(z, reviewer=None, file="apps/content/x.py",
+                                   claim="Otvoren nalaz.", source=zadaci.IZVOR_COVEK,
+                                   severity=E.FindingSeverity.MAJOR.value)
+            with pytest.raises(zadaci.TaskError) as e:
+                zadaci.reopen_finding(n, actor="user:slobodan", razlog="zašto da ne")
+        assert e.value.code == "ALREADY_OPEN"
+
+    def test_upisuje_se_u_zapis_sa_razlogom(self, nalaz):
+        from apps.observability.models import AuditEvent
+        with bind(actor_id="user:slobodan"):
+            zadaci.reopen_finding(nalaz, actor="user:slobodan",
+                                  razlog="zakrpa se nikad nije primenila")
+        red = AuditEvent.objects.filter(event_key="task.finding.reopened").first()
+        assert red is not None
+        detalji = red.payload["details"]
+        assert "nikad nije primenila" in detalji["razlog"]
+        assert detalji["iz"] == E.FindingStatus.FIXED.value

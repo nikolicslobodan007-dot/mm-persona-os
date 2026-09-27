@@ -303,7 +303,8 @@ def check(zadatak: CodeTask, diff: str, *, persona: Persona | None = None) -> Na
 
 @transaction.atomic
 def submit(zadatak: CodeTask, diff: str, *, persona: Persona | None = None,
-           base_sha: str = "", cena_centi: int = 0) -> TaskPatch:
+           base_sha: str = "", cena_centi: int = 0,
+           od_modela: bool = False) -> TaskPatch:
     """Upisuje zakrpu i njen ishod. Odbijena zakrpa se **takođe** pamti.
 
     Odbijena zakrpa je podatak: po njoj se vidi da li agent stalno pokušava izvan
@@ -313,6 +314,7 @@ def submit(zadatak: CodeTask, diff: str, *, persona: Persona | None = None,
     red = TaskPatch.objects.create(
         task=zadatak, author=persona, base_sha=base_sha, diff=diff,
         paths=nalaz.putanje, cost_eur_cents=max(0, int(cena_centi)),
+        from_model=bool(od_modela),
         status=E.PatchStatus.ACCEPTED if nalaz.ok else E.PatchStatus.REJECTED,
         reason="; ".join(nalaz.greske + [f"{p}: {r}" for p, r in nalaz.odbijeno])[:2000],
     )
@@ -359,7 +361,8 @@ def odbij_posle_provere(zadatak: CodeTask, zakrpa: TaskPatch, razlog: str) -> Ta
 
 @transaction.atomic
 def zabelezi_neuspeh(zadatak: CodeTask, *, persona: Persona | None, tekst: str,
-                     razlog: str, cena_centi: int = 0) -> TaskPatch:
+                     razlog: str, cena_centi: int = 0,
+                     od_modela: bool = False) -> TaskPatch:
     """Pokušaj koji nije ni stigao do zakrpe — model nije vratio upotrebljiv diff.
 
     Upisuje se kao odbijena zakrpa iz dva razloga, i oba su o poštenju brojeva
@@ -370,7 +373,7 @@ def zabelezi_neuspeh(zadatak: CodeTask, *, persona: Persona | None, tekst: str,
     red = TaskPatch.objects.create(
         task=zadatak, author=persona, diff=tekst[:20_000], paths=[],
         status=E.PatchStatus.REJECTED, reason=razlog[:2000],
-        cost_eur_cents=max(0, int(cena_centi)),
+        cost_eur_cents=max(0, int(cena_centi)), from_model=bool(od_modela),
     )
     audit.record("task.patch.submitted", severity=E.AuditSeverity.WARNING,
                  persona=persona or zadatak.assignee,

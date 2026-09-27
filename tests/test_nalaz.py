@@ -283,3 +283,51 @@ class TestIspravka:
         with pytest.raises(CommandError, match="ide `--tvrdnja`"):
             call_command("nalaz", "--zadatak", z.public_id, "--izmeni",
                          str(n.pk)[:8], stdout=io.StringIO())
+
+
+class TestKomandaOtvori:
+    """ADR-0050 — `--otvori` vraća pogrešno zatvoren nalaz u igru."""
+
+    def _zatvoren(self, z):
+        n = _upisi(z)
+        with bind(actor_id="user:slobodan"):
+            zadaci.close_finding(n, E.FindingStatus.FIXED.value,
+                                 actor="user:slobodan", note="preuranjeno")
+        return n
+
+    def test_vraca_na_otvoren(self, z):
+        n = self._zatvoren(z)
+        out = io.StringIO()
+        call_command("nalaz", "--zadatak", z.public_id, "--otvori", str(n.pk)[:8],
+                     "--napomena", "zakrpa se nikad nije primenila", stdout=out)
+        n.refresh_from_db()
+        assert n.status == E.FindingStatus.OPEN.value
+        assert "FIXED → OPEN" in out.getvalue()
+        assert "nikad nije primenila" in out.getvalue()
+
+    def test_bez_napomene_se_odbija(self, z):
+        n = self._zatvoren(z)
+        with pytest.raises(CommandError, match="napomena"):
+            call_command("nalaz", "--zadatak", z.public_id, "--otvori", str(n.pk)[:8],
+                         stdout=io.StringIO())
+        n.refresh_from_db()
+        assert n.status == E.FindingStatus.FIXED.value
+
+    def test_masina_ne_prolazi_kroz_komandu(self, z):
+        n = self._zatvoren(z)
+        with pytest.raises(CommandError, match="user:"):
+            call_command("nalaz", "--zadatak", z.public_id, "--otvori", str(n.pk)[:8],
+                         "--napomena", "hoću", "--actor", "service:runner",
+                         stdout=io.StringIO())
+
+    def test_nepostojeci_prefiks_se_ne_pogadja(self, z):
+        self._zatvoren(z)
+        with pytest.raises(CommandError, match="Nijedan nalaz"):
+            call_command("nalaz", "--zadatak", z.public_id, "--otvori", "zzzzzzzz",
+                         "--napomena", "razlog", stdout=io.StringIO())
+
+    def test_otvoren_nalaz_se_ne_otvara_ponovo(self, z):
+        n = _upisi(z)
+        with pytest.raises(CommandError, match="ALREADY_OPEN"):
+            call_command("nalaz", "--zadatak", z.public_id, "--otvori", str(n.pk)[:8],
+                         "--napomena", "razlog", stdout=io.StringIO())

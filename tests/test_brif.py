@@ -306,3 +306,69 @@ class TestRanijaZakrpa:
         tekst, _ = pisac._prompt(z)
         assert "TVOJA RANIJA ZAKRPA" in tekst and DIFF.splitlines()[0] in tekst
         assert "odnose se na OVU zakrpu" in tekst
+
+
+class TestIshodRanijeZakrpe:
+    """ADR-0050 — brif kaže šta se sa ranijom zakrpom STVARNO desilo.
+
+    27.09. je pisac dobio brif u kome je njegova pokvarena zakrpa stajala kao
+    `status: ACCEPTED`, nalazi prazni, a jedini prigovor je bio `pytest` sa
+    `git` porukom u detalju. Iz takvog brifa je vratio **istu zakrpu** — što je
+    koštalo jedan poziv i poslednji pokušaj. `ACCEPTED` znači samo „prošla je
+    proveru putanja", i sama ta reč je obmanula.
+    """
+
+    def test_neprimenjena_zakrpa_to_kaze(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            p = zakrpa.submit(z, DIFF, persona=mila)
+            zadaci.record_gate(z, "pytest", False, patch=p)
+        pz = brif.build(z)["previous_patch"]
+        assert pz["status"] == E.PatchStatus.ACCEPTED.value
+        assert "NIJE primenjena" in pz["ishod"]
+        assert "napiši je iznova" in pz["ishod"]
+
+    def test_primenjena_zakrpa_nosi_commit(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            p = zakrpa.submit(z, DIFF, persona=mila)
+            zadaci.record_gate(z, "pytest", True, patch=p)
+        p.applied_sha = "a" * 40
+        p.save(update_fields=["applied_sha"])
+        pz = brif.build(z)["previous_patch"]
+        assert "primenjena" in pz["ishod"] and "aaaaaaaaaaaa" in pz["ishod"]
+
+    def test_odbijena_zakrpa_stize_sa_razlogom(self, z, mila):
+        """Razlog odbijanja je jedino po čemu pisac može da ispravi rad."""
+        with bind(actor_id="user:slobodan"):
+            zakrpa.zabelezi_neuspeh(z, persona=mila, tekst="nema tu diffa",
+                                    razlog="model nije vratio diff: evo popravio sam",
+                                    cena_centi=7, od_modela=True)
+        pz = brif.build(z)["previous_patch"]
+        assert pz is not None, "odbijena zakrpa do ADR-0050 uopšte nije stizala do pisca"
+        assert pz["status"] == E.PatchStatus.REJECTED.value
+        assert "ODBIJENA" in pz["ishod"]
+        assert "nije vratio diff" in pz["ishod"] and "nije vratio diff" in pz["reason"]
+
+    def test_bad_hunk_razlog_stize_do_pisca(self, z, mila):
+        """Poruka o pogrešnom `@@` (ADR-0049) je bezvredna ako je pisac ne vidi."""
+        pokvarena = ("diff --git a/apps/content/x.py b/apps/content/x.py\n"
+                     "--- a/apps/content/x.py\n+++ b/apps/content/x.py\n"
+                     "@@ -1,1 +1,9 @@\n-a\n+b\n")
+        with bind(actor_id="user:slobodan"):
+            zakrpa.submit(z, pokvarena, persona=mila, od_modela=True)
+        pz = brif.build(z)["previous_patch"]
+        assert "BAD_HUNK" in pz["reason"]
+        assert "prebroj redove" in pz["ishod"]
+
+    def test_neizmerena_i_dalje_ne_ulazi(self, z, mila):
+        """Prihvaćena a nemerena zakrpa je posao koji poslušnik tek uzima."""
+        with bind(actor_id="user:slobodan"):
+            zakrpa.submit(z, DIFF, persona=mila)
+        assert brif.build(z)["previous_patch"] is None
+
+    def test_poslednja_pobedjuje_bez_obzira_na_ishod(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            p1 = zakrpa.submit(z, DIFF, persona=mila)
+            zadaci.record_gate(z, "pytest", True, patch=p1)
+            p2 = zakrpa.zabelezi_neuspeh(z, persona=mila, tekst="proza",
+                                         razlog="model nije vratio diff", od_modela=True)
+        assert brif.build(z)["previous_patch"]["patch_id"] == str(p2.pk)

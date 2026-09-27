@@ -103,8 +103,14 @@ class Ishod:
 
 
 def _zakrpe_modela(zadatak: CodeTask):
-    """Zakrpe nastale iz modela — one koje su nešto koštale ili ih je pisao pisac."""
-    return zadatak.patches.order_by("created_at")
+    """Zakrpe koje je napisao model — jedino to je agentov pokušaj (ADR-0050).
+
+    Do ADR-0050 je ovde stajalo `zadatak.patches` — svi redovi. Zbog toga je
+    ponovna predaja teksta koji je model već napisao (naša ispravka našeg
+    parsera, ADR-0048) agentu potrošila treći od tri pokušaja. Zakrpa koju je
+    predao čovek nije pokušaj; broji se poziv, ne red u tabeli.
+    """
+    return zadatak.patches.filter(from_model=True).order_by("created_at")
 
 
 def potroseno(zadatak: CodeTask) -> int:
@@ -243,22 +249,23 @@ def _upisi(zadatak: CodeTask, diff: str | None, tekst: str, g, b: dict) -> TaskP
         razlog = ("model nije vratio diff: "
                   + (prvi[0][:300] if prvi else "prazan odgovor"))
         return zakrpa.zabelezi_neuspeh(zadatak, persona=zadatak.assignee, tekst=tekst,
-                                       razlog=razlog, cena_centi=g.amount_eur_cents)
+                                       razlog=razlog, cena_centi=g.amount_eur_cents,
+                                       od_modela=True)
     if otisak(diff) in {otisak(p.diff) for p in zadatak.patches.all()}:
         # Isti pokušaj drugi put je novac bačen na krug u mestu. Beleži se kao
         # neuspeh, sa troškom — jer se poziv već platio (ADR-0044).
         return zakrpa.zabelezi_neuspeh(
             zadatak, persona=zadatak.assignee, tekst=diff,
             razlog="nema napretka — ista zakrpa je već predata na ovom zadatku",
-            cena_centi=g.amount_eur_cents)
+            cena_centi=g.amount_eur_cents, od_modela=True)
     if len(diff) > MAX_DIFF_ZNAKOVA:
         return zakrpa.zabelezi_neuspeh(
             zadatak, persona=zadatak.assignee, tekst=diff,
             razlog=f"diff je {len(diff)} znakova — preko {MAX_DIFF_ZNAKOVA}; "
                    "podeli zadatak (ADR-0041 §1)",
-            cena_centi=g.amount_eur_cents)
+            cena_centi=g.amount_eur_cents, od_modela=True)
     return zakrpa.submit(zadatak, diff, persona=zadatak.assignee,
-                         cena_centi=g.amount_eur_cents)
+                         cena_centi=g.amount_eur_cents, od_modela=True)
 
 
 def pokusaj(zadatak: CodeTask, *, plafon_centi: int = PLAFON_CENTI,

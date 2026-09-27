@@ -165,11 +165,28 @@ class TestPrekidaci:
         assert "poslušnik radi" in pisac.zasto_ne(z)
 
     def test_plafon_pokusaja(self, z, mila, model, ruta):
+        """Broje se zakrpe koje je napisao model (ADR-0050), pa `od_modela=True`.
+
+        Kapije se namerno razlikuju: da su iste dve zaredom, prvo bi se javila
+        kočnica „nema napretka" i ovaj test bi merio nju.
+        """
+        with bind(actor_id="user:slobodan"):
+            for d, kapija in ((DIFF, "pytest"), (DRUGI, "ruff"), (ZONA, "pytest")):
+                p = zakrpa.submit(z, d, persona=mila, od_modela=True)
+                zadaci.record_gate(z, kapija, False, patch=p)
+        assert "plafon pokušaja (3/3)" in pisac.zasto_ne(z)
+
+    def test_rucna_predaja_ne_trosi_pokusaj(self, z, mila, model, ruta):
+        """ADR-0050 — 27.09. je naša ponovna predaja pojela agentu treći pokušaj.
+
+        Tekst je model napisao ranije i već je bio plaćen; ponovna predaja nije
+        nov poziv, pa nije ni pokušaj.
+        """
         with bind(actor_id="user:slobodan"):
             for d in (DIFF, DRUGI, ZONA):
-                p = zakrpa.submit(z, d, persona=mila)
-                zadaci.record_gate(z, "pytest", False, patch=p)
-        assert "plafon pokušaja (3/3)" in pisac.zasto_ne(z)
+                p = zakrpa.submit(z, d, persona=mila)        # bez `od_modela`
+                zadaci.record_gate(z, "ruff", False, patch=p)
+        assert "plafon pokušaja" not in (pisac.zasto_ne(z) or "")
 
     def test_plafon_troska(self, z, mila, model, ruta):
         with bind(actor_id="user:slobodan"):

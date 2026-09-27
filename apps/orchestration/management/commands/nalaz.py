@@ -5,6 +5,8 @@
         --tvrdnja "Odseca pouke bez ijedne reči da je odsekao." --tezina BLOCKER
     manage.py nalaz --zadatak TSK-... --izmeni 1a2b3c4d --tvrdnja "ispravljen tekst"
     manage.py nalaz --zadatak TSK-... --zatvori 1a2b3c4d --kako FIXED
+    manage.py nalaz --zadatak TSK-... --otvori 1a2b3c4d \\
+        --napomena "zatvoren nad zakrpom koja se nije primenila"
 
 `manage.py recenzija` uvozi ono što je našao alat. Ovo je druga strana: ADR-0036
 §2 kaže da `BLOCKER` postavlja isključivo čovek — a do ovog ADR-a čovek nije imao
@@ -42,6 +44,9 @@ class Command(BaseCommand):
         parser.add_argument("--izmeni", default="",
                             help="Početak identifikatora — ispravlja tvrdnju.")
         parser.add_argument("--zatvori", default="", help="Početak identifikatora nalaza.")
+        parser.add_argument("--otvori", default="",
+                            help="Početak identifikatora — vraća nalaz na OPEN "
+                                 "(uz obaveznu `--napomena`).")
         parser.add_argument("--kako", default=E.FindingStatus.FIXED.value,
                             choices=[s for s in E.FindingStatus.values()
                                      if s != E.FindingStatus.OPEN.value])
@@ -49,7 +54,7 @@ class Command(BaseCommand):
         parser.add_argument("--actor", default="user:slobodan")
 
     def handle(self, *args, zadatak, spisak, fajl, linija, tvrdnja, tezina,
-               izmeni, zatvori, kako, napomena, actor, **opts):
+               izmeni, zatvori, otvori, kako, napomena, actor, **opts):
         z = CodeTask.objects.filter(public_id=zadatak).first()
         if z is None:
             raise CommandError(f"Zadatak {zadatak} ne postoji.")
@@ -65,6 +70,8 @@ class Command(BaseCommand):
                     self._spisak(z)
                 elif izmeni:
                     self._izmeni(z, izmeni, tvrdnja, actor)
+                elif otvori:
+                    self._otvori(z, otvori, napomena, actor)
                 elif zatvori:
                     self._zatvori(z, zatvori, kako, napomena, actor)
                 else:
@@ -139,3 +146,19 @@ class Command(BaseCommand):
         zadaci.close_finding(n, kako, actor=actor, note=napomena)
         self.stdout.write(self.style.SUCCESS(
             f"{str(n.pk)[:PREFIKS]}  {n.severity}  → {kako}"))
+
+    def _otvori(self, z: CodeTask, prefiks: str, napomena: str, actor: str) -> None:
+        """Vraća zatvoren nalaz u igru. ADR-0050.
+
+        Postoji zato što je nalaz umeo da bude zatvoren nad zakrpom koja se nikad
+        nije primenila — i posle toga nije bilo načina da se ispravi. Razlog je
+        obavezan, jer je on ono što sledeća recenzija mora da vidi.
+        """
+        if not napomena.strip():
+            raise CommandError("Uz `--otvori` ide `--napomena` sa razlogom.")
+        n = self._nadji(z, prefiks)
+        pre = n.status
+        zadaci.reopen_finding(n, actor=actor, razlog=napomena)
+        self.stdout.write(self.style.SUCCESS(
+            f"{str(n.pk)[:PREFIKS]}  {n.severity}  {pre} → {n.status}"))
+        self.stdout.write(f"  razlog: {napomena.strip()[:160]}")
