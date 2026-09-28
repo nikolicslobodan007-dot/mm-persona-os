@@ -15,10 +15,11 @@ import pytest
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import Client
 
 from api.context import bind
-from apps.content import lessons
+from apps.content import lessons, pravopis
 from apps.content import service as content
 from apps.content.models import EditorialLesson
 from apps.llm_gateway import gateway
@@ -198,3 +199,130 @@ class TestBudzetPouka:
         """Naslov je deo onoga što se plaća — ne sme da se broji kao besplatan."""
         self._pouka("x" * 300, persona=mila)
         assert lessons.prompt_section(mila, budzet=100).count("\n") == 1
+
+
+class TestKucniStilIzPravopisa:
+    """ADR-0054 — pravopisna pravila kao kućni stil koji ide svakom agentu.
+
+    Tri dana je stajao PDF Pravopisa u folderu „PDF Za AI Agente", a nijedno
+    pravopisno pravilo nije bilo upisano. Ova pravila nisu iz sećanja: svako
+    nosi broj tačke po kojoj se proverava u knjizi.
+    """
+
+    def test_upis_pravi_sva_pravila(self, db):
+        br = lessons.upisi_kucni_stil()
+        assert br["upisano"] == len(pravopis.PRAVILA)
+        assert EditorialLesson.objects.filter(
+            persona__isnull=True, department__isnull=True).count() == len(pravopis.PRAVILA)
+
+    def test_vazi_za_sve_agente(self, db, mila):
+        lessons.upisi_kucni_stil()
+        firm, dep, own = lessons.active_for(mila)
+        tekstovi = " ".join(x.text for x in firm)
+        assert "[pravopis:futur-sazeti]" in tekstovi
+        assert not own, "kućni stil nije ničija lična pouka"
+
+    def test_ponovni_upis_ne_duplira(self, db):
+        lessons.upisi_kucni_stil()
+        br = lessons.upisi_kucni_stil()
+        assert br["upisano"] == 0 and br["netaknuto"] == len(pravopis.PRAVILA)
+        assert EditorialLesson.objects.count() == len(pravopis.PRAVILA)
+
+    def test_izmenjen_tekst_pravila_menja_postojecu_poruku(self, db):
+        """Prepoznaje se po ključu, ne po tekstu — inače bi stara ostala aktivna."""
+        lessons.upisi_kucni_stil()
+        red = EditorialLesson.objects.get(text__startswith="[pravopis:navodnici]")
+        red.text = "[pravopis:navodnici] zastareo tekst"
+        red.save(update_fields=["text"])
+        br = lessons.upisi_kucni_stil()
+        assert br["izmenjeno"] == 1 and br["upisano"] == 0
+        assert EditorialLesson.objects.filter(
+            text__startswith="[pravopis:navodnici]").count() == 1
+
+    def test_ugaseno_pravilo_se_vraca_upisom(self, db):
+        lessons.upisi_kucni_stil()
+        red = EditorialLesson.objects.get(text__startswith="[pravopis:crta-i-crtica]")
+        red.is_active = False
+        red.save(update_fields=["is_active"])
+        lessons.upisi_kucni_stil()
+        red.refresh_from_db()
+        assert red.is_active
+
+    def test_pravila_nose_broj_tacke(self, db):
+        """Pravilo bez izvora je tvrdnja koju niko ne može da potkrepi (ADR-0033)."""
+        for p in pravopis.PRAVILA:
+            assert p.tacka, f"{p.kljuc} nema broj tačke"
+            assert f"t. {p.tacka}" in p.za_prompt
+
+    def test_primeri_su_u_latinici_sa_dijakriticima(self, db):
+        """Agenti pišu latinicom; primer u ćirilici im ne pomaže."""
+        for p in pravopis.PRAVILA:
+            spojeno = p.pre + p.posle
+            assert not any("Ѐ" <= c <= "ӿ" for c in spojeno), p.kljuc
+        assert any(c in "čćžšđ" for p in pravopis.PRAVILA for c in p.posle)
+
+    def test_navodnici_u_pravilu_su_srpski(self, db):
+        """Pravilo o navodnicima mora i samo da ih koristi ispravno."""
+        p = next(x for x in pravopis.PRAVILA if x.kljuc == "navodnici")
+        assert "„" in p.posle and "“" in p.posle
+        assert '"prvim izborom"' in p.pre
+
+    def test_komanda_spisak_kaze_sta_nije_upisano(self, db):
+        out = io.StringIO()
+        call_command("kucni_stil", "--spisak", stdout=out)
+        assert "nije upisano" in out.getvalue()
+        call_command("kucni_stil", "--upisi", stdout=io.StringIO())
+        out = io.StringIO()
+        call_command("kucni_stil", "--spisak", stdout=out)
+        assert "nije upisano" not in out.getvalue()
+
+    def test_komanda_gasi_samo_uz_razlog(self, db):
+        call_command("kucni_stil", "--upisi", stdout=io.StringIO())
+        with pytest.raises(CommandError, match="zasto"):
+            call_command("kucni_stil", "--ugasi", "navodnici", stdout=io.StringIO())
+        call_command("kucni_stil", "--ugasi", "navodnici",
+                     "--zasto", "klijent traži engleske navodnike", stdout=io.StringIO())
+        assert not EditorialLesson.objects.get(
+            text__startswith="[pravopis:navodnici]").is_active
+
+    def test_komanda_odbija_nepoznat_kljuc(self, db):
+        call_command("kucni_stil", "--upisi", stdout=io.StringIO())
+        with pytest.raises(CommandError, match="Nepoznat ključ"):
+            call_command("kucni_stil", "--ugasi", "izmisljeno", "--zasto", "r",
+                         stdout=io.StringIO())
+
+    def test_masina_ne_postavlja_kucni_stil(self, db):
+        with pytest.raises(CommandError, match="user:"):
+            call_command("kucni_stil", "--upisi", "--actor", "service:runner",
+                         stdout=io.StringIO())
+
+    def test_pravopis_ne_ispada_pred_poukama_agenta(self, db, mila):
+        """Lične pouke ne smeju da istisnu pravopis — petlja bi se zatvorila."""
+        lessons.upisi_kucni_stil()
+        for i in range(10):
+            EditorialLesson.objects.create(
+                persona=mila, text=f"P{i} " + "x" * 400, is_active=True)
+        odeljak = lessons.prompt_section(mila)
+        for p in pravopis.PRAVILA:
+            assert f"[pravopis:{p.kljuc}]" in odeljak, p.kljuc
+        assert "odsečeno" in odeljak, "nešto je moralo da ispadne, samo ne pravopis"
+
+    def test_pravopis_ne_ispada_pred_granicom_broja(self, db, mila):
+        """Pravopis je najstariji kućni stil; granica „deset najnovijih" bi ga pojela."""
+        lessons.upisi_kucni_stil()
+        for i in range(lessons.PROMPT_LIMIT_GLOBAL + 5):
+            EditorialLesson.objects.create(text=f"Pravilo firme {i}", is_active=True)
+        firm, _dep, _own = lessons.active_for(mila)
+        assert len(firm) == len(pravopis.PRAVILA) + lessons.PROMPT_LIMIT_GLOBAL
+        tekstovi = " ".join(x.text for x in firm)
+        for p in pravopis.PRAVILA:
+            assert f"[pravopis:{p.kljuc}]" in tekstovi, p.kljuc
+
+    def test_pravopis_stoji_pre_ostalog_u_promptu(self, db, mila):
+        lessons.upisi_kucni_stil()
+        EditorialLesson.objects.create(persona=mila, text="Moja pouka.", is_active=True)
+        redovi = [r for r in lessons.prompt_section(mila).splitlines()
+                  if r.startswith("- ")]
+        prvih = redovi[:len(pravopis.PRAVILA)]
+        assert all("[pravopis:" in r for r in prvih)
+        assert "Moja pouka." in redovi[len(pravopis.PRAVILA)]

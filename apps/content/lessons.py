@@ -37,6 +37,11 @@ PROMPT_BUDGET_CHARS = 4000
 #: sve — inače radi po pretpostavci da je spisak potpun (ADR-0033).
 ODSECENO = "- [odsečeno: još {broj} pouka nije stalo u prompt]"
 
+#: Po čemu se pravopisna pouka prepoznaje u tekstu (ADR-0054). Ključ stoji u
+#: samom tekstu, pa isti marker služi i za idempotentan upis i za to da se ova
+#: pouka nikad ne iseče iz prompta.
+OZNAKA_PRAVOPIS = "[pravopis:"
+
 _EXCERPT = 120
 
 
@@ -107,16 +112,68 @@ def learn(*, persona: Persona, kind: str, actor: str, reason: str = "", before: 
     return lesson
 
 
+def upisi_kucni_stil(*, actor: str = "user:slobodan") -> dict[str, int]:
+    """Upisuje pravopisna pravila kao kućni stil — važe za sve agente. ADR-0054.
+
+    Nije `learn()`: te pouke nastaju iz odluke urednika nad konkretnim nacrtom,
+    a ove dolaze iz knjige i ne vezuju se ni za jednu personu ni akciju.
+
+    **Idempotentno je po ključu, ne po tekstu.** Ključ (`[pravopis:futur-sazeti]`)
+    stoji u samom tekstu pouke, pa ponovni upis nađe staru i prepravi je umesto
+    da napravi drugu. Da se prepoznaje po tekstu, svaka ispravka formulacije
+    ostavila bi zastarelu pouku aktivnom pored nove — i obe bi išle u prompt.
+
+    Vraća `{"upisano": n, "izmenjeno": n, "netaknuto": n}`.
+    """
+    from apps.content.pravopis import IZVOR, PRAVILA
+
+    br = {"upisano": 0, "izmenjeno": 0, "netaknuto": 0}
+    for p in PRAVILA:
+        oznaka = f"{OZNAKA_PRAVOPIS}{p.kljuc}]"
+        tekst = f"{oznaka} {p.za_prompt}"[:500]
+        red = EditorialLesson.objects.filter(
+            persona__isnull=True, department__isnull=True,
+            text__startswith=oznaka).first()
+        if red is None:
+            EditorialLesson.objects.create(
+                persona=None, department=None, kind="manual", text=tekst,
+                example_before=p.pre[:300], example_after=p.posle[:300],
+                created_by=IZVOR[:120])
+            br["upisano"] += 1
+            continue
+        if (red.text, red.example_before, red.example_after, red.is_active) == (
+                tekst, p.pre[:300], p.posle[:300], True):
+            br["netaknuto"] += 1
+            continue
+        red.text, red.example_before = tekst, p.pre[:300]
+        red.example_after, red.is_active = p.posle[:300], True
+        red.save(update_fields=["text", "example_before", "example_after",
+                                "is_active", "updated_at"])
+        br["izmenjeno"] += 1
+
+    audit.record("content.house_style.loaded",
+                 details={"izvor": IZVOR, "actor": actor, **br})
+    return br
+
+
 def active_for(persona: Persona) -> tuple[list[EditorialLesson], list[EditorialLesson],
                                           list[EditorialLesson]]:
-    """(kućni stil, pravila sektora, pouke agenta) — aktivne, najnovije prve."""
+    """(kućni stil, pravila sektora, pouke agenta) — aktivne, najnovije prve.
+
+    Pravopisna pravila (ADR-0054) ulaze **van granice broja**. Ona su upisana
+    jednom i zauvek, pa su najstarija u kućnom stilu; granica „deset najnovijih"
+    bi ih izbacila prva, i to tiho, čim se upiše jedanaesto pravilo firme.
+    """
     from apps.personas.org import department_of
 
     qs = EditorialLesson.objects.filter(is_active=True).order_by("-created_at")
     dep = department_of(persona)
     dep_rules = (list(qs.filter(department=dep)[:PROMPT_LIMIT_DEPARTMENT])
                  if dep is not None else [])
-    return (list(qs.filter(persona__isnull=True, department__isnull=True)[:PROMPT_LIMIT_GLOBAL]),
+    firma = qs.filter(persona__isnull=True, department__isnull=True)
+    pravopisna = list(firma.filter(text__startswith=OZNAKA_PRAVOPIS))
+    ostalo = list(firma.exclude(text__startswith=OZNAKA_PRAVOPIS)[:PROMPT_LIMIT_GLOBAL])
+    return (pravopisna + ostalo,
             dep_rules,
             list(qs.filter(persona=persona)[:PROMPT_LIMIT_PERSONA]))
 
@@ -124,9 +181,14 @@ def active_for(persona: Persona) -> tuple[list[EditorialLesson], list[EditorialL
 def prompt_section(persona: Persona, *, budzet: int = PROMPT_BUDGET_CHARS) -> str:
     """Odeljak pouka za prompt, sa gornjom granicom u znakovima.
 
-    Redosled je namerno obrnut od budžeta: kad se seče, prvo ispadaju **kućni
-    stil i pravila sektora**, a pouke samog agenta ostaju do kraja. One su
-    nastale iz odbijanja baš njegovog rada i njemu su najpreče.
+    Redosled punjenja: **pravopis, pa pouke agenta, pa sektor, pa ostali kućni
+    stil.** Pravopis je prvi jer nije mišljenje urednika nego način na koji
+    jezik radi: agent koji ga ne vidi greši u svakoj rečenici, dobija odbijanje
+    zbog toga, i to odbijanje postaje njegova lična pouka — koja onda istiskuje
+    pravopis još dalje. Petlja se zatvara na najgoru stranu (ADR-0054).
+
+    Posle pravopisa idu pouke samog agenta: nastale su iz odbijanja baš njegovog
+    rada i njemu su najpreče. Kućni stil i pravila sektora ispadaju prvi.
 
     Ako nešto ispadne, to se **kaže** u samom promptu. Ćutke skraćen spisak je
     gori od kratkog: pisac po njemu radi kao da je potpun.
@@ -136,10 +198,13 @@ def prompt_section(persona: Persona, *, budzet: int = PROMPT_BUDGET_CHARS) -> st
         return ""
 
     naslov = "## pouke urednika (obavezno poštuj; novije imaju prednost)"
+    pravopis = [x for x in firm if x.text.startswith(OZNAKA_PRAVOPIS)]
+    ostali = [x for x in firm if not x.text.startswith(OZNAKA_PRAVOPIS)]
     # Najpreče prvo — tim redom se i puni budžet.
-    redom = ([f"- {x.text}" for x in own]
+    redom = ([f"- [svi] {x.text}" for x in pravopis]
+             + [f"- {x.text}" for x in own]
              + [f"- [{x.department.code}] {x.text}" for x in dep]
-             + [f"- [svi] {x.text}" for x in firm])
+             + [f"- [svi] {x.text}" for x in ostali])
 
     stalo: list[str] = []
     zauzeto = len(naslov)
