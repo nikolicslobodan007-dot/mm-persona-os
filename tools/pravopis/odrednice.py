@@ -225,12 +225,15 @@ def main() -> None:
                       "tekst": tekst_lat, "tekst_cir": tekst,
                       "tacke": t, "strana_pdf": strana,
                       "ne": odbijeni_oblici(tekst_lat)})
-    # Oblik koji i sam ima svoju odrednicu nije zabranjen — knjiga ga negde
-    # opisuje kao običan. Bez ove provere „neki" ispadne zabranjeno.
-    glave = {r["odrednica"].lower() for r in izlaz}
-    for r in izlaz:
-        r["ne"] = [o for o in r["ne"] if o.lower() not in glave]
-    broj["odbijenih oblika (posle provere)"] = sum(len(r["ne"]) for r in izlaz)
+    # Ovde je stajala zaštita „oblik koji i sam ima svoju odrednicu nije
+    # zabranjen". Izbačena je: knjiga pogrešnom obliku redovno daje SVOJU
+    # odrednicu koja upućuje nazad („havlija, ne nego avlija"), pa je zaštita
+    # obarala baš najkorisnije slučajeve — među njima i „havlija", na kom je
+    # provera prvi put demonstrirana i ništa nije prijavila.
+    # Mereno nad 51 ADR-om (35.704 reči, bez ADR-0054 i 0055 koji sadrže same
+    # primere): sa zaštitom i bez nje isto — 4 pogotka, 0,011%. Zaštita je
+    # koštala 22 oblika i nije donela ništa. Retke lažne uzbune se gase
+    # komandom `recnik --utisaj`, uz razlog u zapisu.
     with open("izgradnja/recnik.jsonl", "w", encoding="utf-8") as f:
         for r in izlaz:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")

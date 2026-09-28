@@ -71,8 +71,8 @@ ranije, lošije obrade da žive pored novih. Baš to se umalo desilo.
 
 ### 3. Provera radi na izlazu, i prijavljuje — ne obara
 
-`recnik.proveri(tekst)` poredi svaku reč sa spiskom od **308 oblika** koje
-odrednice izričito odbijaju. Bez modela, bez troška.
+`recnik.proveri(tekst)` poredi svaku reč sa spiskom od **330 oblika** (u 324
+odrednice) koje knjiga izričito odbija. Bez modela, bez troška.
 
 Tri stvari koje sam morao da ispravim, svaka nađena merenjem nad 36.733 reči
 naših ADR-ova, ne razmišljanjem:
@@ -88,7 +88,16 @@ naših ADR-ova, ne razmišljanjem:
   veličina slova nije poštovala, provera je prijavljivala svaki „korak" u
   tekstu — 45 puta na 36.733 reči.
 
-Posle toga: **4 pogotka na 36.733 reči (0,011%)**, od kojih su dva („Korak")
+- **Zaštita koja je sve obarala.** Imao sam pravilo „oblik koji i sam ima svoju
+  odrednicu nije zabranjen", da bi se izbegle obične reči. Knjiga pogrešnom
+  obliku redovno daje **svoju** odrednicu koja upućuje nazad („havlija, ne nego
+  avlija"), pa je pravilo obaralo baš najkorisnije slučajeve — među njima i
+  „havlija", na kom sam proveru i pokazao, i koji nije prijavio ništa.
+  Izbačeno: mereno nad 51 ADR-om (35.704 reči, bez ADR-0054 i 0055 koji sadrže
+  same primere), sa zaštitom i bez nje ista su **4 pogotka**. Koštala je 22
+  oblika i nije donela ništa.
+
+Konačno: **4 pogotka na 35.704 reči (0,011%)**, od kojih su dva („Korak")
 sporna u korist provere, a dva („mala", iz „mahala, ne mala") lažna.
 
 Za takve postoji `manage.py recnik --utisaj mala --zasto "..."`: oblik se
@@ -135,7 +144,7 @@ manage.py recnik --utisaj mala --zasto "…"
   `apps/content/data/recnik-uz-pravopis.jsonl` (8.797 odrednica, 2,3 MB),
   `tools/pravopis/{tsv,odrednice}.py` — kako je datoteka napravljena.
 - Bez migracije — `KnowledgeSource` i `KnowledgeFact` već postoje (ADR-0006).
-- 33 nove provere; ukupno **1053**.
+- 34 nove provere; ukupno **1054**.
 - Posle deploy-a treba jednom pokrenuti `manage.py recnik --uvezi`.
 - **Nije urađeno:** provera se još ne zove iz `content.service.draft`. Kad se
   pozove, urednik će uz nacrt dobiti i nalaze; to je sledeći korak i biće rečeno
@@ -155,5 +164,13 @@ tačno, ali sam ga primenio samo na brojeve van opsega. Da nisam otvorio sliku
 strane 400 i uporedio red po red, „т. 276" bi ušlo kao tačno upućivanje.
 **Obrazac se proverava na slučaju u kom ne radi, ne na onom u kom radi.**
 
+Treći put — i ovaj je prošao. Proveru sam pokazao na rečenici „Ušao je u havliju",
+i na serveru je ispisala **„Nema oblika koje Pravopis odbija."** Zaštita koju sam
+dodao da bi se izbegle obične reči obarala je baš tu odrednicu. Testovi su
+prolazili jer su radili nad izmišljenim odrednicama, a ne nad isporučenom
+datotekom. **Provera nad lažnim podacima proverava kôd, ne podatke** — a pao je
+podatak. Sada je u testovima i jedna tvrdnja nad samom isporučenom datotekom.
+
 Pravilo koje iz ovoga sledi: **pre uvoza podataka izmeri se ceo skup, a uzorak
-se poredi sa izvorom, ne sa samim sobom.**
+se poredi sa izvorom, ne sa samim sobom** — i **bar jedan test mora da dodirne
+podatke koji se zaista isporučuju.**

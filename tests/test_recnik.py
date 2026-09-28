@@ -106,6 +106,18 @@ class TestBrojTacke:
                 broj = int("".join(z for z in t if z.isdigit()))
                 assert 1 <= broj <= 322, f"{r['odrednica']}: t. {t}"
 
+    def test_isporucena_datoteka_odbija_havliju(self):
+        """Prvi primer na kom je provera pokazana, i prvi koji je otkazao.
+
+        Zaštita „oblik koji i sam ima odrednicu nije zabranjen" obarala je baš
+        ovakve slučajeve: knjiga pogrešnom obliku daje svoju odrednicu koja
+        upućuje nazad („havlija, ne nego avlija").
+        """
+        redovi = [json.loads(r) for r in
+                  recnik.DATOTEKA.read_text(encoding="utf-8").splitlines() if r]
+        avlija = next(r for r in redovi if r["odrednica"] == "avlija")
+        assert "havlija" in avlija["ne"]
+
     def test_isporucena_datoteka_ne_ostavlja_sirovo_nejasno(self):
         """Gde tačka nije pouzdana, u tekstu piše da nije — ne ćuti se."""
         redovi = [json.loads(r) for r in
