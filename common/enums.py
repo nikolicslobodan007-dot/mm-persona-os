@@ -1419,4 +1419,22 @@ class PatchStatus(CanonEnum):
     APPLIED = "APPLIED"
 
 
+class PatchFault(CanonEnum):
+    """Čija je greška što je zakrpa odbijena (ADR-0053).
+
+    Do ADR-0053 je `ucinak` brojao odbijanja bez pitanja ko ih je izazvao, pa su
+    naši sopstveni kvarovi — parser bez `diff --git` (ADR-0048), ponovna predaja
+    koju smo mi izazvali (ADR-0050), zakrpa koju je pretekla ljudska ruka —
+    stajali kao agentov promašaj. Mera koja tuđu grešku pripisuje agentu gora je
+    od mere koje nema (ADR-0048).
+
+    Podrazumevano je `AGENT`: u redovnom slučaju odbijanje jeste njegovo. Drugu
+    vrednost upisuje **isključivo čovek**, uz obavezan razlog.
+    """
+
+    AGENT = "AGENT"       # agent je promašio — putanja, zona, nečitljiv diff
+    SISTEM = "SISTEM"     # naš kvar je odbio valjan rad
+    COVEK = "COVEK"       # ljudska odluka: rad pretekla ručna zakrpa, ili otkazan
+
+
 __all__ += ["PatchStatus"]

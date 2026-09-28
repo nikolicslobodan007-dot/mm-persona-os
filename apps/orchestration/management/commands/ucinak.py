@@ -38,21 +38,34 @@ class Command(BaseCommand):
 
         self.stdout.write(
             f"{'AGENT':10} {'ZADACI':>7} {'GOTOVO':>7} {'ZAKRPE':>7} {'GRANA':>6} "
-            f"{'ODBIJ.':>7} {'ZONA':>5} {'1. PUT':>7} {'NALAZI':>7} {'CENT':>6}  IME")
+            f"{'ODBIJ.':>7} {'NE NJEG':>8} {'ZONA':>5} {'1. PUT':>7} "
+            f"{'NALAZI':>7} {'CENT':>6}  IME")
         for r in redovi:
             prvi = "—" if r.iz_prvog_puta is None else f"{r.iz_prvog_puta:.0%}"
             zona = self.style.ERROR(f"{r.odbijenih_zbog_zone:>5}") \
                 if r.odbijenih_zbog_zone else f"{r.odbijenih_zbog_zone:>5}"
             cena = "—" if r.trosak_centi is None else str(r.trosak_centi)
+            # „NE NJEG" — odbijanja koja su naš kvar ili ljudska odluka (ADR-0053).
+            # Stoji odvojeno, a ne oduzeto iz `ODBIJ.`, jer se broj odbijanja ne
+            # prepravlja; kaže se samo ko za njega odgovara.
+            tudje = (self.style.SUCCESS(f"{r.odbijenih_tudjom_krivicom:>8}")
+                     if r.odbijenih_tudjom_krivicom else f"{'':>8}")
             self.stdout.write(
                 f"{r.persona:10} {r.zadataka:>7} {r.zavrsenih:>7} {r.zakrpa:>7} "
-                f"{r.u_grani:>6} {r.odbijenih:>7} {zona} {prvi:>7} "
+                f"{r.u_grani:>6} {r.odbijenih:>7} {tudje} {zona} {prvi:>7} "
                 f"{r.nalaza_na_rad:>7} {cena:>6}  {r.ime}")
 
         blokeri = sum(r.blokera_na_rad for r in redovi)
         if blokeri:
             self.stdout.write(self.style.WARNING(
                 f"\nOtvorenih i zatvorenih BLOCKER nalaza ukupno: {blokeri}."))
+
+        tudje_ukupno = sum(r.odbijenih_tudjom_krivicom for r in redovi)
+        if tudje_ukupno:
+            self.stdout.write(
+                f"\nOd svih odbijanja, {tudje_ukupno} nije agentova krivica "
+                f"(kolona NE NJEG) — naš kvar ili ljudska odluka, sa razlogom u "
+                f"zapisu (ADR-0053).")
 
         self.stdout.write("\nŠta se NE meri (ADR-0034 §6 traži, izvora još nema):")
         for stavka in u.NE_MERI_SE:

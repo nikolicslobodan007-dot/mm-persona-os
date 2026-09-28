@@ -547,6 +547,14 @@ class TaskPatch(UUIDModel):
     #: nije agentov pokušaj. Cena ne služi kao zamena, jer bi model koji ne košta
     #: (sopstveni, lokalni) time dobio beskonačno pokušaja.
     from_model = models.BooleanField(default=False)
+    #: Čija je greška ako je zakrpa odbijena (ADR-0053). Podrazumevano `AGENT`;
+    #: drugu vrednost upisuje samo čovek, uz razlog koji ide u zapis. Na
+    #: prihvaćenoj zakrpi polje nema značenje.
+    fault = models.CharField(
+        max_length=16, choices=E.PatchFault.choices(), default=E.PatchFault.AGENT
+    )
+    #: Zašto krivica nije agentova. Prazno dok je `fault` podrazumevan.
+    fault_reason = models.TextField(blank=True)
 
     class Meta:
         db_table = "orchestration_task_patch"

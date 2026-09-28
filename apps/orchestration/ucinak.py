@@ -47,6 +47,9 @@ class Ucinak:
     #: je prošla proveru putanja; ova je prošla i kapije, i ima commit.
     u_grani: int = 0
     odbijenih: int = 0
+    #: Od `odbijenih` — koliko ih je odbijeno zbog NAŠEG kvara ili ljudske odluke
+    #: (ADR-0053). Ovi se ne računaju u njegov promašaj.
+    odbijenih_tudjom_krivicom: int = 0
     odbijenih_zbog_zone: int = 0
     kapija_mereno: int = 0
     kapija_iz_prvog: int = 0
@@ -65,13 +68,26 @@ class Ucinak:
         return round(self.kapija_iz_prvog / self.kapija_mereno, 3)
 
     @property
+    def odbijenih_njegovom_krivicom(self) -> int:
+        """Odbijanja koja stvarno stoje njemu na teret (ADR-0053)."""
+        return self.odbijenih - self.odbijenih_tudjom_krivicom
+
+    @property
     def zakrpa_prihvaceno(self) -> float | None:
-        if not self.zakrpa:
+        """Udeo prihvaćenih, računat bez zakrpa koje je oborio NAŠ kvar.
+
+        Zakrpa koju je odbio naš parser nije bila njegova prilika, pa se ne broji
+        ni u imenilac. Mera koja tuđu grešku pripisuje agentu gora je od mere
+        koje nema (ADR-0048).
+        """
+        imenilac = self.zakrpa - self.odbijenih_tudjom_krivicom
+        if imenilac <= 0:
             return None
-        return round(self.prihvacenih / self.zakrpa, 3)
+        return round(self.prihvacenih / imenilac, 3)
 
     def as_dict(self) -> dict:
         d = asdict(self)
+        d["odbijenih_njegovom_krivicom"] = self.odbijenih_njegovom_krivicom
         d["iz_prvog_puta"] = self.iz_prvog_puta
         d["zakrpa_prihvaceno"] = self.zakrpa_prihvaceno
         d["ne_meri_se"] = list(self.ne_meri_se)
@@ -115,6 +131,9 @@ def za_agenta(persona: Persona) -> Ucinak:
     cene = [p.cost_eur_cents for p in zakrpe]
     u.trosak_centi = sum(cene) if any(cene) else None
     u.odbijenih = zakrpe.filter(status=E.PatchStatus.REJECTED.value).count()
+    u.odbijenih_tudjom_krivicom = zakrpe.filter(
+        status=E.PatchStatus.REJECTED.value,
+    ).exclude(fault=E.PatchFault.AGENT.value).count()
     u.odbijenih_zbog_zone = zakrpe.filter(
         status=E.PatchStatus.REJECTED.value, reason__icontains="zaštićena zona").count()
 

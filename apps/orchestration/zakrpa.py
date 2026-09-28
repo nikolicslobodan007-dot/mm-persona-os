@@ -33,7 +33,8 @@ from .models import CodeTask, TaskPatch
 from .zadaci import TaskError, may_touch
 
 __all__ = ["Izmena", "Ispravka", "Nalaz", "paths_in", "prebroj_hunkove", "check",
-           "submit", "zabelezi_neuspeh", "odbij_posle_provere", "MAX_DIFF_BYTES"]
+           "submit", "zabelezi_neuspeh", "odbij_posle_provere", "pripisi_krivicu",
+           "MAX_DIFF_BYTES"]
 
 #: Gornja granica veličine zakrpe. Zakrpa preko ove mere nije izmena nego prepis,
 #: i traži da se zadatak podeli.
@@ -402,6 +403,55 @@ def odbij_posle_provere(zadatak: CodeTask, zakrpa: TaskPatch, razlog: str) -> Ta
                  persona=zakrpa.author or zadatak.assignee,
                  details={"task": zadatak.public_id, "patch": str(zakrpa.pk),
                           "reason": zakrpa.reason})
+    return zakrpa
+
+
+@transaction.atomic
+def pripisi_krivicu(zakrpa: TaskPatch, krivica: str, *, actor: str,
+                    razlog: str) -> TaskPatch:
+    """Kaže čija je greška što je zakrpa odbijena. ADR-0053.
+
+    `ucinak` je do sada brojao odbijanja i ćutao o uzroku, pa su naši kvarovi
+    stajali kao agentov promašaj: parser bez `diff --git` (ADR-0048), ponovna
+    predaja koju smo izazvali (ADR-0050), zakrpa koju je pretekla ljudska ruka.
+    Popravili smo uzroke i ostavili merilo — a po merilu se odlučuje.
+
+    Granice, iste kao kod ponovnog otvaranja nalaza (ADR-0050):
+
+      - **samo čovek.** Ovo je presuda o tuđem radu, ne merenje. Mašina koja bi
+        sama sebe oslobodila krivice ne bi merila ništa;
+      - **razlog je obavezan** i ide u zapis — bez njega bi `ucinak` imao broj
+        koji niko ne može da potkrepi, a to je tačno ono što ADR-0033 zabranjuje;
+      - **samo odbijena zakrpa.** Na prihvaćenoj krivica nema smisla.
+
+    Status se ne dira: zakrpa je odbijena i ostaje odbijena. Menja se ko za to
+    odgovara.
+    """
+    if krivica not in E.PatchFault.values():
+        raise TaskError("UNKNOWN_FAULT", f"Nepoznata krivica {krivica!r}; poznate: "
+                                         f"{sorted(E.PatchFault.values())}")
+    if not actor.startswith("user:"):
+        raise TaskError(
+            "NOT_HUMAN",
+            f"Krivicu za odbijenu zakrpu pripisuje čovek, a {actor!r} to nije.")
+    if not razlog.strip():
+        raise TaskError("NO_REASON",
+                        "Bez razloga bi ovo bio broj koji niko ne može da potkrepi.")
+    if zakrpa.status != E.PatchStatus.REJECTED.value:
+        raise TaskError(
+            "NOT_REJECTED",
+            f"Zakrpa je {zakrpa.status}; krivica se pripisuje samo odbijenoj.")
+
+    pre = zakrpa.fault
+    zakrpa.fault = krivica
+    zakrpa.fault_reason = razlog.strip()[:2000]
+    zakrpa.save(update_fields=["fault", "fault_reason", "updated_at"])
+    audit.record("task.patch.fault_assigned",
+                 severity=E.AuditSeverity.WARNING,
+                 persona=zakrpa.author,
+                 details={"task": zakrpa.task.public_id, "patch": str(zakrpa.pk),
+                          "iz": pre, "u": krivica, "razlog": zakrpa.fault_reason,
+                          "actor": actor})
     return zakrpa
 
 

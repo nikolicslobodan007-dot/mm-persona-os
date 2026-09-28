@@ -165,3 +165,105 @@ class TestKomanda:
         out = io.StringIO()
         call_command("ucinak", stdout=out)
         assert "Nema nijednog agenta" in out.getvalue()
+
+
+class TestKrivicaZaOdbijanje:
+    """ADR-0053 — odbijena zakrpa nosi čija je greška.
+
+    Do ADR-0053 je `ucinak` brojao odbijanja bez pitanja ko ih je izazvao. Tri
+    puta u tri dana je naš kvar stajao kao Lazarev promašaj: parser bez
+    `diff --git` (ADR-0048), ponovna predaja koju smo izazvali (ADR-0050), i
+    zakrpa koju je pretekla ljudska ruka. Popravili smo uzroke i ostavili
+    merilo — a po merilu se odlučuje.
+    """
+
+    def _odbijena(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            return zakrpa.submit(z, ZONA, persona=mila)
+
+    def test_podrazumevano_je_agentova(self, z, mila):
+        red = self._odbijena(z, mila)
+        assert red.fault == E.PatchFault.AGENT.value and red.fault_reason == ""
+
+    def test_covek_pripisuje_sistemu(self, z, mila):
+        red = self._odbijena(z, mila)
+        with bind(actor_id="user:slobodan"):
+            zakrpa.pripisi_krivicu(red, E.PatchFault.SISTEM.value,
+                                   actor="user:slobodan",
+                                   razlog="Naš parser je tražio diff --git.")
+        red.refresh_from_db()
+        assert red.fault == E.PatchFault.SISTEM.value
+        assert "parser" in red.fault_reason
+
+    def test_status_se_ne_dira(self, z, mila):
+        """Zakrpa je odbijena i ostaje odbijena; menja se ko za to odgovara."""
+        red = self._odbijena(z, mila)
+        with bind(actor_id="user:slobodan"):
+            zakrpa.pripisi_krivicu(red, E.PatchFault.COVEK.value,
+                                   actor="user:slobodan", razlog="pretekla ručna zakrpa")
+        red.refresh_from_db()
+        assert red.status == E.PatchStatus.REJECTED.value
+
+    def test_masina_ne_pripisuje(self, z, mila):
+        red = self._odbijena(z, mila)
+        with bind(actor_id="user:slobodan"), pytest.raises(zadaci.TaskError) as e:
+            zakrpa.pripisi_krivicu(red, E.PatchFault.SISTEM.value,
+                                   actor="service:runner", razlog="nisam ja")
+        assert e.value.code == "NOT_HUMAN"
+
+    def test_razlog_je_obavezan(self, z, mila):
+        red = self._odbijena(z, mila)
+        with bind(actor_id="user:slobodan"), pytest.raises(zadaci.TaskError) as e:
+            zakrpa.pripisi_krivicu(red, E.PatchFault.SISTEM.value,
+                                   actor="user:slobodan", razlog="  ")
+        assert e.value.code == "NO_REASON"
+
+    def test_prihvacena_zakrpa_nema_krivicu(self, z, mila):
+        with bind(actor_id="user:slobodan"):
+            red = zakrpa.submit(z, DIFF, persona=mila)
+            with pytest.raises(zadaci.TaskError) as e:
+                zakrpa.pripisi_krivicu(red, E.PatchFault.SISTEM.value,
+                                       actor="user:slobodan", razlog="r")
+        assert e.value.code == "NOT_REJECTED"
+
+    def test_nepoznata_krivica_se_odbija(self, z, mila):
+        red = self._odbijena(z, mila)
+        with bind(actor_id="user:slobodan"), pytest.raises(zadaci.TaskError) as e:
+            zakrpa.pripisi_krivicu(red, "NEBITNO", actor="user:slobodan", razlog="r")
+        assert e.value.code == "UNKNOWN_FAULT"
+
+    def test_ucinak_razdvaja_odbijanja(self, z, mila):
+        prva = self._odbijena(z, mila)
+        self._odbijena(z, mila)
+        with bind(actor_id="user:slobodan"):
+            zakrpa.pripisi_krivicu(prva, E.PatchFault.SISTEM.value,
+                                   actor="user:slobodan", razlog="naš parser")
+        u = U.za_agenta(mila)
+        assert u.odbijenih == 2
+        assert u.odbijenih_tudjom_krivicom == 1
+        assert u.odbijenih_njegovom_krivicom == 1
+
+    def test_nas_kvar_ne_ulazi_u_imenilac(self, z, mila):
+        """Zakrpa koju je oborio naš kvar nije bila njegova prilika."""
+        with bind(actor_id="user:slobodan"):
+            zakrpa.submit(z, DIFF, persona=mila)              # prihvaćena
+            losa = zakrpa.submit(z, ZONA, persona=mila)
+        pre = U.za_agenta(mila).zakrpa_prihvaceno
+        with bind(actor_id="user:slobodan"):
+            zakrpa.pripisi_krivicu(losa, E.PatchFault.SISTEM.value,
+                                   actor="user:slobodan", razlog="naš kvar")
+        posle = U.za_agenta(mila).zakrpa_prihvaceno
+        assert pre == 0.5 and posle == 1.0
+
+    def test_upisuje_se_u_zapis(self, z, mila):
+        from apps.observability.models import AuditEvent
+        red = self._odbijena(z, mila)
+        with bind(actor_id="user:slobodan"):
+            zakrpa.pripisi_krivicu(red, E.PatchFault.COVEK.value,
+                                   actor="user:slobodan",
+                                   razlog="pretekla ju je ljudska zakrpa")
+        zapis = AuditEvent.objects.filter(event_key="task.patch.fault_assigned").last()
+        assert zapis is not None
+        d = zapis.payload["details"]
+        assert d["iz"] == E.PatchFault.AGENT.value and d["u"] == E.PatchFault.COVEK.value
+        assert "pretekla" in d["razlog"]
