@@ -114,6 +114,12 @@ class ContentItem(UUIDModel):
         default=False, help_text="Canon §9.4 tačka 2 — AI priroda se ne skriva."
     )
     citations = JSON_LIST(help_text="Canon §10.4 — izvori tvrdnji, radi provere.")
+    pravopis = JSON_DICT(
+        help_text="ADR-0056 — nalazi Rečnika uz Pravopis nad ovim tekstom: "
+                  "`{provereno, nalazi:[{oblik, odrednica, tekst, tacke}]}`. "
+                  "`provereno=False` znači da Rečnik nije uvezen — to nije isto "
+                  "što i tekst bez primedbi.",
+    )
     version = models.PositiveIntegerField(default=1)
     scheduled_for = models.DateTimeField(null=True, blank=True)
     # F7 (ADR-0009): koje buđenje je napravilo nacrt i zašto je stao.

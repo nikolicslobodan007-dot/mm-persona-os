@@ -200,11 +200,17 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
             status, reason = CS.REJECTED, "REPETITION"
             audit.record("content.item.repetition", persona=persona,
                          details={"similar_to": str(dup.id)})
+        # ADR-0056 — Rečnik uz Pravopis nad gotovim tekstom. Deterministički,
+        # bez poziva modelu, i **ne obara nacrt**: spisak zabranjenih oblika je
+        # izveden obrascem iz odrednica i ume da pogreši (ADR-0055). Nalaz stoji
+        # uz nacrt da bi ga urednik video, sa odrednicom i brojem tačke.
+        from apps.content import recnik
+
         item = ContentItem.objects.create(
             persona=persona, idea=idea, format=fmt.value, title=topic[:220], body=body,
             language=persona.primary_locale, status=status.value, content_hash=_hash(body),
             provenance=provenance.value, disclosure_included=disclose, run=run,
-            status_reason=reason,
+            status_reason=reason, pravopis=recnik.nalaz_za_zapis(body),
             citations=[{"memory_id": str(sc.memory.id), "title": sc.memory.title}
                        for sc in (quotable if pack else [])],
         )

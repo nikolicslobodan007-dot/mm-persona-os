@@ -38,7 +38,8 @@ def item_out(i: ContentItem) -> dict:
         "title": i.title, "body": i.body, "language": i.language, "status": i.status,
         "status_reason": i.status_reason or None, "provenance": i.provenance,
         "disclosure_included": i.disclosure_included, "content_hash": i.content_hash,
-        "version": i.version, "citations": i.citations, "scheduled_for": _iso(i.scheduled_for),
+        "version": i.version, "citations": i.citations, "pravopis": i.pravopis,
+        "scheduled_for": _iso(i.scheduled_for),
         "created_at": _iso(i.created_at),
         "publications": [{
             "channel_account_id": str(p.channel_account_id),

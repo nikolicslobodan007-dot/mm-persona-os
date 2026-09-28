@@ -13,6 +13,17 @@
   {% if i.status_reason %}<span class="small muted">{{ i.status_reason }}</span>{% endif %}
   <span class="spacer"></span><span class="small muted">{{ i.provenance }} · v{{ i.version }} · {{ i.created_at|date:"d.m. H:i" }}</span></div>
   <div class="post">{{ i.body }}</div>
+  {# ADR-0056 — nalazi Rečnika uz Pravopis. Ne obaraju nacrt; urednik odlučuje. #}
+  {% if i.pravopis.nalazi %}
+  <div class="small"><b>Pravopis:</b>
+    {% for n in i.pravopis.nalazi %}
+    <div>„{{ n.oblik }}" — {{ n.tekst }}{% if n.tacke %} (Pravopis, t. {{ n.tacke|join:", " }}){% endif %}</div>
+    {% endfor %}
+    <span class="muted">spisak je izveden iz teksta odrednica i ume da pogreši.</span>
+  </div>
+  {% elif i.pravopis.provereno is False %}
+  <div class="small muted">Pravopis: nije provereno — Rečnik nije uvezen.</div>
+  {% endif %}
   {% for p in i.publications.all %}<div class="small">→ {{ p.channel_account.channel_type }}:
     <span class="pill {{ p.status|status_tone }}">{{ p.status }}</span>
     {% if p.provider_payload.dry_run %}<span class="pill">probni režim</span>{% endif %}

@@ -196,7 +196,33 @@ def utisaj(oblik: str, *, actor: str, razlog: str) -> int:
     return dirnuto
 
 
+def dostupan() -> bool:
+    """Je li Rečnik uopšte uvezen.
+
+    Prazan nalaz i nepostojeći rečnik izgledaju isto — nula nalaza. Bez ovoga
+    bi urednik video „nema primedbi" i tamo gde ništa nije ni provereno, a to
+    je tvrdnja koju niko nije izrekao (ADR-0033).
+    """
+    return KnowledgeFact.objects.filter(
+        persona__isnull=True, predicate=PREDIKAT).exists()
+
+
 REC = re.compile(r"[^\W\d_]+", re.UNICODE)
+
+
+def nalaz_za_zapis(tekst: str) -> dict:
+    """Nalazi u obliku koji ide na `ContentItem.pravopis`.
+
+    `provereno` je tu namerno: prazan spisak i neuvezen rečnik izgledaju isto,
+    a nisu isto. Urednik koji vidi „nema primedbi" mora da zna da li je iko
+    gledao.
+    """
+    if not dostupan():
+        return {"provereno": False, "nalazi": []}
+    return {"provereno": True,
+            "nalazi": [{"oblik": n.oblik, "odrednica": n.odrednica,
+                        "tekst": n.tekst, "tacke": list(n.tacke)}
+                       for n in proveri(tekst)]}
 
 
 def proveri(tekst: str) -> list[Nalaz]:
