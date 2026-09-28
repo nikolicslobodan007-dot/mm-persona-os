@@ -73,8 +73,15 @@ class TestObim:
         assert all(p.startswith("apps/orchestration/") for p in putanje)
 
     def test_prefiks_u_kom_je_sve_zasticeno_daje_prazan_brif(self, db):
-        """`tools/` ima samo `canon_lint.py`, a on je zona — prazno je ISPRAVNO."""
-        b = brif.build(_zadatak(["tools"]))
+        """Obim u kom je sve zaštićeno — prazno je ISPRAVNO, ali objašnjeno.
+
+        Ranije je ovde stajalo `tools/`, uz pretpostavku da u njemu živi samo
+        `canon_lint.py`. Pretpostavka je pala čim je u `tools/pravopis/` stiglo
+        nešto što nije kapija (ADR-0055). `policy/` je stabilniji izbor: oba
+        fajla u njemu su izričito zaštićena, a sam direktorijum nije — pa
+        zadatak sme da se napravi, i tek brif ispadne prazan.
+        """
+        b = brif.build(_zadatak(["policy"]))
         assert b["files"] == []
         assert b["truncated"], "prazno mora da bude objašnjeno, ne prećutano"
 
