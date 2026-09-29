@@ -256,6 +256,39 @@ class TestAritmetikaHunkova:
         _, ispravke = zakrpa.prebroj_hunkove(self._d("@@ -1,2 +1,2 @@", "-a\n+b\n\n"))
         assert not ispravke
 
+    def _nov(self, zaglavlje: str, telo: str) -> str:
+        return ("diff --git a/apps/content/nov.py b/apps/content/nov.py\n"
+                "new file mode 100644\n"
+                "--- /dev/null\n+++ b/apps/content/nov.py\n"
+                f"{zaglavlje}\n{telo}")
+
+    def test_nov_fajl_zadrzava_nula_starih_redova(self):
+        """ADR-0052 — 29.09. je naš ispravljač od `-0,0` napravio `-0,1`.
+
+        Prazan red na kraju tela izbrojan je kao kontekst, a nov fajl kontekst
+        nema. `git apply` takvu zakrpu odbije, i to bi u zapisu stajalo kao
+        agentov neuspeh iako je kvar naš.
+        """
+        d = self._nov("@@ -0,0 +1,2 @@", "+a\n+b\n\n")
+        izlaz, ispravke = zakrpa.prebroj_hunkove(d)
+        assert not ispravke, "telo od dva `+` reda je tačno prijavljeno"
+        assert "@@ -0,0 +1,2 @@" in izlaz
+        assert "-0,1" not in izlaz
+
+    def test_nov_fajl_sa_pogresnim_brojem_se_ispravi_na_nula(self):
+        d = self._nov("@@ -0,0 +1,9 @@", "+a\n+b\n+c\n")
+        izlaz, ispravke = zakrpa.prebroj_hunkove(d)
+        assert [i.posle for i in ispravke] == [(0, 3)]
+        assert "@@ -0,0 +1,3 @@" in izlaz
+
+    def test_nov_fajl_sa_kontekstom_pada_umesto_da_se_ispravi(self):
+        """Nemoguć oblik se ne upisuje tiho — staje se i kaže se zašto."""
+        d = self._nov("@@ -0,0 +1,2 @@", "+a\n stari red\n+b\n")
+        with pytest.raises(zakrpa.PatchError) as e:
+            zakrpa.prebroj_hunkove(d)
+        assert e.value.code == "BAD_HUNK"
+        assert "nov fajl" in str(e.value).lower()
+
     def test_proza_u_hunku_i_dalje_pada(self):
         """Red koji se ne može prebrojati ne može ni da se ispravi."""
         d = self._d("@@ -1 +1 @@", "-a\n+b\nevo, ovo bi trebalo da radi\n")

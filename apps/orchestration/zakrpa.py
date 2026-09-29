@@ -192,12 +192,20 @@ def prebroj_hunkove(diff: str) -> tuple[str, list[Ispravka]]:
             continue
         trazeno_s = int(m.group("sk") or 1)
         trazeno_n = int(m.group("nk") or 1)
+        # ADR-0052 (dopuna 29.09.) — hunk novog fajla (`--- /dev/null`, stari početak `0`) po
+        # definiciji formata NEMA kontekst: jedini ispravan oblik je
+        # `@@ -0,0 +1,N @@`. Prazan red u njegovom telu zato nije kontekst nego
+        # kraj tela. Bez ovoga se `-0,0` „ispravi" u `-0,1`, `git apply` odbije
+        # zakrpu kao pokvarenu, a agent dobije neuspeh za NAŠ kvar (ADR-0053).
+        nov_fajl = m.group("sp") == "0"
         j, s, n = i + 1, 0, 0
         while j < len(goli):
             red = goli[j]
             if _HUNK.match(red) or red.startswith("diff --git ") or _nov_fajl(goli, j):
                 break
             z = red[:1]
+            if z == "" and nov_fajl:
+                break
             if z in (" ", ""):
                 s, n = s + 1, n + 1
             elif z == "-":
@@ -213,6 +221,16 @@ def prebroj_hunkove(diff: str) -> tuple[str, list[Ispravka]]:
                     f"{red[:60]!r}. Ovakav red se ne može ni prebrojati.",
                 )
             j += 1
+        if nov_fajl and s:
+            # Ovde se ne ispravlja nego se staje: `@@ -0,{s}` je nemoguć oblik,
+            # pa telo sadrži red koji smo pogrešno pročitali. Tiho upisan
+            # nemoguć broj je gori od odbijene zakrpe.
+            raise PatchError(
+                "BAD_HUNK",
+                f"Hunk u redu {i + 1} počinje od starog reda 0 (nov fajl), a telo "
+                f"daje {s} starih redova. Nov fajl nema kontekst — telo nije "
+                f"ispravno pročitano.",
+            )
         if (s, n) != (trazeno_s, trazeno_n):
             kraj = "\n" if redovi[i].endswith("\n") else ""
             redovi[i] = (f"@@ -{m.group('sp')},{s} +{m.group('np')},{n} @@"
