@@ -269,11 +269,35 @@ class TestAritmetikaHunkova:
         nema. `git apply` takvu zakrpu odbije, i to bi u zapisu stajalo kao
         agentov neuspeh iako je kvar naš.
         """
-        d = self._nov("@@ -0,0 +1,2 @@", "+a\n+b\n\n")
+        d = self._nov("@@ -0,0 +1,2 @@", "+a\n+b\n")
         izlaz, ispravke = zakrpa.prebroj_hunkove(d)
         assert not ispravke, "telo od dva `+` reda je tačno prijavljeno"
         assert "@@ -0,0 +1,2 @@" in izlaz
         assert "-0,1" not in izlaz
+
+    def test_prazan_red_usred_novog_fajla_dobija_nazad_plus(self):
+        """29.09., drugi krug: prva ispravka je prekidala telo na praznom redu.
+
+        Prazan red je bio **usred** novog fajla — između dve funkcije — pa je
+        hunk od 58 redova prijavljen kao 21 i `git apply` je pukao na sledećem
+        fajlu. `git` prazan red u telu čita kao kontekst i sam odbija hunk
+        novog fajla, pa broj nije dovoljan: redu se vraća njegov `+`.
+        """
+        telo = "+def a():\n+    return 1\n\n+def b():\n+    return 2\n"
+        izlaz, ispravke = zakrpa.prebroj_hunkove(self._nov("@@ -0,0 +1,5 @@", telo))
+        assert [i.posle for i in ispravke] == [(0, 5)]
+        assert [i.prazni for i in ispravke] == [1]
+        assert "@@ -0,0 +1,5 @@" in izlaz
+        # Prazan red više nije prazan: nosi svoj `+`.
+        assert "+    return 1\n+\n+def b():" in izlaz
+        assert "prazn" in str(ispravke[0])
+
+    def test_prazan_red_u_obicnom_hunku_ostaje_kontekst(self):
+        """Granica ide samo oko novog fajla; svuda drugde pravilo je staro."""
+        izlaz, ispravke = zakrpa.prebroj_hunkove(
+            self._d("@@ -1,2 +1,2 @@", "-a\n+b\n\n"))
+        assert not ispravke
+        assert "+\n" not in izlaz
 
     def test_nov_fajl_sa_pogresnim_brojem_se_ispravi_na_nula(self):
         d = self._nov("@@ -0,0 +1,9 @@", "+a\n+b\n+c\n")

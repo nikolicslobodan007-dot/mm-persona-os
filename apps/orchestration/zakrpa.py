@@ -82,10 +82,15 @@ class Ispravka:
     red: int                       # redni broj reda sa `@@`, od 1
     pre: tuple[int, int]           # šta je pisalo: (staro, novo)
     posle: tuple[int, int]         # šta je izbrojano
+    #: Koliko je praznih redova u telu hunka novog fajla dobilo nazad svoj `+`
+    #: (ADR-0052, dopuna 29.09.). Nula kod svakog drugog hunka.
+    prazni: int = 0
 
     def __str__(self) -> str:
-        return (f"red {self.red}: -{self.pre[0]} +{self.pre[1]} → "
-                f"-{self.posle[0]} +{self.posle[1]}")
+        osnovno = (f"red {self.red}: -{self.pre[0]} +{self.pre[1]} → "
+                   f"-{self.posle[0]} +{self.posle[1]}")
+        return osnovno if not self.prazni else (
+            f"{osnovno} (vraćen `+` na {self.prazni} praznih redova novog fajla)")
 
 
 @dataclass
@@ -192,21 +197,28 @@ def prebroj_hunkove(diff: str) -> tuple[str, list[Ispravka]]:
             continue
         trazeno_s = int(m.group("sk") or 1)
         trazeno_n = int(m.group("nk") or 1)
-        # ADR-0052 (dopuna 29.09.) — hunk novog fajla (`--- /dev/null`, stari početak `0`) po
-        # definiciji formata NEMA kontekst: jedini ispravan oblik je
-        # `@@ -0,0 +1,N @@`. Prazan red u njegovom telu zato nije kontekst nego
-        # kraj tela. Bez ovoga se `-0,0` „ispravi" u `-0,1`, `git apply` odbije
-        # zakrpu kao pokvarenu, a agent dobije neuspeh za NAŠ kvar (ADR-0053).
+        # ADR-0052 (dopuna 29.09.) — hunk novog fajla (`--- /dev/null`, stari
+        # početak `0`) po definiciji formata NEMA kontekst: jedini ispravan oblik
+        # je `@@ -0,0 +1,N @@`. Prazan red u njegovom telu zato nije kontekst nego
+        # **dodat prazan red kome je uređivač skinuo `+`**. Bez ovoga se `-0,0`
+        # „ispravi" u `-0,1`, `git apply` odbije zakrpu sa „new file depends on
+        # old contents", a agent dobije neuspeh za NAŠ kvar (ADR-0053).
         nov_fajl = m.group("sp") == "0"
-        j, s, n = i + 1, 0, 0
+        j, s, n, prazni = i + 1, 0, 0, 0
         while j < len(goli):
             red = goli[j]
             if _HUNK.match(red) or red.startswith("diff --git ") or _nov_fajl(goli, j):
                 break
             z = red[:1]
             if z == "" and nov_fajl:
-                break
-            if z in (" ", ""):
+                # Broj nije dovoljan: `git apply` prazan red u telu čita kao
+                # kontekst i sam odbija hunk novog fajla. Zato se redu vraća
+                # njegov `+`. Ovde se ne pogađa — u telu novog fajla svaki red
+                # je dodat, pa prazan red može biti samo dodat prazan red.
+                redovi[j] = "+" + redovi[j]
+                n += 1
+                prazni += 1
+            elif z in (" ", ""):
                 s, n = s + 1, n + 1
             elif z == "-":
                 s += 1
@@ -231,12 +243,12 @@ def prebroj_hunkove(diff: str) -> tuple[str, list[Ispravka]]:
                 f"daje {s} starih redova. Nov fajl nema kontekst — telo nije "
                 f"ispravno pročitano.",
             )
-        if (s, n) != (trazeno_s, trazeno_n):
+        if (s, n) != (trazeno_s, trazeno_n) or prazni:
             kraj = "\n" if redovi[i].endswith("\n") else ""
             redovi[i] = (f"@@ -{m.group('sp')},{s} +{m.group('np')},{n} @@"
                          f"{m.group('rep')}{kraj}")
             ispravke.append(Ispravka(red=i + 1, pre=(trazeno_s, trazeno_n),
-                                     posle=(s, n)))
+                                     posle=(s, n), prazni=prazni))
         i = j
     return ("".join(redovi) if ispravke else diff), ispravke
 
