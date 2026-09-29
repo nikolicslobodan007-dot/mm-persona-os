@@ -74,11 +74,19 @@ koje bi tiho kvarilo svaki rezultat, drugo je stanje koje prođe samo od sebe.
 `StartLimitBurst=3` u dva minuta: pogrešno podešen koren zaustavi servis umesto
 da ga vrti u krug i jede red.
 
-### 3. `ProtectHome=true` ostaje
+### 3. `/home` se krije, repozitorijum se vraća izričito
 
-Repozitorijum je pod `/home`, pa se izuzima imenom kroz `ReadWritePaths=`.
-Ostatak `/home` servis ne vidi. **Ovo je provereno na serveru pre nego što je
-zapisano** — vidi „Kako je provereno".
+`ProtectHome=tmpfs` + `BindPaths=/home/mm/apps/mm-persona-os`. Ostatak `/home`
+servis ne vidi — ni `~/.ssh` korisnika `mm`, a taj proces drži `docker.sock`.
+
+Prvo je pisalo `ProtectHome=true` + `ReadWritePaths=`, uz moje „verujem da to
+probija". **Ne probija.** Server je odgovorio odmah: `status=200/CHDIR`,
+*„Changing to the requested working directory failed: Permission denied"*.
+`ProtectHome` navuče prazan `tmpfs` preko `/home` i `ReadWritePaths=` tu ne
+pomaže; `BindPaths=` izričito vrati jedan direktorijum unutra.
+
+`ReadWritePaths=` ostaje pored `BindPaths=` — bind daje da se uđe, ovo da se
+piše (poslušnik gura granu u taj repozitorijum).
 
 ### 4. Šta se namerno NIJE dodalo
 
@@ -103,11 +111,19 @@ izmere, ne unapred.
 
 ## Kako je provereno
 
-Na serveru, posle instalacije, redom: `systemctl status mm-runner` (aktivan),
-`journalctl -u mm-runner` (prijavljen radni koren i uspešna proba vidljivosti),
-pa **jedan pun zadatak kroz servis** — od reda do grane. Ishod je upisan uz ovaj
-ADR kad je poznat; do tada je ADR stajao bez tog odeljka, a ne sa pretpostavkom u
-njemu.
+29.09.2026. na `mm-persona-os-01`:
+
+1. **Prva instalacija je pala** — `status=200/CHDIR`, trinaest pokušaja ponovnog
+   pokretanja u tri minuta dok `StartLimitBurst` nije stao. Uzrok:
+   `ProtectHome=true`. To je upisano u odluku iznad.
+2. Sa `ProtectHome=tmpfs` + `BindPaths=`: `active (running)`, i u dnevniku
+   `poslušnik kreće; repo: /home/mm/apps/mm-persona-os | radni koren:
+   /var/lib/mm-runner`.
+3. **Proba vidljivosti je prošla** — `/var/lib/mm-runner` Docker vidi isto.
+   Posle ovog ADR-a i uspeh se upisuje u dnevnik: ćutanje bi značilo i „prošlo
+   je" i „nije se ni probalo", a razlika je upravo ono zbog čega provera postoji.
+4. Pun zadatak kroz servis — od reda do grane. Ishod ide u `stanje-rada.md` kad
+   prvi zadatak prođe.
 
 ## Posledice
 

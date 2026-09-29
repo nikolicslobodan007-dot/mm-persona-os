@@ -46,10 +46,16 @@ RestartSec=15
 StartLimitIntervalSec=120
 StartLimitBurst=3
 
-# Poslušnik ne čita tuđe domove. Repozitorijum je pod /home, pa se izuzima
-# imenom — ReadWritePaths= se primenjuje i preko ProtectHome=.
+# Poslušnik ne čita tuđe domove — ni ~/.ssh korisnika `mm`, a on drži
+# docker.sock. Repozitorijum je pod /home, pa se vraća unutra IZRIČITO.
+#
+# ProtectHome=true + ReadWritePaths= NE radi: probano 29.09. na serveru,
+# servis pada sa status=200/CHDIR („Changing to the requested working
+# directory failed: Permission denied"). ProtectHome navuče prazan tmpfs
+# preko /home i ReadWritePaths= ga ne probija.
 PrivateTmp=true
-ProtectHome=true
+ProtectHome=tmpfs
+BindPaths=/home/mm/apps/mm-persona-os
 ProtectSystem=strict
 ReadWritePaths=/home/mm/apps/mm-persona-os
 NoNewPrivileges=true

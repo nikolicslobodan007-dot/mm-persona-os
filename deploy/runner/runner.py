@@ -344,7 +344,11 @@ def main() -> int:
         # odvojeno. To prođe samo od sebe i nije isto što i loše podešen koren.
         log("Docker ili slika za probu se ne dobijaju; provera vidljivosti "
             "radnog korena preskočena")
-    elif not docker_vidi_isto(RADNI_KOREN):
+    elif docker_vidi_isto(RADNI_KOREN):
+        # I uspeh se upisuje. Ćutanje bi značilo i „prošlo je" i „nije se ni
+        # probalo", a razlika je upravo ono zbog čega ova provera postoji.
+        log(f"Docker vidi {RADNI_KOREN} isto kao poslušnik")
+    else:
         # Ovo se NE prelazi ćutke. Svaki zadatak bi pao na istoj stvari, a u
         # zapisu bi stajalo da su kapije pale — dakle da je agent pogrešio.
         log(f"Docker ne vidi {RADNI_KOREN} isto kao poslušnik — kapije bi padale "
