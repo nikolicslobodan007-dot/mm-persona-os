@@ -201,6 +201,29 @@ class TestBudzetPouka:
         assert lessons.prompt_section(mila, budzet=100).count("\n") == 1
 
 
+class TestOdsecanjeNaGraniciSeBroji:
+    """ADR-0054 — pouke odsečene granicom `active_for` (deset po nivou) moraju
+    da se prijave, ne samo one odsečene budžetom znakova.
+    """
+
+    def _pouka(self, tekst, **kw):
+        return EditorialLesson.objects.create(text=tekst, is_active=True, **kw)
+
+    def test_odsecanje_granicom_se_prijavljuje(self, db, mila):
+        limit = 15
+        for i in range(limit):
+            self._pouka(f"Pouka {i}", persona=mila)
+        odeljak = lessons.prompt_section(mila)
+        assert "odsečeno" in odeljak
+        assert f"još {limit - lessons.PROMPT_LIMIT_PERSONA} pouka" in odeljak
+
+    def test_red_o_odsecanju_ne_probija_budzet(self, db, mila):
+        for i in range(30):
+            self._pouka(f"P{i} " + "x" * 400, persona=mila)
+        odeljak = lessons.prompt_section(mila, budzet=1200)
+        assert len(odeljak) <= 1200
+
+
 class TestKucniStilIzPravopisa:
     """ADR-0054 — pravopisna pravila kao kućni stil koji ide svakom agentu.
 
@@ -217,7 +240,7 @@ class TestKucniStilIzPravopisa:
 
     def test_vazi_za_sve_agente(self, db, mila):
         lessons.upisi_kucni_stil()
-        firm, dep, own = lessons.active_for(mila)
+        firm, dep, own, _odseceno = lessons.active_for(mila)
         tekstovi = " ".join(x.text for x in firm)
         assert "[pravopis:futur-sazeti]" in tekstovi
         assert not own, "kućni stil nije ničija lična pouka"
@@ -312,7 +335,7 @@ class TestKucniStilIzPravopisa:
         lessons.upisi_kucni_stil()
         for i in range(lessons.PROMPT_LIMIT_GLOBAL + 5):
             EditorialLesson.objects.create(text=f"Pravilo firme {i}", is_active=True)
-        firm, _dep, _own = lessons.active_for(mila)
+        firm, _dep, _own, _odseceno = lessons.active_for(mila)
         assert len(firm) == len(pravopis.PRAVILA) + lessons.PROMPT_LIMIT_GLOBAL
         tekstovi = " ".join(x.text for x in firm)
         for p in pravopis.PRAVILA:

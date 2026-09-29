@@ -157,25 +157,43 @@ def upisi_kucni_stil(*, actor: str = "user:slobodan") -> dict[str, int]:
 
 
 def active_for(persona: Persona) -> tuple[list[EditorialLesson], list[EditorialLesson],
-                                          list[EditorialLesson]]:
-    """(kućni stil, pravila sektora, pouke agenta) — aktivne, najnovije prve.
+                                          list[EditorialLesson], int]:
+    """(kućni stil, pravila sektora, pouke agenta, odsečeno_granicom) — aktivne,
+    najnovije prve.
 
     Pravopisna pravila (ADR-0054) ulaze **van granice broja**. Ona su upisana
     jednom i zauvek, pa su najstarija u kućnom stilu; granica „deset najnovijih"
     bi ih izbacila prva, i to tiho, čim se upiše jedanaesto pravilo firme.
+
+    Četvrti element je broj pouka koje je ISTA ova granica (deset po nivou)
+    odsekla — pouke koje `prompt_section` inače nikad ne vidi jer dobija samo
+    ono što je prošlo kroz `[:PROMPT_LIMIT...]`. Bez ovoga se odsecanje na
+    ovom nivou ne broji nigde i pisac radi po pretpostavci da je spisak potpun
+    (ADR-0033).
     """
     from apps.personas.org import department_of
 
     qs = EditorialLesson.objects.filter(is_active=True).order_by("-created_at")
     dep = department_of(persona)
-    dep_rules = (list(qs.filter(department=dep)[:PROMPT_LIMIT_DEPARTMENT])
-                 if dep is not None else [])
+    dep_odseceno = 0
+    if dep is not None:
+        dep_qs = qs.filter(department=dep)
+        dep_rules = list(dep_qs[:PROMPT_LIMIT_DEPARTMENT])
+        dep_odseceno = max(0, dep_qs.count() - len(dep_rules))
+    else:
+        dep_rules = []
     firma = qs.filter(persona__isnull=True, department__isnull=True)
     pravopisna = list(firma.filter(text__startswith=OZNAKA_PRAVOPIS))
-    ostalo = list(firma.exclude(text__startswith=OZNAKA_PRAVOPIS)[:PROMPT_LIMIT_GLOBAL])
+    ostalo_qs = firma.exclude(text__startswith=OZNAKA_PRAVOPIS)
+    ostalo = list(ostalo_qs[:PROMPT_LIMIT_GLOBAL])
+    ostalo_odseceno = max(0, ostalo_qs.count() - len(ostalo))
+    own_qs = qs.filter(persona=persona)
+    own = list(own_qs[:PROMPT_LIMIT_PERSONA])
+    own_odseceno = max(0, own_qs.count() - len(own))
     return (pravopisna + ostalo,
             dep_rules,
-            list(qs.filter(persona=persona)[:PROMPT_LIMIT_PERSONA]))
+            own,
+            dep_odseceno + ostalo_odseceno + own_odseceno)
 
 
 def prompt_section(persona: Persona, *, budzet: int = PROMPT_BUDGET_CHARS) -> str:
@@ -193,8 +211,8 @@ def prompt_section(persona: Persona, *, budzet: int = PROMPT_BUDGET_CHARS) -> st
     Ako nešto ispadne, to se **kaže** u samom promptu. Ćutke skraćen spisak je
     gori od kratkog: pisac po njemu radi kao da je potpun.
     """
-    firm, dep, own = active_for(persona)
-    if not firm and not dep and not own:
+    firm, dep, own, odseceno_granicom = active_for(persona)
+    if not firm and not dep and not own and not odseceno_granicom:
         return ""
 
     naslov = "## pouke urednika (obavezno poštuj; novije imaju prednost)"
@@ -206,15 +224,21 @@ def prompt_section(persona: Persona, *, budzet: int = PROMPT_BUDGET_CHARS) -> st
              + [f"- [{x.department.code}] {x.text}" for x in dep]
              + [f"- [svi] {x.text}" for x in ostali])
 
+    # Red o odsecanju mora da stane U budžet, ne pored njega. Rezervišemo mu
+    # mesto unapred (po najvećem mogućem broju) da punjenje ne bi probilo
+    # budžet dodavanjem ovog reda tek na kraju.
+    najveci_moguci_broj = len(redom) + odseceno_granicom
+    rezerva = len(ODSECENO.format(broj=najveci_moguci_broj)) + 1 if najveci_moguci_broj else 0
+
     stalo: list[str] = []
     zauzeto = len(naslov)
     for red in redom:
-        if zauzeto + 1 + len(red) > budzet:
+        if zauzeto + 1 + len(red) + rezerva > budzet:
             break
         stalo.append(red)
         zauzeto += 1 + len(red)
 
-    odseceno = len(redom) - len(stalo)
+    odseceno = (len(redom) - len(stalo)) + odseceno_granicom
     if odseceno:
         stalo.append(ODSECENO.format(broj=odseceno))
     return "\n".join([naslov, *stalo])
