@@ -35,6 +35,11 @@ API = os.environ.get("PERSONA_API", "https://os.webkorporacija.com/api/v1")
 TOKEN = os.environ.get("PERSONA_TOKEN", "")
 REPO = Path(os.environ.get("PERSONA_REPO", "/home/mm/apps/mm-persona-os")).resolve()
 COMPOSE = Path(__file__).resolve().parent / "docker-compose.zadatak.yml"
+#: Gde se pravi radni primerak. Mora biti putanja koju **i Docker demon vidi
+#: isto kao poslušnik** — primerak se u kontejner ubacuje bind montiranjem po
+#: putanji, a demon je razrešava u svom prostoru imena, ne u našem. Pod
+#: `systemd`-om sa `PrivateTmp=true` `/tmp` to nije (ADR-0057).
+RADNI_KOREN = Path(os.environ.get("PERSONA_WORKDIR", tempfile.gettempdir()))
 PAUZA = int(os.environ.get("PERSONA_POLL_SECONDS", "20"))
 #: Koliko sme da traje jedan prolaz kapija. Pun `pytest` je oko 2,5 minuta.
 ROK = int(os.environ.get("PERSONA_TIMEOUT_SECONDS", "900"))
@@ -232,8 +237,8 @@ def obradi(task_id: str) -> None:
     if not u_granu:
         log(task_id, "grana se ne otvara: aplikacija nije poslala ispravan potpis")
 
-    rad = Path(tempfile.mkdtemp(prefix="rad-"))
-    izvestaj = Path(tempfile.mkdtemp(prefix="izv-"))
+    rad = Path(tempfile.mkdtemp(prefix="rad-", dir=RADNI_KOREN))
+    izvestaj = Path(tempfile.mkdtemp(prefix="izv-", dir=RADNI_KOREN))
     prijavljeno = False
     try:
         radni_primerak(baza, rad)
@@ -275,11 +280,77 @@ def obradi(task_id: str) -> None:
         shutil.rmtree(izvestaj, ignore_errors=True)
 
 
+#: Slika koja sigurno postoji na hostu — istom se vrte i kapije.
+SLIKA_ZA_PROBU = "mm-persona-os-web:latest"
+
+
+def moze_da_se_proveri() -> bool:
+    """Ima li čime da se proba: živ demon i slika na hostu.
+
+    Pita se komandama koje daju jasan izlazni kod, a ne čitanjem poruke o
+    grešci. Poruke se menjaju sa verzijom Dockera i prepoznavanje po tekstu bi
+    bilo pogađanje — a od pogađanja ovde i bežimo.
+    """
+    try:
+        if trci("docker", "version", "--format", "{{.Server.Version}}", rok=60).returncode:
+            return False
+        return trci("docker", "image", "inspect", SLIKA_ZA_PROBU, rok=60).returncode == 0
+    except OSError:          # nema ni `docker` binarnog fajla
+        return False
+
+
+def docker_vidi_isto(koren: Path) -> bool:
+    """Vidi li Docker demon `koren` isto kao mi.
+
+    Bind montiranje se radi **po putanji**: poslušnik pošalje `/tmp/rad-xyz`, a
+    demon tu putanju razrešava u svom prostoru imena. Pod `systemd`-om sa
+    `PrivateTmp=true` to su dva različita direktorijuma, pa demon montira prazan
+    i kapije padnu na „nema `kapije.sh`" — greška koja izgleda kao agentova, a
+    naša je (ADR-0048, ADR-0053).
+
+    Zove se tek kad `moze_da_se_proveri()` kaže da ima čime.
+    """
+    proba = Path(tempfile.mkdtemp(prefix="proba-", dir=koren))
+    (proba / "znak").write_text(secrets.token_hex(8), encoding="utf-8")
+    try:
+        return trci("docker", "run", "--rm", "--network", "none",
+                    "-v", f"{proba}:/proba:ro", SLIKA_ZA_PROBU,
+                    "test", "-f", "/proba/znak", rok=120).returncode == 0
+    finally:
+        shutil.rmtree(proba, ignore_errors=True)
+
+
+def pospremi(koren: Path) -> int:
+    """Briše radne primerke zaostale posle pada. Vraća koliko ih je bilo."""
+    stari = [p for p in koren.glob("*")
+             if p.is_dir() and p.name.startswith(("rad-", "izv-", "proba-"))]
+    for p in stari:
+        shutil.rmtree(p, ignore_errors=True)
+    return len(stari)
+
+
 def main() -> int:
     if not TOKEN:
         log("nema PERSONA_TOKEN — poslušnik ne kreće")
         return 2
-    log("poslušnik kreće; repo:", REPO)
+    if not RADNI_KOREN.is_dir() or not os.access(RADNI_KOREN, os.W_OK):
+        log(f"radni koren {RADNI_KOREN} ne postoji ili se u njega ne piše")
+        return 2
+    zaostalo = pospremi(RADNI_KOREN)
+    if zaostalo:
+        log(f"pospremljeno {zaostalo} zaostalih radnih primeraka")
+    if not moze_da_se_proveri():
+        # Demon ume da kasni za servisom pri podizanju, a slika se gradi
+        # odvojeno. To prođe samo od sebe i nije isto što i loše podešen koren.
+        log("Docker ili slika za probu se ne dobijaju; provera vidljivosti "
+            "radnog korena preskočena")
+    elif not docker_vidi_isto(RADNI_KOREN):
+        # Ovo se NE prelazi ćutke. Svaki zadatak bi pao na istoj stvari, a u
+        # zapisu bi stajalo da su kapije pale — dakle da je agent pogrešio.
+        log(f"Docker ne vidi {RADNI_KOREN} isto kao poslušnik — kapije bi padale "
+            f"na prazan direktorijum. Proveri PrivateTmp= i PERSONA_WORKDIR=.")
+        return 3
+    log("poslušnik kreće; repo:", REPO, "| radni koren:", RADNI_KOREN)
     while True:
         try:
             red = api("/tasks/queued").get("tasks", [])

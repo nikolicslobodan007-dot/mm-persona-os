@@ -28,6 +28,23 @@ volumena `secrets`. Nijedan port ne izlazi na host.
 Kapije koje se vrte su iste četiri koje vrtimo rukom: `pytest`, `ruff`,
 `canon_lint`, `makemigrations --check`. Gotovo = sve četiri zelene (ADR-0035 §3).
 
+## Radni primerak ne sme u `/tmp` (ADR-0057)
+
+Radni primerak se u kontejner ubacuje **bind montiranjem po putanji**. Poslušnik
+pošalje `/tmp/rad-xyz`, a Docker demon tu putanju razrešava u **svom** prostoru
+imena, ne u poslušnikovom. Pod `systemd`-om sa `PrivateTmp=true` to su dva
+različita direktorijuma: demon montira prazan, `kapije.sh` nema, i sve četiri
+kapije padnu. U zapisu bi to stajalo kao **agentova** pala kapija.
+
+Zato radni primerak ide u `/var/lib/mm-runner` (`StateDirectory=` u unit fajlu,
+`PERSONA_WORKDIR=` u okruženju). Pri ručnom puštanju, bez `systemd`-a, `/tmp`
+radi i ostaje podrazumevan.
+
+Poslušnik to **proverava pri startu**, ne pretpostavlja: napravi direktorijum sa
+markerom, montira ga u `mm-persona-os-web:latest` i traži marker unutra. Ako ga
+nema, ne kreće i vraća `3`. Ako se Docker uopšte ne dobija, to je druga stvar —
+javi i nastavi.
+
 ## Dve vrednosti koje se moraju proveriti pre puštanja
 
 `PERSONA_REPO` mora da pokazuje na pravi repozitorijum na serveru

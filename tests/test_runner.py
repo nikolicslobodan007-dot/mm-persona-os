@@ -255,3 +255,78 @@ class TestNeuspehBezLazneKapije:
         with pytest.raises(KeyboardInterrupt):
             runner.main()                 # do `sleep` se stiglo → pad je uhvaćen
         assert any(p.endswith("/work") for p in koraci), koraci
+
+
+class TestRadniKoren:
+    """ADR-0057 — radni primerak mora da stoji tamo gde ga i Docker vidi.
+
+    Primerak se u kontejner ubacuje bind montiranjem **po putanji**, a demon je
+    razrešava u svom prostoru imena. Pod `systemd`-om sa `PrivateTmp=true` to
+    nije isti direktorijum: demon montira prazan, kapije padnu na „nema
+    kapije.sh", i u zapisu stoji da je agent oborio kapije.
+    """
+
+    def _main(self, runner, monkeypatch, tmp_path, *, moze, vidi):
+        monkeypatch.setattr(runner, "TOKEN", "t")
+        monkeypatch.setattr(runner, "RADNI_KOREN", tmp_path)
+        monkeypatch.setattr(runner, "moze_da_se_proveri", lambda: moze)
+        monkeypatch.setattr(runner, "docker_vidi_isto", lambda _k: vidi)
+        monkeypatch.setattr(runner, "api", lambda p, t=None: {"tasks": []})
+        monkeypatch.setattr(runner, "PAUZA", 0)
+
+        def stani(_):
+            raise KeyboardInterrupt
+
+        monkeypatch.setattr(runner.time, "sleep", stani)
+        return runner
+
+    def test_nevidljiv_koren_zaustavlja_poslusnika(
+            self, runner, monkeypatch, tmp_path):
+        """Ne kreće se. Svaki zadatak bi pao, a krivica bi pala na agenta."""
+        r = self._main(runner, monkeypatch, tmp_path, moze=True, vidi=False)
+        assert r.main() == 3
+
+    def test_vidljiv_koren_pusta_poslusnika(self, runner, monkeypatch, tmp_path):
+        r = self._main(runner, monkeypatch, tmp_path, moze=True, vidi=True)
+        with pytest.raises(KeyboardInterrupt):      # stiglo se do petlje
+            r.main()
+
+    def test_bez_dockera_se_ne_staje(self, runner, monkeypatch, tmp_path):
+        """Demon ume da kasni za servisom; to prođe samo od sebe."""
+        r = self._main(runner, monkeypatch, tmp_path, moze=False, vidi=False)
+        with pytest.raises(KeyboardInterrupt):
+            r.main()
+
+    def test_koren_koji_ne_postoji_zaustavlja(self, runner, monkeypatch, tmp_path):
+        r = self._main(runner, monkeypatch, tmp_path / "nema", moze=True, vidi=True)
+        assert r.main() == 2
+
+    def test_zaostali_primerci_se_brisu(self, runner, tmp_path):
+        for ime in ("rad-a", "izv-b", "proba-c"):
+            (tmp_path / ime).mkdir()
+        (tmp_path / "tudje").mkdir()
+        assert runner.pospremi(tmp_path) == 3
+        assert [p.name for p in tmp_path.iterdir()] == ["tudje"]
+
+    def test_provera_ne_pita_docker_bez_slike(self, runner, monkeypatch):
+        """Nedostatak slike nije nevidljiv koren — ne meša se jedno s drugim."""
+        pozvano = []
+
+        def lazni(*argv, **kw):
+            pozvano.append(argv)
+
+            class R:
+                returncode = 0 if argv[1] == "version" else 1
+                stdout, stderr = "28.0.0", ""
+            return R()
+
+        monkeypatch.setattr(runner, "trci", lazni)
+        assert runner.moze_da_se_proveri() is False
+        assert [a[1] for a in pozvano] == ["version", "image"]
+
+    def test_bez_docker_binarnog_fajla_nije_pad(self, runner, monkeypatch):
+        def nema(*a, **k):
+            raise FileNotFoundError("docker")
+
+        monkeypatch.setattr(runner, "trci", nema)
+        assert runner.moze_da_se_proveri() is False

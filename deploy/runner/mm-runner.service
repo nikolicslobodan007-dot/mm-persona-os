@@ -1,8 +1,9 @@
-# Poslušnik za zadatke programerskog departmana. ADR-0038 §2.
+# Poslušnik za zadatke programerskog departmana. ADR-0038 §2, ADR-0057.
 #
 # Instalacija:
 #   sudo cp deploy/runner/mm-runner.service /etc/systemd/system/
 #   sudo systemctl daemon-reload && sudo systemctl enable --now mm-runner
+#   journalctl -u mm-runner -f
 #
 # Korisnik `mm` mora biti u grupi `docker`. To je i razlog zašto ovo NIJE u
 # aplikaciji: članstvo u toj grupi je root na hostu, pa ga nosi jedan mali
@@ -19,22 +20,47 @@ User=mm
 Group=mm
 SupplementaryGroups=docker
 WorkingDirectory=/home/mm/apps/mm-persona-os
+
 # `web` ne objavljuje port na host — ispred njega je Caddy. Poslušnik zato
 # ide istim putem kao svaki drugi klijent, kroz TLS.
 Environment=PERSONA_API=https://os.webkorporacija.com/api/v1
 Environment=PERSONA_REPO=/home/mm/apps/mm-persona-os
+
+# Radni primerak NE sme u /tmp. Njega poslušnik bind-montira u kontejner po
+# putanji, a Docker demon je razrešava u svom prostoru imena — sa PrivateTmp=
+# ispod montira prazan direktorijum i kapije padnu na „nema kapije.sh". To bi
+# u zapisu stajalo kao agentova pala kapija (ADR-0057).
+# StateDirectory= pravi /var/lib/mm-runner, u vlasništvu servisa, i Docker ga
+# vidi isto. Poslušnik pri startu i proverava da je zaista tako.
+StateDirectory=mm-runner
+Environment=PERSONA_WORKDIR=/var/lib/mm-runner
+
 # Token NIKAD ovde: stoji u fajlu 0600, kao i ključevi agenata (ADR-0026).
 EnvironmentFile=/etc/mm-persona-os/runner.env
 ExecStart=/usr/bin/python3 /home/mm/apps/mm-persona-os/deploy/runner/runner.py
 Restart=on-failure
 RestartSec=15
+# Pogrešno podešen radni koren vraća 3 i ponavljao bi se u krug. Posle tri
+# pokušaja u dva minuta servis staje i `systemctl status` to kaže — bolje nego
+# da se vrti i jede red.
+StartLimitIntervalSec=120
+StartLimitBurst=3
 
-# Poslušnik ne piše nigde osim u svoj privremeni direktorijum.
+# Poslušnik ne čita tuđe domove. Repozitorijum je pod /home, pa se izuzima
+# imenom — ReadWritePaths= se primenjuje i preko ProtectHome=.
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
 ReadWritePaths=/home/mm/apps/mm-persona-os
 NoNewPrivileges=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+# `docker.sock` je root na hostu i cela poenta ovog servisa je da ga nosi samo
+# on. Zato se NE dodaje ništa što bi mu dalo više: bez PrivateDevices=, bez
+# RestrictNamespaces= (docker CLI ih koristi), i bez CapabilityBoundingSet=
+# užeg od podrazumevanog — svako od toga je zasebna odluka, ne kozmetika.
 
 [Install]
 WantedBy=multi-user.target
