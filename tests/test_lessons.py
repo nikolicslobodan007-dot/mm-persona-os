@@ -188,10 +188,17 @@ class TestBudzetPouka:
         assert f"još {10 - koliko} pouka" in odeljak
 
     def test_pouke_agenta_prezivljavaju_kucni_stil(self, db, mila):
-        """Kad se seče, ispada kućni stil — ne ono što je agent lično zaradio."""
+        """Kad se seče, ispada kućni stil — ne ono što je agent lično zaradio.
+
+        Budžet 600 nije okrugao broj nego izmeren: naslov 58 + moja pouka 408 +
+        mesto za red o odsecanju 46 = 512 je najmanje da moja pouka uđe, a 926
+        najviše da kućna ne uđe. Ranijih 500 je bilo taman dok red o odsecanju
+        nije ulazio u budžet (ADR-0054); sada ulazi, pa granica mora da se
+        pomeri. Test je merio ponašanje, a ponašanje se promenilo.
+        """
         self._pouka("KUCNI " + "x" * 400)
         self._pouka("MOJA " + "x" * 400, persona=mila)
-        odeljak = lessons.prompt_section(mila, budzet=500)
+        odeljak = lessons.prompt_section(mila, budzet=600)
         assert "MOJA" in odeljak and "KUCNI" not in odeljak
         assert "odsečeno" in odeljak
 
