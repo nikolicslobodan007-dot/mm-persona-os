@@ -23,6 +23,7 @@ import os
 import re
 import secrets
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
@@ -40,6 +41,12 @@ COMPOSE = Path(__file__).resolve().parent / "docker-compose.zadatak.yml"
 #: putanji, a demon je razrešava u svom prostoru imena, ne u našem. Pod
 #: `systemd`-om sa `PrivateTmp=true` `/tmp` to nije (ADR-0057).
 RADNI_KOREN = Path(os.environ.get("PERSONA_WORKDIR", tempfile.gettempdir()))
+#: Ko je ovaj poslušnik. `X-Actor-ID` kaže ulogu (`service:runner`), a zakup je
+#: o primerku (ADR-0058). Servis ovo postavlja u jedinici, pa posle ponovnog
+#: pokretanja nastavlja SVOJ posao umesto da čeka istek zakupa. Ručno puštanje
+#: dobija `host:pid`, pa ne može da preotme servisov zadatak — a upravo je to
+#: 29.09. i uradilo.
+POSLUSNIK = os.environ.get("PERSONA_RUNNER_ID") or f"{socket.gethostname()}:{os.getpid()}"
 PAUZA = int(os.environ.get("PERSONA_POLL_SECONDS", "20"))
 #: Koliko sme da traje jedan prolaz kapija. Pun `pytest` je oko 2,5 minuta.
 ROK = int(os.environ.get("PERSONA_TIMEOUT_SECONDS", "900"))
@@ -70,6 +77,7 @@ def zaglavlja() -> dict[str, str]:
         "X-Request-ID": f"runner-{secrets.token_hex(8)}",
         "traceparent": f"00-{trag}-{secrets.token_hex(8)}-01",
         "X-Actor-ID": "service:runner",
+        "X-Runner-ID": POSLUSNIK,
     }
 
 
@@ -190,7 +198,10 @@ def gurni(rad: Path, grana: str, ocekivano: str) -> None:
 
 
 def kapije(task_id: str, rad: Path, izvestaj: Path) -> tuple[bool, dict]:
-    ime = "zad-" + task_id.lower().replace("tsk-", "")[:20]
+    # Sufiks je tu da dva prolaza NIKADA ne dele iste kontejnere. Bez njega se
+    # ime izvodi samo iz zadatka, pa `down -v` jednog prolaza ubija kontejnere
+    # drugog usred rada — i kapije padnu bez ijednog reda ispisa (ADR-0058).
+    ime = "zad-" + task_id.lower().replace("tsk-", "")[:20] + "-" + secrets.token_hex(3)
     okolina = {
         "PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": "/tmp",
         "COMPOSE_PROJECT_NAME": ime,
@@ -215,9 +226,32 @@ def kapije(task_id: str, rad: Path, izvestaj: Path) -> tuple[bool, dict]:
 
 
 def obradi(task_id: str) -> None:
+    """Zakup, posao, vraćanje zakupa — tim redom i bez izuzetka.
+
+    Zakup i posao su razdvojeni namerno. Prvo sam ih pisao zajedno, pa je svaki
+    raniji izlaz iz posla (nema zakrpe, `/work` pao) ostavljao zadatak zaključan
+    do isteka — pola sata u kojem red izgleda prazan (ADR-0058).
+    """
     if not TSK.match(task_id):
         log("odbijen id:", task_id[:60])
         return
+    try:
+        api(f"/tasks/{task_id}/claim", {})
+    except urllib.error.HTTPError as e:
+        if e.code == 409:
+            log(task_id, "drži ga drugi poslušnik — preskačem")
+            return
+        raise
+    try:
+        _uradi(task_id)
+    finally:
+        try:
+            api(f"/tasks/{task_id}/release", {})
+        except Exception as e:  # noqa: BLE001
+            log(task_id, "zakup nije vraćen, istiće sam:", str(e)[:200])
+
+
+def _uradi(task_id: str) -> None:
     posao = api(f"/tasks/{task_id}/work")
     zakrpa, baza = posao.get("diff", ""), posao.get("base_sha", "")
     zakrpa_id = posao.get("patch_id", "")

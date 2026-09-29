@@ -44,7 +44,9 @@ from api.views.runtime import (
 from api.views.zadaci import (
     QueuedTasksView,
     TaskBriefView,
+    TaskClaimView,
     TaskGateView,
+    TaskReleaseView,
     TaskResultView,
     TaskUnappliedView,
     TaskWorkView,
@@ -74,6 +76,8 @@ urlpatterns = [
     path("actions/<str:action_id>/policy-trace", ActionPolicyTraceView.as_view(),
          name="action-policy-trace"),
     path("tasks/queued", QueuedTasksView.as_view(), name="tasks-queued"),
+    path("tasks/<str:task_id>/claim", TaskClaimView.as_view(), name="task-claim"),
+    path("tasks/<str:task_id>/release", TaskReleaseView.as_view(), name="task-release"),
     path("tasks/<str:task_id>/brief", TaskBriefView.as_view(), name="task-brief"),
     path("tasks/<str:task_id>/work", TaskWorkView.as_view(), name="task-work"),
     path("tasks/<str:task_id>/gate", TaskGateView.as_view(), name="task-gate"),

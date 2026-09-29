@@ -26,6 +26,11 @@ WorkingDirectory=/home/mm/apps/mm-persona-os
 Environment=PERSONA_API=https://os.webkorporacija.com/api/v1
 Environment=PERSONA_REPO=/home/mm/apps/mm-persona-os
 
+# ADR-0058 — ime ovog poslušnika. Stabilno je namerno: posle restarta servis
+# nastavlja SVOJ zadatak umesto da čeka istek zakupa. Ručno pokretanje nema ovu
+# promenljivu i dobija `host:pid`, pa ne može da preotme servisov posao.
+Environment=PERSONA_RUNNER_ID=mm-runner
+
 # Radni primerak NE sme u /tmp. Njega poslušnik bind-montira u kontejner po
 # putanji, a Docker demon je razrešava u svom prostoru imena — sa PrivateTmp=
 # ispod montira prazan direktorijum i kapije padnu na „nema kapije.sh". To bi

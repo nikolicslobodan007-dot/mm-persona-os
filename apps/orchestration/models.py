@@ -429,6 +429,19 @@ class CodeTask(UUIDModel):
     commit_sha = models.CharField(max_length=40, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)
 
+    # --- ADR-0058: zakup. Red je do 29.09. davao isti zadatak svakome ko pita,
+    # pa su dva poslušnika radila isti posao i upisala po četiri kapije — jedan
+    # skup tačan, jedan prazan, a `gate_report` je uzimao poslednji po vremenu.
+    claimed_by = models.CharField(
+        max_length=80, blank=True,
+        help_text="Identitet poslušnika koji drži zakup. Prazno = slobodan.",
+    )
+    claimed_until = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Do kada zakup važi. Istekao zakup je slobodan zadatak — "
+                  "poslušnik koji padne ne zaključava posao zauvek.",
+    )
+
     class Meta:
         db_table = "orchestration_code_task"
         indexes = [

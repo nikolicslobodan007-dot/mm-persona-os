@@ -21,6 +21,8 @@ Ovo su jedine tačke koje poslušnik vidi (`allow_runner`), i namerno su uske:
 
 from __future__ import annotations
 
+from django.db.models import Q
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import serializers
 
@@ -46,6 +48,46 @@ def _zadatak(task_id: str) -> CodeTask:
     if zad is None:
         raise ApiError(E.ErrorCode.NOT_FOUND, "Zadatak ne postoji.")
     return zad
+
+
+#: Zaglavlje kojim se poslušnik predstavlja. `X-Actor-ID` kaže ULOGU
+#: (`service:runner`), a ne KOJI primerak — a zakup je o primerku (ADR-0058).
+RUNNER_HEADER = "HTTP_X_RUNNER_ID"
+
+
+def _poslusnik(request) -> str:
+    return (request.META.get(RUNNER_HEADER) or "").strip()[:80]
+
+
+def _mora_da_drzi(zad: CodeTask, request) -> str:
+    """Ishod sme da upiše samo onaj ko drži zakup — ako je mašina. ADR-0058.
+
+    Do 29.09. je svako ko zna `task_id` mogao da upiše kapiju. Dva poslušnika
+    su upisala po četiri, jedan skup tačan a jedan prazan, i merilo je zavisilo
+    od toga koji je red stigao poslednji. Ovo nije provera identiteta radi
+    identiteta — ovo je jedini način da se zna čiji je ishod.
+
+    **Čovek je izuzet.** Zakup rešava trku između mašina; operater koji upisuje
+    ishod rukom ne trči ni sa kim, a njegov potez ionako nosi ime u zapisu
+    (ADR-0045). Traženje zakupa od čoveka bi zatvorilo jedini put kojim se
+    zaglavljen zadatak razrešava.
+    """
+    # Ko je pokretač čita se iz zaglavlja koje je `api.base` već proverio uz
+    # prijavljenog korisnika — ne iz konteksta, koji u ovom trenutku još ume da
+    # nosi podrazumevano `service:system`.
+    if (request.META.get("HTTP_X_ACTOR_ID") or "").startswith("user:"):
+        return ""
+    runner = _poslusnik(request)
+    if not runner:
+        raise ApiError(E.ErrorCode.VALIDATION_ERROR,
+                       "Nedostaje `X-Runner-ID` — bez njega se ne zna ko piše "
+                       "ishod (ADR-0058).")
+    if not zadaci.drzi_zakup(zad, runner):
+        drzi = zad.claimed_by or "niko"
+        raise ApiError(E.ErrorCode.VERSION_CONFLICT,
+                       f"Zakup drži {drzi}, ne {runner}. Preuzmi zadatak pre "
+                       f"nego što upišeš ishod (ADR-0058).")
+    return runner
 
 
 def _poslednja_prihvacena(zad: CodeTask) -> TaskPatch | None:
@@ -90,15 +132,71 @@ class QueuedTasksView(PersonaOSView):
     def get(self, request):
         nemereno = TaskPatch.objects.filter(
             status=E.PatchStatus.ACCEPTED.value, gates__isnull=True)
+        # ADR-0058 — posao pod tuđim živim zakupom nije slobodan. Svoj zakup
+        # ostaje u redu: poslušnik koji se podigao posle pada mora da može da
+        # nastavi ono što je sam započeo.
+        ja = _poslusnik(request)
+        zauzeto = Q(claimed_until__gt=timezone.now()) & ~Q(claimed_by="")
+        if ja:
+            zauzeto &= ~Q(claimed_by=ja)
         redovi = (
             CodeTask.objects
             .filter(patches__in=nemereno)
+            .exclude(zauzeto)
             .exclude(status__in=[E.TaskStatus.DONE.value, E.TaskStatus.CANCELLED.value])
             .order_by("created_at")
             .values_list("public_id", flat=True)
             .distinct()[:MAX_U_REDU]
         )
         return ok({"tasks": list(redovi)})
+
+
+class TaskClaimView(PersonaOSView):
+    """Preuzimanje zadatka na rok. ADR-0058.
+
+    Red nudi posao; zakup ga dodeljuje. Bez ovog koraka `/tasks/queued` je isti
+    spisak za svakoga ko pita, pa dva poslušnika rade isti posao — što se
+    29.09. i desilo, sa osam upisanih kapija umesto četiri.
+    """
+
+    allow_runner = True
+
+    @extend_schema(operation_id="tasks_claim", request=None, responses={200: dict})
+    def post(self, request, task_id: str):
+        zad = _zadatak(task_id)
+        runner = _poslusnik(request)
+        if not runner:
+            raise ApiError(E.ErrorCode.VALIDATION_ERROR,
+                           "Nedostaje `X-Runner-ID` (ADR-0058).")
+        try:
+            zad = zadaci.claim(zad, runner=runner)
+        except zadaci.TaskError as e:
+            # 409 je ono što poslušnik proverava. Ne širim `ErrorCode` novim
+            # članom za ovo: `common/enums.py` je zaštićena zona (ADR-0034
+            # §5.1), a Canon §8.5 je rečnik grešaka za sve klijente. Ako se
+            # ikad bude trebalo razlikovati sudar zakupa od ostalih 409 — to je
+            # svoj ADR, ne uzgredna izmena (ADR-0058).
+            kod = (E.ErrorCode.VERSION_CONFLICT if e.code == "ALREADY_CLAIMED"
+                   else E.ErrorCode.VALIDATION_ERROR)
+            raise ApiError(kod, str(e)) from e
+        return ok({"task_id": zad.public_id, "runner": zad.claimed_by,
+                   "until": zad.claimed_until.isoformat()})
+
+
+class TaskReleaseView(PersonaOSView):
+    """Vraćanje zadatka u red pre isteka zakupa. ADR-0058."""
+
+    allow_runner = True
+
+    @extend_schema(operation_id="tasks_release", request=None, responses={200: dict})
+    def post(self, request, task_id: str):
+        zad = _zadatak(task_id)
+        runner = _poslusnik(request)
+        try:
+            zad = zadaci.release(zad, runner=runner)
+        except zadaci.TaskError as e:
+            raise ApiError(E.ErrorCode.VERSION_CONFLICT, str(e)) from e
+        return ok({"task_id": zad.public_id, "runner": runner})
 
 
 class TaskBriefView(PersonaOSView):
@@ -157,6 +255,7 @@ class TaskResultView(PersonaOSView):
     @extend_schema(operation_id="tasks_result", request=ResultIn, responses={200: dict})
     def post(self, request, task_id: str):
         zad = _zadatak(task_id)
+        _mora_da_drzi(zad, request)
         ulaz = ResultIn(data=request.data)
         ulaz.is_valid(raise_exception=True)
         v = ulaz.validated_data
@@ -181,6 +280,7 @@ class TaskGateView(PersonaOSView):
     @extend_schema(operation_id="tasks_gate", request=GateIn, responses={200: dict})
     def post(self, request, task_id: str):
         zad = _zadatak(task_id)
+        _mora_da_drzi(zad, request)
         ulaz = GateIn(data=request.data)
         ulaz.is_valid(raise_exception=True)
         v = ulaz.validated_data
@@ -212,6 +312,7 @@ class TaskUnappliedView(PersonaOSView):
                    responses={200: dict})
     def post(self, request, task_id: str):
         zad = _zadatak(task_id)
+        _mora_da_drzi(zad, request)
         ulaz = UnappliedIn(data=request.data)
         ulaz.is_valid(raise_exception=True)
         v = ulaz.validated_data

@@ -223,10 +223,13 @@ class TestNeuspehBezLazneKapije:
         assert not any(p.endswith("/unapplied") for p in self._putanje(zvao))
 
     def test_petlja_prezivljava_pao_zadatak(self, runner, monkeypatch, zvao):
-        """`GET /work` stoji pre `try` u `obradi`; petlja mora da ga preživi.
+        """Prvi poziv u `obradi` stoji pre `try`; petlja mora da ga preživi.
 
         Bez ovoga je jedan neuspeo poziv gasio ceo proces, a red je posle ćutao —
         isto ponašanje kao 25.09., samo iz drugog razloga.
+
+        Od ADR-0058 prvi poziv nije `GET /work` nego `POST /claim`: posao se
+        prvo preuzima, pa radi. Tvrdnja prati kôd, ne obrnuto.
         """
         def pukni(*a, **k):
             raise RuntimeError("API nedostupan")
@@ -254,7 +257,7 @@ class TestNeuspehBezLazneKapije:
         monkeypatch.setattr(runner.time, "sleep", stani)
         with pytest.raises(KeyboardInterrupt):
             runner.main()                 # do `sleep` se stiglo → pad je uhvaćen
-        assert any(p.endswith("/work") for p in koraci), koraci
+        assert any(p.endswith("/claim") for p in koraci), koraci
 
 
 class TestRadniKoren:

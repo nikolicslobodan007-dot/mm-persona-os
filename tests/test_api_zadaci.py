@@ -10,9 +10,12 @@ identifikatore, a `gate` ne ume da zatvori zadatak.
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 import pytest
 from django.contrib.auth.models import Group, User
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
@@ -46,13 +49,25 @@ LOSA = (
 )
 
 
+def _preuzmi(klijent, zad):
+    """Zakup pre upisa ishoda. ADR-0058.
+
+    Do 29.09. je ovaj korak nedostajao i u kodu i ovde, pa su dva poslušnika
+    upisala po četiri kapije nad istim zadatkom.
+    """
+    o = klijent.post(reverse("task-claim", args=[zad.public_id]), {}, format="json")
+    assert o.status_code == 200, o.content
+    return o
+
+
 @pytest.fixture
 def poslusnik(db):
     u = User.objects.create_user(username="svc_runner")
     u.groups.set([Group.objects.get_or_create(name=RUNNER_GROUP)[0]])
     c = APIClient()
     c.credentials(HTTP_AUTHORIZATION=f"Token {Token.objects.create(user=u).key}",
-                  HTTP_X_ACTOR_ID="service:runner", **_TRAG)
+                  HTTP_X_ACTOR_ID="service:runner",
+                  HTTP_X_RUNNER_ID="test-runner", **_TRAG)
     return c
 
 
@@ -162,6 +177,7 @@ class TestRad:
 
 class TestKapija:
     def test_upisuje_ishod(self, poslusnik, zad, mila):
+        _preuzmi(poslusnik, zad)
         _predaj(zad, DIFF, mila)
         o = poslusnik.post(reverse("task-gate", args=[zad.public_id]),
                            {"gate": "pytest", "passed": True, "detail": "708 passed"},
@@ -171,6 +187,7 @@ class TestKapija:
         assert zad.gates.filter(gate="pytest", passed=True).exists()
 
     def test_svaki_pokusaj_ostaje(self, poslusnik, zad, mila):
+        _preuzmi(poslusnik, zad)
         _predaj(zad, DIFF, mila)
         for prosla in (False, True):
             poslusnik.post(reverse("task-gate", args=[zad.public_id]),
@@ -178,12 +195,14 @@ class TestKapija:
         assert zad.gates.filter(gate="ruff").count() == 2
 
     def test_nepoznata_kapija(self, poslusnik, zad, mila):
+        _preuzmi(poslusnik, zad)
         _predaj(zad, DIFF, mila)
         o = poslusnik.post(reverse("task-gate", args=[zad.public_id]),
                            {"gate": "izmisljena", "passed": True}, format="json")
         assert o.status_code == 400
 
     def test_poslusnik_ne_zatvara_zadatak(self, poslusnik, zad, mila):
+        _preuzmi(poslusnik, zad)
         """Sve kapije zelene ne znače da je poslušnik završio posao."""
         _predaj(zad, DIFF, mila)
         for g in zad.required_gates:
@@ -238,6 +257,7 @@ class TestRedNeVrtiUKrug:
     """
 
     def _izmeri(self, poslusnik, zad, patch_id, kapije=None):
+        _preuzmi(poslusnik, zad)
         for g in (kapije or zad.required_gates):
             poslusnik.post(reverse("task-gate", args=[zad.public_id]),
                            {"gate": g, "passed": True, "patch": patch_id},
@@ -263,6 +283,7 @@ class TestRedNeVrtiUKrug:
         assert self._red(poslusnik) == []
 
     def test_pale_kapije_takodje_izbacuju(self, poslusnik, zad, mila):
+        _preuzmi(poslusnik, zad)
         """Neuspeh je ishod. Zadatak koji pada ne sme da se vrti u krug."""
         _predaj(zad, DIFF, mila)
         pid = poslusnik.get(
@@ -290,6 +311,7 @@ class TestRedNeVrtiUKrug:
             reverse("task-work", args=[zad.public_id])).status_code == 404
 
     def test_tudja_zakrpa_se_odbija(self, poslusnik, zad, mila, db):
+        _preuzmi(poslusnik, zad)
         """`patch` koji ne pripada zadatku ne sme da prođe."""
         _predaj(zad, DIFF, mila)
         import uuid
@@ -309,6 +331,7 @@ class TestRezultat:
     SHA = "c" * 40
 
     def _zeleno(self, poslusnik, zad, zk):
+        _preuzmi(poslusnik, zad)
         for g in zad.required_gates:
             poslusnik.post(reverse("task-gate", args=[zad.public_id]),
                            {"gate": g, "passed": True, "patch": str(zk.pk)},
@@ -336,6 +359,7 @@ class TestRezultat:
         assert zad.status != E.TaskStatus.DONE.value
 
     def test_bez_zelenih_kapija_se_odbija(self, poslusnik, zad, mila):
+        _preuzmi(poslusnik, zad)
         zk = _predaj(zad, DIFF, mila)
         odgovor = poslusnik.post(
             reverse("task-result", args=[zad.public_id]),
@@ -352,6 +376,7 @@ class TestRezultat:
             format="json").status_code == 400
 
     def test_tudja_zakrpa_se_odbija(self, poslusnik, zad, mila, db):
+        _preuzmi(poslusnik, zad)
         with bind(actor_id="user:slobodan"):
             drugi = zadaci.create(title="Drugi", why="Drugi razlog.",
                                   allowed_paths=["apps/content"], assignee=mila)
@@ -392,6 +417,7 @@ class TestNeprimenjenaTacka:
     """
 
     def test_poslusnik_sme(self, poslusnik, zad, mila):
+        _preuzmi(poslusnik, zad)
         zk = _predaj(zad, DIFF, mila)
         o = poslusnik.post(reverse("task-unapplied", args=[zad.public_id]),
                            {"patch": str(zk.pk), "reason": "corrupt patch at line 22"},
@@ -402,6 +428,7 @@ class TestNeprimenjenaTacka:
         assert "corrupt patch" in podaci["reason"]
 
     def test_zakrpa_izlazi_iz_reda(self, poslusnik, zad, mila):
+        _preuzmi(poslusnik, zad)
         zk = _predaj(zad, DIFF, mila)
         assert poslusnik.get(reverse("tasks-queued")).json()["data"]["tasks"] == [
             zad.public_id]
@@ -417,6 +444,7 @@ class TestNeprimenjenaTacka:
         assert not zk.gates.exists()
 
     def test_izmerena_zakrpa_se_ne_prepravlja(self, poslusnik, zad, mila):
+        _preuzmi(poslusnik, zad)
         zk = _predaj(zad, DIFF, mila)
         poslusnik.post(reverse("task-gate", args=[zad.public_id]),
                        {"gate": "pytest", "passed": True, "patch": str(zk.pk)},
@@ -433,12 +461,14 @@ class TestNeprimenjenaTacka:
             drugi = zadaci.create(title="Drugi", why="Provera vlasništva.",
                                   allowed_paths=["apps/content"], assignee=mila)
         zk = _predaj(drugi, DIFF, mila)
+        _preuzmi(poslusnik, zad)
         assert poslusnik.post(
             reverse("task-unapplied", args=[zad.public_id]),
             {"patch": str(zk.pk), "reason": "greška"},
             format="json").status_code == 404
 
     def test_razlog_je_obavezan(self, poslusnik, zad, mila):
+        _preuzmi(poslusnik, zad)
         zk = _predaj(zad, DIFF, mila)
         assert poslusnik.post(
             reverse("task-unapplied", args=[zad.public_id]),
@@ -456,3 +486,114 @@ class TestNeprimenjenaTacka:
         assert o.status_code >= 400, o.content
         zk.refresh_from_db()
         assert zk.status == E.PatchStatus.ACCEPTED.value
+
+
+class TestZakup:
+    """ADR-0058 — red izdaje zakup, ne poziv.
+
+    29.09. su dva poslušnika uzela isti zadatak iz `/tasks/queued` i upisala po
+    četiri kapije. Jedan skup je bio tačan, drugi prazan (`down -v` jednog
+    prolaza ubio je kontejnere drugog), a `gate_report` je uzimao poslednji red
+    po vremenu — pa je ishod kapije zavisio od trke u pola milisekunde.
+    """
+
+    def _drugi(self):
+        u = User.objects.create_user(username="svc_runner_2")
+        u.groups.set([Group.objects.get_or_create(name=RUNNER_GROUP)[0]])
+        c = APIClient()
+        c.credentials(HTTP_AUTHORIZATION=f"Token {Token.objects.create(user=u).key}",
+                      HTTP_X_ACTOR_ID="service:runner",
+                      HTTP_X_RUNNER_ID="drugi-poslusnik", **_TRAG)
+        return c
+
+    def test_preuzimanje_daje_rok(self, poslusnik, zad, mila):
+        _predaj(zad, DIFF, mila)
+        d = _preuzmi(poslusnik, zad).json()["data"]
+        assert d["runner"] == "test-runner" and d["until"]
+
+    def test_drugi_ne_moze_da_preotme(self, poslusnik, zad, mila):
+        _predaj(zad, DIFF, mila)
+        _preuzmi(poslusnik, zad)
+        o = self._drugi().post(reverse("task-claim", args=[zad.public_id]),
+                               {}, format="json")
+        assert o.status_code == 409
+
+    def test_isti_poslusnik_sme_ponovo(self, poslusnik, zad, mila):
+        """Posle pada i ponovnog pokretanja servis nastavlja SVOJ posao."""
+        _predaj(zad, DIFF, mila)
+        _preuzmi(poslusnik, zad)
+        assert _preuzmi(poslusnik, zad).status_code == 200
+
+    def test_istekao_zakup_oslobadja(self, poslusnik, zad, mila):
+        _predaj(zad, DIFF, mila)
+        zad.claimed_by, zad.claimed_until = "pao-poslusnik", timezone.now() - timedelta(minutes=1)
+        zad.save(update_fields=["claimed_by", "claimed_until"])
+        assert _preuzmi(poslusnik, zad).status_code == 200
+
+    def test_bez_zakupa_kapija_se_ne_upisuje(self, poslusnik, zad, mila):
+        """Ovo je ceo ADR u jednom redu."""
+        zk = _predaj(zad, DIFF, mila)
+        o = poslusnik.post(reverse("task-gate", args=[zad.public_id]),
+                           {"gate": "pytest", "passed": True, "patch": str(zk.pk)},
+                           format="json")
+        assert o.status_code == 409
+        assert zad.gates.count() == 0
+
+    def test_tudji_zakup_ne_dozvoljava_upis(self, poslusnik, zad, mila):
+        zk = _predaj(zad, DIFF, mila)
+        _preuzmi(poslusnik, zad)
+        o = self._drugi().post(reverse("task-gate", args=[zad.public_id]),
+                               {"gate": "pytest", "passed": False, "patch": str(zk.pk)},
+                               format="json")
+        assert o.status_code == 409
+        assert zad.gates.count() == 0
+
+    def test_bez_imena_poslusnika_se_odbija(self, zad, mila, db):
+        zk = _predaj(zad, DIFF, mila)
+        u = User.objects.create_user(username="svc_bezimeni")
+        u.groups.set([Group.objects.get_or_create(name=RUNNER_GROUP)[0]])
+        c = APIClient()
+        c.credentials(HTTP_AUTHORIZATION=f"Token {Token.objects.create(user=u).key}",
+                      HTTP_X_ACTOR_ID="service:runner", **_TRAG)
+        o = c.post(reverse("task-gate", args=[zad.public_id]),
+                   {"gate": "pytest", "passed": True, "patch": str(zk.pk)},
+                   format="json")
+        assert o.status_code == 400
+
+    def test_covek_ne_treba_zakup(self, operater, poslusnik, zad, mila):
+        """Zakup rešava trku između mašina; čovek ne trči ni sa kim (ADR-0045)."""
+        zk = _predaj(zad, DIFF, mila)
+        _preuzmi(poslusnik, zad)
+        o = operater.post(reverse("task-gate", args=[zad.public_id]),
+                          {"gate": "pytest", "passed": True, "patch": str(zk.pk)},
+                          format="json")
+        assert o.status_code == 200
+
+    def test_red_ne_nudi_tudji_zakup(self, poslusnik, zad, mila):
+        _predaj(zad, DIFF, mila)
+        _preuzmi(poslusnik, zad)
+        red = self._drugi().get(reverse("tasks-queued")).json()["data"]["tasks"]
+        assert zad.public_id not in red
+
+    def test_red_i_dalje_nudi_svoj_zakup(self, poslusnik, zad, mila):
+        """Poslušnik posle pada mora da vidi ono što je sam započeo."""
+        _predaj(zad, DIFF, mila)
+        _preuzmi(poslusnik, zad)
+        red = poslusnik.get(reverse("tasks-queued")).json()["data"]["tasks"]
+        assert zad.public_id in red
+
+    def test_vracanje_vraca_u_red(self, poslusnik, zad, mila):
+        _predaj(zad, DIFF, mila)
+        _preuzmi(poslusnik, zad)
+        assert poslusnik.post(reverse("task-release", args=[zad.public_id]),
+                              {}, format="json").status_code == 200
+        red = self._drugi().get(reverse("tasks-queued")).json()["data"]["tasks"]
+        assert zad.public_id in red
+
+    def test_tudji_zakup_se_ne_vraca(self, poslusnik, zad, mila):
+        _predaj(zad, DIFF, mila)
+        _preuzmi(poslusnik, zad)
+        assert self._drugi().post(reverse("task-release", args=[zad.public_id]),
+                                  {}, format="json").status_code == 409
+        zad.refresh_from_db()
+        assert zad.claimed_by == "test-runner"

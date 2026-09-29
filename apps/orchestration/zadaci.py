@@ -15,6 +15,8 @@ zelen zapis i dok ima otvorenog nalaza težine `BLOCKER`.
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+
 from django.db import transaction
 from django.utils import timezone
 
@@ -32,6 +34,10 @@ __all__ = [
     "assign",
     "may_touch",
     "record_gate",
+    "claim",
+    "release",
+    "drzi_zakup",
+    "zakup_zivi",
     "add_finding",
     "amend_finding",
     "reopen_finding",
@@ -219,6 +225,79 @@ def record_gate(zadatak: CodeTask, gate: str, passed: bool, *, detail: str = "",
                  "commit": commit_sha},
     )
     return red
+
+
+# ----------------------------------------------------------------- zakup posla
+
+#: Koliko zakup traje. Mora da nadživi najduži prolaz kapija (poslušnik ima rok
+#: od 900 s) plus kloniranje, primenu i commit. Kraći zakup bi pustio drugog
+#: poslušnika u posao koji još traje, a to je tačno ono što se 29.09. desilo.
+ZAKUP_SEKUNDI = 1800
+
+
+def zakup_zivi(zadatak: CodeTask, *, now: datetime | None = None) -> bool:
+    now = now or timezone.now()
+    return bool(zadatak.claimed_by and zadatak.claimed_until
+                and zadatak.claimed_until > now)
+
+
+@transaction.atomic
+def claim(zadatak: CodeTask, *, runner: str, now: datetime | None = None,
+          trajanje: int = ZAKUP_SEKUNDI) -> CodeTask:
+    """Preuzima zadatak na određeno vreme. ADR-0058.
+
+    `select_for_update` nije ukras: dva poslušnika koji pitaju u istoj
+    milisekundi moraju da se poređaju, inače bi obojica pročitala „slobodan" i
+    obojica upisala zakup. Baš to je i bio kvar koji je ovaj ADR izazvao, samo
+    jedan sloj niže.
+
+    Isti poslušnik sme da preuzme ono što već drži — inače bi se posle pada i
+    ponovnog pokretanja zaključao sam sebi posao do isteka zakupa.
+    """
+    now = now or timezone.now()
+    if not runner.strip():
+        raise TaskError("NO_RUNNER", "Zakup traži ime poslušnika (ADR-0058).")
+    z = CodeTask.objects.select_for_update().get(pk=zadatak.pk)
+    if zakup_zivi(z, now=now) and z.claimed_by != runner:
+        raise TaskError(
+            "ALREADY_CLAIMED",
+            f"Zadatak drži {z.claimed_by} do {z.claimed_until:%H:%M:%S}.",
+            {"claimed_by": z.claimed_by, "until": z.claimed_until.isoformat()},
+        )
+    z.claimed_by = runner[:80]
+    z.claimed_until = now + timedelta(seconds=trajanje)
+    z.save(update_fields=["claimed_by", "claimed_until", "updated_at"])
+    audit.record("task.claimed", persona=z.assignee, details={
+        "task": z.public_id, "runner": z.claimed_by,
+        "until": z.claimed_until.isoformat()})
+    zadatak.claimed_by, zadatak.claimed_until = z.claimed_by, z.claimed_until
+    return z
+
+
+@transaction.atomic
+def release(zadatak: CodeTask, *, runner: str) -> CodeTask:
+    """Vraća zadatak u red. Tuđi zakup se ne dira — ni greškom, ni „da prođe"."""
+    z = CodeTask.objects.select_for_update().get(pk=zadatak.pk)
+    if z.claimed_by and z.claimed_by != runner:
+        raise TaskError("NOT_YOURS",
+                        f"Zakup drži {z.claimed_by}, ne {runner} (ADR-0058).")
+    z.claimed_by, z.claimed_until = "", None
+    z.save(update_fields=["claimed_by", "claimed_until", "updated_at"])
+    audit.record("task.released", persona=z.assignee,
+                 details={"task": z.public_id, "runner": runner})
+    zadatak.claimed_by, zadatak.claimed_until = "", None
+    return z
+
+
+def drzi_zakup(zadatak: CodeTask, runner: str, *, now: datetime | None = None) -> bool:
+    """Sme li `runner` da piše ishod ovog zadatka.
+
+    Ovo je **dozvola, ne heuristika.** Do ADR-0058 se pitalo koji je red noviji;
+    sada se pita ko je uopšte imao pravo da upiše. Isti duh kao ADR-0034: ne
+    pogađa se ko je u pravu.
+    """
+    return bool(runner) and zakup_zivi(zadatak, now=now) \
+        and zadatak.claimed_by == runner
 
 
 def gate_report(zadatak: CodeTask) -> dict[str, bool | None]:

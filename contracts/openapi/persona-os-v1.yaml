@@ -956,6 +956,33 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/tasks/{task_id}/claim:
+    post:
+      operationId: tasks_claim
+      description: |-
+        Preuzimanje zadatka na rok. ADR-0058.
+
+        Red nudi posao; zakup ga dodeljuje. Bez ovog koraka `/tasks/queued` je isti
+        spisak za svakoga ko pita, pa dva poslušnika rade isti posao — što se
+        29.09. i desilo, sa osam upisanih kapija umesto četiri.
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - tasks
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/v1/tasks/{task_id}/gate:
     post:
       operationId: tasks_gate
@@ -974,6 +1001,28 @@ paths:
             schema:
               $ref: '#/components/schemas/GateInRequest'
         required: true
+      security:
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/tasks/{task_id}/release:
+    post:
+      operationId: tasks_release
+      description: Vraćanje zadatka u red pre isteka zakupa. ADR-0058.
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - tasks
       security:
       - tokenAuth: []
       responses:
