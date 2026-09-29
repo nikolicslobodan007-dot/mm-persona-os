@@ -127,7 +127,9 @@ postojalo jutros, zaostali proces bi bio bezopasan.
   posla i vraćanje u `finally`, slučajan sufiks u imenu compose projekta.
 - `deploy/runner/mm-runner.service` — `PERSONA_RUNNER_ID=mm-runner`.
 - Ugovor `contracts/openapi/persona-os-v1.yaml` regenerisan (dve nove tačke).
-- 12 novih provera; ukupno **1083**.
+- 12 novih provera; ukupno **1084**. *(Ispravljeno 29.09.2026. Prvobitno je pisalo
+  1083. Izmereno prebrojavanjem: `test_lessons.py` je imao 29 provera pre
+  ADR-0054 zakrpe, ukupno 1084. Greška u sabiranju, ne u kodu.)*
 - **Zatečeni redovi se ne diraju.** Osam redova nad TSK-…35ED8QY ostaje kakvo
   jeste; zapis se ne doteruje da bi brojevi izgledali bolje (ADR-0046). Taj
   zadatak se meri ponovo, novom zakrpom.
