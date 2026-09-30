@@ -17,15 +17,21 @@ brif, koji već nosi pale kapije i otvorene nalaze (ADR-0041 §4).
 
 ## Tri brojke i zašto baš one
 
-- **Plafon troška** (`PLAFON_CENTI`) se proverava **pre** svakog poziva. Posle
-  poziva se ne može poništiti trošak, pa plafon sme da bude prekoračen za najviše
+Redosled kočnica je odluka, ne slučaj (ADR-0062): agent se zaustavlja zato što
+**nema napretka**, nikad zato što je potrošio pare.
+
+- **Prekidač „nema napretka"** je prva kočnica: isti diff kao ranije, ili dve
+  uzastopne izmerene zakrpe koje obaraju iste kapije. Agent koji stane sa „nisam
+  uspeo" je ispravan ishod; agent koji melje nije.
+- **Najviše pokušaja** (`NAJVISE_POKUSAJA`) je druga — za patološku petlju koju
+  prva kočnica ne vidi (kapije koje se naizmenično menjaju: A, B, A, B). Broji se
+  po zakrpama koje je napisao model, ne po pozivima (ADR-0050).
+- **Plafon troška** (`PLAFON_CENTI`) je **poslednja**, i po ADR-0062 se nikad ne
+  dodirne pri normalnom radu: tu je da uhvati kvar koji troši, ne da odredi
+  koliko posla agent sme da uradi. Proverava se **pre** svakog poziva; posle
+  poziva se trošak ne može poništiti, pa plafon sme da bude prekoračen za najviše
   jedan poziv — a jedan poziv je ograničen veličinom brifa (200 KB, ADR-0041 §1).
   To se ovde kaže naglas umesto da se tvrdi tvrda granica koje nema (ADR-0033).
-- **Najviše pokušaja** (`NAJVISE_POKUSAJA`) se broji po zakrpama koje je napisao
-  model, ne po pozivima — jer se plaća ishod, a ne trud.
-- **Prekidač „nema napretka"** staje pre plafona kad se pokušaj ponavlja: isti
-  diff kao ranije, ili dve uzastopne izmerene zakrpe koje obaraju iste kapije.
-  Agent koji stane sa „nisam uspeo" je ispravan ishod; agent koji melje nije.
 """
 
 from __future__ import annotations
@@ -46,11 +52,16 @@ from .zadaci import TaskError
 __all__ = ["Ishod", "pokusaj", "potroseno", "izvuci_diff", "zasto_ne", "otisak",
            "PLAFON_CENTI", "NAJVISE_POKUSAJA"]
 
-#: Plafon troška po zadatku, u EUR centima (Canon §13.1 — nikad float).
-PLAFON_CENTI = 60
+#: Plafon troška po zadatku, u EUR centima (Canon §13.1 — nikad float). Nije
+#: mera koliko posla agent sme da uradi nego kočnica za kvar koji troši
+#: (ADR-0062): mora da ostane iznad `NAJVISE_POKUSAJA` punih pokušaja, da se
+#: nikad ne javi prvi. Proverava `test_plafon_nije_prva_kocnica`.
+PLAFON_CENTI = 300
 
-#: Koliko zakrpa model sme da napiše za jedan zadatak.
-NAJVISE_POKUSAJA = 3
+#: Koliko zakrpa model sme da napiše za jedan zadatak. Bilo 3 (ADR-0044); dva
+#: puta je naš kvar pojeo agentu pokušaj pod tom granicom (ADR-0050, ADR-0061),
+#: pa je podignuto na 8 (ADR-0062). Prva kočnica je „nema napretka", ne ovo.
+NAJVISE_POKUSAJA = 8
 
 #: Koliko izlaza tražimo od modela. Diff od 20 KB je već prevelik za uzak
 #: zadatak; preko toga se zadatak deli, ne podiže plafon (ADR-0041 §1).

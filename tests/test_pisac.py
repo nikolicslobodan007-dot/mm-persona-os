@@ -8,6 +8,8 @@ tvrdnje o novcu i o zaustavljanju:
     da se prećuti, pokušaji bi bili besplatni i beskonačni;
   - **„nema napretka" staje pre plafona** — ista zakrpa dvaput, ili dve uzastopne
     izmerene zakrpe koje obaraju iste kapije;
+  - **plafon troška nije prva kočnica** (ADR-0062). Stoji iznad punog broja
+    pokušaja po izmerenoj ceni, pa agenta zaustavlja nenapredovanje, ne cena;
   - **lokalni šablon se ne broji kao pokušaj agenta.** On ne piše kod, pa njegov
     odgovor nije agentov neuspeh.
 """
@@ -169,12 +171,17 @@ class TestPrekidaci:
 
         Kapije se namerno razlikuju: da su iste dve zaredom, prvo bi se javila
         kočnica „nema napretka" i ovaj test bi merio nju.
+
+        Granica se predaje izričito (`najvise=3`) jer se ovde meri **kočnica**, a
+        ne brojka. Test koji tvrdo upisuje poslovni broj meri broj; kad se broj
+        promeni (ADR-0062: 3 → 8), takav test padne a mehanizam je i dalje
+        ispravan. Podrazumevanu vrednost čuva `test_podrazumevane_brojke`.
         """
         with bind(actor_id="user:slobodan"):
             for d, kapija in ((DIFF, "pytest"), (DRUGI, "ruff"), (ZONA, "pytest")):
                 p = zakrpa.submit(z, d, persona=mila, od_modela=True)
                 zadaci.record_gate(z, kapija, False, patch=p)
-        assert "plafon pokušaja (3/3)" in pisac.zasto_ne(z)
+        assert "plafon pokušaja (3/3)" in pisac.zasto_ne(z, najvise=3)
 
     def test_rucna_predaja_ne_trosi_pokusaj(self, z, mila, model, ruta):
         """ADR-0050 — 27.09. je naša ponovna predaja pojela agentu treći pokušaj.
@@ -186,19 +193,46 @@ class TestPrekidaci:
             for d in (DIFF, DRUGI, ZONA):
                 p = zakrpa.submit(z, d, persona=mila)        # bez `od_modela`
                 zadaci.record_gate(z, "ruff", False, patch=p)
-        assert "plafon pokušaja" not in (pisac.zasto_ne(z) or "")
+        # `najvise=3` kao gore: pod podrazumevanih 8 tri zakrpe ne bi dosegle
+        # plafon ni da su agentove, pa test ne bi merio ništa (ADR-0062).
+        assert "plafon pokušaja" not in (pisac.zasto_ne(z, najvise=3) or "")
 
     def test_plafon_troska(self, z, mila, model, ruta):
+        """Plafon se predaje izričito — meri se kočnica, ne brojka (ADR-0062)."""
         with bind(actor_id="user:slobodan"):
             p = zakrpa.submit(z, DIFF, persona=mila, cena_centi=60)
             zadaci.record_gate(z, "pytest", False, patch=p)
-        assert "potrošeno 60 od 60" in pisac.zasto_ne(z)
+        assert "potrošeno 60 od 60" in pisac.zasto_ne(z, plafon_centi=60)
 
     def test_visi_plafon_pusta_dalje(self, z, mila, model, ruta):
         with bind(actor_id="user:slobodan"):
             p = zakrpa.submit(z, DIFF, persona=mila, cena_centi=60)
             zadaci.record_gate(z, "pytest", False, patch=p)
         assert pisac.zasto_ne(z, plafon_centi=200) is None
+
+    def test_podrazumevane_brojke(self):
+        """Brojke su poslovna odluka (ADR-0062) — tiha izmena pada na kapiji.
+
+        Gornji testovi granice predaju izričito, pa bi bez ovoga podrazumevane
+        vrednosti mogao neko da promeni a da nijedna provera ne pisne.
+        """
+        assert pisac.PLAFON_CENTI == 300
+        assert pisac.NAJVISE_POKUSAJA == 8
+
+    def test_plafon_nije_prva_kocnica(self):
+        """Novac ne sme da bude ono što zaustavi agenta (ADR-0062 §1).
+
+        Izmereno 30.09. nad `ucinak --persona P-00027`: 96 centi na 17 zakrpa,
+        dakle **6 centi po pokušaju**; najskuplji viđeni pojedinačni poziv je 9
+        centi. Uzima se 9 kao gornja izmerena cena. Da plafon padne ispod
+        `NAJVISE_POKUSAJA × 9`, prva kočnica koju agent oseti bila bi cena — a to
+        je upravo ono što je 30.09. odlučeno da se više ne radi.
+
+        Kad ruta postane skuplja, ovaj test padne. To je i poenta: tada se diže
+        plafon, ne krati agentov posao.
+        """
+        NAJSKUPLJI_POKUSAJ_CENTI = 9          # izmereno, ne procenjeno
+        assert pisac.PLAFON_CENTI > pisac.NAJVISE_POKUSAJA * NAJSKUPLJI_POKUSAJ_CENTI
 
     def test_iste_pale_kapije_dvaput_zaustavljaju(self, z, mila, model, ruta):
         with bind(actor_id="user:slobodan"):
