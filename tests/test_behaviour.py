@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import io
 import threading
+from dataclasses import replace
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
@@ -416,3 +417,70 @@ def test_same_story_after_reseed(mila):
     first = story()
     call_command("seed_agent_001", reset=True, stdout=io.StringIO())
     assert story() == first
+
+
+@requires_db
+@pytest.mark.django_db
+class TestPrijavaNeodradjenogPosla:
+    """ADR-0059 — prozor bez registrovanog posla ne sme da se upiše kao završen.
+
+    Do 30.09. je F3 za svaku vrstu osim `post` upisivao `PlanStep` sa
+    `status=DONE` i opisom da je aktivnost interna. Za `research` je to značilo
+    da **zapis tvrdi da je istraživanje obavljeno, a nijedna stranica nije
+    pročitana**; uz to `reducer` skine energiju i radoznalost, pa je i stanje
+    persone lagalo.
+
+    Zakrpu je napisao P-00027 (pokušaj 3/3). Testove nije — zadatak ih nije
+    tražio, što je propust u postavci, ne u radu. Pisani su rukom posle merenja
+    koje je pokazalo da se `has_job = False` podmetne bez ijedne pale kapije.
+    """
+
+    def _korak(self, run):
+        from apps.orchestration.models import PlanStep
+        return PlanStep.objects.get(plan__run=run)
+
+    def _prisili(self, monkeypatch, kind: E.ActivityKind):
+        """Vrsta aktivnosti se bira, ne čeka — inače test meri raspored, ne kod."""
+        pravi = engine.decide
+
+        def lazna(snap):
+            d = pravi(snap)
+            return replace(d, decision=E.WakeDecision.ACT,
+                           reason=E.DecisionReason.OPERATOR_TASK, kind=kind)
+
+        monkeypatch.setattr(service.engine, "decide", lazna)
+
+    def test_bez_registrovanog_posla_korak_je_skipped(self, mila, monkeypatch):
+        self._prisili(monkeypatch, E.ActivityKind.RESEARCH)
+        run = service.wake(mila, E.WakePriority.OPERATOR_TASK,
+                           now=_utc("2026-09-21T09:40"))
+        korak = self._korak(run)
+        assert korak.status == E.StepStatus.SKIPPED
+        assert "nema registrovan posao" in korak.description.lower()
+        assert korak.output_json.get("skipped_reason", "").startswith("no_job_registered")
+
+    def test_post_ostaje_done_jer_za_njega_posao_postoji(self, mila, monkeypatch):
+        self._prisili(monkeypatch, E.ActivityKind.POST)
+        run = service.wake(mila, E.WakePriority.OPERATOR_TASK,
+                           now=_utc("2026-09-21T09:40"))
+        korak = self._korak(run)
+        assert korak.status == E.StepStatus.DONE
+        assert "skipped_reason" not in korak.output_json
+
+    @pytest.mark.parametrize("kind", [
+        E.ActivityKind.READ, E.ActivityKind.RESEARCH, E.ActivityKind.WORK,
+        E.ActivityKind.SOCIAL, E.ActivityKind.INBOX,
+    ])
+    def test_nijedna_druga_vrsta_nema_posao(self, mila, monkeypatch, kind):
+        """Spisak je jedno mesto — ako se neko doda, ovde se vidi."""
+        self._prisili(monkeypatch, kind)
+        run = service.wake(mila, E.WakePriority.OPERATOR_TASK,
+                           now=_utc("2026-09-21T09:40"))
+        assert self._korak(run).status == E.StepStatus.SKIPPED
+
+    def test_spisak_poslova_sadrzi_tacno_post(self):
+        """Merenje 30.09.: `has_job = False` je prošao sve četiri kapije.
+
+        Ovaj test je jedini koji bi ga oborio nad samim spiskom.
+        """
+        assert service._REGISTERED_JOB == {E.ActivityKind.POST}
