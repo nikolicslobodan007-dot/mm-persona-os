@@ -148,7 +148,12 @@ pod ovakvim uputstvom popustiti sve odjednom:
   (`test_podrazumevane_brojke`, `test_plafon_nije_prva_kocnica`); ukupno **1105**
   (prebrojano, ne izračunato: ADR-0061 je stao na 1095, pa je 8 provera iz
   `test_behaviour.py` došlo posle njega — 1095 + 8 + 2).
-- P-00027 na `TSK-01M3Q5GV73QRFVXWAYHSNDCXKJ` ima **6 pokušaja od 8** umesto 1 od 3.
+- ~~P-00027 na `TSK-01M3Q5GV73QRFVXWAYHSNDCXKJ` ima **6 pokušaja od 8** umesto 1 od 3.~~
+  **Ispravka 30.09. u 14:56:** taj zadatak je **DONE** od 30.09. — Lazarova zakrpa
+  je prihvaćena (`120383f`) i grana spojena. Nova granica na njega ne deluje nego
+  na prvi sledeći zadatak. Red je prepisan iz ADR-0061 („ima još jedan pokušaj od
+  tri") bez provere da se stanje u međuvremenu promenilo; `pisac --zasto` bi to
+  rekao za dve sekunde.
 - Ključevi za Réku, Aminu i Teodoru — ljudska ruka, posle prihvatanja.
 - **Otvoreno ovim:** ADR-0061 je odbacio alat „pročitaj fajl kad ti zatreba" uz
   obrazloženje „svoja odluka sa svojim troškom". Trošak više nije argument; ostaje
@@ -177,3 +182,9 @@ popuštanje svega. §5 postoji zato što popuštanje nije poslušnost: od šest 
 koje su izgledale kao štednja, tri su bile o uskosti zadatka i kontekstu, a ne o
 novcu. **Kad padne jedan razlog, proverava se koja granica je na njemu stajala —
 ne dižu se sve ruke.**
+
+**Peta** (dopisano 30.09. u 14:56, posle sopstvene greške u ovom istom ADR-u):
+posledicu sam prepisao iz ADR-0061 umesto da je izmerim, a između dva ADR-a je
+zadatak završen. **Rečenica iz jučerašnjeg dokumenta je tvrdnja o jučerašnjem
+stanju**, ne činjenica — i kad se prepiše bez provere, dokument koji beleži naše
+kvarove i sam postane jedan.
