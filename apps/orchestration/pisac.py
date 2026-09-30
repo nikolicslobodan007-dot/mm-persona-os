@@ -210,6 +210,15 @@ def _prompt(zadatak: CodeTask) -> tuple[str, dict]:
         "KAPIJE KOJE MORAJU DA PROĐU: " + ", ".join(b["required_gates"]),
         "ZAŠTIĆENE ZONE (nikada): " + ", ".join(b["protected_paths"]),
     ]
+    if b.get("reference"):
+        # ADR-0061 — zaštićena zona zabranjuje izmenu, ne čitanje. Bez ovoga je
+        # 30.09. P-00027 vratio prozu umesto zakrpe, jer nije mogao da potvrdi da
+        # `E.StepStatus.SKIPPED` postoji, a ADR-0033 mu zabranjuje da pretpostavi.
+        delovi += ["", "REČNIK — SMEŠ DA GA ČITAŠ, NE SMEŠ DA GA MENJAŠ.",
+                   "Ako ti treba član enuma ili šifra, ovde piše koji postoje. "
+                   "Nemoj da pretpostavljaš; ako ga ovde nema, kaži to."]
+        for r in b["reference"]:
+            delovi += [f"--- {r['path']} (samo za čitanje) ---", r["content"], ""]
     if b["truncated"]:
         delovi += ["", "NISI DOBIO SVE — ovo je izostavljeno i zašto:"]
         delovi += [f"  · {t['path']}: {t['reason']}" for t in b["truncated"]]

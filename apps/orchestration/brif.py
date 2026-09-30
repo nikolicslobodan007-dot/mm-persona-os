@@ -20,6 +20,7 @@ Tri stvari koje brif namerno radi:
 from __future__ import annotations
 
 import hashlib
+import re
 from pathlib import Path
 
 from django.conf import settings
@@ -44,6 +45,22 @@ BINARNE = frozenset({
 })
 PRESKOCI_DIR = frozenset({".git", "__pycache__", "node_modules", ".ruff_cache",
                           ".pytest_cache", "staticfiles", "media"})
+
+#: ADR-0061 — fajlovi koje pisac uvek dobija **da ih pročita**, bez obzira na
+#: dozvoljene putanje, i koje ne sme da menja.
+#:
+#: `common/enums.py` je rečnik celog sistema (Canon §20): svaka zakrpa koja
+#: imenuje status, ishod ili šifru greške mora da vidi koji članovi postoje.
+#: 30.09. je P-00027 vratio prozu umesto zakrpe jer nije mogao da potvrdi da
+#: `E.StepStatus.SKIPPED` postoji, a ADR-0033 mu zabranjuje da pretpostavi.
+#: Zaštićena zona zabranjuje **izmenu**, ne čitanje — `code.read` je L0 za sve.
+REFERENCA: tuple[str, ...] = ("common/enums.py",)
+
+#: Iz referentnih `.py` fajlova ide **izvod**, ne ceo tekst: pisac traži rečnik,
+#: ne prozu. Mereno 30.09. na `common/enums.py`: ceo fajl 41.552 B (20,8 % od
+#: `MAX_TOTAL_BYTES`), izvod 15.874 B (7,9 %) — i sadrži sve članove.
+_KLASA = re.compile(r"^class \w+")
+_CLAN = re.compile(r"^    [A-Z][A-Z0-9_]* = ")
 
 
 def _koren() -> Path:
@@ -85,6 +102,45 @@ def _procitaj(f: Path) -> tuple[str, str] | None:
     except UnicodeDecodeError:
         return None
     return tekst, hashlib.sha256(sirovo).hexdigest()
+
+
+def _izvod_enuma(tekst: str) -> str:
+    """Iz `.py` fajla vadi samo zaglavlja klasa i članove u velikim slovima.
+
+    Pisac treba da zna **koji članovi postoje**, ne zašto. Dokumentacija i telo
+    metoda su tri četvrtine fajla i nijedan od njih ne odgovara na pitanje zbog
+    kog je ADR-0061 napisan.
+    """
+    izlaz, u_klasi = [], False
+    for red in tekst.splitlines():
+        if _KLASA.match(red):
+            izlaz.append(red)
+            u_klasi = True
+        elif u_klasi and _CLAN.match(red):
+            izlaz.append(red)
+        elif red and not red.startswith((" ", ")")):
+            u_klasi = False
+    return "\n".join(izlaz) + "\n" if izlaz else tekst
+
+
+def _referenca(koren: Path) -> list[dict]:
+    """Fajlovi koje pisac sme da čita a ne sme da menja. ADR-0061."""
+    redovi = []
+    for rel in REFERENCA:
+        f = (koren / rel).resolve()
+        if not (f.is_file() and (f == koren or koren in f.parents)):
+            continue
+        procitano = _procitaj(f)
+        if procitano is None:
+            continue
+        tekst, otisak = procitano
+        redovi.append({
+            "path": rel,
+            "sha256": otisak,
+            "content": _izvod_enuma(tekst) if f.suffix == ".py" else tekst,
+            "read_only": True,
+        })
+    return redovi
 
 
 def _nalazi(zadatak: CodeTask) -> list[dict]:
@@ -193,6 +249,18 @@ def build(zadatak: CodeTask) -> dict:
     # to se kaže u `truncated` — plafon se ne podiže tiho (ADR-0041 §1).
     prethodna = _prethodna(zadatak)
     zauzeto = len(prethodna["diff"].encode("utf-8")) if prethodna else 0
+    # ADR-0061 — referenca ulazi u isti plafon kao i sve ostalo. Ne dodaje se
+    # „pored" budžeta: tada bi rasla dok neko ne primeti. Ono što ne stane ne
+    # nestaje tiho nego ide u `truncated`, kao i svaki drugi fajl.
+    referenca: list[dict] = []
+    for r in _referenca(koren):
+        velicina = len(r["content"].encode("utf-8"))
+        if zauzeto + velicina > MAX_TOTAL_BYTES:
+            odsečeno.append({"path": r["path"],
+                             "reason": "rečnik nije stao u ukupan plafon"})
+            continue
+        zauzeto += velicina
+        referenca.append(r)
     plafon = MAX_TOTAL_BYTES - zauzeto
 
     for f in _kandidati(zadatak):
@@ -230,6 +298,7 @@ def build(zadatak: CodeTask) -> dict:
         "allowed_paths": list(zadatak.allowed_paths),
         "required_gates": list(zadatak.required_gates),
         "protected_paths": list(policy.config.protected_paths()),
+        "reference": referenca,
         "files": fajlovi,
         "files_from": IZVOR_FAJLOVA,
         "previous_patch": prethodna,

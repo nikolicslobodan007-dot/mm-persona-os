@@ -385,3 +385,38 @@ class TestIshodRanijeZakrpe:
             p2 = zakrpa.zabelezi_neuspeh(z, persona=mila, tekst="proza",
                                          razlog="model nije vratio diff", od_modela=True)
         assert brif.build(z)["previous_patch"]["patch_id"] == str(p2.pk)
+
+
+class TestRecnikUBrifu:
+    """ADR-0061 — zaštićena zona zabranjuje izmenu, ne čitanje.
+
+    30.09. je P-00027 vratio prozu umesto zakrpe: *„pretpostavljam da `SKIPPED`
+    postoji u `common/enums.py` jer ga zaštićena zona sadrži, ali ne mogu da je
+    gledam"*. Odbio je da pretpostavi, što mu ADR-0033 i nalaže, a brif mu je
+    uskratio jedinu činjenicu koja mu je trebala.
+    """
+
+    def test_recnik_je_u_brifu_iako_je_zasticena_zona(self, db):
+        b = brif.build(_zadatak(["apps/orchestration"]))
+        putanje = [r["path"] for r in b["reference"]]
+        assert "common/enums.py" in putanje
+        assert "common/enums.py" in b["protected_paths"], "i dalje se ne sme menjati"
+
+    def test_recnik_nosi_clanove_a_ne_prozu(self, db):
+        b = brif.build(_zadatak(["apps/orchestration"]))
+        tekst = next(r["content"] for r in b["reference"]
+                     if r["path"] == "common/enums.py")
+        assert "class StepStatus" in tekst
+        assert "SKIPPED" in tekst, "ovo je član zbog kog je ADR napisan"
+        assert '"""' not in tekst, "dokumentacija ne ide — pisac traži rečnik"
+
+    def test_recnik_je_oznacen_kao_samo_za_citanje(self, db):
+        b = brif.build(_zadatak(["apps/orchestration"]))
+        assert all(r["read_only"] is True for r in b["reference"])
+
+    def test_recnik_ulazi_u_plafon_i_kad_ne_stane_kaze_se(self, db, monkeypatch):
+        monkeypatch.setattr(brif, "MAX_TOTAL_BYTES", 3000)
+        b = brif.build(_zadatak(["apps/orchestration"]))
+        assert b["reference"] == []
+        assert any("rečnik" in t["reason"] for t in b["truncated"])
+        assert b["bytes"] <= 3000
