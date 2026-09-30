@@ -48,6 +48,14 @@ _STEP_TYPE = {
     E.ActivityKind.INBOX: E.StepType.REVIEW,
 }
 
+#: Vrste aktivnosti za koje postoji registrovan posao koji stvara spoljni
+#: efekat (ADR-0059). Samo `POST` ima takav posao — `schedule_draft`, zakazan
+#: kroz `transaction.on_commit`. Za sve ostale vrste, korak se upisuje kao
+#: SKIPPED sa razlogom: aktivnost je interna, ali se to ne sme predstaviti
+#: kao obavljen posao (status DONE bi lagao stanje persone i istoriju).
+_REGISTERED_JOB = {
+    E.ActivityKind.POST,
+}
 
 class PersonaBusy(Exception):
     """Persona nije u stanju koje dozvoljava ovo buđenje."""
@@ -196,14 +204,21 @@ def _persist(persona, state, d: engine.Decision, reason, seed, now, wake_key, ev
             status=E.PlanStatus.COMPLETED,
             priority=E.WAKE_PRIORITY_VALUE[reason],
         )
+        has_job = d.kind in _REGISTERED_JOB
         PlanStep.objects.create(
             plan=plan, sequence=1, step_type=_STEP_TYPE[d.kind].value,
             description=("Nacrt objave; objava ide kroz policy i odobrenje (F7)."
-                         if d.kind == E.ActivityKind.POST else
-                         f"Interna aktivnost '{d.kind.value}' — bez spoljnog efekta."),
-            status=E.StepStatus.DONE,
+                         if has_job else
+                         f"Nema registrovan posao za aktivnost '{d.kind.value}' — "
+                         "korak nije izvršen, samo interno stanje je promenjeno."),
+            status=E.StepStatus.DONE if has_job else E.StepStatus.SKIPPED,
             input_json={"activity": d.kind.value},
-            output_json={"attention_cost": E.ACTIVITY_ATTENTION_COST[d.kind]},
+            output_json=(
+                {"attention_cost": E.ACTIVITY_ATTENTION_COST[d.kind]}
+                if has_job else
+                {"attention_cost": E.ACTIVITY_ATTENTION_COST[d.kind],
+                 "skipped_reason": f"no_job_registered_for_activity:{d.kind.value}"}
+            ),
         )
         bus.emit("plan.created", {"plan_id": plan.public_id, "step_count": 1},
                  persona_id=persona.public_id, run_id=run.public_id)
