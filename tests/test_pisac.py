@@ -38,6 +38,17 @@ ZONA = ("diff --git a/apps/policy/service.py b/apps/policy/service.py\n"
         "--- a/apps/policy/service.py\n+++ b/apps/policy/service.py\n@@ -1 +1 @@\n-a\n+b\n")
 
 
+@pytest.fixture
+def drugi_agent(db):
+    """Recenzent — autor ne piše nalaz na sopstveni rad (ADR-0034 §5.2)."""
+    from apps.personas.models import Persona
+
+    return Persona.objects.create(
+        public_id="P-09300", display_name="Recenzent",
+        persona_type=E.PersonaType.ASSISTANT, status=E.PersonaStatus.ACTIVE,
+    )
+
+
 def _ogroman(n: int = 9000) -> str:
     """Zakrpa preko `MAX_DIFF_ZNAKOVA`, sa **ispravnim** `@@` zaglavljem.
 
@@ -233,6 +244,50 @@ class TestPrekidaci:
         """
         NAJSKUPLJI_POKUSAJ_CENTI = 9          # izmereno, ne procenjeno
         assert pisac.PLAFON_CENTI > pisac.NAJVISE_POKUSAJA * NAJSKUPLJI_POKUSAJ_CENTI
+
+    def _zaglavi(self, z, mila):
+        """Dva merenja koja obaraju istu kapiju — prekidač „nema napretka"."""
+        with bind(actor_id="user:slobodan"):
+            for d in (DIFF, DRUGI):
+                p = zakrpa.submit(z, d, persona=mila, od_modela=True)
+                zadaci.record_gate(z, "pytest", False, patch=p)
+                zadaci.record_gate(z, "ruff", True, patch=p)
+
+    def test_nalaz_posle_merenja_otkljucava(self, z, mila, drugi_agent, model, ruta):
+        """ADR-0064 — ponavljanje nad novom građom nije ponavljanje.
+
+        01.10.2026. je prekidač zaustavio P-00027 tačno u trenutku kad smo mu
+        upisali nalaz koji je nedostajao. Agent je bio zaključan zbog naše
+        zakasnele informacije, a jedini izlaz je bila ljudska zakrpa — koja
+        iskrivljuje meru učinka (ADR-0042).
+        """
+        self._zaglavi(z, mila)
+        assert "nema napretka" in pisac.zasto_ne(z)
+        with bind(actor_id="user:slobodan"):
+            zadaci.add_finding(z, reviewer=drugi_agent, file="tests/test_lessons.py",
+                               claim="Stari test brani staro ponašanje.",
+                               severity=E.FindingSeverity.MAJOR.value, source="human")
+        assert pisac.zasto_ne(z) is None
+
+    def test_zatvoren_nalaz_ne_otkljucava(self, z, mila, drugi_agent, model, ruta):
+        """Zatvoren nalaz nije zadatak nego istorija."""
+        self._zaglavi(z, mila)
+        with bind(actor_id="user:slobodan"):
+            n = zadaci.add_finding(z, reviewer=drugi_agent, file="x.py", claim="c",
+                                   severity=E.FindingSeverity.MAJOR.value,
+                                   source="human")
+            n.status = E.FindingStatus.FIXED.value
+            n.save(update_fields=["status"])
+        assert "nema napretka" in pisac.zasto_ne(z)
+
+    def test_nalaz_stariji_od_merenja_ne_otkljucava(self, z, mila, drugi_agent,
+                                                   model, ruta):
+        """Nalaz koji je agent već imao u brifu nije nova građa."""
+        with bind(actor_id="user:slobodan"):
+            zadaci.add_finding(z, reviewer=drugi_agent, file="x.py", claim="c",
+                               severity=E.FindingSeverity.MAJOR.value, source="human")
+        self._zaglavi(z, mila)
+        assert "nema napretka" in pisac.zasto_ne(z)
 
     def test_iste_pale_kapije_dvaput_zaustavljaju(self, z, mila, model, ruta):
         with bind(actor_id="user:slobodan"):

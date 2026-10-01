@@ -144,6 +144,29 @@ def _izmerene_pale(zadatak: CodeTask) -> list[tuple[str, ...]]:
     return [tuple(sorted(g for g, ok in ishodi[k].items() if not ok)) for k in redosled]
 
 
+def _novo_saznanje(zadatak: CodeTask) -> bool:
+    """Da li je posle poslednjeg merenja stiglo nešto što pisac još nije video.
+
+    Prekidač „nema napretka" meri da agent **melje**: dve uzastopne zakrpe koje
+    obaraju iste kapije. To je tačno samo ako je agent oba puta imao istu građu.
+    Kad čovek posle merenja upiše nalaz (ADR-0045), brif sledećeg pokušaja nosi
+    nešto čega u prethodna dva nije bilo — pa ponavljanje više nije ponavljanje.
+
+    Bez ovoga naša zakasnela informacija trajno zaključava agenta: jedini izlaz
+    je ljudska zakrpa, a ona iskrivljuje meru učinka (ADR-0042, ADR-0053).
+    Viđeno uživo 01.10.2026. na `TSK-01M3V1NV6S82R25AMH8E6JWYNK` (ADR-0064).
+
+    Gleda se **otvoren** nalaz noviji od poslednjeg ishoda kapije: zatvoren nalaz
+    nije zadatak nego istorija, a nalaz stariji od merenja je agent već imao.
+    """
+    poslednje = (GateResult.objects.filter(task=zadatak, patch__isnull=False)
+                 .order_by("created_at").values_list("created_at", flat=True).last())
+    if poslednje is None:
+        return False
+    return zadatak.findings.filter(status=E.FindingStatus.OPEN.value,
+                                   created_at__gt=poslednje).exists()
+
+
 def zasto_ne(zadatak: CodeTask, *, plafon_centi: int = PLAFON_CENTI,
              najvise: int = NAJVISE_POKUSAJA) -> str | None:
     """Razlog zašto se novi pokušaj NE pravi, ili `None` ako sme.
@@ -171,7 +194,7 @@ def zasto_ne(zadatak: CodeTask, *, plafon_centi: int = PLAFON_CENTI,
         return f"potrošeno {trosak} od {plafon_centi} centi za ovaj zadatak"
 
     pale = _izmerene_pale(zadatak)
-    if len(pale) >= 2 and pale[-1] and pale[-1] == pale[-2]:
+    if len(pale) >= 2 and pale[-1] and pale[-1] == pale[-2] and not _novo_saznanje(zadatak):
         return ("nema napretka — dva puta zaredom padaju iste kapije: "
                 + ", ".join(pale[-1]))
 
