@@ -35,7 +35,8 @@ from .zadaci import TaskError, may_touch
 
 __all__ = ["Izmena", "Ispravka", "Nalaz", "paths_in", "prebroj_hunkove", "check",
            "submit", "zabelezi_neuspeh", "odbij_posle_provere", "pripisi_krivicu",
-           "proveri_rep", "MAX_DIFF_BYTES", "NAJMANJE_REPA"]
+           "proveri_rep", "dopuni_rep", "MAX_DIFF_BYTES", "NAJMANJE_REPA",
+           "NAJVISE_DOPUNE"]
 
 #: Gornja granica veličine zakrpe. Zakrpa preko ove mere nije izmena nego prepis,
 #: i traži da se zadatak podeli.
@@ -106,6 +107,9 @@ class Nalaz:
     #: Zakrpa sa ispravljenim zaglavljima — ona koja se čuva i primenjuje.
     diff: str = ""
     greske: list[str] = field(default_factory=list)                 # zakrpa kao celina
+    #: Repovi hunkova koje smo dopunili iz fajla (ADR-0066). Kao i `ispravke`:
+    #: ne obara zakrpu, ali se **uvek** vidi — naša ruka u tuđem radu se ne krije.
+    dopune: list[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -355,9 +359,12 @@ def check(zadatak: CodeTask, diff: str, *, persona: Persona | None = None) -> Na
     nalaz = Nalaz(diff=diff)
     try:
         nalaz.izmene = paths_in(diff)
+        # ADR-0066 — izostavljeni rep hunka se dopunjuje PRE prebrojavanja, da
+        # prebrojavanje vidi dopunjeno telo. Dopuna se ne krije: ide u `reason`.
+        dopunjen, nalaz.dopune = dopuni_rep(diff)
         # ADR-0052 — zaglavlja se prebrojavaju, i ispravljena zakrpa je ona koja
         # se dalje čuva i primenjuje. Ispravka se ne gubi: ide u `reason`.
-        nalaz.diff, nalaz.ispravke = prebroj_hunkove(diff)
+        nalaz.diff, nalaz.ispravke = prebroj_hunkove(dopunjen)
     except PatchError as e:
         nalaz.greske.append(f"{e.code}: {e}")
         return nalaz
@@ -388,6 +395,9 @@ def submit(zadatak: CodeTask, diff: str, *, persona: Persona | None = None,
     # se primeniti. Ono što je pisac napisao ostaje vidljivo kroz `reason`.
     upis = nalaz.diff or diff
     razlozi = [f"{p}: {r}" for p, r in nalaz.odbijeno]
+    if nalaz.dopune:
+        razlozi.append("repovi hunkova dopunjeni iz fajla (ADR-0066): "
+                       + "; ".join(nalaz.dopune))
     if nalaz.ispravke:
         razlozi.append(
             "zaglavlja hunkova prebrojana (ADR-0052): "
@@ -407,6 +417,7 @@ def submit(zadatak: CodeTask, diff: str, *, persona: Persona | None = None,
         details={"task": zadatak.public_id, "status": red.status,
                  "paths": nalaz.putanje, "reason": red.reason,
                  "ispravke": [str(i) for i in nalaz.ispravke],
+                 "dopune": nalaz.dopune,
                  "base": base_sha, "cena_centi": red.cost_eur_cents},
     )
     return red
@@ -590,3 +601,75 @@ def proveri_rep(diff: str, koren: Path | None = None) -> list[str]:
                     "i uračunaj ga u brojeve u `@@` zaglavlju.")
         i = j
     return greske
+
+
+#: Koliko redova repa smemo da dopunimo iz fajla (ADR-0066). Manjak veći od ovoga
+#: nije zaboravljen rep nego nešto drugo, i tada se zakrpa odbija kao i pre.
+NAJVISE_DOPUNE = 5
+
+
+def dopuni_rep(diff: str, koren: Path | None = None) -> tuple[str, list[str]]:
+    """Dopunjuje izostavljeni rep hunka doslovnim redovima iz fajla. ADR-0066.
+
+    Izmereno 01.10.2026. na pet uzastopnih pokušaja: model u zaglavlju napiše
+    `@@ -186,10`, a u telu ostavi osam starih redova i završi izmenom. Zna da
+    tamo idu još dva reda — i sam ih je izbrojao — ali ih ne otkuca. `git apply`
+    takav hunk odbija (ADR-0065).
+
+    **Ovo nije pogađanje.** Koliko redova fali kaže model svojim zaglavljem; koji
+    su to redovi kaže fajl, na poziciji koju je model deklarisao. A ako pozicija
+    nije tačna, `git` i dalje neće naći kontekst i zakrpa pada kao i do sada — kao
+    što pada i kad dopune nema. Dopuna, dakle, ne može tiho da promaši: ili se sve
+    poklopi, ili pukne isto kao pre.
+
+    Radi se **pre** `prebroj_hunkove`, da prebrojavanje vidi dopunjeno telo.
+    Vraća (zakrpa, spisak opisa) — opisi idu u `reason`, nikad se ne prećute.
+    """
+    koren = koren or _koren_slike()
+    redovi = diff.splitlines()
+    izlaz: list[str] = []
+    opisi: list[str] = []
+    put: str | None = None
+    i = 0
+    while i < len(redovi):
+        red = redovi[i]
+        izlaz.append(red)
+        if (m := _PLUS.match(red)):
+            try:
+                put = _clean(m.group("put"))
+            except PatchError:
+                put = None
+            i += 1
+            continue
+        if not (m := _HUNK.match(red)):
+            i += 1
+            continue
+        pocetak, trazeno = int(m.group("sp")), int(m.group("sk") or 1)
+        j, telo, starih = i + 1, [], 0
+        while j < len(redovi):
+            t = redovi[j]
+            if _HUNK.match(t) or t.startswith("diff --git ") or _MINUS.match(t):
+                break
+            telo.append(t)
+            if t[:1] in (" ", "-") or t == "":
+                starih += 1
+            j += 1
+        manjak = trazeno - starih
+        poslednji = telo[-1] if telo else ""
+        if (put and poslednji[:1] in ("+", "-") and 0 < manjak <= NAJVISE_DOPUNE):
+            try:
+                svi = (koren / put).read_text(encoding="utf-8").splitlines()
+            except OSError:
+                svi = []
+            # Redovi koji fale su oni odmah iza onoga što je hunk pokrio.
+            od, do = pocetak - 1 + starih, pocetak - 1 + trazeno
+            if svi and do <= len(svi):
+                telo += [" " + x for x in svi[od:do]]
+                opisi.append(
+                    f"{put}: hunku u redu {i + 1} dopisano {manjak} red(ova) "
+                    f"konteksta iz fajla (redovi {od + 1}–{do}), jer je zaglavlje "
+                    f"tražilo {trazeno} starih redova a telo dalo {starih} "
+                    "(ADR-0066)")
+        izlaz += telo
+        i = j
+    return ("\n".join(izlaz) + ("\n" if diff.endswith("\n") else "")), opisi

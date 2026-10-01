@@ -583,3 +583,75 @@ class TestRepHunka:
             "@@ -20,3 +20,3 @@", " red 20", "-red 21", "+drugi novi"]) + "\n"
         greske = zakrpa.proveri_rep(d, tmp_path)
         assert len(greske) == 1 and "red 7" not in greske[0]
+
+
+class TestDopunaRepa:
+    """ADR-0066 — izostavljeni rep hunka se dopunjuje iz fajla.
+
+    01.10.2026., pet uzastopnih pokušaja: model napiše `@@ -186,10`, a u telu
+    ostavi osam starih redova i završi izmenom. Sam je izbrojao da tamo idu još
+    dva reda — samo ih nije otkucao. Koliko fali kaže njegovo zaglavlje, koji su
+    to redovi kaže fajl. Dokazano nad pravim `git`-om: sirova zakrpa se odbija,
+    dopunjena prolazi.
+    """
+
+    def _fajl(self, tmp_path, redova=20):
+        (tmp_path / "apps").mkdir(parents=True, exist_ok=True)
+        (tmp_path / "apps" / "x.py").write_text(
+            "\n".join(f"red {i}" for i in range(1, redova + 1)) + "\n", encoding="utf-8")
+
+    def _diff(self, *, trazeno: int, pocetak: int = 5) -> str:
+        telo = [" red 5", " red 6", "-red 7", "+novi red"]
+        return "\n".join(["--- a/apps/x.py", "+++ b/apps/x.py",
+                          f"@@ -{pocetak},{trazeno} +{pocetak},3 @@"] + telo) + "\n"
+
+    def test_dopunjuje_manjak_iz_fajla(self, tmp_path):
+        self._fajl(tmp_path)
+        nov, opisi = zakrpa.dopuni_rep(self._diff(trazeno=5), tmp_path)
+        assert nov.splitlines()[-2:] == [" red 8", " red 9"]
+        assert len(opisi) == 1 and "dopisano 2 red" in opisi[0]
+
+    def test_posle_dopune_rep_vise_ne_fali(self, tmp_path):
+        self._fajl(tmp_path)
+        nov, _ = zakrpa.dopuni_rep(self._diff(trazeno=5), tmp_path)
+        assert zakrpa.proveri_rep(nov, tmp_path) == []
+
+    def test_bez_manjka_se_ne_dira(self, tmp_path):
+        self._fajl(tmp_path)
+        d = self._diff(trazeno=3)
+        nov, opisi = zakrpa.dopuni_rep(d, tmp_path)
+        assert nov == d and opisi == []
+
+    def test_prevelik_manjak_se_ne_dopunjuje(self, tmp_path):
+        """Manjak preko granice nije zaboravljen rep nego nešto drugo."""
+        self._fajl(tmp_path)
+        d = self._diff(trazeno=3 + zakrpa.NAJVISE_DOPUNE + 1)
+        nov, opisi = zakrpa.dopuni_rep(d, tmp_path)
+        assert nov == d and opisi == []
+
+    def test_fajl_koji_se_ne_vidi_se_ne_dopunjuje(self, tmp_path):
+        nov, opisi = zakrpa.dopuni_rep(self._diff(trazeno=5), tmp_path)
+        assert opisi == []
+
+    def test_dopuna_ne_ide_preko_kraja_fajla(self, tmp_path):
+        """Zaglavlje koje traži više redova nego što fajl ima se ne izmišlja."""
+        self._fajl(tmp_path, redova=7)
+        nov, opisi = zakrpa.dopuni_rep(self._diff(trazeno=5), tmp_path)
+        assert opisi == []
+
+    def test_dopuna_se_vidi_u_razlogu(self, z, mila, db):
+        """Naša ruka u tuđem radu se ne krije — ide u `reason` (ADR-0053)."""
+        from pathlib import Path
+
+        from django.conf import settings
+
+        from apps.orchestration.models import TaskPatch
+        fajl = Path(settings.BASE_DIR) / "apps/content/steps.py"
+        redovi = fajl.read_text(encoding="utf-8").splitlines()
+        telo = [" " + redovi[4], " " + redovi[5], "-" + redovi[6], "+# izmena"]
+        d = "\n".join(["--- a/apps/content/steps.py", "+++ b/apps/content/steps.py",
+                        "@@ -5,5 @@".replace("@@ -5,5 @@", "@@ -5,5 +5,3 @@")] + telo) + "\n"
+        with bind(actor_id="user:slobodan"):
+            zakrpa.submit(z, d, persona=mila)
+        red = TaskPatch.objects.order_by("-created_at").first()
+        assert "ADR-0066" in red.reason, red.reason
