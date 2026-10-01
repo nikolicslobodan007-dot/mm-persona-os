@@ -655,3 +655,97 @@ class TestDopunaRepa:
             zakrpa.submit(z, d, persona=mila)
         red = TaskPatch.objects.order_by("-created_at").first()
         assert "ADR-0066" in red.reason, red.reason
+
+
+class TestUsidri:
+    """ADR-0067 — zaglavlje se pomera na mesto gde telo zaista stoji.
+
+    01.10.2026.: model je deklarisao `@@ -186,9`, a telo je stajalo na redu 201.
+    `git` to ne primećuje — traži telo po sadržaju i prijavi `offset 15 lines`.
+    Ali `dopuni_rep` (ADR-0066) čita fajl po broju iz zaglavlja, pa je na
+    ispravno telo dopisao red sa pogrešnog mesta i napravio zakrpu koja se ne
+    primenjuje nigde. Zato se sidri prvo, i to po sadržaju kao i `git`.
+    """
+
+    def _fajl(self, tmp_path, puta=1):
+        (tmp_path / "apps").mkdir(parents=True, exist_ok=True)
+        blok = [f"red {i}" for i in range(1, 21)]
+        (tmp_path / "apps" / "x.py").write_text(
+            "\n".join(blok * puta) + "\n", encoding="utf-8")
+
+    def _diff(self, *, pocetak: int, trazeno: int = 3) -> str:
+        telo = [" red 10", " red 11", "-red 12", "+novi red"]
+        return "\n".join(["--- a/apps/x.py", "+++ b/apps/x.py",
+                          f"@@ -{pocetak},{trazeno} +{pocetak},3 @@"] + telo) + "\n"
+
+    def test_pogresan_pocetak_se_pomera_na_pravo_mesto(self, tmp_path):
+        self._fajl(tmp_path)
+        nov, opisi = zakrpa.usidri(self._diff(pocetak=3), tmp_path)
+        assert nov.splitlines()[2] == "@@ -10,3 +10,3 @@"
+        assert len(opisi) == 1 and "+7" in opisi[0] and "ADR-0067" in opisi[0]
+
+    def test_tacan_pocetak_se_ne_dira(self, tmp_path):
+        self._fajl(tmp_path)
+        d = self._diff(pocetak=10)
+        nov, opisi = zakrpa.usidri(d, tmp_path)
+        assert nov == d and opisi == []
+
+    def test_telo_na_dva_mesta_se_ne_dira(self, tmp_path):
+        """Dva mesta znače da bismo birali — a biranje je pogađanje."""
+        self._fajl(tmp_path, puta=2)
+        d = self._diff(pocetak=3)
+        nov, opisi = zakrpa.usidri(d, tmp_path)
+        assert nov == d and opisi == []
+
+    def test_telo_koje_se_ne_nalazi_se_ne_dira(self, tmp_path):
+        self._fajl(tmp_path)
+        d = self._diff(pocetak=3).replace("red 11", "red kojeg nema")
+        nov, opisi = zakrpa.usidri(d, tmp_path)
+        assert nov == d and opisi == []
+
+    def test_fajl_koji_se_ne_vidi_se_ne_dira(self, tmp_path):
+        d = self._diff(pocetak=3)
+        nov, opisi = zakrpa.usidri(d, tmp_path)
+        assert nov == d and opisi == []
+
+    def test_prekratko_telo_se_ne_sidri(self, tmp_path):
+        self._fajl(tmp_path)
+        d = "\n".join(["--- a/apps/x.py", "+++ b/apps/x.py", "@@ -3,1 +3,1 @@",
+                       "-red 12", "+novi red"]) + "\n"
+        nov, opisi = zakrpa.usidri(d, tmp_path)
+        assert nov == d and opisi == []
+
+    def test_bez_sidrenja_dopuna_uzima_red_sa_pogresnog_mesta(self, tmp_path):
+        """Kvar od 01.10.2026., reprodukovan: dopuna veruje broju iz zaglavlja."""
+        self._fajl(tmp_path)
+        nov, _ = zakrpa.dopuni_rep(self._diff(pocetak=3, trazeno=4), tmp_path)
+        assert nov.splitlines()[-1] == " red 6"
+
+    def test_posle_sidrenja_dopuna_uzima_rep_sa_pravog_mesta(self, tmp_path):
+        """Isti ulaz, ali usidren — rep dolazi odande gde telo stvarno stoji."""
+        self._fajl(tmp_path)
+        usidren, _ = zakrpa.usidri(self._diff(pocetak=3, trazeno=4), tmp_path)
+        nov, opisi = zakrpa.dopuni_rep(usidren, tmp_path)
+        assert nov.splitlines()[-1] == " red 13"
+        assert len(opisi) == 1 and "redovi 13–13" in opisi[0]
+
+    def test_sidrenje_se_vidi_u_razlogu(self, z, mila, db):
+        """Naša ruka u tuđem radu se ne krije — ide u `reason` (ADR-0053)."""
+        from pathlib import Path
+
+        from django.conf import settings
+
+        from apps.orchestration.models import TaskPatch
+        redovi = (Path(settings.BASE_DIR) / "apps/content/steps.py").read_text(
+            encoding="utf-8").splitlines()
+        blok = redovi[19:22]
+        assert sum(1 for k in range(len(redovi) - 2) if redovi[k:k + 3] == blok) == 1, (
+            "fikstur traži da ova tri reda budu jedinstvena u fajlu")
+        telo = [" " + blok[0], " " + blok[1], "-" + blok[2], "+# izmena"]
+        d = "\n".join(["--- a/apps/content/steps.py", "+++ b/apps/content/steps.py",
+                       "@@ -5,3 +5,3 @@"] + telo) + "\n"
+        with bind(actor_id="user:slobodan"):
+            zakrpa.submit(z, d, persona=mila)
+        red = TaskPatch.objects.order_by("-created_at").first()
+        assert "ADR-0067" in red.reason, red.reason
+        assert red.diff.splitlines()[2].startswith("@@ -20,"), red.diff

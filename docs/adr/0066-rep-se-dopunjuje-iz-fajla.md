@@ -58,6 +58,14 @@ stoji**, i evo zašto:
   pada — isto kao da dopune nema. Dopuna ne može tiho da promaši: ili se sve
   poklopi, ili pukne kao pre.
 
+> **Ispravka, 01.10.2026. popodne (ADR-0067).** Druga i treća alineja ne stoje.
+> Pozicija iz zaglavlja **jeste** bila pogrešna — telo je stajalo 15 redova niže
+> — pa je dopuna dopisala red sa tuđeg mesta. Zakrpa jeste pukla, kao što je
+> ovde predviđeno, ali je `reason` prijavio **uspešnu dopunu**: mera je lagala o
+> svom postupku iako nije pogrešila o ishodu. Izmereno je i da `git` uopšte ne
+> čita broj iz zaglavlja nego traži telo po sadržaju. Od ADR-0067, `usidri` radi
+> pre dopune i dopuna više ne čita deklarisanu poziciju nego nađenu.
+
 Razlika u odnosu na podne nije u rezonovanju nego u merenju: tada sam mislio da
 rep fali slučajno, a izmereno je da fali **sistematski**, i da model uz manjak
 sam prilaže i njegovu veličinu. Odluka doneta nad pogrešnom pretpostavkom se

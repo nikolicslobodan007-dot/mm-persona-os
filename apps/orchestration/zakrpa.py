@@ -35,8 +35,8 @@ from .zadaci import TaskError, may_touch
 
 __all__ = ["Izmena", "Ispravka", "Nalaz", "paths_in", "prebroj_hunkove", "check",
            "submit", "zabelezi_neuspeh", "odbij_posle_provere", "pripisi_krivicu",
-           "proveri_rep", "dopuni_rep", "MAX_DIFF_BYTES", "NAJMANJE_REPA",
-           "NAJVISE_DOPUNE"]
+           "proveri_rep", "dopuni_rep", "usidri", "MAX_DIFF_BYTES",
+           "NAJMANJE_REPA", "NAJVISE_DOPUNE", "NAJMANJE_SIDRA"]
 
 #: Gornja granica veličine zakrpe. Zakrpa preko ove mere nije izmena nego prepis,
 #: i traži da se zadatak podeli.
@@ -110,6 +110,8 @@ class Nalaz:
     #: Repovi hunkova koje smo dopunili iz fajla (ADR-0066). Kao i `ispravke`:
     #: ne obara zakrpu, ali se **uvek** vidi — naša ruka u tuđem radu se ne krije.
     dopune: list[str] = field(default_factory=list)
+    #: Zaglavlja koja smo pomerili na mesto gde telo hunka zaista stoji (ADR-0067).
+    sidra: list[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -359,9 +361,14 @@ def check(zadatak: CodeTask, diff: str, *, persona: Persona | None = None) -> Na
     nalaz = Nalaz(diff=diff)
     try:
         nalaz.izmene = paths_in(diff)
+        # ADR-0067 — PRVO sidrenje: broj u `@@` je model deklarisao i ume da bude
+        # pogrešan, a `git` ga ionako ne čita nego traži telo po sadržaju. Sve
+        # što posle ovoga čita fajl „na poziciji iz zaglavlja" mora da gleda
+        # pravu poziciju, inače dopisuje tuđe redove (kvar od 01.10.2026.).
+        usidren, nalaz.sidra = usidri(diff)
         # ADR-0066 — izostavljeni rep hunka se dopunjuje PRE prebrojavanja, da
         # prebrojavanje vidi dopunjeno telo. Dopuna se ne krije: ide u `reason`.
-        dopunjen, nalaz.dopune = dopuni_rep(diff)
+        dopunjen, nalaz.dopune = dopuni_rep(usidren)
         # ADR-0052 — zaglavlja se prebrojavaju, i ispravljena zakrpa je ona koja
         # se dalje čuva i primenjuje. Ispravka se ne gubi: ide u `reason`.
         nalaz.diff, nalaz.ispravke = prebroj_hunkove(dopunjen)
@@ -395,6 +402,9 @@ def submit(zadatak: CodeTask, diff: str, *, persona: Persona | None = None,
     # se primeniti. Ono što je pisac napisao ostaje vidljivo kroz `reason`.
     upis = nalaz.diff or diff
     razlozi = [f"{p}: {r}" for p, r in nalaz.odbijeno]
+    if nalaz.sidra:
+        razlozi.append("zaglavlja hunkova usidrena po sadržaju (ADR-0067): "
+                       + "; ".join(nalaz.sidra))
     if nalaz.dopune:
         razlozi.append("repovi hunkova dopunjeni iz fajla (ADR-0066): "
                        + "; ".join(nalaz.dopune))
@@ -417,7 +427,7 @@ def submit(zadatak: CodeTask, diff: str, *, persona: Persona | None = None,
         details={"task": zadatak.public_id, "status": red.status,
                  "paths": nalaz.putanje, "reason": red.reason,
                  "ispravke": [str(i) for i in nalaz.ispravke],
-                 "dopune": nalaz.dopune,
+                 "dopune": nalaz.dopune, "sidra": nalaz.sidra,
                  "base": base_sha, "cena_centi": red.cost_eur_cents},
     )
     return red
@@ -541,6 +551,33 @@ def _koren_slike() -> Path:
     return Path(settings.BASE_DIR).resolve()
 
 
+def _telo_hunka(redovi: list[str], i: int) -> tuple[int, list[str]]:
+    """Telo hunka koji počinje zaglavljem u redu `i`; vraća (kraj, telo).
+
+    Telo ide do sledećeg zaglavlja, sledećeg fajla ili kraja zakrpe. Isti rez
+    koriste `proveri_rep`, `dopuni_rep` i `usidri` — tri čitanja istog tela
+    po tri pravila razilaze se već pri prvoj izmeni (ADR-0067).
+    """
+    j, telo = i + 1, []
+    while j < len(redovi):
+        t = redovi[j]
+        if _HUNK.match(t) or t.startswith("diff --git ") or _MINUS.match(t):
+            break
+        telo.append(t)
+        j += 1
+    return j, telo
+
+
+def _stari_redovi(telo: list[str]) -> list[str]:
+    """Redovi koje hunk očekuje da zatekne u fajlu, bez oznake.
+
+    Prazan red u telu je kontekst kome je neko usput pojeo vodeći razmak —
+    računa se kao prazan red fajla, ne kao ništa.
+    """
+    return [("" if t == "" else t[1:]) for t in telo
+            if t == "" or t[:1] in (" ", "-")]
+
+
 def proveri_rep(diff: str, koren: Path | None = None) -> list[str]:
     """Hunk koji se završava izmenjenim redom `git apply` odbija. ADR-0065.
 
@@ -576,15 +613,9 @@ def proveri_rep(diff: str, koren: Path | None = None) -> list[str]:
             continue
         pocetak = int(m.group("sp"))
         starih = int(m.group("sk") or 1)
-        # Telo hunka: do sledećeg zaglavlja, sledećeg fajla ili kraja.
-        j, poslednji = i + 1, ""
-        while j < len(redovi):
-            t = redovi[j]
-            if _HUNK.match(t) or t.startswith("diff --git ") or _MINUS.match(t):
-                break
-            if t[:1] in ("+", "-", " ") or t == "":
-                poslednji = t
-            j += 1
+        j, telo = _telo_hunka(redovi, i)
+        poslednji = next((t for t in reversed(telo)
+                          if t[:1] in ("+", "-", " ") or t == ""), "")
         if poslednji[:1] in ("+", "-") and put:
             fajl = (koren / put)
             try:
@@ -645,15 +676,8 @@ def dopuni_rep(diff: str, koren: Path | None = None) -> tuple[str, list[str]]:
             i += 1
             continue
         pocetak, trazeno = int(m.group("sp")), int(m.group("sk") or 1)
-        j, telo, starih = i + 1, [], 0
-        while j < len(redovi):
-            t = redovi[j]
-            if _HUNK.match(t) or t.startswith("diff --git ") or _MINUS.match(t):
-                break
-            telo.append(t)
-            if t[:1] in (" ", "-") or t == "":
-                starih += 1
-            j += 1
+        j, telo = _telo_hunka(redovi, i)
+        starih = len(_stari_redovi(telo))
         manjak = trazeno - starih
         poslednji = telo[-1] if telo else ""
         if (put and poslednji[:1] in ("+", "-") and 0 < manjak <= NAJVISE_DOPUNE):
@@ -670,6 +694,82 @@ def dopuni_rep(diff: str, koren: Path | None = None) -> tuple[str, list[str]]:
                     f"konteksta iz fajla (redovi {od + 1}–{do}), jer je zaglavlje "
                     f"tražilo {trazeno} starih redova a telo dalo {starih} "
                     "(ADR-0066)")
+        izlaz += telo
+        i = j
+    return ("\n".join(izlaz) + ("\n" if diff.endswith("\n") else "")), opisi
+
+
+#: Koliko najmanje starih redova hunk mora da ponudi da bi se uopšte tražio po
+#: sadržaju (ADR-0067). Jedan red se u fajlu ponavlja previše lako; jedinstvenost
+#: ishoda i dalje odlučuje, ovo je samo prag ispod kog se ne isplati ni gledati.
+NAJMANJE_SIDRA = 2
+
+
+def usidri(diff: str, koren: Path | None = None) -> tuple[str, list[str]]:
+    """Pomera `@@` zaglavlje na mesto gde telo hunka zaista stoji. ADR-0067.
+
+    Broj u `@@ -186,9` deklariše model i ume da ga promaši: 01.10.2026. je telo
+    bilo tačno bajt po bajt, a stajalo je na redu **201**. Samom `git`-u to ne
+    smeta — on ne čita broj nego traži telo po sadržaju i prijavi `offset 15
+    lines`. Smeta **nama**: `dopuni_rep` (ADR-0066) čita fajl „na poziciji iz
+    zaglavlja", pa je na ispravno telo zalepio red sa pogrešnog mesta i tako od
+    bezopasne greške napravio zakrpu koja se ne primenjuje nigde.
+
+    Zato se sidri prvo, i to po istom merilu po kom sudi `git`: telo se traži u
+    fajlu, i pomera se **samo ako se nađe na tačno jednom mestu**. Nula mesta ili
+    više njih — ništa se ne dira i zakrpa pada kao i do sada. Pogađanja nema:
+    poziciju ne biramo nego je nalazimo, a jedinstven nalaz nije izbor.
+
+    Vraća (zakrpa, spisak opisa); opisi idu u `reason` i `audit` — naša ruka u
+    tuđem radu se ne krije (ADR-0052, ADR-0066).
+    """
+    koren = koren or _koren_slike()
+    redovi = diff.splitlines()
+    izlaz: list[str] = []
+    opisi: list[str] = []
+    kes: dict[str, list[str]] = {}
+    put: str | None = None
+    i = 0
+    while i < len(redovi):
+        red = redovi[i]
+        if (m := _PLUS.match(red)):
+            try:
+                put = _clean(m.group("put"))
+            except PatchError:
+                put = None
+            izlaz.append(red)
+            i += 1
+            continue
+        if not (m := _HUNK.match(red)):
+            izlaz.append(red)
+            i += 1
+            continue
+        j, telo = _telo_hunka(redovi, i)
+        stari = _stari_redovi(telo)
+        pocetak = int(m.group("sp"))
+        if put and pocetak > 0 and len(stari) >= NAJMANJE_SIDRA:
+            if (svi := kes.get(put)) is None:
+                try:
+                    svi = (koren / put).read_text(encoding="utf-8").splitlines()
+                except OSError:
+                    svi = []
+                kes[put] = svi
+            # Ako telo već stoji tamo gde zaglavlje kaže, nema šta da se sidri.
+            if svi and svi[pocetak - 1:pocetak - 1 + len(stari)] != stari:
+                mesta = [k for k in range(len(svi) - len(stari) + 1)
+                         if svi[k:k + len(stari)] == stari]
+                if len(mesta) == 1:
+                    pomeraj = (mesta[0] + 1) - pocetak
+                    red = (f"@@ -{mesta[0] + 1}"
+                           + (f",{m.group('sk')}" if m.group("sk") else "")
+                           + f" +{int(m.group('np')) + pomeraj}"
+                           + (f",{m.group('nk')}" if m.group("nk") else "")
+                           + f" @@{m.group('rep')}")
+                    opisi.append(
+                        f"{put}: hunk u redu {i + 1} prijavljen na redu {pocetak}, "
+                        f"a telo stoji na redu {mesta[0] + 1} — zaglavlje pomereno "
+                        f"za {pomeraj:+d} (ADR-0067)")
+        izlaz.append(red)
         izlaz += telo
         i = j
     return ("\n".join(izlaz) + ("\n" if diff.endswith("\n") else "")), opisi
