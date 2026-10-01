@@ -69,7 +69,26 @@ ponavlja prelako.
 `Nalaz.sidra` → `reason` → `audit`, istom logikom kao ADR-0052 i ADR-0066.
 Poruka kaže šta je zaglavlje tvrdilo, gde telo stvarno stoji i koliki je pomeraj.
 
-### 4. Priručnik se **ne** menja
+### 4. Poruka o repu je **i sama** pokazivala pogrešan red
+
+`proveri_rep` računa gde rep treba da stoji iz istog deklarisanog broja:
+`kraj_hunka = pocetak + starih - 1`. Zato je poruka koju je agent dobio na
+pokušajima 4 i 5 glasila „dodaj bar 1 red konteksta (red **194** fajla)" — a
+red koji tamo ide je **209**. Rekli smo mu tačnu stvar i pogrešno mesto.
+
+Izmereno posle izmene, nad istim ulazom:
+
+| | poruka pokazuje na |
+|---|---|
+| bez sidrenja | red 6 |
+| sa sidrenjem | **red 13** (tačan) |
+
+Pošto `usidri` u `check` radi pre svega, `proveri_rep` od sada gleda usidreno
+zaglavlje i njegova poruka nosi pravi broj. Popravka nije nova — ista izmena
+leči oba mesta — ali zasluga za pokušaje 4 i 5 time **nije** cela agentova:
+suština uputstva je bila tačna, pokazivač nije.
+
+### 5. Priručnik se **ne** menja
 
 Izmereno je da `git` toleriše pogrešan broj. Pravilo koje bi agentu nalagalo da
 tačno broji redove rešavalo bi problem koji ne postoji, a zauzimalo bi mesto u
@@ -93,8 +112,17 @@ budžetu priručnika (ADR-0063). Pravilo 2 već traži ono što jedino i fali �
   `_telo_hunka` i `_stari_redovi` (tri funkcije su do sada sekle telo hunka
   svaka za sebe), polje `Nalaz.sidra`, upis u `reason` i `audit`.
 - `tests/test_zakrpa.py` → 9 novih provera; ukupno **1163**.
-- `TSK-01M3V1NV6S82R25AMH8E6JWYNK` — šesti pokušaj i 36 centi takođe idu
-  `SISTEM`-u (ADR-0053). Preostala su dva pokušaja.
+- `TSK-01M3V1NV6S82R25AMH8E6JWYNK` — **zatvoren 01.10. u 17:20**, commit
+  `ae167e390c3c10599b4b869a12f7fe29c46b3aaa`, **sedam pokušaja, 42 centa od
+  300**. Sedmi je prošao iz prve posle sidrenja, i sidro je radilo na oba
+  hunka: `lessons.py` −3, `test_lessons.py` +16. Model opet nije pogodio
+  nijednu poziciju — što je i cela poenta: `git` ih ne čita, pa ni mi ne
+  smemo da ih čitamo kao istinu.
+- Raspodela sedam pokušaja: 1–3 pala na **netačno pravilo 2** priručnika
+  (ADR-0065), 4–5 na uputstvo koje je pokazivalo **pogrešan red** (§4 iznad),
+  6 na **našu dopunu sa tuđeg mesta** (ovaj ADR), 7 prošao. Jedini deo koji
+  pripada agentu je to što na 4 i 5 nije dodao **nijedan** red konteksta,
+  iako mu je suština uputstva bila tačna.
 
 ## Zapisano za ADR-0033
 
