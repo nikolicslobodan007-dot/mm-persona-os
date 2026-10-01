@@ -221,6 +221,13 @@ def _prompt(zadatak: CodeTask) -> tuple[str, dict]:
         "KAPIJE KOJE MORAJU DA PROĐU: " + ", ".join(b["required_gates"]),
         "ZAŠTIĆENE ZONE (nikada): " + ", ".join(b["protected_paths"]),
     ]
+    if b.get("handbook"):
+        # ADR-0060 — priručnik radnog mesta. Stoji IZNAD rečnika i fajlova jer
+        # kaže kako se posao radi; sve ispod su činjenice ovog zadatka. Izvor
+        # pravila se ne šalje: agent ne može da otvori `docs/adr/` (zaštićena
+        # zona, nije u brifu), pa bi citat bio ukras koji jede mesto zadatku
+        # (ADR-0063 §2).
+        delovi += ["", b["handbook"]]
     if b.get("reference"):
         # ADR-0061 — zaštićena zona zabranjuje izmenu, ne čitanje. Bez ovoga je
         # 30.09. P-00027 vratio prozu umesto zakrpe, jer nije mogao da potvrdi da

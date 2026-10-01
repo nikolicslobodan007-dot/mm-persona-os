@@ -26,6 +26,7 @@ from pathlib import Path
 from django.conf import settings
 from django.db.models import Q
 
+from apps.personas import prirucnik
 from apps.policy import service as policy
 from common import enums as E
 
@@ -261,6 +262,21 @@ def build(zadatak: CodeTask) -> dict:
             continue
         zauzeto += velicina
         referenca.append(r)
+
+    # ADR-0060 — priručnik radnog mesta. Ulazi u isti plafon kao referenca i
+    # ranija zakrpa, iz istog razloga: budžet koji ima izuzetak nije budžet.
+    # Izmereno: jezgro `RAZ-PRO` je ~1,6 kB, dakle ispod procenta plafona —
+    # ali pravilo ostaje isto i kad priručnik poraste.
+    mesto = prirucnik.mesto_persone(zadatak.assignee)
+    prirucnik_tekst = prirucnik.prompt_section(mesto) if mesto else ""
+    if prirucnik_tekst:
+        velicina = len(prirucnik_tekst.encode("utf-8"))
+        if zauzeto + velicina > MAX_TOTAL_BYTES:
+            odsečeno.append({"path": f"priručnik {mesto}",
+                             "reason": "priručnik nije stao u ukupan plafon"})
+            prirucnik_tekst = ""
+        else:
+            zauzeto += velicina
     plafon = MAX_TOTAL_BYTES - zauzeto
 
     for f in _kandidati(zadatak):
@@ -299,6 +315,8 @@ def build(zadatak: CodeTask) -> dict:
         "required_gates": list(zadatak.required_gates),
         "protected_paths": list(policy.config.protected_paths()),
         "reference": referenca,
+        "handbook": prirucnik_tekst,
+        "handbook_position": mesto or "",
         "files": fajlovi,
         "files_from": IZVOR_FAJLOVA,
         "previous_patch": prethodna,

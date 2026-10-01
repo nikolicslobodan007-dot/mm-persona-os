@@ -530,3 +530,69 @@ class PersonaDossier(models.Model):
 
     def __str__(self) -> str:
         return f"dosije<{self.persona_id}> v{self.dossier_version}"
+
+
+class PositionHandbookRule(UUIDModel):
+    """Pravilo iz priručnika radnog mesta. ADR-0060.
+
+    Priručnik visi o **radnom mestu**, ne o agentu: ko god sedne na stolicu,
+    dobija ga prvog dana, a ko pređe na drugo mesto dobija drugi — bez
+    prepisivanja i bez „obuke". Dozvola kaže šta agent sme (`TrustState`);
+    priručnik kaže kako se to radi kad sme.
+
+    Ovo nije pouka urednika (`EditorialLesson`, ADR-0014): pouka je naučena iz
+    jedne odluke nad jednim tekstom i veže se za agenta, sektor ili firmu.
+    Priručnik je **opis posla** i ne menja se iz jednog slučaja — put od nalaza
+    do pravila ide kroz čoveka (ADR-0060 §5).
+
+    Nije ni `KnowledgeFact`: ta tabela traži izvor-zapis i trojku
+    subject–predicate–object, a pravilo nije tvrdnja o svetu nego uputstvo sa
+    redosledom i ključem po kom se gasi. Zaseban nosilac je ono što je ADR-0060
+    ostavio da odluči merenje.
+    """
+
+    position = models.ForeignKey(
+        Position, on_delete=models.CASCADE, related_name="handbook_rules",
+        help_text="Radno mesto čiji je ovo priručnik (`RAZ-PRO`, `IST-ANA`, …).")
+    key = models.CharField(
+        max_length=48,
+        help_text="Stabilan ključ pravila — po njemu se pravilo gasi i ponovo upisuje.")
+    sort_order = models.SmallIntegerField(
+        default=0, help_text="Redosled u promptu. Pravila se čitaju kao spisak, ne skup.")
+    text = models.CharField(
+        max_length=400, help_text="Pravilo, kako ga model čita. Jedna misao po pravilu.")
+    source = models.CharField(
+        max_length=200,
+        help_text="Odakle je pravilo: broj ADR-a, glava priručnika, zadatak. "
+                  "Čuva se uvek; u prompt ne ulazi (ADR-0060 §3).")
+    is_active = models.BooleanField(default=True)
+    retired_reason = models.CharField(
+        max_length=300, blank=True,
+        help_text="Zašto je pravilo ugašeno. Ugašeno bez razloga se ne upisuje.")
+    created_by = models.CharField(max_length=120)
+    retired_by = models.CharField(max_length=120, blank=True)
+
+    class Meta:
+        db_table = "personas_position_handbook_rule"
+        indexes = [models.Index(fields=["position", "is_active", "sort_order"])]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["position", "key"], name="handbook_rule_key_per_position"),
+            models.CheckConstraint(
+                # ADR-0060 §3: pravilo bez izvora je tvrdnja, ne pravilo. Ovde je to
+                # uslov baze, a ne nada — tvrdnja u ADR-u koju ništa ne proverava
+                # posle godinu dana se ne razlikuje od izmišljotine.
+                condition=~models.Q(source=""),
+                name="handbook_rule_source_required",
+            ),
+            models.CheckConstraint(
+                # Tiho ugašenih pravila nema (ADR-0036 §1). Ko gasi, kaže zašto.
+                condition=models.Q(is_active=True)
+                | (~models.Q(retired_reason="") & ~models.Q(retired_by="")),
+                name="handbook_rule_retired_has_reason",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        stanje = "" if self.is_active else " (ugašeno)"
+        return f"{self.position_id}/{self.key}: {self.text[:60]}{stanje}"

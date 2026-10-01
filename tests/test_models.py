@@ -49,6 +49,8 @@ class TestAppOwnership:
             # ADR-0017 — organizacija i dosije žive uz personu, ne u zasebnom app-u
             # (Canon §1 ima tačno 12 app-ova).
             "Department", "Position", "Assignment", "PersonaDossier",
+            # ADR-0060 — priručnik visi o radnom mestu, pa stoji uz `Position`.
+            "PositionHandbookRule",
         },
         "visuals": {
             "VisualProfile", "MediaAsset", "AssetCollection", "AssetCollectionItem",
