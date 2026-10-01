@@ -230,6 +230,25 @@ def prompt_section(persona: Persona, *, budzet: int = PROMPT_BUDGET_CHARS) -> st
     najveci_moguci_broj = len(redom) + odseceno_granicom
     rezerva = len(ODSECENO.format(broj=najveci_moguci_broj)) + 1 if najveci_moguci_broj else 0
 
+    # Budžet koji ne može da ponese ni sâm naslov nije budžet nego pogrešno
+    # podešavanje — ćutke vraćen prekoračen ili prazan tekst bi sakrio baš ono
+    # što ADR-0036 §1 zabranjuje.
+    if len(naslov) > budzet:
+        raise ValueError(
+            f"budzet={budzet} je manji od naslova ({len(naslov)} znakova) — podesi veći budzet")
+
+    # Ako ima šta da se odsece, red o odsecanju mora imati mesta uz naslov —
+    # inače bismo morali ili da ćutke odsečemo spisak bez obaveštenja (upravo
+    # ono što ADR-0036 §1 zabranjuje), ili da probijemo budžet da ga ipak
+    # dodamo. Budžet koji ne nosi ni samu poruku o odsecanju je pogrešno
+    # podešavanje, ne nešto za ćutke sakrivanje.
+    if najveci_moguci_broj:
+        najmanja_rezerva = len(ODSECENO.format(broj=najveci_moguci_broj)) + 1
+        if len(naslov) + najmanja_rezerva > budzet:
+            raise ValueError(
+                f"budzet={budzet} ne staje ni naslov ({len(naslov)}) ni red o odsecanju "
+                f"({najmanja_rezerva}) — podesi veći budzet")
+
     stalo: list[str] = []
     zauzeto = len(naslov)
     for red in redom:
