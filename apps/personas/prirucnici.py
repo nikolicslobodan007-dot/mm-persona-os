@@ -27,9 +27,10 @@ RAZ_PRO: list[Pravilo] = [
             "rezultat ide na granu.",
             "ADR-0038, ADR-0043"),
     Pravilo("minimalni-diff", 2,
-            "Minimalni unified diff je dovoljan: `---`, `+++`, `@@`. "
-            "`diff --git` sme, ne mora.",
-            "ADR-0048"),
+            "Minimalni unified diff je dovoljan: `---`, `+++`, `@@`; `diff --git` "
+            "sme, ne mora. Ali hunk mora da se završi bar jednim redom konteksta — "
+            "hunk koji se završava izmenjenim redom `git apply` odbija.",
+            "ADR-0048, ADR-0065"),
     Pravilo("aritmetika-hunka", 3,
             "Brojevi u `@@ -a,b +c,d @@` moraju da se slažu sa telom hunka. "
             "Ako se ne slažu, zakrpa pada pre kapija.",

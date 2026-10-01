@@ -35,17 +35,19 @@ _TRAG = {
     "HTTP_TRACEPARENT": "00-" + "a" * 32 + "-" + "b" * 16 + "-01",
 }
 
+#: ADR-0065 — hunk nosi bar jedan red konteksta iza izmene. Bez njega ga
+#: `git apply` odbija, pa ga od 01.10.2026. odbija i `zakrpa.check`.
 DIFF = (
     "diff --git a/apps/content/steps.py b/apps/content/steps.py\n"
     "--- a/apps/content/steps.py\n"
     "+++ b/apps/content/steps.py\n"
-    "@@ -1 +1 @@\n-a\n+b\n"
+    "@@ -1,2 +1,2 @@\n-a\n+b\n c\n"
 )
 LOSA = (
     "diff --git a/apps/policy/service.py b/apps/policy/service.py\n"
     "--- a/apps/policy/service.py\n"
     "+++ b/apps/policy/service.py\n"
-    "@@ -1 +1 @@\n-a\n+b\n"
+    "@@ -1,2 +1,2 @@\n-a\n+b\n c\n"
 )
 
 

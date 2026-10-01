@@ -18,6 +18,7 @@ from api.context import bind
 from apps.orchestration import zadaci
 from apps.orchestration.models import CodeTask
 from apps.personas.models import Persona
+from common import enums as E
 
 
 def _persona(public_id: str) -> Persona:
@@ -126,6 +127,21 @@ class Command(BaseCommand):
         if z.adr:
             self.stdout.write(f"  ADR:     {z.adr}")
         self.stdout.write(f"  putanje: {', '.join(z.allowed_paths)}")
+        # ADR-0065 — kapije ispod su ishod POSLEDNJE IZMERENE zakrpe. Ako je posle
+        # nje stigla novija koja do kapija nije došla, to se mora reći: 01.10. sam
+        # ja tri sata čitao stare kapije kao da mere novu zakrpu.
+        zadnja = z.patches.order_by("created_at").last()
+        if zadnja is not None:
+            kad = zadnja.created_at.strftime("%d.%m. %H:%M")
+            if not zadnja.gates.exists():
+                stanje = (self.style.ERROR(f"nije se primenila — {zadnja.reason[:120]}")
+                          if zadnja.status == E.PatchStatus.REJECTED.value
+                          else self.style.WARNING("još nije merena — poslušnik radi"))
+                self.stdout.write(f"  zadnja zakrpa ({kad}): {stanje}")
+                self.stdout.write(self.style.WARNING(
+                    "  PAŽNJA: kapije ispod su od ranije zakrpe, ne od ove."))
+            else:
+                self.stdout.write(f"  zadnja zakrpa ({kad}): izmerena")
         self.stdout.write("  kapije:")
         for g, ok in zadaci.gate_report(z).items():
             oznaka = {True: "zelena", False: "pala", None: "nije vrtena"}[ok]

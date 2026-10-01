@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from django.db import transaction
 
@@ -34,7 +35,7 @@ from .zadaci import TaskError, may_touch
 
 __all__ = ["Izmena", "Ispravka", "Nalaz", "paths_in", "prebroj_hunkove", "check",
            "submit", "zabelezi_neuspeh", "odbij_posle_provere", "pripisi_krivicu",
-           "MAX_DIFF_BYTES"]
+           "proveri_rep", "MAX_DIFF_BYTES", "NAJMANJE_REPA"]
 
 #: Gornja granica veličine zakrpe. Zakrpa preko ove mere nije izmena nego prepis,
 #: i traži da se zadatak podeli.
@@ -361,6 +362,11 @@ def check(zadatak: CodeTask, diff: str, *, persona: Persona | None = None) -> Na
         nalaz.greske.append(f"{e.code}: {e}")
         return nalaz
 
+    # ADR-0065 — hunk bez repa `git apply` odbija, pa se to kaže ovde a ne tek
+    # kod poslušnika. Provera se vrti nad ISPRAVLJENOM zakrpom, jer se ona i
+    # primenjuje (ADR-0052).
+    nalaz.greske.extend(proveri_rep(nalaz.diff))
+
     for izmena in nalaz.izmene:
         razlog = may_touch(zadatak, izmena.path, persona=persona)
         if razlog:
@@ -507,3 +513,80 @@ def zabelezi_neuspeh(zadatak: CodeTask, *, persona: Persona | None, tekst: str,
                           "paths": [], "reason": red.reason,
                           "cena_centi": red.cost_eur_cents})
     return red
+
+
+# ------------------------------------------------------- rep hunka (ADR-0065)
+
+#: Koliko redova konteksta `git apply` traži na kraju hunka koji nije na kraju
+#: fajla. Izmereno 01.10.2026. nad pravim `git`-om: 0 → „patch does not apply",
+#: 1 → primenjuje se. Nije stvar stila nego uslov primene.
+NAJMANJE_REPA = 1
+
+
+def _koren_slike() -> Path:
+    """Stablo nad kojim brif čita fajlove — isto ono koje pisac vidi."""
+    from django.conf import settings
+
+    return Path(settings.BASE_DIR).resolve()
+
+
+def proveri_rep(diff: str, koren: Path | None = None) -> list[str]:
+    """Hunk koji se završava izmenjenim redom `git apply` odbija. ADR-0065.
+
+    01.10.2026. su tri Lazarova pokušaja na `TSK-01M3V1NV6S82R25AMH8E6JWYNK`
+    primljena kao `ACCEPTED`, a poslušnik ih je odbio sa „patch does not apply".
+    Zakrpa je bila ispravna po svemu što smo proveravali — putanje, aritmetika
+    hunkova, kontekst koji postoji u fajlu bajt po bajt — ali je poslednji red
+    hunka bio dodat red, bez ijednog reda konteksta iza.
+
+    Izuzetak je hunk koji dopire do **kraja fajla**: tamo repa nema odakle, i
+    `git` ga ne traži. Zato se gleda stvarni fajl, a ne samo zaglavlje.
+
+    Vraća spisak poruka; prazan spisak znači da je sve u redu. Fajl koji se ne
+    može pročitati se **preskače** — ovo je provera, ne drugi sloj dozvola, a
+    ćutke odbijena ispravna zakrpa je gora od propuštene (ADR-0053).
+    """
+    koren = koren or _koren_slike()
+    greske: list[str] = []
+    redovi = diff.splitlines()
+    put: str | None = None
+    i = 0
+    while i < len(redovi):
+        red = redovi[i]
+        if (m := _PLUS.match(red)):
+            try:
+                put = _clean(m.group("put"))
+            except PatchError:
+                put = None
+            i += 1
+            continue
+        if not (m := _HUNK.match(red)):
+            i += 1
+            continue
+        pocetak = int(m.group("sp"))
+        starih = int(m.group("sk") or 1)
+        # Telo hunka: do sledećeg zaglavlja, sledećeg fajla ili kraja.
+        j, poslednji = i + 1, ""
+        while j < len(redovi):
+            t = redovi[j]
+            if _HUNK.match(t) or t.startswith("diff --git ") or _MINUS.match(t):
+                break
+            if t[:1] in ("+", "-", " ") or t == "":
+                poslednji = t
+            j += 1
+        if poslednji[:1] in ("+", "-") and put:
+            fajl = (koren / put)
+            try:
+                ukupno = len(fajl.read_text(encoding="utf-8").splitlines())
+            except OSError:
+                i = j
+                continue
+            kraj_hunka = pocetak + starih - 1
+            if kraj_hunka < ukupno:
+                greske.append(
+                    f"{put}: hunk u redu {i + 1} se završava izmenjenim redom. "
+                    f"`git apply` takav hunk odbija — dodaj bar {NAJMANJE_REPA} red "
+                    f"konteksta iza poslednje izmene (red {kraj_hunka + 1} fajla), "
+                    "i uračunaj ga u brojeve u `@@` zaglavlju.")
+        i = j
+    return greske

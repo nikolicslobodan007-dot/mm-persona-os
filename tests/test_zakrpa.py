@@ -528,3 +528,58 @@ class TestKomanda:
         with pytest.raises(CommandError, match="tačno jedno"):
             call_command("zakrpa", "--zadatak", z.public_id, "--iz",
                          self._fajl(tmp_path, _diff()), stdout=io.StringIO())
+
+
+class TestRepHunka:
+    """ADR-0065 — hunk bez završnog konteksta `git apply` odbija.
+
+    01.10.2026. su tri zakrpe primljene kao `ACCEPTED` i sve tri odbijene kod
+    poslušnika sa „patch does not apply". Bile su ispravne po svemu što smo
+    proveravali; falio im je jedan red konteksta na kraju hunka. Provera je
+    izmerena nad pravim `git`-om: 0 redova repa → odbija, 1 red → primenjuje se.
+    """
+
+    def _fajl(self, tmp_path, redova=20):
+        (tmp_path / "apps").mkdir(parents=True, exist_ok=True)
+        put = tmp_path / "apps" / "x.py"
+        put.write_text("\n".join(f"red {i}" for i in range(1, redova + 1)) + "\n",
+                       encoding="utf-8")
+        return put
+
+    def _diff(self, *, rep: int, pocetak: int = 5) -> str:
+        ctx = [f"red {pocetak}", f"red {pocetak + 1}"]
+        rem = [f"red {pocetak + 2}"]
+        post = [f"red {pocetak + 3 + i}" for i in range(rep)]
+        telo = ([" " + x for x in ctx] + ["-" + x for x in rem]
+                + ["+novi red"] + [" " + x for x in post])
+        st, nov = len(ctx) + len(rem) + rep, len(ctx) + 1 + rep
+        return "\n".join(["--- a/apps/x.py", "+++ b/apps/x.py",
+                          f"@@ -{pocetak},{st} +{pocetak},{nov} @@"] + telo) + "\n"
+
+    def test_bez_repa_se_prijavljuje(self, tmp_path):
+        self._fajl(tmp_path)
+        greske = zakrpa.proveri_rep(self._diff(rep=0), tmp_path)
+        assert len(greske) == 1
+        assert "završava izmenjenim redom" in greske[0]
+        assert "apps/x.py" in greske[0]
+
+    def test_jedan_red_repa_je_dovoljan(self, tmp_path):
+        self._fajl(tmp_path)
+        assert zakrpa.proveri_rep(self._diff(rep=1), tmp_path) == []
+
+    def test_hunk_do_kraja_fajla_ne_traži_rep(self, tmp_path):
+        """Na kraju fajla repa nema odakle, pa ga ni `git` ne traži."""
+        self._fajl(tmp_path, redova=8)          # hunk pokriva 5,6,7 → 7 == kraj? ne
+        d = self._diff(rep=0, pocetak=6)        # 6,7,8 → kraj fajla
+        assert zakrpa.proveri_rep(d, tmp_path) == []
+
+    def test_fajl_koji_se_ne_moze_procitati_se_preskace(self, tmp_path):
+        """Provera ne sme da obara ispravan rad kad sama ne vidi fajl."""
+        assert zakrpa.proveri_rep(self._diff(rep=0), tmp_path) == []
+
+    def test_vise_hunkova_prijavljuje_samo_onaj_bez_repa(self, tmp_path):
+        self._fajl(tmp_path, redova=30)
+        d = self._diff(rep=1, pocetak=5).rstrip("\n") + "\n" + "\n".join([
+            "@@ -20,3 +20,3 @@", " red 20", "-red 21", "+drugi novi"]) + "\n"
+        greske = zakrpa.proveri_rep(d, tmp_path)
+        assert len(greske) == 1 and "red 7" not in greske[0]
