@@ -202,10 +202,31 @@ class TestBudzetPouka:
         assert "MOJA" in odeljak and "KUCNI" not in odeljak
         assert "odsečeno" in odeljak
 
-    def test_naslov_ulazi_u_budzet(self, db, mila):
-        """Naslov je deo onoga što se plaća — ne sme da se broji kao besplatan."""
+    def test_naslov_sam_ulazi_u_budzet_kad_nema_sta_da_se_odsece(self, db, mila):
+        """Naslov je deo onoga što se plaća — ne sme da se broji kao besplatan.
+
+        Budžet 100 ne nosi ni naslov (58) ni red o odsecanju (46) zajedno, pa
+        je ovo pogrešno podešavanje — funkcija mora da pukne, ne da ćutke
+        probije budžet ili vrati prazno (ADR-0036 §1).
+        """
         self._pouka("x" * 300, persona=mila)
-        assert lessons.prompt_section(mila, budzet=100).count("\n") == 1
+        with pytest.raises(ValueError, match="budzet"):
+            lessons.prompt_section(mila, budzet=100)
+
+    def test_budzet_koji_ne_nosi_ni_naslov_puca(self, db, mila):
+        """Naslov je 58 znakova — budžet manji od toga je pogrešno podešavanje,
+        ne nešto što se ćutke sakrije vraćanjem prekoračenog ili praznog teksta.
+        """
+        self._pouka("x", persona=mila)
+        with pytest.raises(ValueError, match="manji od naslova"):
+            lessons.prompt_section(mila, budzet=10)
+
+    def test_dovoljno_veliki_budzet_i_dalje_radi(self, db, mila):
+        """Ponašanje za dovoljno velike budžete ostaje nepromenjeno."""
+        self._pouka("Piši ijekavicom.", persona=mila)
+        odeljak = lessons.prompt_section(mila, budzet=200)
+        assert "Piši ijekavicom." in odeljak
+        assert "odsečeno" not in odeljak
 
 
 class TestOdsecanjeNaGraniciSeBroji:
