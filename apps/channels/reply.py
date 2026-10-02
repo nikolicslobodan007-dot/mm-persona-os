@@ -27,8 +27,11 @@ from apps.channels.models import ChannelAccount, MailMessage
 from apps.orchestration import plans
 from common import enums as E
 
-NO_REPLY = re.compile(r"(^|[.<])(no-?reply|do-?not-?reply|mailer-daemon|postmaster|bounce)@",
-                      re.I)
+NO_REPLY = re.compile(r"(^|[.<])(no-?reply|do-?not-?reply)@", re.I)
+# ADR-0008: nedostavljivost (mailer-daemon/postmaster/bounce) je drugi ishod
+# od no-reply posiljaoca - bez ovoga se gubi podatak da je poruka DSN
+# obavestenje o nedostavljivosti.
+BOUNCE_SENDER = re.compile(r"(^|[.<])(mailer-daemon|postmaster|bounce)@", re.I)
 REPLIED = "reply_action"
 
 
@@ -48,6 +51,8 @@ def skip_reason(msg: MailMessage, *, now: datetime) -> str:
     if meta.get("list_id"):
         return "MAILING_LIST"
     sender = _address(msg.from_addr)
+    if sender and BOUNCE_SENDER.search(msg.from_addr or ""):
+        return "BOUNCE_SENDER"
     if not sender or NO_REPLY.search(msg.from_addr or ""):
         return "NO_REPLY_SENDER"
     hours = getattr(settings, "MAIL_REPLY_MAX_AGE_HOURS", 72)
@@ -158,7 +163,13 @@ def draft_reply(msg: MailMessage, *, now: datetime | None = None):
     from apps.orchestration.models import Action
 
     now = now or timezone.now()
-    if skip_reason(msg, now=now):
+    reason = skip_reason(msg, now=now)
+    if reason:
+        if reason == "BOUNCE_SENDER":
+            # ADR-0008: adresa posiljaoca se NE upisuje - isto pravilo kao
+            # kod liste odjava, koja namerno ne cuva adrese.
+            audit.record("channel.mail.bounce_seen", persona=msg.persona,
+                         details={"message": str(msg.pk)})
         return None
     persona = msg.persona
     acc = ChannelAccount.objects.filter(pk=msg.channel_account_id).first()
