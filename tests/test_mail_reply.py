@@ -13,6 +13,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from api import audit
 from api.context import bind
 from apps.channels import mailbox, reply
 from apps.channels.models import ChannelAccount, ChannelCapability, MailMessage
@@ -130,6 +131,22 @@ class TestSkipRules:
         m = self._msg(_box(mila), from_addr="Portal <noreply@portal.rs>")
         assert reply.skip_reason(m, now=NOW) == "NO_REPLY_SENDER"
 
+    def test_bounce_sender(self, mila, mc):
+        """TSK-01M3Y4Q9H1WK9M9WN7J5HZEDZE: DSN obavestenje je BOUNCE_SENDER,
+        ne NO_REPLY_SENDER - razlikuju se u daljoj obradi (ADR-0008)."""
+        m = self._msg(_box(mila),
+                      from_addr="Mail Delivery Subsystem <mailer-daemon@portal.rs>")
+        assert reply.skip_reason(m, now=NOW) == "BOUNCE_SENDER"
+
+    def test_unrecognized_sender_stays_no_reply(self, mila, mc):
+        """Posiljalac koji se ne moze prepoznati ostaje NO_REPLY_SENDER,
+        ne postaje BOUNCE_SENDER (TSK-01M3Y4Q9H1WK9M9WN7J5HZEDZE)."""
+        m = self._msg(_box(mila), from_addr="")
+        assert reply.skip_reason(m, now=NOW) == "NO_REPLY_SENDER"
+        m.from_addr = "nema ovde ispravnu adresu"
+        m.save()
+        assert reply.skip_reason(m, now=NOW) == "NO_REPLY_SENDER"
+
     def test_too_old(self, mila, mc):
         m = self._msg(_box(mila))
         assert reply.skip_reason(m, now=NOW + timedelta(days=5)) == "TOO_OLD"
@@ -179,6 +196,22 @@ class TestDraft:
             m.refresh_from_db()
             assert reply.draft_reply(m, now=NOW) is None
         assert Action.objects.filter(action_type="mail.reply").count() == 1
+
+    def test_bounce_sender_audit_logged_and_no_action(self, mila, mc):
+        """TSK-01M3Y4Q9H1WK9M9WN7J5HZEDZE: bounce se beleži u audit, bez akcije."""
+        from apps.observability.models import AuditEvent
+
+        acc = _box(mila)
+        m = self._inbound(acc)
+        m.from_addr = "Mail Delivery <mailer-daemon@portal.rs>"
+        m.save()
+        with bind(actor_id="service:mail-poll"):
+            assert reply.draft_reply(m, now=NOW) is None
+        ev = AuditEvent.objects.get(event_key="channel.mail.bounce_seen")
+        assert ev.payload["details"].get("message") == str(m.pk)
+        # Lista odjava namerno ne cuva adrese - isto pravilo vazi i ovde.
+        assert "mailer-daemon" not in audit.canonical_json(ev.payload)
+        assert "portal.rs" not in audit.canonical_json(ev.payload)
 
     def test_daily_cap(self, mila, mc, settings):
         settings.MAIL_REPLIES_PER_DAY = 1
