@@ -420,3 +420,43 @@ class TestRecnikUBrifu:
         assert b["reference"] == []
         assert any("rečnik" in t["reason"] for t in b["truncated"])
         assert b["bytes"] <= 3000
+
+
+class TestReferencaNosiModelIAudit:
+    """ADR-0068 — referenca mora da nosi i činjenicu izvan rečnika.
+
+    02.10. je P-00027 dva puta stao na istom mestu: zadatak je tražio tvrdnju o
+    `AuditEvent`, a brif mu je davao samo `common/enums.py`. Prvo je pogodio ime
+    polja (`details_json`, ne postoji) i pao na kapiji, pa ispravno vratio
+    `NE MOGU`. Oba ishoda su posledica istog praznog mesta.
+    """
+
+    def test_model_i_audit_su_u_referenci(self, db):
+        putanje = [r["path"] for r in brif.build(_zadatak(["apps/channels"]))["reference"]]
+        assert "apps/observability/models.py" in putanje
+        assert "api/audit.py" in putanje
+
+    def test_model_nosi_polje_payload(self, db):
+        """Bez ovoga izvod modela je 204 bajta i ne sadrži nijedno polje."""
+        tekst = next(r["content"] for r in brif.build(_zadatak(["apps/channels"]))["reference"]
+                     if r["path"] == "apps/observability/models.py")
+        assert "class AuditEvent" in tekst
+        assert "payload = " in tekst, "polje zbog kog je ADR-0068 napisan"
+        assert "details_json" not in tekst, "ime koje je pisac izmislio ne postoji"
+
+    def test_audit_pokazuje_da_details_ide_u_payload(self, db):
+        """Model kaže da `payload` postoji; tek ovo kaže šta je unutra."""
+        tekst = next(r["content"] for r in brif.build(_zadatak(["apps/channels"]))["reference"]
+                     if r["path"] == "api/audit.py")
+        assert '"details"' in tekst
+
+    def test_izvod_malih_imena_ne_menja_recnik(self):
+        """Opšte pravilo ne sme da poveća izvod enuma — izmereno 02.10.2026."""
+        from pathlib import Path
+
+        from django.conf import settings
+        tekst = (Path(settings.BASE_DIR) / "common/enums.py").read_text(encoding="utf-8")
+        assert len(brif._izvod(tekst).encode()) == 15_874
+
+    def test_fajl_bez_klase_ide_ceo(self):
+        assert brif._izvod("def f():\n    return 1\n") == "def f():\n    return 1\n"

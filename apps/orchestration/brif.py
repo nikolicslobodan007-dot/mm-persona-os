@@ -55,13 +55,34 @@ PRESKOCI_DIR = frozenset({".git", "__pycache__", "node_modules", ".ruff_cache",
 #: 30.09. je P-00027 vratio prozu umesto zakrpe jer nije mogao da potvrdi da
 #: `E.StepStatus.SKIPPED` postoji, a ADR-0033 mu zabranjuje da pretpostavi.
 #: Zaštićena zona zabranjuje **izmenu**, ne čitanje — `code.read` je L0 za sve.
-REFERENCA: tuple[str, ...] = ("common/enums.py",)
+#:
+#: ADR-0068 — 02.10. je isti zastoj došao drugi put, iz drugog fajla: zadatak je
+#: tražio proveru nad `AuditEvent`, pisac nije imao model, pa je prvo **pogodio**
+#: ime polja (`details_json`, ne postoji) i pao na kapiji, a zatim ispravno vratio
+#: `NE MOGU`. Oba puta je uzrok isti: referenca nosi rečnik, a zadatak traži
+#: tvrdnju o nečemu izvan njega.
+#:
+#: Zato ovde stoje i model i funkcija koja ga puni. Model sâm kaže da polje
+#: `payload` postoji, ali ne i da `audit.record` u njega upisuje ključ `details`
+#: — bez `api/audit.py` pisac i dalje pogađa unutrašnji ključ.
+REFERENCA: tuple[str, ...] = (
+    "common/enums.py",
+    "apps/observability/models.py",
+    "api/audit.py",
+)
 
 #: Iz referentnih `.py` fajlova ide **izvod**, ne ceo tekst: pisac traži rečnik,
 #: ne prozu. Mereno 30.09. na `common/enums.py`: ceo fajl 41.552 B (20,8 % od
 #: `MAX_TOTAL_BYTES`), izvod 15.874 B (7,9 %) — i sadrži sve članove.
+#:
+#: ADR-0068 — `_CLAN` je do 02.10. hvatao samo VELIKA imena, jer je pisan za
+#: enume. Polja Django modela su mala slovima, pa je izvod `apps/observability/
+#: models.py` bio 204 B i nije sadržao nijedno polje — dodati takav fajl na
+#: spisak ne bi ništa rešilo. Izmereno nad oba fajla: opšte pravilo ostavlja
+#: `common/enums.py` **bajt u bajt isto** (15.874 B), a model diže sa 204 na
+#: 3.426 B (1,7 % plafona) i u njemu se vidi `payload`.
 _KLASA = re.compile(r"^class \w+")
-_CLAN = re.compile(r"^    [A-Z][A-Z0-9_]* = ")
+_CLAN = re.compile(r"^    [A-Za-z_][A-Za-z0-9_]* = ")
 
 
 def _koren() -> Path:
@@ -105,12 +126,16 @@ def _procitaj(f: Path) -> tuple[str, str] | None:
     return tekst, hashlib.sha256(sirovo).hexdigest()
 
 
-def _izvod_enuma(tekst: str) -> str:
-    """Iz `.py` fajla vadi samo zaglavlja klasa i članove u velikim slovima.
+def _izvod(tekst: str) -> str:
+    """Iz `.py` fajla vadi zaglavlja klasa i imena koja te klase definišu.
 
-    Pisac treba da zna **koji članovi postoje**, ne zašto. Dokumentacija i telo
-    metoda su tri četvrtine fajla i nijedan od njih ne odgovara na pitanje zbog
-    kog je ADR-0061 napisan.
+    Pisac treba da zna **šta postoji**, ne zašto. Dokumentacija i telo metoda su
+    tri četvrtine fajla i nijedan od njih ne odgovara na pitanje zbog kog je
+    ADR-0061 napisan.
+
+    Hvata se svaka dodela u klasi, ne samo VELIKA imena (ADR-0068): član enuma i
+    polje modela su za pisca ista vrsta činjenice — ime koje sme da napiše a ne
+    sme da izmisli. Fajl bez ijedne klase (npr. `api/audit.py`) vraća se ceo.
     """
     izlaz, u_klasi = [], False
     for red in tekst.splitlines():
@@ -138,7 +163,7 @@ def _referenca(koren: Path) -> list[dict]:
         redovi.append({
             "path": rel,
             "sha256": otisak,
-            "content": _izvod_enuma(tekst) if f.suffix == ".py" else tekst,
+            "content": _izvod(tekst) if f.suffix == ".py" else tekst,
             "read_only": True,
         })
     return redovi
