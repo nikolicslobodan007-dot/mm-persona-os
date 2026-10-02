@@ -5,6 +5,11 @@
 Ispisuje zadatke koji imaju commit na grani `zadatak/TSK-…`, a još nisu
 zatvoreni. Uz spisak ide i komanda kojom se te grane dovlače — jer se `main`
 menja sa radne mašine, ne sa servera: serverski ključ je namerno read-only.
+
+Refspec nosi `+` (ADR-0069). Poslušnik svaki pokušaj gradi iz čistog primerka,
+pa grana zadatka nije istorija nego **poslednji ishod**: svaki novi pokušaj je
+prepisuje. Dovlačenje bez `+` takvu granu odbija kao `non-fast-forward` i tiho
+ostavlja ono što je stiglo prošli put.
 """
 
 from __future__ import annotations
@@ -42,8 +47,9 @@ class Command(BaseCommand):
                     f"  otvorenih BLOCKER nalaza: {r['blokera']}"))
 
         self.stdout.write("\nNa radnoj mašini (ne na serveru):")
+        # `+` nije ukras: grana se prepisuje svakim pokušajem (ADR-0069).
         self.stdout.write(f"  git fetch {DALJINSKI} "
-                          f"'refs/heads/{rezultat.PREFIKS_GRANE}*:"
+                          f"'+refs/heads/{rezultat.PREFIKS_GRANE}*:"
                           f"refs/remotes/agent/*'")
         self.stdout.write("\nU `main` ulazi ljudskom rukom; poslušnik gura samo u "
                           "svoju granu (ADR-0038 §6, ADR-0043).")

@@ -19,6 +19,9 @@ Tri pravila:
     kada mašina treba da stane.
   - **Zapisuje se tek kad su kapije zelene NAD TOM zakrpom.** Zelena kapija nad
     starijom zakrpom ne otvara granu novoj (ADR-0040).
+  - **Upis je knjiženje, ne presuda** (ADR-0070). Grana je u trenutku ovog poziva
+    već pomerena; odbiti upis znači samo da baza ne zna gde je grana. Sud o tome
+    da li posao valja donosi se u `zadaci.finish`, gde još može nešto da promeni.
 """
 
 from __future__ import annotations
@@ -185,11 +188,13 @@ def zabelezi(zadatak: CodeTask, zakrpa: TaskPatch, *, branch: str,
                 for g in pale),
             {"gates": pale},
         )
-    blokade = list(blocking_findings(zadatak).values_list("file", "line"))
-    if blokade:
-        raise TaskError("OPEN_BLOCKERS",
-                        "Otvoren nalaz težine BLOCKER: " + ", ".join(
-                            f"{f}:{ln or '-'}" for f, ln in blokade))
+    # Do ADR-0070 je ovde stajala i brana na otvoreni BLOCKER. Ona nije branila
+    # ništa: poslušnik gura granu PRE ovog poziva, pa je u trenutku odbijanja
+    # grana već pomerena — odbijanje je samo sprečavalo da aplikacija to zapiše.
+    # Ishod je bio razilaženje diska i baze, i `branch_expected_sha` koji sledeći
+    # put pokazuje na commit kog na grani više nema. Sud o nalazu ostaje tamo gde
+    # je delotvoran — u `zadaci.finish`, koji zadatak ne zatvara dok je blokada
+    # otvorena. Ovde se samo knjiži ono što se već desilo.
 
     if zakrpa.applied_sha and zakrpa.applied_sha != sha:
         raise TaskError(

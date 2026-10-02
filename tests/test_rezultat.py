@@ -149,7 +149,14 @@ class TestZabelezi:
         with pytest.raises(zadaci.TaskError, match="nije vrtena"):
             rezultat.zabelezi(z, nova, branch=rezultat.ime_grane(z), commit_sha=SHA)
 
-    def test_otvoren_blocker_zadrzava(self, z, zk, mila):
+    def test_otvoren_blocker_ne_zadrzava_upis_ali_zadrzava_zatvaranje(self, z, zk, mila):
+        """ADR-0070 — upis je knjiženje, sud je u `finish`.
+
+        Poslušnik gurne granu pre nego što pozove upis. Odbiti upis zbog nalaza
+        znači ostaviti bazu da pokazuje na commit kog na grani više nema, a samu
+        granu ne vratiti — izmereno 02.10.2026. nad
+        `TSK-01M3Y4Q9H1WK9M9WN7J5HZEDZE`. Brana ostaje tamo gde još nešto menja.
+        """
         zeleno(z, zk)
         recenzent = Persona.objects.create(
             public_id="P-09302", display_name="Recenzent",
@@ -158,8 +165,15 @@ class TestZabelezi:
             zadaci.add_finding(z, reviewer=recenzent, file="apps/content/x.py",
                                claim="puca", severity="BLOCKER",
                                source=zadaci.IZVOR_COVEK)
+            out = rezultat.zabelezi(z, zk, branch=rezultat.ime_grane(z), commit_sha=SHA)
+
+        assert out.applied_sha == SHA
+        assert out.status == E.PatchStatus.APPLIED.value
+        z.refresh_from_db()
+        assert z.commit_sha == SHA
+
         with pytest.raises(zadaci.TaskError, match="BLOCKER"):
-            rezultat.zabelezi(z, zk, branch=rezultat.ime_grane(z), commit_sha=SHA)
+            zadaci.finish(z)
 
     @pytest.mark.parametrize("los", ["", "nije sha", "g" * 40, "a" * 39, "a" * 41])
     def test_odbija_los_commit(self, z, zk, los):
@@ -242,3 +256,19 @@ class TestKomandaGrane:
         assert f"zadatak/{z.public_id}" in ispis
         assert "git fetch" in ispis
         assert "ne na serveru" in ispis
+
+    def test_refspec_nosi_plus(self, z, zk):
+        """ADR-0069 — grana se prepisuje svakim pokušajem, pa dovlačenje mora da sme.
+
+        Bez `+` `git` odbija takvu granu kao `non-fast-forward` i **ćuteći**
+        ostavlja onu od prošlog puta. Izmereno 02.10.2026: ispis bez `+` doneo je
+        commit od pre osam pokušaja, sa kvarom koji je recenzija već odbila.
+        """
+        zeleno(z, zk)
+        with bind(actor_id="service:runner"):
+            rezultat.zabelezi(z, zk, branch=rezultat.ime_grane(z), commit_sha=SHA)
+        out = io.StringIO()
+        call_command("grane", stdout=out)
+        ispis = out.getvalue()
+        assert f"'+refs/heads/{rezultat.PREFIKS_GRANE}*:" in ispis
+        assert f"'refs/heads/{rezultat.PREFIKS_GRANE}" not in ispis
