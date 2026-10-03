@@ -21,7 +21,9 @@ vrti() {
     fi
 }
 
-vrti pytest      python -m pytest -q
+# BEZ `-q`: `pytest.ini` ga vec nosi, a dva `-q` daju `-qq` — pytest tada
+# precuti zavrsni red sa brojem testova. ADR-0072 §5.
+vrti pytest      python -m pytest
 vrti ruff        ruff check .
 vrti canon_lint  python tools/canon_lint.py
 vrti migrations  python manage.py makemigrations --check --dry-run

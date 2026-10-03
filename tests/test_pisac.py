@@ -478,3 +478,47 @@ class TestPromptNosiIshod:
                                severity=E.FindingSeverity.MAJOR.value,
                                source=zadaci.IZVOR_COVEK)
         assert "Zaglavlje hunka ne odgovara telu." in self._tekst(z)
+
+
+class TestZastoLokalno:
+    """ADR-0072 — dijagnoza imenuje razlog koji je gateway već izmerio.
+
+    03.10. je `pisac` na pad u lokalni šablon odgovorio porukom „uključi rutu za
+    `code_patch` i LLM_EXTERNAL_ENABLED". Oba su već bila uključena; nedostajao
+    je agentov ključ. `Generation.fallbacks` je sve vreme nosio `NO_PERSONA_KEY`.
+    """
+
+    def test_poznata_sifra_se_prevodi(self):
+        tekst = pisac.zasto_lokalno(["anthropic/claude-proba:NO_PERSONA_KEY"])
+        assert "anthropic/claude-proba" in tekst
+        assert "nema svoj ključ" in tekst
+
+    def test_nepoznata_sifra_prolazi_kakva_jeste(self):
+        """Bolje nepoznata šifra nego izmišljen razlog (ADR-0033)."""
+        assert "NESTO_NOVO" in pisac.zasto_lokalno(["x/y:NESTO_NOVO"])
+
+    def test_bez_ijedne_preskocene_rute(self):
+        assert "nije ni ponuđena" in pisac.zasto_lokalno([])
+        assert "nije ni ponuđena" in pisac.zasto_lokalno(None)
+
+    def test_sve_preskocene_rute_se_vide(self):
+        tekst = pisac.zasto_lokalno(["a/1:NO_PERSONA_KEY", "b/2:PROVIDER_MAY_TRAIN"])
+        assert "a/1" in tekst and "b/2" in tekst
+        assert "nema svoj ključ" in tekst and "sme da uči" in tekst
+
+    def test_smece_ne_dize_izuzetak(self):
+        """Dijagnoza koja pukne ostavlja čoveka bez ijednog podatka."""
+        assert pisac.zasto_lokalno(["", "bez dvotacke"])
+
+    def test_poruka_imenuje_pravi_razlog(self, z, monkeypatch, ruta):
+        """Poruka sme da kaže samo ono što je izmereno, ne šta da se uključi."""
+        monkeypatch.setattr(
+            pisac.gateway, "generate",
+            lambda *a, **k: LazniOdgovor(
+                text="Danas razmišljam…", provider="local", amount_eur_cents=0,
+                fallbacks=("anthropic/claude-proba:NO_PERSONA_KEY",)))
+        with pytest.raises(zadaci.TaskError) as e:
+            pisac.pokusaj(z)
+        assert "nema svoj ključ" in str(e.value)
+        assert "LLM_EXTERNAL_ENABLED" not in str(e.value)
+        assert z.patches.count() == 0
