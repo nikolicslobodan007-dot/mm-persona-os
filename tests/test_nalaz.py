@@ -113,14 +113,23 @@ class TestBlockerStvarnoZaustavlja:
             with pytest.raises(zadaci.TaskError, match="BLOCKER"):
                 zadaci.finish(z)
 
-    def test_grana_se_ne_otvara(self, z, mila):
+    def test_upis_grane_prolazi_ali_zatvaranje_ne(self, z, mila):
+        """ADR-0070 — upis je knjiženje, brana je u `finish`.
+
+        Do 02.10.2026. je i `rezultat.zabelezi` odbijao zbog blokade. Ta provera
+        nije branila ništa: poslušnik gurne granu pre nego što je pozove, pa je
+        odbijanje samo ostavljalo bazu da pokazuje na commit kog na grani nema.
+        """
         _upisi(z)
         with bind(actor_id="user:slobodan"):
             p = zakrpa.submit(z, DIFF, persona=mila)
             for g in z.required_gates:
                 zadaci.record_gate(z, g, True, patch=p)
+            out = rezultat.zabelezi(z, p, branch=rezultat.ime_grane(z),
+                                    commit_sha="a" * 40)
+            assert out.applied_sha == "a" * 40
             with pytest.raises(zadaci.TaskError, match="BLOCKER"):
-                rezultat.zabelezi(z, p, branch=rezultat.ime_grane(z), commit_sha="a" * 40)
+                zadaci.finish(z)
 
     def test_zatvoren_nalaz_pusta_dalje(self, z):
         n = _upisi(z)

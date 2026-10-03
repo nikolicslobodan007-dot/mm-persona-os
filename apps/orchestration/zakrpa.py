@@ -35,7 +35,7 @@ from .zadaci import TaskError, may_touch
 
 __all__ = ["Izmena", "Ispravka", "Nalaz", "paths_in", "prebroj_hunkove", "check",
            "submit", "zabelezi_neuspeh", "odbij_posle_provere", "pripisi_krivicu",
-           "proveri_rep", "dopuni_rep", "usidri", "MAX_DIFF_BYTES",
+           "proveri_rep", "dopuni_rep", "usidri", "brojke", "MAX_DIFF_BYTES",
            "NAJMANJE_REPA", "NAJVISE_DOPUNE", "NAJMANJE_SIDRA"]
 
 #: Gornja granica veličine zakrpe. Zakrpa preko ove mere nije izmena nego prepis,
@@ -773,3 +773,47 @@ def usidri(diff: str, koren: Path | None = None) -> tuple[str, list[str]]:
         izlaz += telo
         i = j
     return ("\n".join(izlaz) + ("\n" if diff.endswith("\n") else "")), opisi
+
+
+def brojke(diff: str) -> dict[str, tuple[int, int]]:
+    """Po fajlu: koliko je redova dodato i koliko obrisano. ADR-0071.
+
+    Ovo **nije** provera i ne sme da obori ništa — služi da čovek koji ne čita
+    `diff` ipak vidi obim izmene. Zato nigde ne diže izuzetak: zakrpa koja je
+    već prihvaćena i primenjena ne sme da postane neprikazljiva zato što joj
+    prikaz ne ume da pročita jedan red.
+
+    Broje se redovi tela hunka — `+` i `-` — a ne zaglavlja `+++` i `---`, koja
+    počinju istim znakom a nose imena fajlova.
+    """
+    def tiho(raw: str) -> str | None:
+        try:
+            return _clean(raw)
+        except PatchError:
+            return None
+
+    po_fajlu: dict[str, list[int]] = {}
+    tekuci: str | None = None
+    sa_minusa: str | None = None
+    for red in diff.splitlines():
+        if _DIFF_GIT.match(red):
+            tekuci = sa_minusa = None
+            continue
+        if (m := _MINUS.match(red)):
+            # `---` uvek stiže pre `+++`; pamti se dok se ne vidi i druga strana.
+            sa_minusa = tiho(m.group("put"))
+            continue
+        if (m := _PLUS.match(red)):
+            # Kod brisanja je `+++ /dev/null`, pa ime fajla nosi `---`.
+            tekuci = tiho(m.group("put")) or sa_minusa
+            sa_minusa = None
+            if tekuci is not None:
+                po_fajlu.setdefault(tekuci, [0, 0])
+            continue
+        if tekuci is None:
+            continue
+        if red.startswith("+"):
+            po_fajlu[tekuci][0] += 1
+        elif red.startswith("-"):
+            po_fajlu[tekuci][1] += 1
+    return {p: (d, o) for p, (d, o) in sorted(po_fajlu.items())}

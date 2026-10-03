@@ -36,7 +36,8 @@ from apps.personas.models import Persona
 from common import enums as E
 
 from .models import CodeTask, GateResult, TaskPatch
-from .zadaci import TaskError, blocking_findings
+from .zadaci import TaskError
+from .zakrpa import brojke as zakrpa_brojke
 
 __all__ = [
     "DOMEN_AGENATA",
@@ -217,8 +218,54 @@ def zabelezi(zadatak: CodeTask, zakrpa: TaskPatch, *, branch: str,
     return zakrpa
 
 
+def _nalazi(zadatak: CodeTask) -> dict[str, int]:
+    """Koliko je recenzija našla i šta je od toga ostalo otvoreno."""
+    svi = list(zadatak.findings.all().values_list("severity", "status"))
+    otvoren = E.FindingStatus.OPEN.value
+    return {
+        "ukupno": len(svi),
+        "otvoreno": sum(1 for _, s in svi if s == otvoren),
+        "zatvoreno": sum(1 for _, s in svi if s != otvoren),
+        "blokera": sum(1 for t, s in svi
+                       if s == otvoren and t == E.FindingSeverity.BLOCKER.value),
+    }
+
+
+def _upozorenja(zadatak: CodeTask, zakrpa: TaskPatch | None,
+                kapije: dict[str, bool | None], nalazi: dict[str, int]) -> list[str]:
+    """Razlozi da se ova grana **ne** spaja — činjenice, ne sud.
+
+    Sud o tome da li posao valja i dalje donosi recenzent u razgovoru; ovde stoji
+    samo ono što se može pročitati iz baze i što bi čovek prevideo.
+    """
+    red: list[str] = []
+    if zakrpa is None:
+        red.append("commit na grani ne pripada nijednoj zapisanoj zakrpi — "
+                   "neko je granu pomerao mimo aplikacije")
+    pale = [g for g, ok in kapije.items() if ok is not True]
+    if pale:
+        red.append("kapije nisu zelene nad ovom zakrpom: " + ", ".join(
+            f"{g} ({'nije vrtena' if kapije[g] is None else 'pala'})" for g in pale))
+    if nalazi["blokera"]:
+        red.append(f"otvorenih nalaza težine BLOCKER: {nalazi['blokera']}")
+    if nalazi["otvoreno"] and not nalazi["blokera"]:
+        red.append(f"otvorenih nalaza (nisu blokade): {nalazi['otvoreno']}")
+    if zakrpa is not None and not zakrpa.from_model:
+        red.append("ovu zakrpu nije napisao model nego čovek — ne meri agenta "
+                   "(ADR-0050)")
+    return red
+
+
 def za_pregled() -> list[dict]:
-    """Zadaci koji imaju granu sa commitom, a još nisu zatvoreni ljudskom rukom."""
+    """Zadaci koji imaju granu sa commitom, a još nisu zatvoreni ljudskom rukom.
+
+    Red nosi sve što čoveku treba da **odluči**, ne samo da pronađe granu
+    (ADR-0071): zašto je zadatak otvoren, šta je dirano i koliko, kako su prošle
+    kapije, šta je koštalo i šta je recenzija našla. Sve iz baze — nijedan poziv
+    modelu, pa prikaz ne može da izmisli ono čega nema.
+    """
+    from .pisac import NAJVISE_POKUSAJA, PLAFON_CENTI, pokusaja, potroseno
+
     redovi = []
     for zadatak in (CodeTask.objects.exclude(commit_sha="")
                     .exclude(status__in=[E.TaskStatus.DONE.value,
@@ -226,14 +273,27 @@ def za_pregled() -> list[dict]:
                     .order_by("created_at")):
         zakrpa = (zadatak.patches.filter(applied_sha=zadatak.commit_sha)
                   .order_by("-created_at").first())
+        kapije = _kapije_zakrpe(zadatak, zakrpa) if zakrpa else {}
+        nalazi = _nalazi(zadatak)
+        izmene = zakrpa_brojke(zakrpa.diff) if zakrpa else {}
         redovi.append({
             "task": zadatak.public_id,
             "title": zadatak.title,
+            "zasto": zadatak.why,
+            "adr": zadatak.adr,
             "branch": ime_grane(zadatak),
             "commit": zadatak.commit_sha,
             "agent": getattr(zadatak.assignee, "public_id", "—"),
             "ime": getattr(zadatak.assignee, "display_name", ""),
-            "gates": _kapije_zakrpe(zadatak, zakrpa) if zakrpa else {},
-            "blokera": blocking_findings(zadatak).count(),
+            "gates": kapije,
+            "izmene": [{"put": p, "dodato": d, "obrisano": o}
+                       for p, (d, o) in izmene.items()],
+            "pokusaja": pokusaja(zadatak),
+            "plafon_pokusaja": NAJVISE_POKUSAJA,
+            "centi": potroseno(zadatak),
+            "plafon_centi": PLAFON_CENTI,
+            "nalazi": nalazi,
+            "blokera": nalazi["blokera"],
+            "upozorenja": _upozorenja(zadatak, zakrpa, kapije, nalazi),
         })
     return redovi

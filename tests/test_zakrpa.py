@@ -749,3 +749,47 @@ class TestUsidri:
         red = TaskPatch.objects.order_by("-created_at").first()
         assert "ADR-0067" in red.reason, red.reason
         assert red.diff.splitlines()[2].startswith("@@ -20,"), red.diff
+
+
+class TestBrojke:
+    """ADR-0071 — obim izmene za čoveka koji ne čita `diff`.
+
+    Mera je `git diff --numstat`, ne naša predstava o njoj: brojevi su upoređeni
+    sa pravim `git`-om nad pravim repozitorijumom 03.10.2026, i poklapaju se za
+    izmenu, nov fajl i brisanje.
+    """
+
+    IZMENA = ("diff --git a/apps/content/x.py b/apps/content/x.py\n"
+              "--- a/apps/content/x.py\n+++ b/apps/content/x.py\n"
+              "@@ -1,2 +1,3 @@\n a\n-b\n+B\n+c\n")
+    NOV = ("diff --git a/apps/content/n.py b/apps/content/n.py\n"
+           "new file mode 100644\n--- /dev/null\n+++ b/apps/content/n.py\n"
+           "@@ -0,0 +1,3 @@\n+1\n+2\n+3\n")
+    BRISANJE = ("diff --git a/apps/content/s.py b/apps/content/s.py\n"
+                "deleted file mode 100644\n--- a/apps/content/s.py\n+++ /dev/null\n"
+                "@@ -1,2 +0,0 @@\n-a\n-b\n")
+
+    def test_izmena(self):
+        assert zakrpa.brojke(self.IZMENA) == {"apps/content/x.py": (2, 1)}
+
+    def test_nov_fajl(self):
+        assert zakrpa.brojke(self.NOV) == {"apps/content/n.py": (3, 0)}
+
+    def test_brisanje_se_pripisuje_starom_imenu(self):
+        """Kod brisanja je `+++ /dev/null`, pa ime nosi `---`."""
+        assert zakrpa.brojke(self.BRISANJE) == {"apps/content/s.py": (0, 2)}
+
+    def test_vise_fajlova_odjednom(self):
+        svi = zakrpa.brojke(self.IZMENA + self.NOV + self.BRISANJE)
+        assert svi == {"apps/content/n.py": (3, 0), "apps/content/s.py": (0, 2),
+                       "apps/content/x.py": (2, 1)}
+
+    def test_zaglavlja_se_ne_broje_kao_redovi(self):
+        """`+++` i `---` počinju istim znakom kao telo, a nose imena fajlova."""
+        assert zakrpa.brojke(self.IZMENA)["apps/content/x.py"] == (2, 1)
+
+    def test_ne_die_izuzetak_na_smece(self):
+        """Prikaz nije provera: zakrpa koja je već primenjena mora da se prikaže."""
+        assert zakrpa.brojke("ovo nije diff") == {}
+        assert zakrpa.brojke("") == {}
+        assert zakrpa.brojke("+++ /nesto/apsolutno\n+a\n") == {}

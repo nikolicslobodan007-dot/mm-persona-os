@@ -272,3 +272,73 @@ class TestKomandaGrane:
         ispis = out.getvalue()
         assert f"'+refs/heads/{rezultat.PREFIKS_GRANE}*:" in ispis
         assert f"'refs/heads/{rezultat.PREFIKS_GRANE}" not in ispis
+
+
+class TestPrevodGrane:
+    """ADR-0071 — ispis mora da bude dovoljan čoveku koji ne čita `diff`.
+
+    Slobodan je 02.10.2026. rekao: „Ja ne umem da pregledam kod." Do tada je
+    ADR-0038 §6 tražio ljudsku ruku nad `main`-om pretpostavljajući ruku koja
+    čita zakrpu. Ove provere brane sadržaj tog prevoda, ne njegov raspored.
+    """
+
+    def _ispis(self, z, zk):
+        with bind(actor_id="service:runner"):
+            rezultat.zabelezi(z, zk, branch=rezultat.ime_grane(z), commit_sha=SHA)
+        out = io.StringIO()
+        call_command("grane", stdout=out)
+        return out.getvalue()
+
+    def test_nosi_zasto_agenta_i_obim_izmene(self, z, zk, mila):
+        zeleno(z, zk)
+        ispis = self._ispis(z, zk)
+        assert "Provera rezultata." in ispis          # `why`, rečenica čoveka
+        assert mila.display_name in ispis
+        assert "apps/content/x.py" in ispis
+        assert "+1" in ispis and "−1" in ispis        # minus je U+2212, ne crtica
+
+    def test_nosi_kapije_trosak_i_recenziju(self, z, zk):
+        zeleno(z, zk)
+        ispis = self._ispis(z, zk)
+        for g in z.required_gates:
+            assert f"{g}: prošla" in ispis
+        assert "pokušaja" in ispis and "centi" in ispis
+        assert "RECENZIJA" in ispis
+
+    def test_cista_grana_kaze_da_nema_smetnji(self, z, zk):
+        zk.from_model = True            # zakrpa agenta, ne čovekova
+        zk.save(update_fields=["from_model"])
+        zeleno(z, zk)
+        ispis = self._ispis(z, zk)
+        assert "SMETNJI   nema" in ispis
+        assert "NE SPAJATI" not in ispis
+
+    def test_otvoren_nalaz_pise_ne_spajati(self, z, zk, mila):
+        zeleno(z, zk)
+        recenzent = Persona.objects.create(
+            public_id="P-09303", display_name="Recenzent dva",
+            persona_type=E.PersonaType.ASSISTANT, status=E.PersonaStatus.ACTIVE)
+        with bind(actor_id="user:slobodan"):
+            zadaci.add_finding(z, reviewer=recenzent, file="apps/content/x.py",
+                               claim="puca", severity="BLOCKER",
+                               source=zadaci.IZVOR_COVEK)
+        ispis = self._ispis(z, zk)
+        assert "NE SPAJATI" in ispis
+        assert "BLOCKER" in ispis
+
+    def test_kaze_kad_zakrpu_nije_pisao_model(self, z, zk):
+        """Zakrpa koju je predao čovek ne meri agenta (ADR-0050) — i to se vidi."""
+        zeleno(z, zk)
+        ispis = self._ispis(z, zk)
+        assert "nije napisao model nego čovek" in ispis
+
+    def test_ne_zove_model(self, z, zk, monkeypatch):
+        """Prikaz koji bi izmišljao bio bi gori od nikakvog (ADR-0033)."""
+        from apps.llm_gateway import gateway
+
+        def pukni(*a, **k):  # pragma: no cover — sme da se pozove samo ako grešimo
+            raise AssertionError("prikaz grane ne sme da zove model")
+
+        monkeypatch.setattr(gateway, "generate", pukni)
+        zeleno(z, zk)
+        assert "GRANA" in self._ispis(z, zk)

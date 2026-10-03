@@ -49,8 +49,8 @@ from common import enums as E
 from .models import CodeTask, GateResult, TaskPatch
 from .zadaci import TaskError
 
-__all__ = ["Ishod", "pokusaj", "potroseno", "izvuci_diff", "zasto_ne", "otisak",
-           "PLAFON_CENTI", "NAJVISE_POKUSAJA"]
+__all__ = ["Ishod", "pokusaj", "pokusaja", "potroseno", "izvuci_diff", "zasto_ne",
+           "otisak", "PLAFON_CENTI", "NAJVISE_POKUSAJA"]
 
 #: Plafon troška po zadatku, u EUR centima (Canon §13.1 — nikad float). Nije
 #: mera koliko posla agent sme da uradi nego kočnica za kvar koji troši
@@ -124,6 +124,15 @@ def _zakrpe_modela(zadatak: CodeTask):
     return zadatak.patches.filter(from_model=True).order_by("created_at")
 
 
+def pokusaja(zadatak: CodeTask) -> int:
+    """Koliko je pokušaja agent potrošio — jedno mesto za to brojanje.
+
+    Postoji da bi prikaz (ADR-0071) brojao **isto** što i kočnica. Dva mesta sa
+    istom definicijom su dve definicije koje čekaju da se raziđu (ADR-0033).
+    """
+    return _zakrpe_modela(zadatak).count()
+
+
 def potroseno(zadatak: CodeTask) -> int:
     """Koliko je model dosad koštao na ovom zadatku, u centima."""
     return sum(p.cost_eur_cents for p in zadatak.patches.all())
@@ -185,7 +194,7 @@ def zasto_ne(zadatak: CodeTask, *, plafon_centi: int = PLAFON_CENTI,
         return ("već postoji prihvaćena a neizmerena zakrpa — poslušnik radi; "
                 "novi pokušaj bi pisao preko tuđeg posla (ADR-0040)")
 
-    broj = _zakrpe_modela(zadatak).count()
+    broj = pokusaja(zadatak)
     if broj >= najvise:
         return f"dostignut plafon pokušaja ({broj}/{najvise})"
 
@@ -330,7 +339,7 @@ def pokusaj(zadatak: CodeTask, *, plafon_centi: int = PLAFON_CENTI,
     kocnica = zasto_ne(zadatak, plafon_centi=plafon_centi, najvise=najvise)
     if kocnica:
         return Ishod(razlog=kocnica, potroseno_ukupno=potroseno(zadatak),
-                     pokusaja=_zakrpe_modela(zadatak).count())
+                     pokusaja=pokusaja(zadatak))
 
     tekst_prompta, b = _prompt(zadatak)
     try:
@@ -353,7 +362,7 @@ def pokusaj(zadatak: CodeTask, *, plafon_centi: int = PLAFON_CENTI,
         napisano=red.status == E.PatchStatus.ACCEPTED.value,
         zakrpa_id=str(red.pk), status=red.status, razlog=red.reason,
         cena_centi=red.cost_eur_cents, potroseno_ukupno=potroseno(zadatak),
-        pokusaja=_zakrpe_modela(zadatak).count(), putanje=list(red.paths),
+        pokusaja=pokusaja(zadatak), putanje=list(red.paths),
         model=f"{g.provider}/{g.model}",
     )
 
