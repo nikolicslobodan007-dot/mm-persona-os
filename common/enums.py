@@ -866,6 +866,24 @@ class SourceKind(CanonEnum):
     SYNTHETIC_WORLD_EVENT = "synthetic_world_event"
 
 
+class LicenseBox(CanonEnum):
+    """U koju kutiju pada licenca procitanog izvora. ADR-0059 §2.
+
+    `NEPOZNATA` je podrazumevana i znaci **nema dozvole**, ne „slobodno je".
+    Iz te kutije se nista ne prepisuje — ponasanje se opisuje, a kod pise drugi
+    agent koji izvor nije video (ADR-0059 §3).
+    """
+
+    SLOBODNA = "SLOBODNA"        # MIT, Apache-2.0, BSD, ISC
+    ZARAZNA = "ZARAZNA"          # GPL, AGPL, SSPL, BUSL
+    ZABRANJENA = "ZABRANJENA"    # „sva prava zadrzana", CC-BY-NC za komercijalno
+    NEPOZNATA = "NEPOZNATA"      # licence nema
+
+
+#: Kutije iz kojih sadrzaj sme da udje u klijentski projekat (uz navodjenje).
+LICENSE_BOXES_USABLE: frozenset[LicenseBox] = frozenset({LicenseBox.SLOBODNA})
+
+
 class LLMPurpose(CanonEnum):
     """Zašto je model pozvan — osnova za rutiranje i za budžet (Canon §13.2)."""
 
@@ -919,6 +937,8 @@ __all__ += [
     "ReconcileStatus",
     "IncidentStatus",
     "SourceKind",
+    "LicenseBox",
+    "LICENSE_BOXES_USABLE",
     "LLMPurpose",
     "DISCLOSURE_ALWAYS_REQUIRED",
     "TERMINAL_ACTION_STATUSES",
@@ -1211,7 +1231,11 @@ ACTION_RATE_DIMENSION: dict[str, str] = {
 
 #: ActionType koji nema spoljni efekat — ne troši dnevni plafon i ne ide
 #: kroz gateway kao spoljna akcija.
-INTERNAL_ACTION_TYPES: frozenset[str] = frozenset({"content.draft", "memory.consolidate"})
+#: Akcije bez spoljnog efekta: publika je „internal", novina i obim se ne racunaju.
+#: `knowledge.collect` je ovde jer je upis u NASU memoriju; citanje tudjeg sajta je
+#: zasebna akcija (`browser.page.read`) i ima svoje uslove (ADR-0059 §1).
+INTERNAL_ACTION_TYPES: frozenset[str] = frozenset({"content.draft", "memory.consolidate",
+                                                   "knowledge.collect"})
 
 #: Koliko dugo važi odluka ALLOW/THROTTLE/DENY (za REQUIRE_APPROVAL važi TTL klase).
 POLICY_DECISION_TTL_MINUTES = 15

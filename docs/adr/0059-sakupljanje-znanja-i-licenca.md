@@ -1,6 +1,8 @@
 # ADR-0059 — Agent sme da sakuplja znanje, ali ne sme da ga uzme
 
-- **Status:** predložen (29.09.2026.)
+- **Status:** **prihvaćen** (03.10.2026.) — Slobodan, pet nedelja posle predloga
+- **Sprovedeno:** `knowledge.collect` u katalogu, `LicenseBox` u enumima,
+  `KnowledgeSource.license_box` i dva CHECK-a (migracija `memory/0006`)
 - **Prethodi:** ADR-0032 (izviđanje), ADR-0008 (čitanje javnog weba), ADR-0054 (pravilo
   bez izvora), ADR-0055 (bolje bez upućivanja nego sa pogrešnim), ADR-0033
 - **Menja:** ADR-0032 — izviđač više ne donosi samo **presudu o alatu** nego i
@@ -139,6 +141,87 @@ nalaz na sopstveni rad (ADR-0045).
 sopstvenim ključem (ADR-0026). Danas ključ ima **samo P-00027**. Ova tri agenta ne mogu
 da odrade nijedan korak dok ne dobiju svoje ključeve, i to je trošak koji ulazi u plan
 pre prvog prolaza, ne posle njega.
+
+
+## Izmereno pri prihvatanju (03.10.2026.)
+
+Pre nego što je iz ovog ADR-a nastao ijedan red koda, izmereno je dvoje čega sam
+se plašio. **Oba su se vratila bolje nego što sam pretpostavljao** — i to je
+razlog zašto se merilo, a ne procenjivalo.
+
+### 1. Uslovi za čitanje javnog weba **se sprovode u kodu**
+
+Nisu samo zapisani u katalogu. `apps/runtime/adapters/web.py`:
+
+| uslov | gde se sprovodi |
+|---|---|
+| istinit `User-Agent` sa kontaktom | `user_agent()` ga čita iz samog kataloga — ne može da se raziđe sa `capabilities.yaml` |
+| `robots.txt` se poštuje | `rp.can_fetch(ua, url)`; zabrana vraća `BLOCKED_BY_PLATFORM / ROBOTS_DISALLOWED` |
+| `Crawl-delay` | `max(1.0, rp.crawl_delay(ua))` — nikad brže od 1 zahteva u sekundi po hostu, deljeno kroz keš između svih radnika |
+| uslovni GET | `If-None-Match` / `If-Modified-Since` iz keša; `304` se vraća kao `NOT_MODIFIED` |
+| 429/503 | odustaje tačno onoliko koliko piše u `Retry-After` |
+| prijava, nalog, „prihvatam" | **nikada** (Aneks A §5.1) |
+
+Uz to, `apps/policy/engine.py` **ponovo proverava izvršni ugovor** pre dozvole:
+`robots_respected is True`, `user_agent_declared` jednak traženom, `0 < qps ≤ 1.0`,
+`conditional_get is True`. Dva nezavisna mesta, ne jedno.
+
+Slobodanovo pravilo — *„nećemo da krademo, hoćemo da sakupljamo"* — ovde ne
+sprovodi dokument nego kod.
+
+### 2. Globalni prekidač **nije jedini ključ**
+
+Plašio sam se da paljenje `GLOBAL_EXTERNAL_ACTIONS_ENABLED` otvara sve odjednom.
+Ne otvara. `gateway.external_live`:
+
+```
+globalni prekidač  I  persona u CONTROLLED_LIVE ili LIVE
+```
+
+Persona u `SIMULATION` ili `SHADOW` ostaje `dry_run=True` i kad je prekidač
+upaljen. Brava su **dva ključa, ne jedan**: prekidač je firmin, okruženje je po
+agentu. Znači da se sakupljanje može pustiti **jednom agentu**, a da ostala
+trideset dva ostanu zatvorena.
+
+To menja redosled GO odluke: ne „sve napolje ili ništa", nego jedan izviđač u
+`CONTROLLED_LIVE`, izmeren, pa tek onda sledeći.
+
+## Sprovedeno — šta je tačno ušlo
+
+| | |
+|---|---|
+| `knowledge.collect` | katalog, `L1`, uslovi `source_url_required` i `license_required` |
+| `knowledge.collect` kao akcija | traži **oba**: `web.read_public` i `knowledge.collect` |
+| rizik akcije | `5` — upisano izričito, jer akcija koje nema u tabeli dobija `50` i traži odobrenje bez razloga |
+| publika | `INTERNAL_ACTION_TYPES` — upis ide u našu memoriju, ne napolje |
+| `LicenseBox` | četiri kutije iz §2, podrazumevana `NEPOZNATA` |
+| `LICENSE_BOXES_USABLE` | samo `SLOBODNA` — spisak postoji da se „nema licence" nikad ne pročita kao „slobodno je" |
+| CHECK `knowledge_source_web_has_uri` | izvor sa javnog weba bez adrese nije izvor nego tvrdnja |
+| CHECK `knowledge_source_free_names_license` | kutija `SLOBODNA` mora da imenuje licencu; odbijanje ne mora da se obrazlaže, dozvola mora |
+
+Pravila stoje u **bazi**, ne u servisu, iz istog razloga kao kod `CodeTask`
+(ADR-0035): servis se zaobilazi jednim `objects.create()`, a CHECK ne.
+
+`tests/test_sakupljanje.py` — 12 provera.
+
+## Šta još NE postoji (da se ne pročita kao gotovo)
+
+- **Nijedan agent još nema `knowledge.collect`.** Dozvola se dodeljuje rukom
+  (`manage.py poverenje`), po agentu i po opsegu.
+- **Nijedan agent nije u `CONTROLLED_LIVE`**, pa ništa ne izlazi napolje ni kad
+  bi imao dozvolu.
+- **Lanac iz §3** — izviđač opisuje ponašanje, drugi agent piše kod — **nema
+  svoju cev**. Danas bi to bila dva ručno otvorena zadatka, bez provere da je
+  pisac zaista drugi agent od onog koji je video izvor. To je sledeći ADR.
+- **GitHub ključ kao `credential_ref`** nije postavljen (60 zahteva na sat bez
+  njega, 5.000 sa njim).
+
+## Zapisano za ADR-0033
+
+Ovaj ADR u sebi nosi pouku da je **ADR-0032 stajao napisan i nepokrenut pet
+dana**. Sam je potom stajao **pet nedelja**. Napisati odluku i ne pokrenuti je
+nije pola posla nego nula — i to je greška koja se ponavlja upravo zato što
+izgleda kao da je nešto urađeno.
 
 ## Šta je odbačeno
 

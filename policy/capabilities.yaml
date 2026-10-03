@@ -53,6 +53,17 @@ capabilities:
       rate_per_host_qps: 1.0
       conditional_get: true
 
+  knowledge.collect:
+    description: "Upis javno procitanog u bazu znanja, uz izvor i licencu"
+    min_trust_level: L1
+    requires_approval_class: null
+    requires_disclosure_label: false
+    # ADR-0059 §1 — L1, ne L0: citanje ne ostavlja trag, upis ostavlja, a
+    # pogresan zapis se posle godinu dana ne razlikuje od tacnog.
+    required_constraints:
+      source_url_required: true
+      license_required: true
+
   browser.form_submit_approved:
     description: "Slanje forme na sopstvenom ili odobrenom sistemu"
     min_trust_level: L2
@@ -132,6 +143,7 @@ action_types:
   mail.send:                [email.outbound_approved]
   mail.reply:               [email.reply_inbound]
   browser.page.read:        [web.read_public]
+  knowledge.collect:        [web.read_public, knowledge.collect]
   browser.form.submit:      [browser.form_submit_approved]
   content.draft:            []
   visual.generate:          []   # ADR-0018 — slika agenta, bez spoljašnjeg efekta

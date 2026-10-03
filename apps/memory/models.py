@@ -401,17 +401,46 @@ class KnowledgeSource(UUIDModel):
         help_text="Canon §12.6 — web.read_public traži robots_respected.",
     )
 
+    # --- ADR-0059 §2: zapis bez izvora i licence se odbija ---------------
+    #
+    # Pravilo stoji u bazi, ne u servisu, iz istog razloga kao kod `CodeTask`:
+    # servis se zaobilazi jednim `objects.create()`, a CHECK ne. „Nema licence"
+    # je `NEPOZNATA` i znači **nema dozvole**, ne „slobodno je".
+    license_box = models.CharField(
+        max_length=16, choices=E.LicenseBox.choices(),
+        default=E.LicenseBox.NEPOZNATA,
+        help_text="ADR-0059 §2 — u koju kutiju pada licenca izvora.",
+    )
+    license_note = models.CharField(
+        max_length=200, blank=True,
+        help_text="Tačan naziv licence kako stoji na izvoru (npr. `MIT`, `AGPL-3.0`).",
+    )
+
     class Meta:
         db_table = "memory_knowledge_source"
         indexes = [
             models.Index(fields=["persona", "is_active"]),
             models.Index(fields=["checksum"]),
+            models.Index(fields=["license_box", "is_active"],
+                         name="memory_know_license_a1f3c2_idx"),
         ]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(trust_score__gte=0) & models.Q(trust_score__lte=1),
                 name="knowledge_source_trust_unit",
-            )
+            ),
+            # Izvor sa javnog weba bez adrese nije izvor nego tvrdnja (ADR-0059 §2).
+            models.CheckConstraint(
+                condition=~models.Q(source_kind=E.SourceKind.PUBLIC_WEB_SOURCE.value)
+                | ~models.Q(uri=""),
+                name="knowledge_source_web_has_uri",
+            ),
+            # Kutija `SLOBODNA` tvrdi dozvolu — mora da kaže i koju licencu.
+            models.CheckConstraint(
+                condition=~models.Q(license_box=E.LicenseBox.SLOBODNA.value)
+                | ~models.Q(license_note=""),
+                name="knowledge_source_free_names_license",
+            ),
         ]
 
     def __str__(self) -> str:

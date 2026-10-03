@@ -16,6 +16,10 @@ action_base_risk:
   browser.page.read: 0
   content.draft: 0
   memory.consolidate: 0
+  # ADR-0059 — upis u nasu memoriju, bez publike. Iznad `memory.consolidate`
+  # zato sto zapis nosi tudje poreklo i licencu, pa pogresan ulazi u znanje
+  # trajno. Ovo je procena, ne merenje.
+  knowledge.collect: 5
   channel.comment.moderate: 5
   mail.reply: 10
   channel.comment.create: 15
