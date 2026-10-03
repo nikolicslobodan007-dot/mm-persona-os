@@ -658,3 +658,58 @@ class TestKljuceviUKonzoli:
                {"provider": "anthropic", "kljuc": "sk-ant-0123456789abcdef"})
         assert AgentCredential.objects.filter(persona=mila, provider="anthropic").exists()
         assert "nema rutu" not in c.get("/console/personas/P-00001").content.decode()
+
+
+class TestBranchesConsole:
+    """ADR-0071 — strana /console/branches čita `rezultat.za_pregled()`."""
+
+    def test_requires_login(self, db):
+        r = Client().get("/console/branches")
+        assert r.status_code == 302 and r["Location"].startswith("/console/login")
+
+    def test_session_that_lost_its_role_gets_403(self, boss):
+        c = _login(Client(), boss)
+        boss.groups.clear()
+        r = c.get("/console/branches")
+        assert r.status_code == 403
+
+    def test_operator_sees_branch_data_from_za_pregled(self, boss, monkeypatch):
+        from apps.orchestration import rezultat
+
+        redovi = [{
+            "task": "TSK-01M41NT6SP88MN6FNQS77A8AJ1",
+            "title": "Test za konzolnu stranu Grane",
+            "zasto": "Nema nijednu proveru.",
+            "adr": "ADR-0071",
+            "branch": "zadatak/TSK-01M41NT6SP88MN6FNQS77A8AJ1",
+            "commit": "a" * 40,
+            "agent": "P-00001",
+            "ime": "Mila Vuković (AI)",
+            "gates": {"pytest": True, "ruff": True},
+            "izmene": [{"put": "tests/test_console.py", "dodato": 44, "obrisano": 0}],
+            "pokusaja": 1,
+            "plafon_pokusaja": 3,
+            "centi": 10,
+            "plafon_centi": 1000,
+            "nalazi": {"ukupno": 0, "otvoreno": 0, "zatvoreno": 0, "blokera": 0},
+            "blokera": 0,
+            "upozorenja": [],
+        }]
+        monkeypatch.setattr(rezultat, "za_pregled", lambda: redovi)
+        c = _login(Client(), boss)
+        r = c.get("/console/branches")
+        assert r.status_code == 200
+        html = r.content.decode()
+        assert "TSK-01M41NT6SP88MN6FNQS77A8AJ1" in html
+        assert "zadatak/TSK-01M41NT6SP88MN6FNQS77A8AJ1" in html
+        assert "Test za konzolnu stranu Grane" in html
+        assert "tests/test_console.py" in html
+
+    def test_empty_list_shows_placeholder_message(self, boss, monkeypatch):
+        from apps.orchestration import rezultat
+
+        monkeypatch.setattr(rezultat, "za_pregled", lambda: [])
+        c = _login(Client(), boss)
+        html = c.get("/console/branches").content.decode()
+        assert "Nijedna grana ne čeka pregled." in html
+        assert "<table" not in html
