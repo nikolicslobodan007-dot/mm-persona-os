@@ -62,6 +62,26 @@ Lokalni šablon se i dalje **ne broji kao pokušaj agenta**. `pokusaj` diže
 0/8 pokušaja i 0 centi. To je ADR-0050 i radi kako treba: naš propust u
 podešavanju nije agentov neuspeh.
 
+### 5. Kapija mora da kaže i koliko je izmerila
+
+Isti dan, isti kvar, drugo mesto. `deploy/runner/kapije.sh` je pokretao
+`python -m pytest -q`, a `pytest.ini` već nosi `addopts = -q`. Dva `-q` su
+`-qq`, a na tom nivou pytest **preskače završni red** — onaj sa brojem testova.
+Izmereno nad praznim primerom, ne zaključeno iz dokumentacije:
+
+| poziv | poslednji red ispisa |
+|---|---|
+| `pytest -q` | `2 passed in 0.01s` |
+| `pytest -q -q` | `..  [100%]` |
+
+Posledica: nijedan prolaz kapija — ni naš, ni ijednog agenta — nikad nije
+zapisao **koliko** je testova prošlo. „pytest: ZELENO" je bilo da/ne bez broja
+iza sebe. Izlaz `0` jeste dokaz da su testovi vrteni (pytest vraća `5` kad ne
+sakupi nijedan), ali nije dokaz da ih je bilo onoliko koliko ih ima.
+
+`-q` je uklonjen iz `kapije.sh`; `pytest.ini` ga i dalje daje, pa je ispis isti
+kao ranije plus red sa brojem.
+
 ## Šta je odbačeno
 
 - **Da poruka nabraja šta sve može da se uključi.** Rečnik sme da kaže gde se
@@ -76,6 +96,8 @@ podešavanju nije agentov neuspeh.
 - `apps/orchestration/pisac.py` → `zasto_lokalno`, `_RAZLOG_RUTE`; poruka
   `LOCAL_ONLY` se sastavlja iz `Generation.fallbacks`.
 - `tests/test_pisac.py` → `TestZastoLokalno`, 6 provera.
+- `deploy/runner/kapije.sh` → `pytest` bez drugog `-q`; ispis kapije od sada
+  nosi broj testova.
 
 ## Zapisano za ADR-0033
 
