@@ -460,3 +460,52 @@ class TestReferencaNosiModelIAudit:
 
     def test_fajl_bez_klase_ide_ceo(self):
         assert brif._izvod("def f():\n    return 1\n") == "def f():\n    return 1\n"
+
+
+class TestReferencaPoZadatku:
+    """ADR-0073 — brif nosi i ono što se čita, po zadatku.
+
+    03.10. je Pavol (P-00029) odbio da napiše stranu konzole: zadatak ga je
+    uputio na `rezultat.za_pregled()`, a ta funkcija nije bila ni u jednom
+    priloženom fajlu. Tražili smo spajanje sa kodom koji mu nismo pokazali.
+    """
+
+    CILJ = "apps/orchestration/rezultat.py"
+
+    def _putanje(self, z):
+        return [r["path"] for r in brif.build(z)["reference"]]
+
+    def test_bez_spiska_samo_globalna_referenca(self, db):
+        z = _zadatak(["console"])
+        assert set(self._putanje(z)) <= set(brif.REFERENCA)
+
+    def test_fajl_sa_spiska_ulazi_u_brif(self, db):
+        z = _zadatak(["console"], reference_paths=[self.CILJ])
+        assert self.CILJ in self._putanje(z)
+
+    def test_spisak_se_menja_i_na_otvorenom_zadatku(self, db):
+        z = _zadatak(["console"])
+        with bind(actor_id="user:slobodan"):
+            zadaci.set_reference(z, [self.CILJ])
+        assert self.CILJ in self._putanje(z)
+
+    def test_referentni_fajl_je_samo_za_citanje(self, db):
+        z = _zadatak(["console"], reference_paths=[self.CILJ])
+        assert all(r["read_only"] is True for r in brif.build(z)["reference"])
+
+    def test_citanje_ne_daje_pravo_pisanja(self, db):
+        """Dve različite stvari: spisak ne sme da proširi ono što se dira."""
+        z = _zadatak(["console"], reference_paths=[self.CILJ])
+        assert zadaci.may_touch(z, self.CILJ), "referentni fajl ne sme da se dira"
+
+    def test_globalna_referenca_se_ne_duplira(self, db):
+        z = _zadatak(["console"], reference_paths=["common/enums.py"])
+        assert self._putanje(z).count("common/enums.py") == 1
+
+    def test_nepostojeci_fajl_ne_obara_brif(self, db):
+        z = _zadatak(["console"], reference_paths=["apps/orchestration/nema-me.py"])
+        assert "apps/orchestration/nema-me.py" not in self._putanje(z)
+
+    def test_bekstvo_iz_korena_se_odbija(self, db):
+        z = _zadatak(["console"], reference_paths=["../../etc/passwd"])
+        assert not any("passwd" in p for p in self._putanje(z))

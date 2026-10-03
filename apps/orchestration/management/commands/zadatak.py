@@ -3,6 +3,7 @@
     manage.py zadatak --novi --naslov "..." --zasto "..." \\
         --putanje apps/content,tests/test_content.py --adr 0024 --izvrsilac P-00027
 
+    manage.py zadatak --zadatak TSK-... --referenca apps/orchestration/rezultat.py
     manage.py zadatak --spisak
     manage.py zadatak --zadatak TSK-... (stanje, kapije, nalazi)
     manage.py zadatak --zadatak TSK-... --sme apps/content/steps.py
@@ -36,6 +37,9 @@ class Command(BaseCommand):
         parser.add_argument("--naslov", default="")
         parser.add_argument("--zasto", default="")
         parser.add_argument("--putanje", default="", help="Zarezom razdvojeni prefiksi.")
+        parser.add_argument("--referenca", default="",
+                            help="Zarezom; fajlovi koje pisac SME DA CITA, ne da menja "
+                                 "(ADR-0073). Prazan string ne menja nista; `-` brise.")
         parser.add_argument("--kapije", default="", help="Zarezom; podrazumevano sve mašinske.")
         parser.add_argument("--adr", default="")
         parser.add_argument("--izvrsilac", default="")
@@ -53,17 +57,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, novi, naslov, zasto, putanje, kapije, adr, izvrsilac,
                recenzent, spisak, zadatak, sme, kapija, prosla, pala, ispis,
-               zavrsi, commit, actor, **opts):
+               zavrsi, commit, actor, referenca, **opts):
         with bind(actor_id=actor):
             try:
                 self._radi(novi, naslov, zasto, putanje, kapije, adr, izvrsilac,
                            recenzent, spisak, zadatak, sme, kapija, prosla, pala,
-                           ispis, zavrsi, commit)
+                           ispis, zavrsi, commit, referenca)
             except zadaci.TaskError as e:
                 raise CommandError(f"{e.code}: {e}") from e
 
     def _radi(self, novi, naslov, zasto, putanje, kapije, adr, izvrsilac, recenzent,
-              spisak, zadatak, sme, kapija, prosla, pala, ispis, zavrsi, commit):
+              spisak, zadatak, sme, kapija, prosla, pala, ispis, zavrsi, commit,
+              referenca=""):
         if novi:
             z = zadaci.create(
                 title=naslov, why=zasto, adr=adr,
@@ -71,10 +76,13 @@ class Command(BaseCommand):
                 gates=[g.strip() for g in kapije.split(",") if g.strip()] or None,
                 assignee=_persona(izvrsilac) if izvrsilac else None,
                 reviewer=_persona(recenzent) if recenzent else None,
+                reference_paths=[r for r in referenca.split(",") if r.strip()],
             )
             self.stdout.write(self.style.SUCCESS(f"{z.public_id} · {z.title}"))
             self.stdout.write(f"  putanje: {', '.join(z.allowed_paths)}")
             self.stdout.write(f"  kapije:  {', '.join(z.required_gates)}")
+            if z.reference_paths:
+                self.stdout.write(f"  cita:    {', '.join(z.reference_paths)}")
             return
 
         if spisak:
@@ -92,6 +100,14 @@ class Command(BaseCommand):
         z = CodeTask.objects.filter(public_id=zadatak).first()
         if z is None:
             raise CommandError(f"Zadatak {zadatak} ne postoji.")
+
+        if referenca:
+            zadaci.set_reference(
+                z, [] if referenca.strip() == "-"
+                else [r for r in referenca.split(",") if r.strip()])
+            self.stdout.write(self.style.SUCCESS(
+                f"{z.public_id} cita: {', '.join(z.reference_paths) or '(nista)'}"))
+            return
 
         if izvrsilac:
             zadaci.assign(z, assignee=_persona(izvrsilac),
@@ -127,6 +143,8 @@ class Command(BaseCommand):
         if z.adr:
             self.stdout.write(f"  ADR:     {z.adr}")
         self.stdout.write(f"  putanje: {', '.join(z.allowed_paths)}")
+        if z.reference_paths:
+            self.stdout.write(f"  cita:    {', '.join(z.reference_paths)}")
         # ADR-0065 — kapije ispod su ishod POSLEDNJE IZMERENE zakrpe. Ako je posle
         # nje stigla novija koja do kapija nije došla, to se mora reći: 01.10. sam
         # ja tri sata čitao stare kapije kao da mere novu zakrpu.

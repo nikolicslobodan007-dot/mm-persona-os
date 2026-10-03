@@ -149,10 +149,21 @@ def _izvod(tekst: str) -> str:
     return "\n".join(izlaz) + "\n" if izlaz else tekst
 
 
-def _referenca(koren: Path) -> list[dict]:
-    """Fajlovi koje pisac sme da čita a ne sme da menja. ADR-0061."""
+def _referenca(koren: Path, zadatak: CodeTask | None = None) -> list[dict]:
+    """Fajlovi koje pisac sme da čita a ne sme da menja. ADR-0061, ADR-0073.
+
+    `REFERENCA` je ono što treba svakom zadatku (rečnik enuma, audit). Uz to ide
+    i spisak po zadatku: 03.10. je Pavol odbio da piše stranu konzole jer
+    `rezultat.za_pregled()` nije bio ni u jednom priloženom fajlu — tražili smo
+    spajanje sa kodom koji mu nismo pokazali. Globalni spisak to ne rešava:
+    svaki zadatak bi nosio tuđe fajlove.
+    """
+    spisak = list(REFERENCA)
+    for rel in (zadatak.reference_paths if zadatak is not None else []):
+        if rel not in spisak:
+            spisak.append(rel)
     redovi = []
-    for rel in REFERENCA:
+    for rel in spisak:
         f = (koren / rel).resolve()
         if not (f.is_file() and (f == koren or koren in f.parents)):
             continue
@@ -279,7 +290,7 @@ def build(zadatak: CodeTask) -> dict:
     # „pored" budžeta: tada bi rasla dok neko ne primeti. Ono što ne stane ne
     # nestaje tiho nego ide u `truncated`, kao i svaki drugi fajl.
     referenca: list[dict] = []
-    for r in _referenca(koren):
+    for r in _referenca(koren, zadatak):
         velicina = len(r["content"].encode("utf-8"))
         if zauzeto + velicina > MAX_TOTAL_BYTES:
             odsečeno.append({"path": r["path"],
