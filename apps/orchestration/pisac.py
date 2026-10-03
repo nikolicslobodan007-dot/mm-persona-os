@@ -50,7 +50,7 @@ from .models import CodeTask, GateResult, TaskPatch
 from .zadaci import TaskError
 
 __all__ = ["Ishod", "pokusaj", "pokusaja", "potroseno", "izvuci_diff", "zasto_ne",
-           "otisak", "PLAFON_CENTI", "NAJVISE_POKUSAJA"]
+           "otisak", "zasto_lokalno", "PLAFON_CENTI", "NAJVISE_POKUSAJA"]
 
 #: Plafon troška po zadatku, u EUR centima (Canon §13.1 — nikad float). Nije
 #: mera koliko posla agent sme da uradi nego kočnica za kvar koji troši
@@ -353,8 +353,8 @@ def pokusaj(zadatak: CodeTask, *, plafon_centi: int = PLAFON_CENTI,
         # kao pokušaj, brojali bismo kao neuspeh agenta nešto što nije ni model.
         raise TaskError(
             "LOCAL_ONLY",
-            "Zahtev je pao na lokalni šablon, a on ne piše kod. Uključi rutu za "
-            "`code_patch` i LLM_EXTERNAL_ENABLED (ADR-0009).")
+            "Zahtev je pao na lokalni šablon, a on ne piše kod. "
+            f"Preskočene rute: {zasto_lokalno(g.fallbacks)}.")
 
     diff = izvuci_diff(g.text)
     red = _upisi(zadatak, diff, g.text, g, b)
@@ -365,6 +365,36 @@ def pokusaj(zadatak: CodeTask, *, plafon_centi: int = PLAFON_CENTI,
         pokusaja=pokusaja(zadatak), putanje=list(red.paths),
         model=f"{g.provider}/{g.model}",
     )
+
+
+#: Zašto je ruta preskočena — rečima. Šifru koje nema ovde puštamo kakva jeste:
+#: nepoznata šifra je neprijatna, izmišljen razlog je štetan (ADR-0033).
+_RAZLOG_RUTE = {
+    "NO_PERSONA_KEY": "agent nema svoj ključ (konzola → Modeli i ključevi)",
+    "NO_CREDENTIAL_REF": "nema nijedne reference na ključ",
+    "LLM_EXTERNAL_DISABLED": "LLM_EXTERNAL_ENABLED je isključen",
+    "PROVIDER_MAY_TRAIN": "provajder sme da uči na našim podacima — odbijeno",
+    "CREDENTIAL_MISSING": "referenca na ključ postoji, ali ključ nije nađen",
+    "NETWORK": "mreža nije propustila poziv",
+    "EMPTY_RESPONSE": "model je vratio prazan odgovor",
+}
+
+
+def zasto_lokalno(fallbacks: list[str] | None) -> str:
+    """Prevod preskočenih ruta u rečenicu. Dijagnoza, pa ne sme da obori ništa.
+
+    `gateway.generate` već nosi tačan razlog po ruti u `Generation.fallbacks`
+    (`provajder/model:ŠIFRA`). Do ADR-0072 se taj spisak bacao, a poruka je
+    nagađala uzrok — i 03.10. poslala čoveka da uključi dve stvari koje su obe
+    već bile uključene.
+    """
+    if not fallbacks:
+        return "nijedna spoljna ruta nije ni ponuđena za `code_patch`"
+    delovi = []
+    for stavka in fallbacks:
+        ruta, _, sifra = (stavka or "").rpartition(":")
+        delovi.append(f"{ruta or '?'} — {_RAZLOG_RUTE.get(sifra, sifra or '?')}")
+    return "; ".join(delovi)
 
 
 def otisak(diff: str) -> str:
