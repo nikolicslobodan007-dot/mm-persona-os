@@ -41,6 +41,7 @@ urlpatterns = [
     path("content", views.content, name="console-content"),
     path("actions/<str:action_id>", views.action, name="console-action"),
     path("costs", views.costs, name="console-costs"),
+    path("branches", views.branches, name="console-branches"),
     path("incidents", views.incidents, name="console-incidents"),
     path("kill-switch", views.kill_switch, name="console-kill-switch"),
 ]

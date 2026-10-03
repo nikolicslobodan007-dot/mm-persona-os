@@ -1,0 +1,56 @@
+{% extends "console/base.html" %}{% load console_tags %}
+{% block title %}Grane{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Grane</h1>
+  <div class="sub">Rezultat agenta pre nego što ga čovek spoji u main (ADR-0071).
+    Ovde se ništa ne računa iznova — samo se čita ono što je već presuđeno kapijama.</div></div>
+  <div class="pills"><span class="pill">{{ n }} otvorenih</span></div></div>
+
+{% for r in redovi %}
+<div class="card mb12">
+  <div class="row">
+    <b class="mono">{{ r.task }}</b>
+    <span class="pill">{{ r.branch }}</span>
+    <span class="mono small muted">{{ r.commit|slice:":12" }}</span>
+    <span class="spacer"></span>
+    {% if r.adr %}<span class="pill">{{ r.adr }}</span>{% endif %}
+  </div>
+  <h2 class="mt12">{{ r.title }}</h2>
+  <p class="sub">{{ r.zasto }}</p>
+  <div class="row small muted mb12">
+    <span>Agent: <b>{{ r.ime|default:r.agent }}</b> ({{ r.agent }})</span>
+    <span>· pokušaja {{ r.pokusaja }}/{{ r.plafon_pokusaja }}</span>
+    <span>· trošak {{ r.centi|eur }} od {{ r.plafon_centi|eur }}</span>
+  </div>
+
+  {% if r.upozorenja %}
+  <div class="msg warning">
+    <b>Razlozi protiv spajanja:</b>
+    <ul class="mt8">{% for u in r.upozorenja %}<li>{{ u }}</li>{% endfor %}</ul>
+  </div>
+  {% else %}
+  <div class="msg success">Nema evidentiranih razloga protiv spajanja.</div>
+  {% endif %}
+
+  <div class="row mt12">
+    {% for g, ok in r.gates.items %}
+    <span class="pill {% if ok == True %}ok{% elif ok == False %}bad{% else %}warn{% endif %}">
+      {{ g }}{% if ok == True %} ✓{% elif ok == False %} ✕{% else %} —{% endif %}</span>
+    {% empty %}<span class="sub">Nema zapisanih kapija.</span>
+    {% endfor %}
+  </div>
+
+  <table class="mt12"><tr><th>Fajl</th><th>Dodato</th><th>Obrisano</th></tr>
+  {% for iz in r.izmene %}<tr><td class="mono small">{{ iz.put }}</td>
+    <td class="small">+{{ iz.dodato }}</td><td class="small">-{{ iz.obrisano }}</td></tr>
+  {% empty %}<tr><td colspan="3" class="sub">Nema zapisanih izmena.</td></tr>{% endfor %}</table>
+
+  <div class="row mt12 small muted">
+    <span>Nalazi recenzije: {{ r.nalazi.ukupno }} ukupno, {{ r.nalazi.otvoreno }} otvoreno
+      {% if r.blokera %}<span class="pill bad">{{ r.blokera }} BLOCKER</span>{% endif %}</span>
+  </div>
+</div>
+{% empty %}
+<div class="card"><p class="sub">Nijedna grana ne čeka pregled.</p></div>
+{% endfor %}
+{% endblock %}

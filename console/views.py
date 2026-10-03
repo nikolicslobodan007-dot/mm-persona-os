@@ -977,6 +977,21 @@ def costs(request):
 
 
 @console_view
+def branches(request):
+    """Grane spremne za ljudski pregled (ADR-0071).
+
+    Strana samo čita `rezultat.za_pregled()` — nijedno polje se ovde ne
+    računa iznova i nijedan poziv modelu se ne pravi. Odluka o spajanju
+    ostaje ljudska i dešava se van konzole (ADR-0038 §6, ADR-0043).
+    """
+    from apps.orchestration import rezultat
+
+    redovi = rezultat.za_pregled()
+    return render(request, "console/branches.html", _nav(request) | {
+        "redovi": redovi, "n": len(redovi)})
+
+
+@console_view
 def incidents(request):
     return render(request, "console/incidents.html", _nav(request) | {
         "incidents": PolicyIncident.objects.select_related("persona", "action")
