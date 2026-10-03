@@ -450,13 +450,47 @@ class TestReferencaNosiModelIAudit:
                      if r["path"] == "api/audit.py")
         assert '"details"' in tekst
 
-    def test_izvod_malih_imena_ne_menja_recnik(self):
-        """Opšte pravilo ne sme da poveća izvod enuma — izmereno 02.10.2026."""
+    def test_izvod_hvata_i_mala_imena(self):
+        """ADR-0068 — opšte pravilo hvata i polja modela, ne samo VELIKE članove.
+
+        Mereno nad **nepromenljivim uzorkom**, ne nad `common/enums.py`. Do
+        03.10. je ovde stajalo `len(izvod(enums.py)) == 15_874`: to je dokazivalo
+        pravilo samo onog dana kad je izmereno, a palo je prvi put kad je neko
+        dodao enum (`LicenseBox`, ADR-0059). **Mera koja se podiže pri svakoj
+        izmeni prestaje da bude mera** — postaje red koji se mehanički ažurira.
+        """
+        uzorak = (
+            "class Model(Base):\n"
+            '    """Dokumentacija koja ne sme u izvod."""\n'
+            "\n"
+            "    VELIKO = 1\n"
+            "    polje = models.CharField()\n"
+            "    def metoda(self):\n"
+            "        return 1\n"
+            "\n"
+            "\n"
+            "def van_klase():\n"
+            "    x = 2\n"
+        )
+        assert brif._izvod(uzorak) == (
+            "class Model(Base):\n"
+            "    VELIKO = 1\n"
+            "    polje = models.CharField()\n")
+
+    def test_izvod_enuma_ostaje_u_budzetu(self):
+        """Pravi rizik nije tačan broj bajtova nego da rečnik pojede brif.
+
+        Izmereno 03.10.2026: **16.153 B = 8,1 %** od `MAX_TOTAL_BYTES` (02.10.
+        bilo 15.874 B = 7,9 %). Granica je 10 %, pa rast od par enuma ne obara
+        kapiju, a udvostručenje je obara — a to je ono što je ADR-0068 i branio.
+        """
         from pathlib import Path
 
         from django.conf import settings
         tekst = (Path(settings.BASE_DIR) / "common/enums.py").read_text(encoding="utf-8")
-        assert len(brif._izvod(tekst).encode()) == 15_874
+        n = len(brif._izvod(tekst).encode())
+        assert n < 0.10 * brif.MAX_TOTAL_BYTES, f"izvod enuma je narastao na {n} B"
+        assert n < len(tekst.encode()) / 2, "izvod mora da ostane bitno manji od fajla"
 
     def test_fajl_bez_klase_ide_ceo(self):
         assert brif._izvod("def f():\n    return 1\n") == "def f():\n    return 1\n"

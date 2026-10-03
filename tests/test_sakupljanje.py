@@ -25,6 +25,9 @@ from tests.conftest import requires_db
 
 pytestmark = [requires_db]
 
+#: `requires_db` je SAMO preskakanje kad baze nema — pristup bazi i dalje traži
+#: fixture `db`. Bez nje test puca u `connection.cursor()`, a ne kaže zašto.
+
 
 class TestKatalog:
     def test_knowledge_collect_postoji_i_trazi_l1(self):
@@ -57,22 +60,22 @@ class TestLicenca:
                       title="Proba", uri="https://example.com/x", trust_score="0.5")
         return KnowledgeSource.objects.create(**(podaci | kw))
 
-    def test_podrazumevana_kutija_je_nepoznata(self):
+    def test_podrazumevana_kutija_je_nepoznata(self, db):
         assert self._izvor().license_box == E.LicenseBox.NEPOZNATA.value
 
-    def test_web_izvor_bez_adrese_ne_ulazi(self):
+    def test_web_izvor_bez_adrese_ne_ulazi(self, db):
         with pytest.raises(IntegrityError), transaction.atomic():
             self._izvor(uri="")
 
-    def test_slobodna_bez_imena_licence_ne_ulazi(self):
+    def test_slobodna_bez_imena_licence_ne_ulazi(self, db):
         with pytest.raises(IntegrityError), transaction.atomic():
             self._izvor(license_box=E.LicenseBox.SLOBODNA.value)
 
-    def test_slobodna_sa_imenom_licence_ulazi(self):
+    def test_slobodna_sa_imenom_licence_ulazi(self, db):
         izvor = self._izvor(license_box=E.LicenseBox.SLOBODNA.value, license_note="MIT")
         assert izvor.license_note == "MIT"
 
-    def test_zarazna_i_zabranjena_ne_traze_ime(self):
+    def test_zarazna_i_zabranjena_ne_traze_ime(self, db):
         """Odbijanje ne mora da se obrazlaže imenom — dozvola mora."""
         for kutija in (E.LicenseBox.ZARAZNA, E.LicenseBox.ZABRANJENA):
             assert self._izvor(license_box=kutija.value).pk
