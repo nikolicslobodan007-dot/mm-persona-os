@@ -400,6 +400,13 @@ class CodeTask(UUIDModel):
     #: Prefiksi putanja koje ovaj zadatak sme da dira. Normalizovani, bez vodeće
     #: kose crte. Zaštićena zona ovde ne može da se nađe — `zadaci.create` odbija.
     allowed_paths = JSON_LIST()
+
+    #: Fajlovi koje pisac sme da ČITA a ne sme da menja, uz ona tri koja svaki
+    #: brif nosi (ADR-0073). Ovde stoje pune putanje do fajlova, ne prefiksi, i
+    #: zasticena zona SME da se nadje: pravilo 7 prirucnika kaze da se zona cita,
+    #: ne menja. Prazno = samo globalna referenca.
+    reference_paths = JSON_LIST()
+
     required_gates = JSON_LIST(default=default_gates)
 
     requested_by = models.ForeignKey(

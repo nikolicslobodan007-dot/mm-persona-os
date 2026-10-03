@@ -88,7 +88,7 @@ def _clean_gates(gates) -> list[str]:
 def create(*, title: str, why: str, allowed_paths, adr: str = "",
            gates=None, requested_by: Persona | None = None,
            assignee: Persona | None = None, reviewer: Persona | None = None,
-           plan=None, run=None) -> CodeTask:
+           plan=None, run=None, reference_paths=None) -> CodeTask:
     """Pravi zadatak. Odbija prazan spisak putanja i zaštićenu zonu u njemu."""
     if not title.strip():
         raise TaskError("NO_TITLE", "Zadatak bez naslova.")
@@ -122,12 +122,14 @@ def create(*, title: str, why: str, allowed_paths, adr: str = "",
         public_id=ulid_public_id(EntityKind.CODE_TASK),
         title=title.strip(), why=why.strip(), adr=adr.strip(),
         allowed_paths=putanje, required_gates=kapije,
+        reference_paths=_clean_paths(reference_paths),
         requested_by=requested_by, reviewer=reviewer, plan=plan, run=run,
         status=E.TaskStatus.DRAFT,
     )
     audit.record("task.created", persona=assignee or requested_by, details={
         "task": zadatak.public_id, "title": zadatak.title, "adr": zadatak.adr,
         "allowed_paths": putanje, "required_gates": kapije,
+        "reference_paths": zadatak.reference_paths,
         "assignee": getattr(assignee, "public_id", None),
         "reviewer": getattr(reviewer, "public_id", None),
     })
@@ -137,6 +139,21 @@ def create(*, title: str, why: str, allowed_paths, adr: str = "",
 
 
 @transaction.atomic
+def set_reference(zadatak: CodeTask, paths) -> CodeTask:
+    """Menja spisak fajlova koje pisac sme da cita (ADR-0073).
+
+    Nije isto sto i `allowed_paths`: ovo se cita, ne menja, pa zasticena zona
+    ovde prolazi. Ko sme da menja kod i dalje odlucuje poverenje po opsegu
+    (ADR-0034), a ovaj spisak na to ne utice ni u jednom smeru.
+    """
+    zadatak.reference_paths = _clean_paths(paths)
+    zadatak.save(update_fields=["reference_paths", "updated_at"])
+    audit.record("task.reference_changed", persona=zadatak.assignee, details={
+        "task": zadatak.public_id, "reference_paths": zadatak.reference_paths,
+    })
+    return zadatak
+
+
 def assign(zadatak: CodeTask, *, assignee: Persona, reviewer: Persona | None = None,
            capability: str = "code.write") -> CodeTask:
     """Dodeljuje zadatak — i proverava da agent uopšte sme na te putanje.
