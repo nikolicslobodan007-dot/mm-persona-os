@@ -26,6 +26,9 @@ class Command(BaseCommand):
         parser.add_argument("--licenca", required=True,
                              choices=[e.value for e in E.LicenseBox],
                              help="Licenca materijala (LicenseBox).")
+        parser.add_argument("--naziv-licence", default="",
+                             help="Naziv licence — obavezan kada je --licenca SLOBODNA "
+                                  "(ADR-0059 tačka 2).")
         parser.add_argument("--datoteka", required=True,
                              help="Putanja do JSON datoteke sa veštinama.")
         parser.add_argument("--actor", required=True,
@@ -36,6 +39,13 @@ class Command(BaseCommand):
         if not actor.startswith("user:"):
             raise CommandError(
                 "ADR-0074: --actor mora da počne sa 'user:' — ovaj uvoz pokreće čovek."
+            )
+
+        licenca = E.LicenseBox(options["licenca"])
+        naziv_licence = options["naziv_licence"]
+        if licenca == E.LicenseBox.SLOBODNA and not naziv_licence:
+            raise CommandError(
+                "ADR-0059: slobodna kutija mora da imenuje licencu (--naziv-licence)."
             )
 
         putanja = Path(options["datoteka"])
@@ -56,7 +66,8 @@ class Command(BaseCommand):
         broj = uvezi(
             naslov_izvora=options["izvor"],
             uri=options["uri"],
-            license_box=E.LicenseBox(options["licenca"]),
+            license_box=licenca,
+            license_note=naziv_licence,
             vestine=vestine,
             actor=actor,
         )
