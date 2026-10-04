@@ -39,6 +39,7 @@ def uvezi(
     naslov_izvora: str,
     uri: str,
     license_box: E.LicenseBox,
+    license_note: str = "",
     vestine: list[Vestina],
     actor: str,
 ) -> dict[str, int]:
@@ -54,12 +55,20 @@ def uvezi(
         if not 0.0 <= v.pouzdanost <= 1.0:
             raise ValueError(f"Pouzdanost van [0,1] za veštinu '{v.ime}'.")
 
+    # ADR-0059 tačka 2: slobodna kutija mora da imenuje licencu — provera ovde,
+    # pre upisa, da uvoz ne padne tek na CHECK ogradi u bazi.
+    if E.LicenseBox(license_box) == E.LicenseBox.SLOBODNA and not license_note:
+        raise ValueError(
+            "ADR-0059: slobodna kutija mora da imenuje licencu (license_note)."
+        )
+
     with transaction.atomic():
         izvor, _ = KnowledgeSource.objects.get_or_create(
             persona=None, title=naslov_izvora,
             defaults={"source_kind": E.SourceKind.FIRST_PARTY_USER_INPUT.value,
                       "trust_score": 1.0, "uri": uri,
                       "license_box": E.LicenseBox(license_box).value,
+                      "license_note": license_note,
                       "is_active": True})
         obrisano = KnowledgeFact.objects.filter(source=izvor, predicate=PREDIKAT).delete()[0]
         KnowledgeFact.objects.bulk_create([
