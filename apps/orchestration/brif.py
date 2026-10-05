@@ -32,12 +32,13 @@ from common import enums as E
 
 from .models import CodeTask
 
-__all__ = ["build", "MAX_FILES", "MAX_FILE_BYTES", "MAX_TOTAL_BYTES"]
+__all__ = ["build", "MAX_FILES", "MAX_FILE_BYTES", "MAX_TOTAL_BYTES", "MAX_REFERENCA_CELA"]
 
 #: Plafoni. Zadatak koji ih probija nije uzak dovoljno — deli se, ne podiže se plafon.
 MAX_FILES = 40
 MAX_FILE_BYTES = 60_000
 MAX_TOTAL_BYTES = 200_000
+MAX_REFERENCA_CELA = 12_000
 
 #: Šta se i ne pokušava pročitati kao tekst.
 BINARNE = frozenset({
@@ -136,6 +137,13 @@ def _izvod(tekst: str) -> str:
     Hvata se svaka dodela u klasi, ne samo VELIKA imena (ADR-0068): član enuma i
     polje modela su za pisca ista vrsta činjenice — ime koje sme da napiše a ne
     sme da izmisli. Fajl bez ijedne klase (npr. `api/audit.py`) vraća se ceo.
+
+    ADR-0075 — ovaj izvod hvata samo dodele unutar klase. Fajl čija je vrednost u
+    *funkciji* (`apps/memory/vestine.py`, `apps/content/recnik.py`) kroz njega
+    prođe prazan ili skoro prazan: pisac dobije `class Vestina:` i ništa više.
+    `_izvod` se namerno ne dira — radi tačno ono za šta je pisan za enume i
+    modele. Rešenje je u `_referenca`: fajl ispod `MAX_REFERENCA_CELA` ide ceo,
+    neizmenjen; izvod ostaje rezervisan za velike rečnike gde zaista skraćuje.
     """
     izlaz, u_klasi = [], False
     for red in tekst.splitlines():
@@ -171,11 +179,26 @@ def _referenca(koren: Path, zadatak: CodeTask | None = None) -> list[dict]:
         if procitano is None:
             continue
         tekst, otisak = procitano
+        # ADR-0075 — ceo tekst ide neizmenjen dok staje ispod praga; `_izvod` se
+        # zove samo kad je fajl veći, da ne bi sitne reference stizale prazne
+        # (apps/memory/vestine.py, apps/content/recnik.py).
+        if f.suffix == ".py" and len(tekst.encode("utf-8")) <= MAX_REFERENCA_CELA:
+            sadrzaj = tekst
+        elif f.suffix == ".py":
+            sadrzaj = _izvod(tekst)
+        else:
+            sadrzaj = tekst
+        # `skracen` se izvodi iz POREĐENJA poslatog sadržaja sa celim tekstom,
+        # ne iz toga koja je grana koda izabrana — `_izvod` zna da vrati fajl
+        # ceo kad u njemu nema nijedne klase (ADR-0068, npr. `console/views.py`),
+        # pa izbor grane sam po sebi ne govori da li je nešto zaista skraćeno.
         redovi.append({
             "path": rel,
             "sha256": otisak,
-            "content": _izvod(tekst) if f.suffix == ".py" else tekst,
+            "content": sadrzaj,
             "read_only": True,
+            # ADR-0041 — pisac mora da zna da nije video ceo fajl.
+            "skracen": sadrzaj != tekst,
         })
     return redovi
 
