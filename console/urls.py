@@ -43,5 +43,6 @@ urlpatterns = [
     path("costs", views.costs, name="console-costs"),
     path("branches", views.branches, name="console-branches"),
     path("incidents", views.incidents, name="console-incidents"),
+    path("izvori", views.izvori, name="console-izvori"),
     path("kill-switch", views.kill_switch, name="console-kill-switch"),
 ]

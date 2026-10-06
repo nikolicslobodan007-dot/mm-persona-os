@@ -1,0 +1,56 @@
+{% extends "console/base.html" %}{% load console_tags %}
+{% block title %}Izvori{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Izvori</h1>
+  <div class="sub">Zavođenje izvora znanja za uvoz (ADR-0076). Strana ne ide po
+    adresu — link se samo zapisuje, uvoz radi ko ga pokrene posebno.</div></div>
+  <div class="pills"><span class="pill">{{ cekaju|length }} čeka</span></div></div>
+
+<div class="card mb12">
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="field">
+      <label for="naslov">Naslov izvora</label>
+      <input type="text" id="naslov" name="naslov" required maxlength="220">
+    </div>
+    <div class="field">
+      <label for="adresa">Adresa</label>
+      <input type="text" id="adresa" name="adresa" required maxlength="2000">
+    </div>
+    <div class="field">
+      <label for="licenca">Kutija licence</label>
+      <select id="licenca" name="licenca">
+        {% for k in kutije %}
+        <option value="{{ k }}" {% if k == podrazumevana_kutija %}selected{% endif %}>
+          {{ k }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="naziv_licence">Naziv licence</label>
+      <input type="text" id="naziv_licence" name="naziv_licence" maxlength="120">
+      <div class="sub small">Obavezno kad je kutija SLOBODNA.</div>
+    </div>
+    <div class="field">
+      <label for="datoteka">Datoteka (JSON sa veštinama, neobavezno)</label>
+      <input type="file" id="datoteka" name="datoteka" accept="application/json,.json">
+    </div>
+    <button type="submit">Zavedi izvor</button>
+  </form>
+</div>
+
+<table>
+  <tr><th>Naslov</th><th>Adresa</th><th>Kutija</th><th>Licenca</th><th>Zavedeno</th></tr>
+  {% for iz in cekaju %}
+  <tr>
+    <td>{{ iz.title }}</td>
+    <td class="mono small">{{ iz.uri|truncatechars:60 }}</td>
+    <td><span class="pill">{{ iz.license_box }}</span></td>
+    <td class="small">{{ iz.license_note|default:"—" }}</td>
+    <td class="small muted">{{ iz.retrieved_at|default:"—" }}</td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="5" class="sub">Nijedan izvor ne čeka uvoz.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
