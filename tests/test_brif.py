@@ -543,3 +543,89 @@ class TestReferencaPoZadatku:
     def test_bekstvo_iz_korena_se_odbija(self, db):
         z = _zadatak(["console"], reference_paths=["../../etc/passwd"])
         assert not any("passwd" in p for p in self._putanje(z))
+
+
+class TestIzborOblikaReference:
+    """ADR-0075 — `_referenca` bira ceo tekst ili izvod po pragu, a `skracen`
+    se izvodi iz POREĐENJA poslatog sadržaja sa celim tekstom, ne iz grane
+    koda koja je izabrana.
+    """
+
+    def test_fajl_manji_od_praga_stize_ceo(self, tmp_path, monkeypatch):
+        koren = tmp_path
+        sadrzaj = "class T:\n    A = 1\n"
+        (koren / "x.py").write_text(sadrzaj, encoding="utf-8")
+        monkeypatch.setattr(brif, "REFERENCA", ("x.py",))
+        redovi = brif._referenca(koren)
+        assert len(redovi) == 1
+        red = redovi[0]
+        assert red["content"] == sadrzaj
+        assert red["skracen"] is False
+
+    def test_fajl_veci_od_praga_sa_klasama_stize_kao_izvod(self, tmp_path, monkeypatch):
+        koren = tmp_path
+        # Veliki fajl sa mnogo klasa i članova, dovoljno veliki da pređe prag
+        # i da izvod zaista bude kraći od celog teksta.
+        delovi = []
+        for i in range(400):
+            delovi.append(f"class K{i}:\n")
+            delovi.append(f'    """Dokumentacija broj {i} koja ne ide u izvod."""\n')
+            delovi.append(f"    A{i} = {i}\n")
+            delovi.append(f"    def metoda_{i}(self):\n        return {i}\n")
+        sadrzaj = "".join(delovi)
+        assert len(sadrzaj.encode("utf-8")) > brif.MAX_REFERENCA_CELA
+        (koren / "x.py").write_text(sadrzaj, encoding="utf-8")
+        monkeypatch.setattr(brif, "REFERENCA", ("x.py",))
+        redovi = brif._referenca(koren)
+        assert len(redovi) == 1
+        red = redovi[0]
+        assert red["skracen"] is True
+        assert red["content"] != sadrzaj
+
+    def test_fajl_bez_klasa_veci_od_praga_stize_neizmenjen_i_skracen_je_false(
+        self, tmp_path, monkeypatch
+    ):
+        """KLJUČNI SLUČAJ (ADR-0068) — fajl veći od praga bez ijedne klase:
+        `_izvod` vraća fajl NEIZMENJEN, pa `skracen` mora da bude False iako
+        je izabrana grana izvoda.
+
+        Izmereno 06.10: `console/views.py` je 43242 B, izvod je takođe
+        43242 B, identičan; isto važi za `apps/orchestration/brif.py`,
+        16475 B. Ako `skracen` bude izveden iz grane koda umesto iz
+        poređenja, ovaj test pada.
+        """
+        koren = tmp_path
+        # Veliki fajl bez ijedne klase — samo funkcije i proza.
+        delovi = [f"def funkcija_{i}():\n    return {i}\n\n" for i in range(2000)]
+        sadrzaj = "".join(delovi)
+        assert len(sadrzaj.encode("utf-8")) > brif.MAX_REFERENCA_CELA
+        (koren / "x.py").write_text(sadrzaj, encoding="utf-8")
+        monkeypatch.setattr(brif, "REFERENCA", ("x.py",))
+        redovi = brif._referenca(koren)
+        assert len(redovi) == 1
+        red = redovi[0]
+        assert red["content"] == sadrzaj
+        assert red["skracen"] is False
+
+    def test_prag_je_manje_ili_jednako(self, tmp_path, monkeypatch):
+        """Prag je granica tipa manje-ili-jednako: fajl od tačno
+        `MAX_REFERENCA_CELA` bajtova ide ceo."""
+        # Sadržaj namerno počinje klasom — samo tako se vidi razlika između
+        # "manje" i "manje-ili-jednako": da je prag strogo "manje", ovaj
+        # sadržaj od tačno MAX_REFERENCA_CELA bajtova bi upao u granu izvoda,
+        # gde bi `_izvod` uhvatio baš tu klasu i skratio sadržaj, pa bi test
+        # pao. Klasa je ovde namerno da bi razlika uopšte bila vidljiva.
+        osnova = "class T:\n    A = 1\n"
+        popuna_duzina = brif.MAX_REFERENCA_CELA - len(osnova.encode("utf-8"))
+        assert popuna_duzina >= 0
+        popuna = "#" * popuna_duzina
+        sadrzaj = osnova + popuna
+        assert len(sadrzaj.encode("utf-8")) == brif.MAX_REFERENCA_CELA
+        koren = tmp_path
+        (koren / "x.py").write_text(sadrzaj, encoding="utf-8")
+        monkeypatch.setattr(brif, "REFERENCA", ("x.py",))
+        redovi = brif._referenca(koren)
+        assert len(redovi) == 1
+        red = redovi[0]
+        assert red["content"] == sadrzaj
+        assert red["skracen"] is False
