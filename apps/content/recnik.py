@@ -27,6 +27,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from django.db import transaction
+from django.utils import timezone
 
 from api import audit
 from apps.content.pravopis import DONJI, GORNJI
@@ -84,6 +85,11 @@ def uvezi(*, actor: str = "user:slobodan", putanja: Path | None = None) -> dict[
                              "strana": r["strana_pdf"], "ne": r["ne"]})
             for r in redovi
         ], batch_size=1000)
+        # ADR-0076 tačka 2: pečat se upisuje tek kad činjenice stvarno uđu u
+        # bazu — prazan uvoz ne sme da skine izvor sa reda čekanja.
+        if redovi:
+            izvor.ingested_at = timezone.now()
+            izvor.save(update_fields=["ingested_at"])
     broj = {"upisano": len(redovi), "obrisano": obrisano,
             "sa tačkom": sum(1 for r in redovi if r["tacke"]),
             "odbijenih oblika": sum(len(r["ne"]) for r in redovi)}
