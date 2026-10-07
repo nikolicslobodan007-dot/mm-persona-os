@@ -998,6 +998,107 @@ def incidents(request):
         .order_by("-occurred_at")[:100]})
 
 
+# ---------------------------------------------------------------- izvori
+
+#: Koliko nezavedenih izvora staje na jednu stranu (ADR-0076).
+IZVORI_NA_STRANI = 50
+
+
+@console_view
+def izvori(request):
+    """Zavođenje izvora znanja — ista zaštita kao ostale strane (ADR-0076).
+
+    GET pokazuje obrazac i spisak izvora koji čekaju uvoz (`ingested_at`
+    prazan), najnoviji prvi. POST zavodi izvor; ako je priložena datoteka,
+    zove se POSTOJEĆA `apps.memory.vestine.uvezi()` — nema novog puta uvoza.
+    Strana ne ide po adresu: link se samo zapisuje, nema odlaznih zahteva.
+    """
+    from apps.memory.models import KnowledgeSource
+    from apps.memory.vestine import Vestina, uvezi
+
+    if request.method == "POST":
+        naslov = (request.POST.get("naslov") or "").strip()
+        uri = (request.POST.get("adresa") or "").strip()
+        licenca_raw = (request.POST.get("licenca") or E.LicenseBox.NEPOZNATA.value).strip()
+        naziv_licence = (request.POST.get("naziv_licence") or "").strip()
+        datoteka = request.FILES.get("datoteka")
+
+        try:
+            licenca = E.LicenseBox(licenca_raw)
+        except ValueError:
+            messages.error(request, "Nepoznata kutija licence.")
+            return redirect("/console/izvori")
+
+        if not naslov:
+            messages.error(request, "Upiši naslov izvora.")
+            return redirect("/console/izvori")
+        if not uri:
+            messages.error(request, "Adresa je obavezna.")
+            return redirect("/console/izvori")
+        # ADR-0059 tačka 2, provereno OVDE, pre upisa — da slobodna kutija bez
+        # naziva licence ne stigne do CHECK ograde ili do IntegrityError u bazi.
+        if licenca == E.LicenseBox.SLOBODNA and not naziv_licence:
+            messages.error(request, "Slobodna kutija mora da imenuje licencu.")
+            return redirect("/console/izvori")
+
+        actor = f"user:{principal_of(request.user)}"
+
+        if datoteka is not None:
+            try:
+                sirovo = json.loads(datoteka.read().decode("utf-8"))
+                vestine = [
+                    Vestina(
+                        ime=stavka["ime"],
+                        koraci=list(stavka["koraci"]),
+                        napomene=stavka.get("napomene", ""),
+                        pouzdanost=float(stavka["pouzdanost"]),
+                    )
+                    for stavka in sirovo
+                ]
+                broj = uvezi(
+                    naslov_izvora=naslov, uri=uri, license_box=licenca,
+                    license_note=naziv_licence, vestine=vestine, actor=actor,
+                )
+            except (ValueError, KeyError, TypeError, json.JSONDecodeError) as e:
+                messages.error(request, f"Datoteka nije prihvaćena: {e}")
+                return redirect("/console/izvori")
+            messages.success(
+                request, f"Izvor „{naslov}” uvezen: {broj['upisano']} veština.")
+            return redirect("/console/izvori")
+
+        # Bez datoteke: samo zavođenje linka. Idempotentno po naslovu —
+        # isto kao `uvezi()` — da dvoklik ne napravi dva reda (ADR-0076).
+        sada = timezone.now()
+        izvor, created = KnowledgeSource.objects.get_or_create(
+            persona=None, title=naslov,
+            defaults={
+                "source_kind": E.SourceKind.FIRST_PARTY_USER_INPUT.value,
+                "trust_score": 1.0, "uri": uri,
+                "license_box": licenca.value, "license_note": naziv_licence,
+                "is_active": True, "retrieved_at": sada,
+            },
+        )
+        audit.record("memory.izvor.zaveden", details={
+            "izvor": naslov, "actor": actor, "created": created})
+        messages.success(
+            request, f"Izvor „{naslov}” je zaveden i čeka uvoz."
+            if created else f"Izvor „{naslov}” je već zaveden.")
+        return redirect("/console/izvori")
+
+    cekaju = (
+        KnowledgeSource.objects.filter(ingested_at__isnull=True)
+        .order_by("-retrieved_at")[:IZVORI_NA_STRANI]
+    )
+    return render(
+        request, "console/izvori.html",
+        _nav(request) | {
+            "cekaju": cekaju,
+            "kutije": [k.value for k in E.LicenseBox],
+            "podrazumevana_kutija": E.LicenseBox.NEPOZNATA.value,
+        },
+    )
+
+
 # ---------------------------------------------------------------- kill-switch
 
 
