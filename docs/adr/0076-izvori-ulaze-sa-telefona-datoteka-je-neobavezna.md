@@ -65,6 +65,31 @@ Spisak izvora koji čekaju je time **upit, ne nov red u šemi**:
 `ingested_at IS NULL`. Kad transkripcija proradi, ona puni te izvore i upisuje
 `ingested_at`. Dotle je to Slobodanov red čekanja, i vidi se.
 
+**Dopunjeno 07.10. posle prvog otvaranja strane.** Slobodan je otvorio stranu i
+u redu čekanja zatekao **dva izvora koja su odavno uvezena** — rečnik sa 8.797
+činjenica i Pravilo nula sa jednom. Izmereno odmah zatim:
+
+| provera | rezultat |
+|---|---|
+| izvora u bazi | 2 |
+| sa praznim `ingested_at` | **2** |
+| gde se `ingested_at` uopšte pominje u kodu | migracija, model, i nova strana — **i nigde više** |
+
+**Nijedan uvoz nikada ne upisuje to polje.** Ni `apps/memory/vestine.py`, ni
+`apps/content/recnik.py`. Polje stoji u šemi od prve migracije i nikad nije
+postavljeno, pa `ingested_at IS NULL` u pogonu ne znači „čeka" nego „uvek".
+
+Odluka ostaje — **upit je ispravan, podatak nije.** Oba uvoza dobijaju obavezu
+da pri upisu činjenica postave `ingested_at`. Dva postojeća izvora se popravljaju
+jednokratno, rukom, jer **jesu** uvezeni.
+
+Pouka za ADR-0033 je oštra i vredi je zapisati tačno: **gradio sam uslov na
+polju koje niko ne puni, i to nisam izmerio.** Proverio sam da polje *sme* da
+bude prazno (`null=True`) i stao tu — a pravo pitanje nije sme li biti prazno
+nego **da li ga iko ikada popuni**. Kvar nije uhvatilo ni moje čitanje zakrpe ni
+četiri zelene kapije; uhvatilo ga je to što je čovek otvorio stranu i pogledao
+šta na njoj piše.
+
 ### 3. Pravila su ista kao u komandi, i proveravaju se u strani
 
 - `licenca` je spisak od četiri kutije, podrazumevana je `NEPOZNATA`;
