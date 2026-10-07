@@ -16,6 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from django.db import transaction
+from django.utils import timezone
 
 from api import audit
 from apps.memory.models import KnowledgeFact, KnowledgeSource
@@ -79,6 +80,11 @@ def uvezi(
                 object_json={"koraci": list(v.koraci), "napomene": v.napomene})
             for v in vestine
         ], batch_size=1000)
+        # ADR-0076 tačka 2: pečat se upisuje tek kad su veštine stvarno
+        # upisane — prazan uvoz ne sme da skine izvor sa reda čekanja.
+        if vestine:
+            izvor.ingested_at = timezone.now()
+            izvor.save(update_fields=["ingested_at"])
     broj = {"upisano": len(vestine), "obrisano": obrisano}
     audit.record("memory.vestina.loaded",
                  details={"izvor": naslov_izvora, "actor": actor, **broj})
