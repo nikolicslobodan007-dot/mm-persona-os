@@ -897,6 +897,11 @@ class LLMPurpose(CanonEnum):
     #: Pisanje zakrpe nad kodom (ADR-0044). Svoja svrha, a ne `content_draft`,
     #: jer traži drugu rutu, drugi plafon izlaza i svoj budžet (Canon §13.2).
     CODE_PATCH = "code_patch"
+    #: Pretvaranje zvuka u tekst (ADR-0078). Svoja svrha, a ne `summarise`,
+    #: jer traži drugu rutu, drugi oblik poziva i svoje merenje troška.
+    #: Lanac za ovu svrhu NEMA lokalni šablon kao poslednji član: šablon ne
+    #: može da čuje, pa bi vratio izmišljen prepis (izuzetak od ADR-0009).
+    TRANSCRIBE = "transcribe"
 
 
 class OutboxStatus(CanonEnum):
