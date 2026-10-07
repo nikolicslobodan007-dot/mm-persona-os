@@ -153,6 +153,13 @@ Strana ostaje unutar prvih vrata, gde dozvola ni ne treba.
 - `tests/test_console.py` — piše ih **drugi agent** (`RAZ-TES`), ne Pavol:
   izvor bez datoteke ostaje sa praznim `ingested_at`; `SLOBODNA` bez naziva
   licence pada u strani a ne u bazi; neprijavljen čovek ne vidi stranu.
+- **Neodlučeno, zapisano 07.10. da se ne izgubi:** ako se nad već uvezenim
+  izvorom pusti uvoz sa **praznim** spiskom, stare činjenice se brišu a pečat
+  `ingested_at` ostaje od ranije — izvor bi tvrdio da je uvezen bez ijedne
+  činjenice. Lazar je 07.10. postavio stražu `if vestine:` koja sprečava da
+  prazan uvoz *postavi* pečat, ali ne briše postojeći. Pitanje je da li prazan
+  uvoz treba da **obriše** pečat. Odluka ide u zaseban ADR; dotle testovi moraju
+  da zakucaju ponašanje kakvo jeste, da se ne menja slučajno.
 - **Rebuild je obavezan** — `console` je u slici aplikacije. Posle spajanja ide
   `up -d --build`. (Izuzetak važi samo za izmene pod `tests/`.)
 - Redosled iz ADR-0074 ostaje: komanda → strana → transkripcija. Ovo je drugi
