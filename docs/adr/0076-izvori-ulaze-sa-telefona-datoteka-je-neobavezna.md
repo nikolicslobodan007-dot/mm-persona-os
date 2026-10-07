@@ -75,13 +75,28 @@ Spisak izvora koji čekaju je time **upit, ne nov red u šemi**:
 Strana ne sme da bude blaža od komande. Dvoja vrata do iste baze koja ne traže
 isto su rupa, ne udobnost.
 
-### 4. Pokretač je prijavljeni čovek
+### 4. Pokretač se zapisuje onako kako mehanizam dozvoljava
 
-Audit upisuje `actor` prijavljenog operatera, ne `service:system`. **Ovo je
-poznata rupa** — `vestina --actor user:slobodan` je 04.10. svejedno upisala
-`actor=service:system`, i to još nije popravljeno. Nova strana **ne sme da je
-nasledi**; ako se pokaže da je uzrok dublje u `audit.record`, otvara se zaseban
-ADR, ali se ovaj posao ne isporučuje sa pogrešnim pokretačem.
+**Ispravljeno 07.10. posle merenja.** Prvi oblik ove tačke tražio je da audit
+nosi prijavljenog čoveka kao pokretača. To je **zahtev koji sistem ne
+dozvoljava**, i to je moja greška iste vrste kao ona od 04.10.
+
+Izmereno je potpis funkcije:
+
+```
+audit.record(event_key, *, severity, persona, action, run, before, after, details)
+```
+
+**Parametra `actor` nema.** Nijedan pozivalac ga ne može proslediti — ni ova
+strana, ni komanda `vestina`, ni `recnik`. Zato strana radi ono što je jedino
+moguće: upisuje prijavljenog čoveka u `details`, u obliku `user:korisnicko_ime`,
+isto kao postojeći pozivaoci.
+
+Prava rupa je time **imenovana i locirana**: nije u pozivaocima nego u
+`api/audit.py`. Taj fajl je **zaštićena zona** — nijedan agent ga ne sme dirati
+ni na kom nivou poverenja, pa ispravku mora da napiše čovek, zasebnim ADR-om.
+Dok se to ne desi, Canon §8.5 ostaje neispunjen i to stoji zapisano ovde, a ne
+sakriveno u jednom zadatku.
 
 ### 5. Strana ne dira ništa spolja
 
