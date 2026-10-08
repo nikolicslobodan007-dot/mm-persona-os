@@ -294,3 +294,75 @@ def _record(route, purpose, system, prompt, text, persona, run, pack, now, t0, *
                 input_tokens=tin, output_tokens=tout, amount_eur_cents=cents,
                 is_estimated=not external, cost_entry=cost, recorded_at=now)
     return rec
+
+
+# ---------------------------------------------------------------- transcribe
+
+
+def transcribe(asset, *, persona=None, run=None, context_pack=None,
+               now: datetime | None = None) -> Generation:
+    """Ulazna tačka za zvuk — fajl unutra, tekst napolje. ADR-0078.
+
+    Oblik je preuzet iz `generate`: isti izbor rute preko `routes()` za svrhu
+    TRANSCRIBE, isto razrešavanje ključa preko `credential_ref`, isti zapis u
+    `PromptRecord`/`LLMUsage`, isto merenje troška. Razlika je ulaz: `asset`
+    je `MediaAsset` (`storage_key`, `mime_type`, `duration_ms`, `sha256`), ne
+    tekstualni prompt.
+
+    Lanac za ovu svrhu NEMA lokalni šablon kao poslednji član (ADR-0078 §4):
+    šablon ne može da čuje, pa bi vratio izmišljen prepis, a izmišljen prepis
+    je gori od nikakvog. Zato se ovde ne zove `routes()` (koja lokalni šablon
+    dodaje uvek) nego se filtriraju samo spoljne, uključene rute za ovu
+    svrhu; ako nijedna nije dozvoljena, vraća se jasno odbijanje — isti oblik
+    kao `LLM_EXTERNAL_DISABLED` — i nikakav lokalni put se ne poziva. Ovo je
+    jedini izuzetak od ADR-0009, i važi samo za `TRANSCRIBE`.
+    """
+    now = now or timezone.now()
+    purpose = E.LLMPurpose.TRANSCRIBE
+    fallbacks: list[str] = []
+    prompt_marker = f"audio:{asset.sha256}"
+    system = f"transcribe:{asset.mime_type}"
+
+    moje: list[LLMRoute] = []
+    if persona is not None:
+        moje = [ar.route for ar in AgentRoute.objects.filter(
+            persona=persona, purpose=purpose.value, is_enabled=True,
+        ).select_related("route").order_by("priority")]
+    uzeti = {r.pk for r in moje}
+    firmine = [r for r in LLMRoute.objects.filter(
+        purpose=purpose.value, is_enabled=True).exclude(
+        provider=LOCAL_PROVIDER).order_by("priority", "name") if r.pk not in uzeti]
+    spoljne_rute = moje + firmine
+
+    if not spoljne_rute:
+        raise LLMError("LLM_EXTERNAL_DISABLED", "no enabled external route for transcribe")
+
+    for route in spoljne_rute:
+        t0 = time.monotonic()
+        why = _external_allowed(route, persona)
+        if why:
+            fallbacks.append(f"{route.provider}/{route.model_key}:{why}")
+            continue
+        try:
+            text, tin, tout, finish = _call_external_audio(route, asset, persona)
+            if not text.strip():
+                raise LLMError("EMPTY_RESPONSE")
+        except LLMError as e:
+            fallbacks.append(f"{route.provider}/{route.model_key}:{e.code}")
+            _record(route, purpose, system, prompt_marker, "", persona, run, context_pack,
+                    now, t0, error=e.code)
+            continue
+        cents = _cost_cents(route, tin, tout)
+        rec = _record(route, purpose, system, prompt_marker, text, persona, run,
+                      context_pack, now, t0, finish=finish, tin=tin, tout=tout, cents=cents,
+                      external=True)
+        return Generation(text.strip(), route.provider, route.model_key, rec, tin, tout,
+                          cents, fallbacks)
+    raise LLMError("LLM_EXTERNAL_DISABLED", "; ".join(fallbacks))
+
+
+def _call_external_audio(route: LLMRoute, asset, persona=None) -> tuple[str, int, int, str]:
+    """Poziv provajdera za transkripciju. Nema generičkog oblika kao za tekst —
+    svaki provajder zvuka ima svoj ugovor, pa se dodaje kad prva ruta za
+    TRANSCRIBE bude izmerena i upisana (ADR-0078 §5)."""
+    raise LLMError("UNSUPPORTED_PROVIDER", route.provider)
