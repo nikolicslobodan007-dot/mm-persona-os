@@ -32,13 +32,26 @@ from common import enums as E
 
 from .models import CodeTask
 
-__all__ = ["build", "MAX_FILES", "MAX_FILE_BYTES", "MAX_TOTAL_BYTES", "MAX_REFERENCA_CELA"]
+__all__ = ["build", "MAX_FILES", "MAX_FILE_BYTES", "MAX_TOTAL_BYTES",
+           "MAX_REFERENCA_CELA", "MIN_IZVOD_PROCENAT"]
 
 #: Plafoni. Zadatak koji ih probija nije uzak dovoljno — deli se, ne podiže se plafon.
 MAX_FILES = 40
 MAX_FILE_BYTES = 60_000
 MAX_TOTAL_BYTES = 200_000
 MAX_REFERENCA_CELA = 12_000
+
+#: Koliko procenata fajla izvod mora da sacuva da bi se uopste slao umesto
+#: celog teksta. ADR-0080 — `_izvod` hvata zaglavlja klasa i dodele unutar
+#: klasa; fajl gradjen od funkcija na nivou modula kroz njega prolazi gotovo
+#: prazan, a ako u njemu postoji makar jedna klasa izvod nije prazan pa ne
+#: pada ni u spasavanje iz ADR-0068. Izmereno 12.10.: `gateway.py` 16.857 B
+#: daje 45 B (0,3 %), `zadaci.py` 22.031 daje 28 B (0,1 %), `policy/service.py`
+#: 38.289 daje 46 B (0,1 %) — a fajlovi koje izvod opisuje dobro ostaju na
+#: 29-43 % (`enums.py` 37,7 %, `observability/models.py` 29,3 %). Izmedju 0,7 %
+#: i 29,3 % nema nijednog izmerenog fajla, pa se prag sme postaviti a ne
+#: pogoditi. Procenat, ne razlomak: poredjenje ide celim brojevima.
+MIN_IZVOD_PROCENAT = 25
 
 #: Šta se i ne pokušava pročitati kao tekst.
 BINARNE = frozenset({
@@ -185,7 +198,15 @@ def _referenca(koren: Path, zadatak: CodeTask | None = None) -> list[dict]:
         if f.suffix == ".py" and len(tekst.encode("utf-8")) <= MAX_REFERENCA_CELA:
             sadrzaj = tekst
         elif f.suffix == ".py":
-            sadrzaj = _izvod(tekst)
+            # ADR-0080 — izvod se salje samo kad zaista opisuje fajl. Kad od
+            # fajla ostane manje od `MIN_IZVOD_PROCENAT`, izvod nije skracenje
+            # nego brisanje: 12.10. je Lazar odbio zadatak jer mu je od
+            # `gateway.py` stiglo 45 bajtova od 16.857. Tada ide ceo tekst, a
+            # ono sto ne stane u `MAX_TOTAL_BYTES` i dalje ide u `truncated`.
+            izvod = _izvod(tekst)
+            ceo_b = len(tekst.encode("utf-8"))
+            dovoljno = len(izvod.encode("utf-8")) * 100 >= ceo_b * MIN_IZVOD_PROCENAT
+            sadrzaj = izvod if dovoljno else tekst
         else:
             sadrzaj = tekst
         # `skracen` se izvodi iz POREĐENJA poslatog sadržaja sa celim tekstom,

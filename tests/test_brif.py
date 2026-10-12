@@ -566,12 +566,17 @@ class TestIzborOblikaReference:
         koren = tmp_path
         # Veliki fajl sa mnogo klasa i članova, dovoljno veliki da pređe prag
         # i da izvod zaista bude kraći od celog teksta.
+        # ADR-0080 — uzorak mora da bude gust: izvod cuva samo red `class` i
+        # redove oblika `    IME = vrednost`, pa udeo raste sa brojem dodela po
+        # klasi a pada sa svakim redom dokumentacije i tela. Raniji uzorak (400
+        # klasa sa jednom dodelom, dokumentacijom i metodom) zadrzavao je 21,0 %
+        # i od ADR-0080 vise ne ide kao izvod nego ceo.
         delovi = []
-        for i in range(400):
+        for i in range(60):
             delovi.append(f"class K{i}:\n")
-            delovi.append(f'    """Dokumentacija broj {i} koja ne ide u izvod."""\n')
-            delovi.append(f"    A{i} = {i}\n")
-            delovi.append(f"    def metoda_{i}(self):\n        return {i}\n")
+            for j in range(10):
+                delovi.append(f'    CLAN_{j} = "vrednost-{i}-{j}-popunjavanje"\n')
+            delovi.append("\n")
         sadrzaj = "".join(delovi)
         assert len(sadrzaj.encode("utf-8")) > brif.MAX_REFERENCA_CELA
         (koren / "x.py").write_text(sadrzaj, encoding="utf-8")
@@ -629,3 +634,66 @@ class TestIzborOblikaReference:
         red = redovi[0]
         assert red["content"] == sadrzaj
         assert red["skracen"] is False
+
+    def test_fajl_veci_od_praga_cija_je_vrednost_u_funkcijama_stize_ceo(
+        self, tmp_path, monkeypatch
+    ):
+        """ADR-0080 — izvod koji pojede fajl nije izvod.
+
+        Fajl iznad praga koji ima makar jednu klasu ne pada u spasavanje iz
+        ADR-0068, a `_izvod` mu uzme samo zaglavlje te klase. Izmereno 12.10.
+        na `apps/llm_gateway/gateway.py`: 16.857 B celo, **45 B** izvod — Lazar
+        je s pravom odbio zadatak jer fajl nije ni video. Takav fajl ide ceo.
+        """
+        koren = tmp_path
+        delovi = ['class Greska(Exception):\n    SIFRA = "x"\n\n']
+        for i in range(120):
+            delovi.append(f"def radnja_{i}(a, b):\n")
+            delovi.append(f'    """Funkcija {i} koja ima telo od nekoliko redova."""\n')
+            delovi.append(f"    rezultat = a + b + {i}\n")
+            delovi.append("    if rezultat > 100:\n        rezultat -= 100\n")
+            delovi.append("    return rezultat\n\n")
+        sadrzaj = "".join(delovi)
+        assert len(sadrzaj.encode("utf-8")) > brif.MAX_REFERENCA_CELA
+        izvod = brif._izvod(sadrzaj)
+        assert len(izvod.encode("utf-8")) * 100 < (
+            len(sadrzaj.encode("utf-8")) * brif.MIN_IZVOD_PROCENAT
+        ), "uzorak mora da padne ispod praga udela"
+        (koren / "x.py").write_text(sadrzaj, encoding="utf-8")
+        monkeypatch.setattr(brif, "REFERENCA", ("x.py",))
+        redovi = brif._referenca(koren)
+        assert len(redovi) == 1
+        red = redovi[0]
+        assert red["content"] == sadrzaj
+        assert red["skracen"] is False
+
+    def test_izvod_koji_cuva_dovoljno_i_dalje_ide_kao_izvod(
+        self, tmp_path, monkeypatch
+    ):
+        """Druga strana ADR-0080: prag ne sme da ukine izvod tamo gde radi.
+
+        Recnik enuma je razlog zbog kog izvod postoji. Izmereno 12.10.:
+        `common/enums.py` 42.978 B daje 16.183 B izvoda, 37,7 % — iznad praga,
+        pa i dalje ide skracen.
+        """
+        koren = tmp_path
+        delovi = []
+        for i in range(60):
+            delovi.append(f"class R{i}:\n")
+            delovi.append(f'    """Dokumentacija {i} koja ne ide u izvod."""\n')
+            for j in range(6):
+                delovi.append(f'    CLAN_{j} = "vrednost-{i}-{j}-popunjavanje"\n')
+            delovi.append("\n")
+        sadrzaj = "".join(delovi)
+        assert len(sadrzaj.encode("utf-8")) > brif.MAX_REFERENCA_CELA
+        izvod = brif._izvod(sadrzaj)
+        assert len(izvod.encode("utf-8")) * 100 >= (
+            len(sadrzaj.encode("utf-8")) * brif.MIN_IZVOD_PROCENAT
+        ), "uzorak mora da ostane iznad praga udela"
+        (koren / "x.py").write_text(sadrzaj, encoding="utf-8")
+        monkeypatch.setattr(brif, "REFERENCA", ("x.py",))
+        redovi = brif._referenca(koren)
+        assert len(redovi) == 1
+        red = redovi[0]
+        assert red["skracen"] is True
+        assert red["content"] != sadrzaj
