@@ -42,6 +42,29 @@ skoro jedan prema jedan:
 | `credential_ref`, naš provajder | `--anthropic-api-key` / promenljiva okruženja |
 | ništa ne sme napolje | `--analytics-disable`, `--no-check-update` |
 
+## Mapa je izmerena nad našim repozitorijumom, ne pretpostavljena
+
+Aider je pokrenut sa `--show-repo-map` nad kopijom `main`-a (`218727c`), bez
+ključa i bez ijednog poziva modela. Obišao je **456 fajlova** i napravio mapu od
+**59.402 B** uz budžet od 8.192 tokena — unutar našeg plafona brifa od 200.000 B.
+Mapa pominje **166 fajlova odjednom**, dok mi danas ručno biramo tri globalne
+reference plus spisak po zadatku.
+
+Poređenje nad baš onim fajlovima koji su nas 12.10. zaustavili:
+
+| fajl | naš `_izvod` | njihova mapa |
+|---|---|---|
+| `apps/llm_gateway/gateway.py` | **45 B** — dva imena klasa | potpisi svih funkcija: `generate`, `transcribe`, `routes`, `credential_ref`, `local_route`, `persona_env_name` |
+| `apps/orchestration/zadaci.py` | **28 B** | `create(...)` sa parametrima, `TaskError.__init__`, pomoćne funkcije |
+
+Njihova mapa hvata **funkcije na nivou modula** — tačno ono što naš `_izvod`
+baca. Da smo je imali 12.10. ujutru, ADR-0080 ne bi ni postojao, a Lazar ne bi
+imao šta da odbije.
+
+Mapa, međutim, nije fajl: ona je spisak onoga **šta postoji**. Fajl koji agent
+menja i dalje ide ceo (`--file`), a referenca ceo (`--read`). Mapa zamenjuje
+`_izvod`, ne ceo tekst.
+
 ## Odluka
 
 Šav ide **unutar `pisac.pokusaj()`**, i nigde drugde.
