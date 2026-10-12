@@ -33,6 +33,21 @@ Veštine ulaze u **isti plafon** `MAX_TOTAL_BYTES` kao referenca, priručnik i
 ranija zakrpa, i to **pre** fajlova koji se menjaju. Ono što ne stane ne nestaje
 tiho nego ide u `truncated`, kao i sve ostalo (ADR-0041 §1).
 
+## Jedna stvar koju ova odluka proširuje, i to naglas
+
+`LICENSE_BOXES_USABLE` je upisana sa užim značenjem nego što joj ovde dajemo.
+Komentar uz nju u `common/enums.py` glasi: *„Kutije iz kojih sadrzaj sme da udje
+u klijentski projekat (uz navodjenje)."* Brif agentu nije klijentski projekat.
+
+Svejedno je koristimo, i to namerno: **ono što šaljemo svom agentu držimo na
+istom standardu kao ono što bismo isporučili klijentu.** Agent piše kod koji
+ide u naš proizvod; znanje koje ne bi smelo kod klijenta nema šta da traži ni
+u njegovoj glavi. Stroži standard od potrebnog je jeftin, a obrnuto nije.
+
+Ovo se ovde kaže zato što se značenje konstante time širi. Kad se `enums.py`
+sledeći put bude dirao — a to piše čovek, zaštićena je zona — komentar uz
+konstantu treba da pomene i ovu upotrebu.
+
 ## Čega namerno NEMA
 
 **Nema pravila izbora.** Ne bira se koja veština ide kom agentu, nema bodovanja,
