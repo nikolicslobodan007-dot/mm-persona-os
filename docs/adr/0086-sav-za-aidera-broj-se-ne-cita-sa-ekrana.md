@@ -164,3 +164,27 @@ je druga odluka i ne donosi se ovde.
 **Ovo je ujedno prvi put da je agent prijavio sopstvenu neizmerenu
 pretpostavku pre nego što ga je iko pitao.** ADR-0033 nije stigao do njega kroz
 priručnik nego kroz brif, i proradio je.
+
+## Granica koju je vlasnik pomerio, 13.10.
+
+Merenje je pokazalo da **nijedna od 33 persone nema L1 na
+`apps/orchestration/pisac.py`.** Šav se bez toga ne može napisati rukom agenta,
+pa je pitanje izneto Slobodanu kao odluka vlasnika, ne kao tehnički korak:
+dati agentu pravo da menja pisca znači dati mu pravo da menja **način na koji
+agenti pišu**.
+
+Odobrio je. Dodeljeno je `P-00027 · code.write · apps/orchestration/pisac.py →
+L1` — najuži mogući opseg, tačno taj fajl, ne ceo `apps/orchestration`.
+
+Šta ovo **ne** menja, i zbog čega je granica bezbedna za prelazak:
+
+- zaštićene zone ostaju zatvorene na svakom nivou (`apps/policy`,
+  `common/enums.py`, `api/audit.py`, `docs/adr/`, `tools/canon_lint.py`) —
+  one se menjaju ADR-om, ne komandom (ADR-0034);
+- `zakrpa --proveri` i dalje odbija putanju van `allowed_paths` zadatka;
+- četiri kapije i dalje vrte u izolovanom kontejneru, bez mreže i bez ključeva;
+- **`main` se i dalje menja isključivo sa Slobodanovog PC-a.** Server ima ključ
+  samo za čitanje. Nijedna zakrpa ne ulazi a da je čovek nije spojio.
+
+Dakle agent sme da **predloži** izmenu pisca. Da je pusti u pogon — ne sme, i to
+se ovim ne menja.
