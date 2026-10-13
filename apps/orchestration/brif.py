@@ -26,6 +26,8 @@ from pathlib import Path
 from django.conf import settings
 from django.db.models import Q
 
+from apps.memory.models import KnowledgeFact
+from apps.memory.vestine import PREDIKAT as VESTINA_PREDIKAT
 from apps.personas import prirucnik
 from apps.policy import service as policy
 from common import enums as E
@@ -244,6 +246,34 @@ def _pale_kapije(zadatak: CodeTask) -> list[dict]:
     ]
 
 
+def _vestine() -> list[dict]:
+    """Veštine iz dozvoljenih kutija licence. ADR-0084.
+
+    Populacija je JEDNA: svaki `KnowledgeFact` sa predikatom `vestina.postupak`
+    (konstanta `PREDIKAT` iz `apps.memory.vestine`) čiji je izvor aktivan i čija
+    je kutija licence u `LICENSE_BOXES_USABLE` (`common.enums`). Biranje koja
+    veština ide kom agentu, bodovanje i poklapanje sa putanjama zadatka ovde se
+    namerno NE rade — populacija je jedan, a pravilo izbora se piše tek posle
+    merenja (ADR-0077).
+
+    Znanje bez porekla se ne šalje: svaka stavka nosi i naslov izvora i naziv
+    licence, ne samo sadržaj veštine.
+    """
+    dozvoljene = {kutija.value for kutija in E.LICENSE_BOXES_USABLE}
+    cinjenice = (
+        KnowledgeFact.objects
+        .filter(predicate=VESTINA_PREDIKAT, source__is_active=True,
+                source__license_box__in=dozvoljene)
+        .select_related("source")
+        .order_by("subject")
+    )
+    return [
+        {"subject": c.subject, "object_json": c.object_json,
+         "source_title": c.source.title, "license_note": c.source.license_note}
+        for c in cinjenice
+    ]
+
+
 #: Koliko ranije zakrpe staje u brif. Ista mera kao plafon diff-a kod pisca.
 MAX_PATCH_BYTES = 20_000
 
@@ -357,6 +387,22 @@ def build(zadatak: CodeTask) -> dict:
             prirucnik_tekst = ""
         else:
             zauzeto += velicina
+
+    # ADR-0084 — veštine ulaze u isti plafon kao referenca i priručnik, po
+    # istom obrascu: šta ne stane ide u odsečeno sa razlogom, nikad tiho. Nema
+    # biranja koja veština ide kom agentu — populacija je jedan (ADR-0077).
+    vestine: list[dict] = []
+    for v in _vestine():
+        velicina = len(str(v).encode("utf-8"))
+        if zauzeto + velicina > MAX_TOTAL_BYTES:
+            odsečeno.append({
+                "path": f"veština {v['subject']}",
+                "reason": "veština nije stala u ukupan plafon",
+            })
+            continue
+        zauzeto += velicina
+        vestine.append(v)
+
     plafon = MAX_TOTAL_BYTES - zauzeto
 
     for f in _kandidati(zadatak):
@@ -397,6 +443,7 @@ def build(zadatak: CodeTask) -> dict:
         "reference": referenca,
         "handbook": prirucnik_tekst,
         "handbook_position": mesto or "",
+        "skills": vestine,
         "files": fajlovi,
         "files_from": IZVOR_FAJLOVA,
         "previous_patch": prethodna,

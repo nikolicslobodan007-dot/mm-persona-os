@@ -697,3 +697,67 @@ class TestIzborOblikaReference:
         red = redovi[0]
         assert red["skracen"] is True
         assert red["content"] != sadrzaj
+
+
+class TestVestineUBrifu:
+    """ADR-0084 — brif nosi veštine iz dozvoljenih kutija licence.
+
+    Populacija je jedna: `source.license_box in LICENSE_BOXES_USABLE` i
+    `source.is_active`. Nema biranja koja veština ide kom agentu, nema
+    bodovanja, nema poklapanja sa putanjama zadatka — to dolazi tek posle
+    merenja (ADR-0077).
+    """
+
+    def _izvor(self, *, license_box, is_active=True, title="Priručnik X",
+              license_note="MIT"):
+        from apps.memory.models import KnowledgeSource
+        return KnowledgeSource.objects.create(
+            persona=None, title=title, source_kind=E.SourceKind.FIRST_PARTY_USER_INPUT,
+            trust_score=1.0, license_box=license_box, license_note=license_note,
+            is_active=is_active,
+        )
+
+    def _vestina(self, izvor, *, subject="Pisanje brifa"):
+        from apps.memory.models import KnowledgeFact
+        from apps.memory.vestine import PREDIKAT
+        return KnowledgeFact.objects.create(
+            source=izvor, persona=None, subject=subject, predicate=PREDIKAT,
+            provenance=E.Provenance.USER_PROVIDED, confidence=1.0,
+            object_json={"koraci": ["prvi", "drugi"], "napomene": ""},
+        )
+
+    def test_vestina_iz_dozvoljene_kutije_stize_u_brif(self, db):
+        izvor = self._izvor(license_box=E.LicenseBox.SLOBODNA, title="Zbirka znanja")
+        self._vestina(izvor, subject="Pisanje brifa")
+        b = brif.build(_zadatak(["manage.py"]))
+        subjekti = [v["subject"] for v in b["skills"]]
+        assert "Pisanje brifa" in subjekti
+        stavka = next(v for v in b["skills"] if v["subject"] == "Pisanje brifa")
+        assert stavka["source_title"] == "Zbirka znanja"
+        assert stavka["license_note"] == "MIT"
+
+    def test_vestina_iz_nedozvoljene_kutije_ne_stize(self, db):
+        izvor = self._izvor(license_box=E.LicenseBox.ZABRANJENA, license_note="")
+        self._vestina(izvor, subject="Tajna veština")
+        b = brif.build(_zadatak(["manage.py"]))
+        subjekti = [v["subject"] for v in b["skills"]]
+        assert "Tajna veština" not in subjekti
+
+    def test_neaktivan_izvor_ne_stize(self, db):
+        izvor = self._izvor(license_box=E.LicenseBox.SLOBODNA, is_active=False)
+        self._vestina(izvor, subject="Ugašena veština")
+        b = brif.build(_zadatak(["manage.py"]))
+        subjekti = [v["subject"] for v in b["skills"]]
+        assert "Ugašena veština" not in subjekti
+
+    def test_vestina_koja_ne_stane_u_plafon_zavrsi_u_odsečeno(self, db, monkeypatch):
+        izvor = self._izvor(license_box=E.LicenseBox.SLOBODNA, title="Zbirka znanja")
+        self._vestina(izvor, subject="Velika veština")
+        monkeypatch.setattr(brif, "MAX_TOTAL_BYTES", 10)
+        b = brif.build(_zadatak(["manage.py"]))
+        subjekti = [v["subject"] for v in b["skills"]]
+        assert "Velika veština" not in subjekti
+        assert any(
+            "veština" in o["reason"] and "Velika veština" in o["path"]
+            for o in b["truncated"]
+        ), "veština koja ne stane mora da završi u odsečeno, ne da nestane"
