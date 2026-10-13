@@ -140,6 +140,69 @@ class TestGateway:
         assert g.amount_eur_cents == 1
         assert CostLedger.objects.get().cost_bucket == E.CostBucket.LLM
 
+    # ---------------------------------------------------------- ADR-0086 šav
+
+    def _ruta_sa_cenom(self, *, uci=True):
+        return LLMRoute.objects.create(
+            purpose=E.LLMPurpose.CONTENT_DRAFT, name="Claude", provider="anthropic",
+            model_key="claude-test", priority=1, data_training_allowed=uci,
+            input_price_micro_eur_per_1k=3_000, output_price_micro_eur_per_1k=15_000)
+
+    def test_pozivalac_zamenjuje_poziv_a_cena_i_zapis_ostaju_nasi(
+            self, mila, settings, monkeypatch):
+        """ADR-0086 — tuđi pisac šalje zahtev, knjigu i dalje vodimo mi."""
+        settings.LLM_EXTERNAL_ENABLED = True
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+        self._ruta_sa_cenom()
+
+        def pukni(*a, **k):
+            raise AssertionError("_post_json ne sme da se pozove kad postoji pozivalac")
+
+        monkeypatch.setattr(gateway, "_post_json", pukni)
+        videne = []
+
+        def pozivalac(route):
+            videne.append(route.model_key)
+            return ("--- a/x\n+++ b/x\n", 1000, 200, "ok")
+
+        with bind(actor_id="user:op"):
+            g = gateway.generate(E.LLMPurpose.CONTENT_DRAFT, "s", "p", persona=mila,
+                                 pozivalac=pozivalac)
+        assert videne == ["claude-test"]
+        assert g.provider == "anthropic" and g.text.startswith("--- a/x")
+        # ista formula kao za nas: 1000×3 + 200×15 = 6000 µEUR → 1 cent naviše
+        assert g.amount_eur_cents == 1
+        assert CostLedger.objects.get().cost_bucket == E.CostBucket.LLM
+
+    def test_pozivalac_ne_zaobilazi_provajdera_koji_sme_da_uci(
+            self, mila, settings, monkeypatch):
+        """Dozvola se proverava PRE pozivaoca; tuđi alat je ne otključava."""
+        settings.LLM_EXTERNAL_ENABLED = True
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+        self._ruta_sa_cenom(uci=False)
+
+        def pozivalac(route):
+            raise AssertionError("pozivalac ne sme da se pozove za rutu koja sme da uči")
+
+        with bind(actor_id="user:op"):
+            g = gateway.generate(E.LLMPurpose.CONTENT_DRAFT, "s", "p", persona=mila,
+                                 brief={"topic": "AI"}, pozivalac=pozivalac)
+        assert g.provider == "local"
+        assert g.fallbacks[0].endswith("PROVIDER_MAY_TRAIN")
+
+    def test_pozivalac_se_ne_zove_za_lokalnu_rutu(self, mila, settings):
+        """Lokalni šablon nema šta da preda tuđem alatu."""
+        settings.LLM_EXTERNAL_ENABLED = False
+        self._ruta_sa_cenom()
+
+        def pozivalac(route):
+            raise AssertionError("pozivalac ne sme da se pozove za lokalnu rutu")
+
+        with bind(actor_id="user:op"):
+            g = gateway.generate(E.LLMPurpose.CONTENT_DRAFT, "s", "p", persona=mila,
+                                 brief={"topic": "AI"}, pozivalac=pozivalac)
+        assert g.provider == "local" and g.amount_eur_cents == 0
+
     def _keyed(self, mila, settings, monkeypatch):
         settings.LLM_EXTERNAL_ENABLED = True
         LLMRoute.objects.create(purpose=E.LLMPurpose.CONTENT_DRAFT, name="C",

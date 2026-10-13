@@ -25,6 +25,7 @@ import os
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_CEILING, Decimal
@@ -227,10 +228,19 @@ def _cost_cents(route: LLMRoute, tin: int, tout: int) -> int:
 
 def generate(purpose: E.LLMPurpose, system: str, prompt: str, *, persona=None, run=None,
              context_pack=None, brief: dict | None = None,
-             now: datetime | None = None, only: LLMRoute | None = None) -> Generation:
+             now: datetime | None = None, only: LLMRoute | None = None,
+             pozivalac: Callable[[LLMRoute], tuple[str, int, int, str]] | None = None,
+             ) -> Generation:
     """`brief` je strukturisan ulaz za lokalni šablon (tema, ugao, jezik…).
 
     `only` — samo ta ruta, bez prelaska na sledeću (za merenje, ADR-0011).
+
+    `pozivalac` — ADR-0086, šav za tuđeg pisca. Ko god da zove model, izbor
+    rute, dozvola (`_external_allowed`, dakle i `PROVIDER_MAY_TRAIN`), cena i
+    zapis ostaju ovde. Menja se samo KO šalje zahtev: umesto `_call_external`,
+    pozove se ovaj poziv sa izabranom rutom i od njega se očekuje isto —
+    `(tekst, ulazni_tokeni, izlazni_tokeni, razlog_zavrsetka)`. Lokalni šablon
+    se ne dira: on nema šta da preda tuđem alatu.
     """
     now = now or timezone.now()
     fallbacks: list[str] = []
@@ -243,7 +253,12 @@ def generate(purpose: E.LLMPurpose, system: str, prompt: str, *, persona=None, r
                 fallbacks.append(f"{route.provider}/{route.model_key}:{why}")
                 continue
         try:
-            if external:
+            if external and pozivalac is not None:
+                # ADR-0086 — tuđi pisac. Iznad ove linije je već provereno sve
+                # što se proverava i za nas: ruta, `LLM_EXTERNAL_ENABLED`,
+                # ključ persone i `data_training_allowed`. Ispod nje je zapis.
+                text, tin, tout, finish = pozivalac(route)
+            elif external:
                 text, tin, tout, finish = _call_external(route, system, prompt, persona)
             else:
                 text = local.compose(purpose, brief or {}, prompt)
