@@ -124,3 +124,43 @@ Mapa repozitorijuma. 13.10. je bila ugašena (`--no-git`), pa je ceo dobitak do�
 od oblika izmene, ne od mape (ADR-0085). Dok se mapa ne izmeri sa upaljenim
 `git`-om u slici, ADR-0080 (`MIN_IZVOD_PROCENAT`) ostaje na snazi i `_izvod` se
 ne dira.
+
+## Dopuna, izmereno isto veče: keš brojači ne postoje na objektu
+
+Zakrpu po ovom ADR-u napisao je Aider (P-00027, zadatak
+`TSK-01M4TTDGWKY9H9YKGQBED5OAFZ`), i uz nju je **sam prijavio** da tačni nazivi
+keš brojača nisu izmereni u brifu, nego pogođeni. Provereno je, i sumnja je bila
+opravdana — stvar je čak gora od toga.
+
+`base_coder.py`, pročitano:
+
+```
+2003–2006:  cache_hit_tokens = ...        cache_write_tokens = ...
+2012:       self.message_tokens_sent += cache_write_tokens
+2026:       tokens_report += f", {format_tokens(cache_write_tokens)} cache write"
+2095:       cost += cache_write_tokens * input_cost_per_token * 1.25
+```
+
+Keš brojači su **lokalne promenljive unutar funkcije**. Ulaze u zbir poslatih
+tokena, u tekst izveštaja i u Aiderov račun — ali se **nigde ne čuvaju na
+objektu `Coder`**. Nema `total_tokens_cache_read` ni ičega sličnog.
+
+Posledica: pokretač će za `cache_read` i `cache_write` uvek upisati `null`.
+To **nije** mana njegovog koda — `null` znači „nije izmereno", i to je istina.
+Broj prosto nije dostupan putem `return_coder`.
+
+Dve činjenice koje ovo merenje usput daje, i obe idu u ADR o ceni:
+
+1. **Red 2095:** upisani keš se naplaćuje `input_cost × 1.25`. To je izmeren
+   množilac, ne procena.
+2. **Red 2012:** `cache_write_tokens` **ulazi** u `message_tokens_sent`. Dakle
+   broj poslatih tokena nije čist ulaz. Naš `_cost_cents` bi taj deo naplatio po
+   običnoj ulaznoj ceni, dok provajder traži 1,25×. Greška ide u našu korist pri
+   čitanju keša, a protiv nas pri upisu.
+
+Da bi se keš ikad izmerio, pokretač bi morao da uhvati odgovor pre Aidera — to
+je druga odluka i ne donosi se ovde.
+
+**Ovo je ujedno prvi put da je agent prijavio sopstvenu neizmerenu
+pretpostavku pre nego što ga je iko pitao.** ADR-0033 nije stigao do njega kroz
+priručnik nego kroz brif, i proradio je.
