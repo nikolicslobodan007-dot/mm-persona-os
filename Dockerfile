@@ -6,8 +6,11 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# ADR-0087 — `git` je ovde zato sto zakrpu pravi on. Izvestaj pokretaca
+# (ADR-0086) nosi tokene i cenu, ali ne i izmenjene fajlove; razliku izmedju
+# radnog primerka i polazista racuna `git diff`. Svoj differ ne pisemo.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends build-essential libpq-dev \
+ && apt-get install -y --no-install-recommends build-essential libpq-dev git \
  && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml constraints.txt ./
