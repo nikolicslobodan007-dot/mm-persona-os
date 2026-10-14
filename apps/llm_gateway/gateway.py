@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import time
 import urllib.error
@@ -41,11 +42,24 @@ from common import enums as E
 LOCAL_PROVIDER = "local"
 LOCAL_MODEL = "template-v1"
 
+# ADR-0088 — detalj greske ide u dnevnik, nikada u bazu. `LLMError.detail`
+# nosi ispis tudjeg pokretaca (ADR-0086); u `fallbacks` i `PromptRecord`
+# ostaje samo sifra, pa bez ovog reda covek ne vidi zasto je ruta pala.
+log = logging.getLogger(__name__)
+
 
 class LLMError(Exception):
     def __init__(self, code: str, detail: str = ""):
         super().__init__(f"{code}: {detail}")
         self.code, self.detail = code, detail
+
+
+def _u_dnevnik(route: LLMRoute, e: LLMError) -> None:
+    """Prvih 2000 znakova detalja. Okruzenje se ne pise — u njemu je kljuc."""
+    if not e.detail:
+        return
+    log.warning("LLM ruta pala: %s/%s %s — %s",
+                route.provider, route.model_key, e.code, e.detail[:2000])
 
 
 @dataclass
@@ -267,6 +281,7 @@ def generate(purpose: E.LLMPurpose, system: str, prompt: str, *, persona=None, r
                 raise LLMError("EMPTY_RESPONSE")
         except LLMError as e:
             fallbacks.append(f"{route.provider}/{route.model_key}:{e.code}")
+            _u_dnevnik(route, e)
             _record(route, purpose, system, prompt, "", persona, run, context_pack, now,
                     t0, error=e.code)
             continue
@@ -364,6 +379,7 @@ def transcribe(asset, *, persona=None, run=None, context_pack=None,
                 raise LLMError("EMPTY_RESPONSE")
         except LLMError as e:
             fallbacks.append(f"{route.provider}/{route.model_key}:{e.code}")
+            _u_dnevnik(route, e)
             _record(route, purpose, system, prompt_marker, "", persona, run, context_pack,
                     now, t0, error=e.code)
             continue

@@ -203,6 +203,26 @@ class TestGateway:
                                  brief={"topic": "AI"}, pozivalac=pozivalac)
         assert g.provider == "local" and g.amount_eur_cents == 0
 
+    def test_detalj_greske_stize_u_dnevnik_a_u_bazi_ostaje_sifra(
+            self, mila, settings, monkeypatch, caplog):
+        """ADR-0088 — ispis tuđeg pokretača vidi čovek, baza vidi samo šifru."""
+        settings.LLM_EXTERNAL_ENABLED = True
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+        self._ruta_sa_cenom()
+
+        def pozivalac(route):
+            raise gateway.LLMError("PRAZNA_ZAKRPA", "ispis pokretaca: nista nije dodato")
+
+        with caplog.at_level("WARNING", logger="apps.llm_gateway.gateway"), \
+                bind(actor_id="user:op"):
+            g = gateway.generate(E.LLMPurpose.CONTENT_DRAFT, "s", "p", persona=mila,
+                                 brief={"topic": "AI"}, pozivalac=pozivalac)
+        assert g.provider == "local"
+        assert g.fallbacks[0].endswith("PRAZNA_ZAKRPA")
+        assert "ispis pokretaca: nista nije dodato" in caplog.text
+        pao = PromptRecord.objects.get(error_code="PRAZNA_ZAKRPA")
+        assert "pokretaca" not in json.dumps({k: str(v) for k, v in pao.__dict__.items()})
+
     def _keyed(self, mila, settings, monkeypatch):
         settings.LLM_EXTERNAL_ENABLED = True
         LLMRoute.objects.create(purpose=E.LLMPurpose.CONTENT_DRAFT, name="C",
