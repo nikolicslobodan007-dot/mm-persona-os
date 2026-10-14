@@ -615,6 +615,20 @@ class TestAiderPisac:
         assert videni["timeout"] == 777
         assert videni["timeout"] != RutaAider.timeout_seconds
 
+    def test_aiderova_zakrpa_zadrzava_zavrsni_red(self, z, model, ruta, monkeypatch,
+                                                  lazni_fs):
+        """ADR-0091 — `gateway` radi `text.strip()`, `git apply` traži taj red.
+
+        Bez njega zakrpa se upisuje, prikaže kao predata, a onda padne na
+        `apply --check: corrupt patch at line <poslednji>` — što je 14.10.
+        izgledalo kao da je Aider napisao neispravan diff, a nije.
+        """
+        monkeypatch.setattr(pisac, "PISAC", "aider")
+        model["odgovor"] = DIFF.rstrip("\n")  # ovako ga gateway isporuči
+        pisac.pokusaj(z)
+        upisana = z.patches.order_by("created_at").last()
+        assert upisana.diff.endswith("\n")
+
     def test_pisac_nas_ne_salje_pozivaoca(self, z, model, ruta, monkeypatch):
         monkeypatch.setattr(pisac, "PISAC", "nas")
         pisac.pokusaj(z)

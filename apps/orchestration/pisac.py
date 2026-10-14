@@ -276,6 +276,17 @@ def _pocetak(tekst: str) -> int | None:
     return min(mesta) if mesta else None
 
 
+def _zavrsi_redom(diff: str) -> str:
+    """Zakrpa mora da se završi novim redom — `git apply` to traži (ADR-0091).
+
+    `gateway.generate` vraća `Generation(text.strip(), ...)`. Za odgovor modela
+    je to ispravno, za zakrpu je pogubno: bez završnog reda `git apply --check`
+    javlja „corrupt patch at line <poslednji>", a `izvuci_diff` — koje taj red
+    dopisuje — na Aiderovom putu se namerno preskače. Zato se dopisuje ovde.
+    """
+    return diff if diff.endswith("\n") else diff + "\n"
+
+
 def izvuci_diff(tekst: str) -> str | None:
     """Vadi unified diff iz odgovora modela, ili `None` ako ga nema.
 
@@ -573,7 +584,7 @@ def pokusaj(zadatak: CodeTask, *, plafon_centi: int = PLAFON_CENTI,
     # Kad je zakrpu napisao Aider, `g.text` VEĆ JESTE diff (sastavljen preko
     # `git diff --cached`) — provlačenje kroz `izvuci_diff` bi mu tražilo
     # markdown ogradu koju Aider ovde ne piše.
-    diff = g.text if pozivalac is not None else izvuci_diff(g.text)
+    diff = _zavrsi_redom(g.text) if pozivalac is not None else izvuci_diff(g.text)
     red = _upisi(zadatak, diff, g.text, g, b)
     return Ishod(
         napisano=red.status == E.PatchStatus.ACCEPTED.value,
