@@ -12,12 +12,19 @@ tvrdnje o novcu i o zaustavljanju:
     pokušaja po izmerenoj ceni, pa agenta zaustavlja nenapredovanje, ne cena;
   - **lokalni šablon se ne broji kao pokušaj agenta.** On ne piše kod, pa njegov
     odgovor nije agentov neuspeh.
+  - **Aider je samo druga strana istog poziva** (ADR-0086) — kad `PISAC=aider`,
+    gateway dobija `pozivalac`; kad nije, dobija `None`. Ključ se razrešava isto
+    kao za naš sastavljač, a zakrpa se sastavlja preko `git diff --cached`,
+    nikad preko `git add -A`.
 """
 
 from __future__ import annotations
 
 import io
+import json
+import os
 from dataclasses import dataclass
+from pathlib import Path
 
 import pytest
 from django.core.management import call_command
@@ -85,11 +92,12 @@ def z(mila):
 @pytest.fixture
 def model(monkeypatch):
     """Model koji vraća šta mu se kaže, i broji koliko je puta zvan."""
-    stanje = {"pozivi": 0, "odgovor": f"```diff\n{DIFF}```", "cena": 7}
+    stanje = {"pozivi": 0, "odgovor": f"```diff\n{DIFF}```", "cena": 7, "kwargs": {}}
 
     def lazni(purpose, system, prompt, **kw):
         stanje["pozivi"] += 1
         stanje["prompt"] = prompt
+        stanje["kwargs"] = kw
         return LazniOdgovor(text=stanje["odgovor"], amount_eur_cents=stanje["cena"])
 
     monkeypatch.setattr(gateway, "generate", lazni)
@@ -522,3 +530,105 @@ class TestZastoLokalno:
         assert "nema svoj ključ" in str(e.value)
         assert "LLM_EXTERNAL_ENABLED" not in str(e.value)
         assert z.patches.count() == 0
+
+
+class RutaAider:
+    """Lažna ruta — dovoljno polja za `_aiderom` (ADR-0086)."""
+
+    provider = "anthropic"
+    model_key = "claude-proba"
+    timeout_seconds = 30
+
+
+class TestAiderPisac:
+    """ADR-0086 — Aider je druga strana istog poziva, ne nova petlja.
+
+    Gateway bira rutu, proverava dozvolu, računa cenu i upisuje zapis isto kao
+    za naš sastavljač (`pozivalac=None`); menja se samo ko šalje zahtev.
+    """
+
+    @pytest.fixture
+    def lazni_fs(self, monkeypatch):
+        """Preskače stvarni git klon i stvarni Aider — oba su lažna."""
+        pozivi: dict = {"add": None, "argv": None}
+
+        def lazni_klon(koren, radni):
+            os.makedirs(radni, exist_ok=True)
+
+        def lazni_pokretac(argv, env, timeout):
+            pozivi["argv"] = argv
+            izvestaj_put = argv[argv.index("--izvestaj") + 1]
+            Path(izvestaj_put).write_text(json.dumps({
+                "model": "anthropic/claude-proba",
+                "tokens_sent": 123, "tokens_received": 45,
+                "cache_read": None, "cache_write": None,
+                "finish": "ok", "greska": "",
+            }), encoding="utf-8")
+
+        def lazni_add(radni, putanje):
+            pozivi["add"] = list(putanje)
+
+        def lazni_diff(radni):
+            return DIFF
+
+        monkeypatch.setattr(pisac, "_klonirani_repo", lazni_klon)
+        monkeypatch.setattr(pisac, "_pozovi_pokretac", lazni_pokretac)
+        monkeypatch.setattr(pisac, "_git_add", lazni_add)
+        monkeypatch.setattr(pisac, "_git_diff_cached", lazni_diff)
+        monkeypatch.setattr(pisac.gateway, "credential_ref",
+                            lambda provider, persona=None: ("env:X", "persona"))
+        monkeypatch.setattr("apps.runtime.transport.resolve_secret",
+                            lambda ref: "tajna-koja-se-ne-vidi")
+        return pozivi
+
+    def test_pisac_nas_ne_salje_pozivaoca(self, z, model, ruta, monkeypatch):
+        monkeypatch.setattr(pisac, "PISAC", "nas")
+        pisac.pokusaj(z)
+        assert model["kwargs"]["pozivalac"] is None
+
+    def test_pisac_aider_salje_pozivaoca(self, z, model, ruta, monkeypatch):
+        monkeypatch.setattr(pisac, "PISAC", "aider")
+        pisac.pokusaj(z)
+        assert model["kwargs"]["pozivalac"] is not None
+        assert callable(model["kwargs"]["pozivalac"])
+
+    def test_vraceni_poziv_cita_izvestaj(self, z, lazni_fs):
+        tekst_prompta, b = pisac._prompt(z)
+        poziv = pisac._aiderom(z, tekst_prompta, b)
+        tekst, tin, tout, finish = poziv(RutaAider())
+        assert tekst == DIFF
+        assert tin == 123 and tout == 45
+        assert finish == "ok"
+
+    def test_bez_tokena_dize_gresku_i_ne_upisuje_zakrpu(self, z, monkeypatch):
+        def lazni_klon(koren, radni):
+            os.makedirs(radni, exist_ok=True)
+
+        def lazni_pokretac(argv, env, timeout):
+            izvestaj_put = argv[argv.index("--izvestaj") + 1]
+            Path(izvestaj_put).write_text(json.dumps({
+                "model": "x", "tokens_sent": None, "tokens_received": None,
+                "cache_read": None, "cache_write": None,
+                "finish": "", "greska": "nesto",
+            }), encoding="utf-8")
+
+        monkeypatch.setattr(pisac, "_klonirani_repo", lazni_klon)
+        monkeypatch.setattr(pisac, "_pozovi_pokretac", lazni_pokretac)
+        monkeypatch.setattr(pisac.gateway, "credential_ref",
+                            lambda provider, persona=None: ("env:X", "persona"))
+        monkeypatch.setattr("apps.runtime.transport.resolve_secret",
+                            lambda ref: "tajna-koja-se-ne-vidi")
+
+        tekst_prompta, b = pisac._prompt(z)
+        poziv = pisac._aiderom(z, tekst_prompta, b)
+        with pytest.raises(gateway.LLMError):
+            poziv(RutaAider())
+        assert z.patches.count() == 0
+
+    def test_git_add_dobija_tacne_putanje_nikad_dash_a(self, z, lazni_fs):
+        tekst_prompta, b = pisac._prompt(z)
+        poziv = pisac._aiderom(z, tekst_prompta, b)
+        poziv(RutaAider())
+        ocekivane = [f["path"] for f in b["files"]]
+        assert lazni_fs["add"] == ocekivane
+        assert "-A" not in lazni_fs["add"]

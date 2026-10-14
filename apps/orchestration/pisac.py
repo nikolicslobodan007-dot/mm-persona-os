@@ -32,13 +32,30 @@ Redosled kočnica je odluka, ne slučaj (ADR-0062): agent se zaustavlja zato št
   poziva se trošak ne može poništiti, pa plafon sme da bude prekoračen za najviše
   jedan poziv — a jedan poziv je ograničen veličinom brifa (200 KB, ADR-0041 §1).
   To se ovde kaže naglas umesto da se tvrdi tvrda granica koje nema (ADR-0033).
+
+## Ko piše — naš sastavljač ili Aider (ADR-0086)
+
+`PISAC` je jedini prekidač: `nas` (podrazumevano) zove `gateway.generate` bez
+`pozivalac`-a, kao do sada. `aider` prosleđuje `pozivalac=_aiderom(...)` —
+gateway i dalje bira rutu, proverava dozvolu, računa cenu i upisuje zapis
+(ADR-0086); menja se SAMO ko šalje zahtev modelu. `_aiderom` radi u svom
+`git clone --local` radnom primerku, pokreće `deploy/aider/pokretac.py` iz
+Aiderovog kaveza, i zakrpu sastavlja preko `git diff --cached` nad TAČNO onim
+putanjama koje su poslate kao `--fajl` — nikad `git add -A` (13.10.2026: Aiderov
+dnevnik je time ušao u zakrpu kao 1297 redova smeća).
 """
 
 from __future__ import annotations
 
 import hashlib
+import json
+import os
 import re
+import shutil
+import subprocess
+import tempfile
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from django.db import transaction
 
@@ -50,7 +67,7 @@ from .models import CodeTask, GateResult, TaskPatch
 from .zadaci import TaskError
 
 __all__ = ["Ishod", "pokusaj", "pokusaja", "potroseno", "izvuci_diff", "zasto_ne",
-           "otisak", "zasto_lokalno", "PLAFON_CENTI", "NAJVISE_POKUSAJA"]
+           "otisak", "zasto_lokalno", "PLAFON_CENTI", "NAJVISE_POKUSAJA", "PISAC"]
 
 #: Plafon troška po zadatku, u EUR centima (Canon §13.1 — nikad float). Nije
 #: mera koliko posla agent sme da uradi nego kočnica za kvar koji troši
@@ -66,6 +83,19 @@ NAJVISE_POKUSAJA = 8
 #: Koliko izlaza tražimo od modela. Diff od 20 KB je već prevelik za uzak
 #: zadatak; preko toga se zadatak deli, ne podiže plafon (ADR-0041 §1).
 MAX_DIFF_ZNAKOVA = 20_000
+
+#: Ko piše zakrpu: `nas` (podrazumevano, naš sastavljač preko gateway-a) ili
+#: `aider` (ADR-0086 — pisac predaje zahtev Aideru, gateway i dalje bira rutu,
+#: proverava dozvolu, računa cenu i upisuje zapis).
+PISAC = os.environ.get("PISAC", "nas")
+
+#: Pajton iz Aiderovog kaveza (ADR-0082) — aplikacija ga nikad ne uvozi kao
+#: biblioteku, samo ga pokreće kao poseban proces.
+_AIDER_PYTHON = "/opt/aider/bin/python"
+
+#: Koren repozitorijuma — odavde se kloniraju radni primerci za Aidera.
+_KOREN = Path(__file__).resolve().parents[2]
+_POKRETAC_SKRIPTA = _KOREN / "deploy" / "aider" / "pokretac.py"
 
 _OGRADA = re.compile(r"```[a-zA-Z]*\s*\n(.*?)```", re.S)
 #: `diff --git` je `git`-ov dodatak, ne deo unified diff formata. Zakrpa bez njega
@@ -304,6 +334,123 @@ def _prompt(zadatak: CodeTask) -> tuple[str, dict]:
     return "\n".join(delovi), b
 
 
+# -------------------------------------------------------------- Aider (ADR-0086)
+
+
+def _klonirani_repo(koren: Path, radni: str) -> None:
+    """Radni primerak repozitorijuma — Aider nikad ne piše u pravi."""
+    subprocess.run(["git", "clone", "--quiet", "--local", str(koren), radni],
+                   check=True, capture_output=True, text=True)
+
+
+def _pozovi_pokretac(argv: list[str], env: dict, timeout) -> None:
+    """Jedina tačka gde se pokreće pravi proces — ovde se test kači monkeypatch-om."""
+    subprocess.run(argv, env=env, timeout=timeout, capture_output=True, text=True)
+
+
+def _git_add(radni: str, putanje: list[str]) -> None:
+    """Dodaje TAČNO ove putanje. Nikad `-A` (13.10.2026 — Aiderov dnevnik u zakrpi)."""
+    subprocess.run(["git", "-C", radni, "add", "--", *putanje],
+                   check=True, capture_output=True, text=True)
+
+
+def _git_diff_cached(radni: str) -> str:
+    r = subprocess.run(["git", "-C", radni, "diff", "--cached"],
+                       check=True, capture_output=True, text=True)
+    return r.stdout
+
+
+def _aiderom(zadatak: CodeTask, tekst_prompta: str, b: dict):
+    """Vraća `pozivalac` za `gateway.generate` — Aider piše zakrpu (ADR-0086).
+
+    Izbor rute, dozvola (`PROVIDER_MAY_TRAIN`, ključ persone, `LLM_EXTERNAL_ENABLED`),
+    cena i zapis ostaju u `llm_gateway` — ovo je samo DRUGA STRANA poziva, ono
+    što šalje zahtev modelu umesto `gateway._call_external`.
+
+    Ključ persone se razrešava identično `gateway._call_external`: ako ga nema,
+    `NO_PERSONA_KEY`; ako referenca postoji a tajna ne, `CREDENTIAL_MISSING`.
+    Ključ se nigde ne ispisuje, ne loguje i ne ulazi u poruku greške.
+    """
+
+    def pozovi(route) -> tuple[str, int, int, str]:
+        from apps.runtime.transport import CredentialMissing, resolve_secret
+
+        ref, _izvor = gateway.credential_ref(route.provider, zadatak.assignee)
+        if ref is None:
+            raise gateway.LLMError(
+                "NO_PERSONA_KEY",
+                zadatak.assignee.public_id if zadatak.assignee else "")
+        try:
+            kljuc = resolve_secret(ref).strip()
+        except CredentialMissing as e:
+            raise gateway.LLMError("CREDENTIAL_MISSING", str(e)) from e
+
+        temp = tempfile.mkdtemp(prefix="aider-")
+        try:
+            radni = os.path.join(temp, "radni")
+            fajlovi = [f["path"] for f in (b.get("files") or [])]
+            citanja = [r["path"] for r in (b.get("reference") or [])]
+
+            brif_put = os.path.join(temp, "brif.txt")
+            Path(brif_put).write_text(tekst_prompta, encoding="utf-8")
+
+            podesavanja_put = os.path.join(temp, "podesavanja.yaml")
+            Path(podesavanja_put).write_text(
+                f"- name: {route.provider}/{route.model_key}\n"
+                "  edit_format: whole\n"
+                "  use_temperature: false\n"
+                "  use_repo_map: false\n",
+                encoding="utf-8")
+
+            izvestaj_put = os.path.join(temp, "izvestaj.json")
+            argv = [_AIDER_PYTHON, str(_POKRETAC_SKRIPTA),
+                   "--brif", brif_put,
+                   "--model", f"{route.provider}/{route.model_key}",
+                   "--podesavanja", podesavanja_put,
+                   "--radni", radni,
+                   "--izvestaj", izvestaj_put]
+            for f in fajlovi:
+                argv += ["--fajl", f]
+            for r in citanja:
+                argv += ["--citaj", r]
+
+            env = os.environ.copy()
+            env[f"{route.provider.upper()}_API_KEY"] = kljuc
+
+            try:
+                _klonirani_repo(_KOREN, radni)
+                _pozovi_pokretac(argv, env, route.timeout_seconds)
+            except subprocess.TimeoutExpired as e:
+                raise gateway.LLMError("NETWORK", str(e)) from e
+            except (subprocess.CalledProcessError, OSError) as e:
+                raise gateway.LLMError("AIDER_ERROR", str(e)) from e
+
+            try:
+                izvestaj = json.loads(Path(izvestaj_put).read_text(encoding="utf-8"))
+            except (OSError, ValueError) as e:
+                raise gateway.LLMError("AIDER_NO_REPORT", str(e)) from e
+
+            tin, tout = izvestaj.get("tokens_sent"), izvestaj.get("tokens_received")
+            if tin is None or tout is None:
+                # None znači „nije izmereno" — cena se ne računa iz neizmerenog
+                # broja (ADR-0086).
+                raise gateway.LLMError(
+                    "AIDER_UNMEASURED",
+                    "tokens_sent/tokens_received nisu izmereni")
+
+            try:
+                _git_add(radni, fajlovi)
+                diff = _git_diff_cached(radni)
+            except (subprocess.CalledProcessError, OSError) as e:
+                raise gateway.LLMError("AIDER_ERROR", str(e)) from e
+
+            return diff, int(tin), int(tout), str(izvestaj.get("finish", ""))
+        finally:
+            shutil.rmtree(temp, ignore_errors=True)
+
+    return pozovi
+
+
 # -------------------------------------------------------------------- pokušaj
 
 
@@ -342,9 +489,13 @@ def pokusaj(zadatak: CodeTask, *, plafon_centi: int = PLAFON_CENTI,
                      pokusaja=pokusaja(zadatak))
 
     tekst_prompta, b = _prompt(zadatak)
+    # ADR-0086: `aider` šalje `pozivalac` — gateway bira rutu, proverava dozvolu,
+    # računa cenu i upisuje zapis isto kao i za naš sastavljač; menja se samo ko
+    # šalje zahtev modelu.
+    pozivalac = _aiderom(zadatak, tekst_prompta, b) if PISAC == "aider" else None
     try:
         g = gateway.generate(E.LLMPurpose.CODE_PATCH, SISTEM, tekst_prompta,
-                             persona=zadatak.assignee)
+                             persona=zadatak.assignee, pozivalac=pozivalac)
     except gateway.LLMError as e:
         raise TaskError("NO_MODEL", f"Model nije odgovorio: {e}") from e
 
@@ -356,7 +507,10 @@ def pokusaj(zadatak: CodeTask, *, plafon_centi: int = PLAFON_CENTI,
             "Zahtev je pao na lokalni šablon, a on ne piše kod. "
             f"Preskočene rute: {zasto_lokalno(g.fallbacks)}.")
 
-    diff = izvuci_diff(g.text)
+    # Kad je zakrpu napisao Aider, `g.text` VEĆ JESTE diff (sastavljen preko
+    # `git diff --cached`) — provlačenje kroz `izvuci_diff` bi mu tražilo
+    # markdown ogradu koju Aider ovde ne piše.
+    diff = g.text if pozivalac is not None else izvuci_diff(g.text)
     red = _upisi(zadatak, diff, g.text, g, b)
     return Ishod(
         napisano=red.status == E.PatchStatus.ACCEPTED.value,
