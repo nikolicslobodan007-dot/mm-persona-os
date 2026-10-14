@@ -588,6 +588,33 @@ class TestAiderPisac:
                             lambda ref: "tajna-koja-se-ne-vidi")
         return pozivi
 
+    def test_rok_je_piscev_a_ne_rutin(self, z, model, ruta, monkeypatch, lazni_fs):
+        """ADR-0090 — Aiderova sesija nije jedan poziv provajderu.
+
+        `RutaAider.timeout_seconds` je 30; pokretač mora da dobije
+        `pisac.ROK_SEKUNDI`. Dok su ta dva roka bila isto, posao se gasio
+        na 60. sekundi i to se prijavljivalo kao kvar mreže.
+        """
+        videni: dict = {}
+
+        def hvataj(argv, env, timeout):
+            videni["timeout"] = timeout
+            izvestaj_put = argv[argv.index("--izvestaj") + 1]
+            Path(izvestaj_put).write_text(json.dumps({
+                "model": "anthropic/claude-proba",
+                "tokens_sent": 1, "tokens_received": 1,
+                "cache_read": None, "cache_write": None,
+                "finish": "ok", "greska": "",
+            }), encoding="utf-8")
+            return subprocess.CompletedProcess(args=argv, returncode=0, stdout="", stderr="")
+
+        monkeypatch.setattr(pisac, "_pozovi_pokretac", hvataj)
+        monkeypatch.setattr(pisac, "ROK_SEKUNDI", 777)
+        pozivalac = pisac._aiderom(z, "brif", {"files": [], "reference": []})
+        pozivalac(RutaAider())
+        assert videni["timeout"] == 777
+        assert videni["timeout"] != RutaAider.timeout_seconds
+
     def test_pisac_nas_ne_salje_pozivaoca(self, z, model, ruta, monkeypatch):
         monkeypatch.setattr(pisac, "PISAC", "nas")
         pisac.pokusaj(z)

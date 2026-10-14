@@ -78,7 +78,8 @@ from .models import CodeTask, GateResult, TaskPatch
 from .zadaci import TaskError
 
 __all__ = ["Ishod", "pokusaj", "pokusaja", "potroseno", "izvuci_diff", "zasto_ne",
-           "otisak", "zasto_lokalno", "PLAFON_CENTI", "NAJVISE_POKUSAJA", "PISAC"]
+           "otisak", "zasto_lokalno", "PLAFON_CENTI", "NAJVISE_POKUSAJA", "PISAC",
+           "ROK_SEKUNDI"]
 
 #: Plafon troška po zadatku, u EUR centima (Canon §13.1 — nikad float). Nije
 #: mera koliko posla agent sme da uradi nego kočnica za kvar koji troši
@@ -99,6 +100,12 @@ MAX_DIFF_ZNAKOVA = 20_000
 #: `aider` (ADR-0086 — pisac predaje zahtev Aideru, gateway i dalje bira rutu,
 #: proverava dozvolu, računa cenu i upisuje zapis).
 PISAC = os.environ.get("PISAC", "nas")
+
+#: Koliko sme da traje CELA Aiderova sesija, u sekundama (ADR-0090).
+#: NIJE isto što i `LLMRoute.timeout_seconds`: to je rok za JEDAN poziv
+#: provajderu, a Aider vodi razgovor od više poziva i pre toga pročita ceo
+#: brif. Poistovećivanje ta dva roka gasilo je posao na 60. sekundi.
+ROK_SEKUNDI = int(os.environ.get("PISAC_ROK_SEKUNDI", "900"))
 
 #: Pajton iz Aiderovog kaveza (ADR-0082) — aplikacija ga nikad ne uvozi kao
 #: biblioteku, samo ga pokreće kao poseban proces.
@@ -457,9 +464,12 @@ def _aiderom(zadatak: CodeTask, tekst_prompta: str, b: dict):
 
             try:
                 _klonirani_repo(_KOREN, radni)
-                rezultat = _pozovi_pokretac(argv, env, route.timeout_seconds)
+                # ADR-0090 — rok pisca, ne rok rute: Aiderova sesija nije
+                # jedan poziv provajderu.
+                rezultat = _pozovi_pokretac(argv, env, ROK_SEKUNDI)
             except subprocess.TimeoutExpired as e:
-                raise gateway.LLMError("NETWORK", str(e)) from e
+                # Ovo nije mreža. Mi smo ga ubili, i to tako treba da se zove.
+                raise gateway.LLMError("ROK_ISTEKAO", str(e)) from e
             except (subprocess.CalledProcessError, OSError) as e:
                 raise gateway.LLMError("AIDER_ERROR", str(e)) from e
 
@@ -584,6 +594,11 @@ _RAZLOG_RUTE = {
     "CREDENTIAL_MISSING": "referenca na ključ postoji, ali ključ nije nađen",
     "NETWORK": "mreža nije propustila poziv",
     "EMPTY_RESPONSE": "model je vratio prazan odgovor",
+    "ROK_ISTEKAO": "pisac nije završio u zadatom roku (PISAC_ROK_SEKUNDI)",
+    "PRAZNA_ZAKRPA": "poziv je prošao, ali zakrpa je prazna",
+    "AIDER_ERROR": "pokretač je pao — razlog je u dnevniku (ADR-0088)",
+    "AIDER_NO_REPORT": "pokretač nije ostavio izveštaj",
+    "AIDER_UNMEASURED": "tokeni nisu izmereni, pa se cena ne računa",
 }
 
 
