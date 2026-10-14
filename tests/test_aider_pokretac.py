@@ -53,7 +53,6 @@ def test_argv_sadrzi_sve_zastavice_i_file_read_po_ulazu():
     argv = pokretac._sastavi_argv(
         model="claude-x",
         podesavanja="/tmp/podesavanja.yml",
-        brif="/tmp/brif.txt",
         fajlovi=["a.py", "b.py"],
         citanja=["c.py"],
     )
@@ -61,7 +60,6 @@ def test_argv_sadrzi_sve_zastavice_i_file_read_po_ulazu():
         "--no-git",
         "--model", "claude-x",
         "--model-settings-file", "/tmp/podesavanja.yml",
-        "--message-file", "/tmp/brif.txt",
         "--file", "a.py",
         "--file", "b.py",
         "--read", "c.py",
@@ -81,7 +79,7 @@ def test_izvestaj_nosi_tacne_brojeve_iz_laznog_coder_objekta(monkeypatch, tmp_pa
         total_tokens_cache_read=30,
         total_tokens_cache_write=5,
     )
-    monkeypatch.setattr(pokretac, "_pozovi_aider", lambda argv: lazni)
+    monkeypatch.setattr(pokretac, "_pozovi_aider", lambda argv, poruka: lazni)
 
     radni, brif, podesavanja, izvestaj = _pripremi_okruzenje(tmp_path)
     kod = pokretac.pokreni(_argv_za_pokreni(brif, podesavanja, radni, izvestaj))
@@ -97,9 +95,32 @@ def test_izvestaj_nosi_tacne_brojeve_iz_laznog_coder_objekta(monkeypatch, tmp_pa
     assert podaci["greska"] == ""
 
 
+def test_brif_stize_kao_tekst_jer_argv_vise_ne_nosi_message_file(monkeypatch, tmp_path):
+    """ADR-0089 — sa `return_coder=True` Aider izadje pre petlje razgovora.
+
+    Zato brif mora da stigne kao TEKST, do `coder.run`. Da ovaj test ne postoji,
+    pokretač bi opet ćutke podigao kavez, vratio codera i izašao sa kodom 0 —
+    bez ijednog poslatog tokena i bez ijedne izmene u fajlu.
+    """
+    videno = {}
+
+    def _hvataj(argv, poruka):
+        videno["argv"], videno["poruka"] = argv, poruka
+        return _LazniCoder(total_tokens_sent=1, total_tokens_received=1)
+
+    monkeypatch.setattr(pokretac, "_pozovi_aider", _hvataj)
+    radni, brif, podesavanja, izvestaj = _pripremi_okruzenje(tmp_path)
+    kod = pokretac.pokreni(_argv_za_pokreni(brif, podesavanja, radni, izvestaj))
+
+    assert kod == 0
+    assert videno["poruka"] == "uradi nesto"
+    assert "--message-file" not in videno["argv"]
+    assert str(brif) not in videno["argv"]
+
+
 def test_null_a_ne_nula_kad_nema_kes_atribute(monkeypatch, tmp_path):
     lazni = _LazniCoder(total_tokens_sent=10, total_tokens_received=2)
-    monkeypatch.setattr(pokretac, "_pozovi_aider", lambda argv: lazni)
+    monkeypatch.setattr(pokretac, "_pozovi_aider", lambda argv, poruka: lazni)
 
     radni, brif, podesavanja, izvestaj = _pripremi_okruzenje(tmp_path)
     kod = pokretac.pokreni(_argv_za_pokreni(brif, podesavanja, radni, izvestaj))
@@ -113,7 +134,7 @@ def test_null_a_ne_nula_kad_nema_kes_atribute(monkeypatch, tmp_path):
 def test_izlazni_kod_razlicit_od_nule_i_greska_popunjena_kad_pozvani_izuzetak(
     monkeypatch, tmp_path
 ):
-    def _puca(argv):
+    def _puca(argv, poruka):
         raise RuntimeError("nesto je puklo pri pozivu Aidera")
 
     monkeypatch.setattr(pokretac, "_pozovi_aider", _puca)

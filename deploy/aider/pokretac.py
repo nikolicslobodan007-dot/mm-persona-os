@@ -24,16 +24,19 @@ def _sastavi_argv(
     *,
     model: str,
     podesavanja: str,
-    brif: str,
     fajlovi: list[str],
     citanja: list[str],
 ) -> list[str]:
-    """Slaže argv za Aidera, tačno u redu propisanom ADR-0086."""
+    """Slaže argv za Aidera, u redu propisanom ADR-0086.
+
+    Bez `--message-file`: ADR-0089 — sa `return_coder=True` Aider vraća codera
+    pre petlje razgovora (aider/main.py:1018) i tu zastavicu nikad ne pročita.
+    Brif isporučuje `coder.run`, pa ovde mrtva zastavica ne stoji.
+    """
     argv: list[str] = [
         "--no-git",
         "--model", model,
         "--model-settings-file", podesavanja,
-        "--message-file", brif,
     ]
     for f in fajlovi:
         argv += ["--file", f]
@@ -50,16 +53,22 @@ def _sastavi_argv(
     return argv
 
 
-def _pozovi_aider(argv: list[str]):
+def _pozovi_aider(argv: list[str], poruka: str):
     """Jedina tačka gde se Aider stvarno zove.
 
     Uvoz je namerno ovde, ne na vrhu modula: kapija nema ni Aider ni mrežu
     ka provajderu (ADR-0086, ADR-0082). Test ovu funkciju menja preko
     monkeypatch i ne dira uvoz.
+
+    ADR-0089 — DVA poziva, ne jedan. `main(..., return_coder=True)` samo
+    sastavi codera i izadje (aider/main.py:1018), pre nego sto je ijedna
+    poruka poslata. Razgovor pokrece `coder.run`, i tek on zove model.
     """
     from aider.main import main as aider_main
 
-    return aider_main(argv, return_coder=True)
+    coder = aider_main(argv, return_coder=True)
+    coder.run(with_message=poruka)
+    return coder
 
 
 def _izvestaj_iz_codera(coder, model: str, greska: str | None) -> dict:
@@ -98,7 +107,6 @@ def pokreni(argv: list[str] | None = None) -> int:
     aider_argv = _sastavi_argv(
         model=args.model,
         podesavanja=args.podesavanja,
-        brif=args.brif,
         fajlovi=args.fajl,
         citanja=args.citaj,
     )
@@ -109,7 +117,9 @@ def pokreni(argv: list[str] | None = None) -> int:
     try:
         os.chdir(args.radni)
         try:
-            coder = _pozovi_aider(aider_argv)
+            # ADR-0089 — brif se predaje kao TEKST. Putanja u argv ne bi bila
+            # pročitana: Aider sa `return_coder=True` izlazi pre petlje.
+            coder = _pozovi_aider(aider_argv, Path(args.brif).read_text(encoding="utf-8"))
         except Exception as exc:  # svaki kvar poziva ide u izveštaj, ne ruši proces
             greska = str(exc)
         finally:
