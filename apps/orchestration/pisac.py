@@ -43,6 +43,17 @@ gateway i dalje bira rutu, proverava dozvolu, računa cenu i upisuje zapis
 Aiderovog kaveza, i zakrpu sastavlja preko `git diff --cached` nad TAČNO onim
 putanjama koje su poslate kao `--fajl` — nikad `git add -A` (13.10.2026: Aiderov
 dnevnik je time ušao u zakrpu kao 1297 redova smeća).
+
+Dve stvari koje ume da pogodi u tišini, i zašto sad ne mogu:
+
+  - **pokretač padne** (ne-nula izlazni kod). `_pozovi_pokretac` je do sada
+    hvatao `stdout`/`stderr` i ništa sa njima nije radio — pad je nestajao bez
+    traga. Sada se izlaz vraća pozivaocu, i neuspeh nosi njegov ispis.
+  - **`git diff --cached` vrati prazno.** To je NAŠA greška (pisac nije ništa
+    promenio), ne agentov prazan odgovor. Do sada je prazan tekst stizao do
+    `gateway.generate`, koji ga je video kao `EMPTY_RESPONSE` i tvrdio da model
+    ništa nije rekao — iako je ceo poziv prošao. Sad je to `PRAZNA_ZAKRPA`,
+    podignuto PRE nego što prazan tekst i stigne do gateway-a.
 """
 
 from __future__ import annotations
@@ -96,6 +107,10 @@ _AIDER_PYTHON = "/opt/aider/bin/python"
 #: Koren repozitorijuma — odavde se kloniraju radni primerci za Aidera.
 _KOREN = Path(__file__).resolve().parents[2]
 _POKRETAC_SKRIPTA = _KOREN / "deploy" / "aider" / "pokretac.py"
+
+#: Koliko znakova ispisa pokretača ide u poruku greške (ADR-0086). Dovoljno da
+#: se vidi šta se desilo, malo da se ne nadigra `MAX_DIFF_ZNAKOVA`.
+_MAX_ISPIS_ZNAKOVA = 2000
 
 _OGRADA = re.compile(r"```[a-zA-Z]*\s*\n(.*?)```", re.S)
 #: `diff --git` je `git`-ov dodatak, ne deo unified diff formata. Zakrpa bez njega
@@ -343,9 +358,15 @@ def _klonirani_repo(koren: Path, radni: str) -> None:
                    check=True, capture_output=True, text=True)
 
 
-def _pozovi_pokretac(argv: list[str], env: dict, timeout) -> None:
-    """Jedina tačka gde se pokreće pravi proces — ovde se test kači monkeypatch-om."""
-    subprocess.run(argv, env=env, timeout=timeout, capture_output=True, text=True)
+def _pozovi_pokretac(argv: list[str], env: dict, timeout) -> subprocess.CompletedProcess:
+    """Jedina tačka gde se pokreće pravi proces — ovde se test kači monkeypatch-om.
+
+    Vraća ceo `CompletedProcess`, ne samo da li je prošao: pozivalac čita
+    `returncode`, `stdout` i `stderr` da bi neuspeh opisao onim što se stvarno
+    desilo, ne pogađao (ADR-0086). Namerno bez `check=True` — poziv koji padne
+    nije izuzetak koji se baca ovde, nego ishod koji pozivalac tumači.
+    """
+    return subprocess.run(argv, env=env, timeout=timeout, capture_output=True, text=True)
 
 
 def _git_add(radni: str, putanje: list[str]) -> None:
@@ -360,6 +381,17 @@ def _git_diff_cached(radni: str) -> str:
     return r.stdout
 
 
+def _ispis(rezultat: subprocess.CompletedProcess) -> str:
+    """Poslednjih `_MAX_ISPIS_ZNAKOVA` znakova ispisa pokretača, s izlaznim kodom.
+
+    NIKAD okruženje potprocesa — u njemu je ključ (ADR-0086). Ulazi samo ono
+    što je pokretač ispisao na `stdout`/`stderr`, da zapis kaže šta se desilo
+    a da ključ nikad ne procuri u grešku koja se loguje i pamti.
+    """
+    tekst = ((rezultat.stdout or "") + (rezultat.stderr or ""))[-_MAX_ISPIS_ZNAKOVA:]
+    return f"izlazni kod {rezultat.returncode}: {tekst or '(bez ispisa)'}"
+
+
 def _aiderom(zadatak: CodeTask, tekst_prompta: str, b: dict):
     """Vraća `pozivalac` za `gateway.generate` — Aider piše zakrpu (ADR-0086).
 
@@ -370,6 +402,12 @@ def _aiderom(zadatak: CodeTask, tekst_prompta: str, b: dict):
     Ključ persone se razrešava identično `gateway._call_external`: ako ga nema,
     `NO_PERSONA_KEY`; ako referenca postoji a tajna ne, `CREDENTIAL_MISSING`.
     Ključ se nigde ne ispisuje, ne loguje i ne ulazi u poruku greške.
+
+    Dva neuspeha koja pokretač ume da proizvede u tišini sada su imenovana:
+    ne-nula izlazni kod je `AIDER_ERROR` sa njegovim ispisom, a prazan
+    `git diff --cached` je `PRAZNA_ZAKRPA` — NAŠA greška (pisac nije ništa
+    promenio), podignuta pre nego što prazan tekst stigne do `gateway.generate`
+    i bude pogrešno pročitan kao `EMPTY_RESPONSE` modela.
     """
 
     def pozovi(route) -> tuple[str, int, int, str]:
@@ -419,11 +457,17 @@ def _aiderom(zadatak: CodeTask, tekst_prompta: str, b: dict):
 
             try:
                 _klonirani_repo(_KOREN, radni)
-                _pozovi_pokretac(argv, env, route.timeout_seconds)
+                rezultat = _pozovi_pokretac(argv, env, route.timeout_seconds)
             except subprocess.TimeoutExpired as e:
                 raise gateway.LLMError("NETWORK", str(e)) from e
             except (subprocess.CalledProcessError, OSError) as e:
                 raise gateway.LLMError("AIDER_ERROR", str(e)) from e
+
+            if rezultat.returncode != 0:
+                # Pokretač je pao — njegov ispis je jedini trag zašto. Do sada
+                # je `capture_output=True` hvatao stderr i niko ga nije čitao
+                # (ADR-0086): pad je nestajao bez traga u zapisu zadatka.
+                raise gateway.LLMError("AIDER_ERROR", _ispis(rezultat))
 
             try:
                 izvestaj = json.loads(Path(izvestaj_put).read_text(encoding="utf-8"))
@@ -443,6 +487,15 @@ def _aiderom(zadatak: CodeTask, tekst_prompta: str, b: dict):
                 diff = _git_diff_cached(radni)
             except (subprocess.CalledProcessError, OSError) as e:
                 raise gateway.LLMError("AIDER_ERROR", str(e)) from e
+
+            if not diff.strip():
+                # Prazna zakrpa je NAŠA greška, ne agentov prazan odgovor:
+                # pokretač je prošao (izlazni kod 0, tokeni izmereni), ali
+                # `git diff --cached` nema šta da pokaže. Diže se OVDE, pre nego
+                # što prazan tekst stigne do `gateway.generate` i bude pogrešno
+                # pročitan kao `EMPTY_RESPONSE` — „model ništa nije rekao", što
+                # nije tačno (ADR-0086).
+                raise gateway.LLMError("PRAZNA_ZAKRPA", _ispis(rezultat))
 
             return diff, int(tin), int(tout), str(izvestaj.get("finish", ""))
         finally:

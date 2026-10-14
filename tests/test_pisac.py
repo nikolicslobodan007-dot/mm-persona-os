@@ -16,6 +16,11 @@ tvrdnje o novcu i o zaustavljanju:
     gateway dobija `pozivalac`; kad nije, dobija `None`. Ključ se razrešava isto
     kao za naš sastavljač, a zakrpa se sastavlja preko `git diff --cached`,
     nikad preko `git add -A`.
+  - **pokretač koji padne ostavlja trag.** Ne-nula izlazni kod nosi njegov
+    ispis u poruci greške; prazan `git diff --cached` je `PRAZNA_ZAKRPA`, ne
+    tihi prazan tekst koji bi gateway pogrešno pročitao kao prazan odgovor
+    modela. Ni jedna od te dve poruke nikad ne nosi ključ ili ime promenljive
+    okruženja.
 """
 
 from __future__ import annotations
@@ -23,6 +28,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -564,6 +570,7 @@ class TestAiderPisac:
                 "cache_read": None, "cache_write": None,
                 "finish": "ok", "greska": "",
             }), encoding="utf-8")
+            return subprocess.CompletedProcess(args=argv, returncode=0, stdout="", stderr="")
 
         def lazni_add(radni, putanje):
             pozivi["add"] = list(putanje)
@@ -611,6 +618,7 @@ class TestAiderPisac:
                 "cache_read": None, "cache_write": None,
                 "finish": "", "greska": "nesto",
             }), encoding="utf-8")
+            return subprocess.CompletedProcess(args=argv, returncode=0, stdout="", stderr="")
 
         monkeypatch.setattr(pisac, "_klonirani_repo", lazni_klon)
         monkeypatch.setattr(pisac, "_pozovi_pokretac", lazni_pokretac)
@@ -632,3 +640,96 @@ class TestAiderPisac:
         ocekivane = [f["path"] for f in b["files"]]
         assert lazni_fs["add"] == ocekivane
         assert "-A" not in lazni_fs["add"]
+
+    def test_neuspesan_izlazni_kod_nosi_ispis_u_poruci(self, z, monkeypatch):
+        """Do sada je `capture_output=True` hvatao stderr i niko ga nije čitao —
+        pad pokretača je nestajao bez traga (ADR-0086)."""
+
+        def lazni_klon(koren, radni):
+            os.makedirs(radni, exist_ok=True)
+
+        def lazni_pokretac(argv, env, timeout):
+            return subprocess.CompletedProcess(
+                args=argv, returncode=1, stdout="",
+                stderr="Traceback: nešto je puklo u aideru")
+
+        monkeypatch.setattr(pisac, "_klonirani_repo", lazni_klon)
+        monkeypatch.setattr(pisac, "_pozovi_pokretac", lazni_pokretac)
+        monkeypatch.setattr(pisac.gateway, "credential_ref",
+                            lambda provider, persona=None: ("env:X", "persona"))
+        monkeypatch.setattr("apps.runtime.transport.resolve_secret",
+                            lambda ref: "tajna-koja-se-ne-vidi")
+
+        tekst_prompta, b = pisac._prompt(z)
+        poziv = pisac._aiderom(z, tekst_prompta, b)
+        with pytest.raises(gateway.LLMError) as e:
+            poziv(RutaAider())
+        assert "puklo u aideru" in str(e.value)
+        assert z.patches.count() == 0
+
+    def test_prazan_diff_dize_gresku_ne_vraca_prazan_tekst(self, z, monkeypatch):
+        """Prazna zakrpa je NAŠ kvar, ne agentov prazan odgovor (ADR-0086):
+        gateway bi prazan tekst video kao `EMPTY_RESPONSE` i tvrdio da model
+        ništa nije rekao, iako je ceo poziv prošao."""
+
+        def lazni_klon(koren, radni):
+            os.makedirs(radni, exist_ok=True)
+
+        def lazni_pokretac(argv, env, timeout):
+            izvestaj_put = argv[argv.index("--izvestaj") + 1]
+            Path(izvestaj_put).write_text(json.dumps({
+                "model": "anthropic/claude-proba",
+                "tokens_sent": 10, "tokens_received": 5,
+                "cache_read": None, "cache_write": None,
+                "finish": "ok", "greska": "",
+            }), encoding="utf-8")
+            return subprocess.CompletedProcess(
+                args=argv, returncode=0, stdout="Nema izmena.", stderr="")
+
+        def lazni_add(radni, putanje):
+            pass
+
+        def lazni_diff(radni):
+            return ""
+
+        monkeypatch.setattr(pisac, "_klonirani_repo", lazni_klon)
+        monkeypatch.setattr(pisac, "_pozovi_pokretac", lazni_pokretac)
+        monkeypatch.setattr(pisac, "_git_add", lazni_add)
+        monkeypatch.setattr(pisac, "_git_diff_cached", lazni_diff)
+        monkeypatch.setattr(pisac.gateway, "credential_ref",
+                            lambda provider, persona=None: ("env:X", "persona"))
+        monkeypatch.setattr("apps.runtime.transport.resolve_secret",
+                            lambda ref: "tajna-koja-se-ne-vidi")
+
+        tekst_prompta, b = pisac._prompt(z)
+        poziv = pisac._aiderom(z, tekst_prompta, b)
+        with pytest.raises(gateway.LLMError) as e:
+            poziv(RutaAider())
+        assert "PRAZNA_ZAKRPA" in str(e.value)
+        assert z.patches.count() == 0
+
+    def test_poruka_ne_otkriva_kljuc_ni_env_promenljivu(self, z, monkeypatch):
+        """NIKADA okruženje potprocesa u poruci greške — u njemu je ključ."""
+
+        def lazni_klon(koren, radni):
+            os.makedirs(radni, exist_ok=True)
+
+        def lazni_pokretac(argv, env, timeout):
+            assert env.get("ANTHROPIC_API_KEY") == "tajna-koja-se-ne-vidi"
+            return subprocess.CompletedProcess(
+                args=argv, returncode=1, stdout="obican ispis bez tajni", stderr="")
+
+        monkeypatch.setattr(pisac, "_klonirani_repo", lazni_klon)
+        monkeypatch.setattr(pisac, "_pozovi_pokretac", lazni_pokretac)
+        monkeypatch.setattr(pisac.gateway, "credential_ref",
+                            lambda provider, persona=None: ("env:X", "persona"))
+        monkeypatch.setattr("apps.runtime.transport.resolve_secret",
+                            lambda ref: "tajna-koja-se-ne-vidi")
+
+        tekst_prompta, b = pisac._prompt(z)
+        poziv = pisac._aiderom(z, tekst_prompta, b)
+        with pytest.raises(gateway.LLMError) as e:
+            poziv(RutaAider())
+        poruka = str(e.value)
+        assert "tajna-koja-se-ne-vidi" not in poruka
+        assert "ANTHROPIC_API_KEY" not in poruka
