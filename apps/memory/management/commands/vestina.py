@@ -1,9 +1,15 @@
-"""Komanda: uvoz veštine u bazu znanja — prva vrata (ADR-0074).
+"""Komanda: uvoz veštine u bazu znanja — prva vrata (ADR-0074), ili spisak (ADR-0084).
 
-Pokreće je isključivo čovek, zato `--actor` mora da počne sa `user:` —
+Uvoz pokreće isključivo čovek, zato `--actor` mora da počne sa `user:` —
 ADR-0074 insistira da materijal za ovu vrstu znanja daje čovek, agent
 ništa spolja ne radi, i ta granica se proverava ovde, pre nego što se
 bilo šta upiše.
+
+`--spisak` (ADR-0084) samo čita bazu znanja — ne upisuje ništa, pa ne traži
+ni `--actor` ni ostale argumente uvoza. Postoji da bi se videlo šta je već
+u bazi, pre nego što se nešto uveze po drugi put. Uz `--spisak`, `--izvor`
+filtrira po delu naslova izvora; bez `--spisak` to je pun naslov izvora koji
+se uvozi.
 """
 
 from __future__ import annotations
@@ -13,41 +19,92 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 
-from apps.memory.vestine import Vestina, uvezi
+from apps.memory.vestine import Vestina, spisak, uvezi
 from common import enums as E
 
 
 class Command(BaseCommand):
-    help = "Uvozi veštine (postupke) u bazu znanja iz JSON datoteke."
+    help = "Uvozi veštine (postupke) u bazu znanja iz JSON datoteke, ili ih ispisuje (--spisak)."
 
     def add_arguments(self, parser):
-        parser.add_argument("--izvor", required=True, help="Naslov izvora (KnowledgeSource).")
-        parser.add_argument("--uri", required=True, help="URI izvora — čovek ga navodi.")
-        parser.add_argument("--licenca", required=True,
-                             choices=[e.value for e in E.LicenseBox],
-                             help="Licenca materijala (LicenseBox).")
+        parser.add_argument("--spisak", action="store_true",
+                             help="Ispiši veštine iz baze znanja, bez uvoza (ADR-0084).")
+        parser.add_argument("--izvor", default="",
+                             help="Uvoz: naslov izvora (KnowledgeSource), obavezan. "
+                                  "Uz --spisak: filtrira po delu naslova izvora.")
+        parser.add_argument("--uri", default="",
+                             help="URI izvora — čovek ga navodi. Obavezan pri uvozu.")
+        parser.add_argument("--licenca", default="",
+                             help="Licenca materijala (LicenseBox). Obavezna pri uvozu.")
         parser.add_argument("--naziv-licence", default="",
                              help="Naziv licence — obavezan kada je --licenca SLOBODNA "
                                   "(ADR-0059 tačka 2).")
-        parser.add_argument("--datoteka", required=True,
-                             help="Putanja do JSON datoteke sa veštinama.")
-        parser.add_argument("--actor", required=True,
+        parser.add_argument("--datoteka", default="",
+                             help="Putanja do JSON datoteke sa veštinama. Obavezna pri uvozu.")
+        parser.add_argument("--actor", default="",
                              help="Mora da počne sa 'user:' — čovek pokreće uvoz.")
 
     def handle(self, *args, **options):
+        if options["spisak"]:
+            self._ispisi(options["izvor"])
+            return
+        self._uvezi(options)
+
+    def _ispisi(self, izvor_filter: str) -> None:
+        """ADR-0084 — čitljiv prikaz, kolone poravnate, bez horizontalnog skrola."""
+        redovi = spisak(izvor=izvor_filter)
+        if not redovi:
+            if izvor_filter:
+                self.stdout.write(f"Nema veština za izvor koji sadrži „{izvor_filter}”.")
+            else:
+                self.stdout.write("Nema upisanih veština u bazi znanja.")
+            return
+
+        w_subject = max(len("veština"), *(len(r["subject"]) for r in redovi))
+        w_izvor = max(len("izvor"), *(len(r["izvor"]) for r in redovi))
+        w_licenca = max(len("licenca"), *(len(r["licenca"]) for r in redovi))
+        header = (f"{'veština':<{w_subject}}  {'izvor':<{w_izvor}}  "
+                  f"{'licenca':<{w_licenca}}  aktivan")
+        self.stdout.write(header)
+        self.stdout.write("-" * len(header))
+        for r in redovi:
+            aktivan = "da" if r["aktivan"] else "ne"
+            self.stdout.write(
+                f"{r['subject']:<{w_subject}}  {r['izvor']:<{w_izvor}}  "
+                f"{r['licenca']:<{w_licenca}}  {aktivan}"
+            )
+
+    def _uvezi(self, options: dict) -> None:
         actor = options["actor"]
+        if not actor:
+            raise CommandError("--actor je obavezan.")
         if not actor.startswith("user:"):
             raise CommandError(
                 "ADR-0074: --actor mora da počne sa 'user:' — ovaj uvoz pokreće čovek."
             )
 
-        licenca = E.LicenseBox(options["licenca"])
+        if not options["izvor"]:
+            raise CommandError("--izvor je obavezan.")
+        if not options["uri"]:
+            raise CommandError("--uri je obavezan.")
+        if not options["licenca"]:
+            raise CommandError("--licenca je obavezan.")
+        try:
+            licenca = E.LicenseBox(options["licenca"])
+        except ValueError as exc:
+            validne = ", ".join(e.value for e in E.LicenseBox)
+            raise CommandError(
+                f"Nepoznata licenca: {options['licenca']!r}. Važeće: {validne}."
+            ) from exc
+
         naziv_licence = options["naziv_licence"]
         if licenca == E.LicenseBox.SLOBODNA and not naziv_licence:
             raise CommandError(
                 "ADR-0059: slobodna kutija mora da imenuje licencu (--naziv-licence)."
             )
 
+        if not options["datoteka"]:
+            raise CommandError("--datoteka je obavezan.")
         putanja = Path(options["datoteka"])
         if not putanja.exists():
             raise CommandError(f"Datoteka ne postoji: {putanja}")

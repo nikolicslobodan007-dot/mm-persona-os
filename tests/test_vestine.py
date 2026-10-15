@@ -1,4 +1,4 @@
-"""Testovi za uvoz veština (ADR-0074).
+"""Testovi za uvoz veština (ADR-0074) i za spisak veština (ADR-0084).
 
 Komanda `vestina` i modul `apps/memory/vestine.py` su u pogonu od 04.10. i
 do sada ih je čuvao jedino CHECK u bazi. Ovi testovi proveravaju ugovor koji
@@ -179,3 +179,62 @@ def test_object_json_nema_doslovan_prepis_izvora(db):
     for zabranjen_kljuc in ("izvorni_tekst", "raw", "original", "doslovan_tekst", "source_text"):
         assert zabranjen_kljuc not in cinjenica.object_json
 
+
+@requires_db
+@pytest.mark.django_db
+def test_spisak_ispisuje_upisanu_vestinu(db):
+    uvezi(
+        naslov_izvora="Spisak izvor A",
+        uri="https://example.com/spisak-a",
+        license_box=E.LicenseBox.SLOBODNA,
+        license_note="MIT",
+        vestine=[_vestina(ime="veština za spisak")],
+        actor="user:qa",
+    )
+
+    stdout = io.StringIO()
+    call_command("vestina", "--spisak", stdout=stdout)
+    izlaz = stdout.getvalue()
+
+    assert "veština za spisak" in izlaz
+    assert "Spisak izvor A" in izlaz
+    assert E.LicenseBox.SLOBODNA.value in izlaz
+
+
+@requires_db
+@pytest.mark.django_db
+def test_spisak_prazna_baza_daje_recenicu(db):
+    stdout = io.StringIO()
+    call_command("vestina", "--spisak", stdout=stdout)
+    izlaz = stdout.getvalue().strip()
+
+    assert izlaz == "Nema upisanih veština u bazi znanja."
+    assert izlaz != ""
+
+
+@requires_db
+@pytest.mark.django_db
+def test_spisak_filtrira_po_izvoru(db):
+    uvezi(
+        naslov_izvora="Izvor jedan filter",
+        uri="https://example.com/filter-1",
+        license_box=E.LicenseBox.NEPOZNATA,
+        license_note="",
+        vestine=[_vestina(ime="vestina iz izvora jedan")],
+        actor="user:qa",
+    )
+    uvezi(
+        naslov_izvora="Izvor dva filter",
+        uri="https://example.com/filter-2",
+        license_box=E.LicenseBox.NEPOZNATA,
+        license_note="",
+        vestine=[_vestina(ime="vestina iz izvora dva")],
+        actor="user:qa",
+    )
+
+    stdout = io.StringIO()
+    call_command("vestina", "--spisak", "--izvor=jedan", stdout=stdout)
+    izlaz = stdout.getvalue()
+
+    assert "vestina iz izvora jedan" in izlaz
+    assert "vestina iz izvora dva" not in izlaz

@@ -1,4 +1,4 @@
-"""Uvoz veština u bazu znanja — prva vrata (ADR-0074).
+"""Uvoz veština u bazu znanja — prva vrata (ADR-0074), i spisak (ADR-0084).
 
 ADR-0074 kaže: materijal za ovu vrstu znanja daje čovek, agent ništa spolja
 ne radi. Zato `uvezi()` ne pretpostavlja ni `uri` ni `license_box` — ona
@@ -9,6 +9,10 @@ Jedna veština je jedan `KnowledgeFact`: `subject` je ime veštine,
 `predicate` je `vestina.postupak`, `object_json` nosi korake i napomene —
 naš opis postupka, nikad doslovan prepis izvora (ADR-0074 tačka 3): takvo
 polje se namerno ne upisuje.
+
+`spisak()` (ADR-0084) je čisto čitanje baze znanja — ne upisuje i ne menja
+ništa. Postoji da bi se videlo šta je već uvezeno, pre nego što se nešto
+uveze po drugi put.
 """
 
 from __future__ import annotations
@@ -89,3 +93,30 @@ def uvezi(
     audit.record("memory.vestina.loaded",
                  details={"izvor": naslov_izvora, "actor": actor, **broj})
     return broj
+
+
+def spisak(*, izvor: str = "") -> list[dict]:
+    """Sve veštine iz baze znanja, za prikaz čoveku (ADR-0084).
+
+    Jedan red po `KnowledgeFact` sa predikatom `vestina.postupak`, sa
+    naslovom izvora, kutijom licence i time da li je izvor aktivan — da bi
+    čovek video šta je već uvezeno pre nego što nešto uveze po drugi put.
+    `izvor` filtrira po delu naslova izvora (bez obzira na veličinu slova);
+    prazan niz ne filtrira ništa. Ne upisuje i ne menja ništa.
+    """
+    qs = (
+        KnowledgeFact.objects.filter(predicate=PREDIKAT)
+        .select_related("source")
+        .order_by("source__title", "subject")
+    )
+    if izvor:
+        qs = qs.filter(source__title__icontains=izvor)
+    return [
+        {
+            "subject": f.subject,
+            "izvor": f.source.title,
+            "licenca": f.source.license_box,
+            "aktivan": f.source.is_active,
+        }
+        for f in qs
+    ]
