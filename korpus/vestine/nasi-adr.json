@@ -1,0 +1,141 @@
+[
+  {
+    "ime": "Izlazni kod nula ne znači da je posao obavljen",
+    "koraci": [
+      "Posle poziva tuđeg alata ne gledaj samo izlazni kod nego i trag posla: izmenjen fajl, poslate tokene, zapis.",
+      "Ako koda nema traga, pretpostavi da alat nije ni počeo, ne da je završio prazno.",
+      "Pronađi tačan red u izvoru tog alata koji objašnjava rani izlaz i navedi ga u nalazu.",
+      "Tek kad imaš red koda, imenuj uzrok."
+    ],
+    "napomene": "ADR-0089. Aider sa `return_coder=True` vraća objekat pre petlje razgovora i izlazi sa kodom 0 — tri puta je izgledalo kao da je model ćutao, a nijedan poziv nije ni poslat.",
+    "pouzdanost": 1.0
+  },
+  {
+    "ime": "Nula nije isto što i neizmereno",
+    "koraci": [
+      "Kad proveravaš da li je nešto izmereno, proveri da li vrednost postoji, ne da li je istinita.",
+      "Koristi provera-na-`None`, ne provera-na-prazno, i to zapiši u kodu.",
+      "Nula koja prođe kroz kapiju „izmereno\" nosi lažnu sigurnost u sve što sledi — pre svega u cenu."
+    ],
+    "napomene": "ADR-0086 i ADR-0089. `total_tokens_sent` na svežem objektu je 0, a ne `None`; nula je prošla kao izmerena vrednost i sakrila da model nikad nije pozvan.",
+    "pouzdanost": 1.0
+  },
+  {
+    "ime": "Šifra greške ide u zapis, detalj ide u dnevnik",
+    "koraci": [
+      "U zapis (bazu) upiši kratku šifru greške — ona je za brojanje i za pretragu.",
+      "Pun detalj, uključujući ispis tuđeg procesa, pošalji u dnevnik, sečen na razumnu meru.",
+      "Nikada ne piši okruženje potprocesa — u njemu su ključevi.",
+      "Ako greška nema ni šifru ni dnevnik, kvar je nevidljiv i ponoviće se."
+    ],
+    "napomene": "ADR-0088. Polje `error_code` je kratko i tu detalj ne pripada; bez jednog reda u dnevniku ispis pokretača nikada nije stigao do čoveka.",
+    "pouzdanost": 1.0
+  },
+  {
+    "ime": "Rok za jedan poziv nije rok za ceo posao",
+    "koraci": [
+      "Razlikuj rok jednog poziva provajderu od roka cele sesije alata koji vodi više poziva.",
+      "Ne pozajmljuj prvi za drugo samo zato što je pri ruci.",
+      "Daj dužem poslu svoj rok, i stavi ga u promenljivu okruženja da se menja bez ponovne gradnje slike.",
+      "Kad rok istekne, imenuj to rokom, ne mrežom."
+    ],
+    "napomene": "ADR-0090. Rok rute od 60 sekundi presecao je Aiderovu sesiju i prijavljivao to kao `NETWORK` — „mreža nije propustila poziv\", što je bila laž o uzroku.",
+    "pouzdanost": 1.0
+  },
+  {
+    "ime": "Zakrpa se završava novim redom",
+    "koraci": [
+      "Pre nego što zakrpu predaš `git apply`, proveri da se završava prelaskom u novi red.",
+      "Ako je tekst negde na putu prošao kroz `strip()`, taj red je pojeden.",
+      "Dopiši ga na mestu gde tekst ponovo postaje zakrpa, a ne u opštoj funkciji koja ne zna šta nosi.",
+      "Greška „corrupt patch at line <poslednji>\" je skoro uvek ovo, a ne loš sadržaj."
+    ],
+    "napomene": "ADR-0091. `git diff` taj red napiše, gateway ga pojede, `git apply` ga traži; izgledalo je kao da je agent napisao neispravan diff.",
+    "pouzdanost": 1.0
+  },
+  {
+    "ime": "Zakrpa sadrži tačno dozvoljene putanje",
+    "koraci": [
+      "Pri pravljenju zakrpe dodaj u indeks tačno one putanje koje zadatak dozvoljava.",
+      "Nikada ne koristi dodavanje svega — alat u radnom primerku ostavlja i svoje dnevnike.",
+      "Ako se u zakrpi nađe fajl koji zadatak ne pominje, zakrpa je pokvarena bez obzira na sadržaj."
+    ],
+    "napomene": "13.10.2026. — dodavanje svega uvuklo je Aiderov dnevnik razgovora od 1297 redova u zakrpu od 64 KB.",
+    "pouzdanost": 1.0
+  },
+  {
+    "ime": "Prvo potraži gotovo rešenje",
+    "koraci": [
+      "Pre nego što napišeš novi kod, proveri postoji li alat koji taj posao već radi.",
+      "Ako postoji, uvedi njega i zapiši zašto.",
+      "Svoje rešenje piši samo kad je izmereno da gotovo ne odgovara, i to merenje navedi.",
+      "Rubni slučajevi tuđeg rešenog problema otkrivali bi se kod nas jedan po jedan, kroz odbijene pokušaje."
+    ],
+    "napomene": "ADR-0079 i pravilo vlasnika od 07.10.2026: „vadimo sve što možemo, ne pišemo kod bez veze\". Zato zakrpu pravi `git diff`, a ne naš differ.",
+    "pouzdanost": 1.0
+  },
+  {
+    "ime": "Alat ulazi u sliku tek kad za njega postoji izmeren razlog",
+    "koraci": [
+      "Ne dodaj zavisnost zato što će „verovatno trebati\".",
+      "Sačekaj kvar koji je imenuje, pa je dodaj u sloj koji već postoji.",
+      "U istom koraku zapiši koji kvar ju je uveo.",
+      "Ono što alat sme da radi ostaje usko: dodata zavisnost ne znači data dozvola za sve njene mogućnosti."
+    ],
+    "napomene": "ADR-0085 i ADR-0087. `git` je ušao u sliku tek kad je izmereno da izveštaj pokretača ne nosi zakrpu — i i dalje služi samo za jednu stvar.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Mrtva zastavica je gora od nijedne",
+    "koraci": [
+      "Kad utvrdiš da neki argument ili podešavanje nema nikakvo dejstvo, ukloni ga.",
+      "Ne ostavljaj ga „da ne pokvarimo oblik\" — sledeći čitalac veruje da nešto radi.",
+      "Ako oblik propisuje dokument, izmeni dokument u istom koraku."
+    ],
+    "napomene": "ADR-0089. `--message-file` je stajao u argumentima iako ga alat nikad nije pročitao, i baš je on stvarao utisak da je brif isporučen.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Licenca se ne pretpostavlja",
+    "koraci": [
+      "Uz svaki materijal unesi kutiju licence i, kad je slobodna, njeno ime.",
+      "Adresu izvora sačuvaj uz materijal.",
+      "Ako licenca nije poznata, materijal ne ulazi — ne izmišlja se.",
+      "Tuđe ime ostaje uz tuđi materijal."
+    ],
+    "napomene": "ADR-0059 i ADR-0077. Pravilo kuće: sakupljamo, ne krademo.",
+    "pouzdanost": 1.0
+  },
+  {
+    "ime": "Materijal donosi čovek, na prva vrata",
+    "koraci": [
+      "Znanje u bazu ulazi komandom koju pokreće čovek ili stranom Izvori.",
+      "Agent ne odlazi na tuđi server po materijal.",
+      "Proveri da pokretač uvoza počinje oznakom čoveka, pre nego što se bilo šta upiše.",
+      "Isti rezultat se dobija bez otvaranja vrata za koja nismo spremni."
+    ],
+    "napomene": "ADR-0074 i ADR-0077. Spoljne radnje stoje isključene do odluke vlasnika.",
+    "pouzdanost": 1.0
+  },
+  {
+    "ime": "Tajna u bazi stoji samo kao referenca",
+    "koraci": [
+      "U bazu upiši referencu na tajnu, nikada samu tajnu.",
+      "Tajnu drži u fajlu sa pravima 0600, po persona nalogu.",
+      "Ključ se nikada ne ispisuje na ekran — vlasnik slika terminal.",
+      "Na ekran idu putanja i poslednja četiri znaka, ništa više."
+    ],
+    "napomene": "ADR-0026 i ADR-0039. Ključ na slici je ključ u tuđim rukama.",
+    "pouzdanost": 1.0
+  },
+  {
+    "ime": "Pečat se upisuje tek kad je posao stvarno obavljen",
+    "koraci": [
+      "Oznaku „obrađeno\" upiši posle upisa, ne pre njega.",
+      "Prazan prolaz ne sme da skine stavku sa reda čekanja.",
+      "Ako polje postoji a niko ga ne upisuje, ono laže tiše nego da ga nema."
+    ],
+    "napomene": "ADR-0076, ispravka od 06.10.2026.",
+    "pouzdanost": 1.0
+  }
+]
