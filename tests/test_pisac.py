@@ -559,7 +559,9 @@ class TestAiderPisac:
         pozivi: dict = {"add": None, "argv": None}
 
         def lazni_klon(koren, radni):
-            os.makedirs(radni, exist_ok=True)
+            # Ograda zadatka mora da postoji u radnom primerku, inače je
+            # `_za_indeks` preskače (ADR-0092).
+            os.makedirs(os.path.join(radni, "apps", "content"), exist_ok=True)
 
         def lazni_pokretac(argv, env, timeout):
             pozivi["argv"] = argv
@@ -674,13 +676,34 @@ class TestAiderPisac:
             poziv(RutaAider())
         assert z.patches.count() == 0
 
-    def test_git_add_dobija_tacne_putanje_nikad_dash_a(self, z, lazni_fs):
+    def test_git_add_dobija_ograde_zadatka_nikad_dash_a(self, z, lazni_fs):
+        """ADR-0092 — u indeks idu ograde, da bi i nov fajl ušao u zakrpu."""
         tekst_prompta, b = pisac._prompt(z)
         poziv = pisac._aiderom(z, tekst_prompta, b)
         poziv(RutaAider())
-        ocekivane = [f["path"] for f in b["files"]]
-        assert lazni_fs["add"] == ocekivane
+        assert lazni_fs["add"] == ["apps/content"]
         assert "-A" not in lazni_fs["add"]
+
+    def test_nov_fajl_ulazi_u_indeks_jer_ograda_pokriva_i_ono_cega_nije_bilo(
+            self, tmp_path):
+        """ADR-0092 — spisak iz brifa nosi samo ono što je postojalo.
+
+        Migracija koju agent tek napiše nije u tom spisku; bez ograda nikad ne
+        bi stigla do `git add`, pa ni u zakrpu. Zadatak sa novom migracijom je
+        15.10.2026. dvaput pao upravo na tome.
+        """
+        radni = tmp_path / "radni"
+        (radni / "apps" / "content").mkdir(parents=True)
+        (radni / "apps" / "content" / "novi.py").write_text("x", encoding="utf-8")
+
+        assert pisac._za_indeks(str(radni), ["apps/content"], ["apps/content/x.py"]) == [
+            "apps/content"]
+        # Bez ogradā ostaje stari spisak — ponašanje se ne menja tiho.
+        assert pisac._za_indeks(str(radni), [], ["apps/content/x.py"]) == [
+            "apps/content/x.py"]
+        # Ograda koje u radnom primerku nema se preskače.
+        assert pisac._za_indeks(str(radni), ["apps/nema"], ["apps/content/x.py"]) == [
+            "apps/content/x.py"]
 
     def test_neuspesan_izlazni_kod_nosi_ispis_u_poruci(self, z, monkeypatch):
         """Do sada je `capture_output=True` hvatao stderr i niko ga nije čitao —

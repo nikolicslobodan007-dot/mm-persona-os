@@ -393,6 +393,26 @@ def _git_add(radni: str, putanje: list[str]) -> None:
                    check=True, capture_output=True, text=True)
 
 
+def _za_indeks(radni: str, ograde: list[str], fajlovi: list[str]) -> list[str]:
+    """Šta ide u indeks: ograde zadatka, a ne spisak zatečenih fajlova (ADR-0092).
+
+    Spisak iz brifa nosi samo fajlove koji su POSTOJALI kad je brif sastavljen
+    (`brif.py` ih čita sa diska). Nov fajl — migracija, nova komanda, nov modul
+    — tako nikad nije stizao u `git add`, pa ni u zakrpu: agent ga je mogao
+    napisati, a mi ga nikad ne bismo videli.
+
+    Ograde (`allowed_paths`) ga hvataju, a i dalje su tačno navedene putanje —
+    nikad `-A` (13.10.2026, Aiderov dnevnik u zakrpi). Aiderovi sopstveni
+    fajlovi stoje u korenu radnog primerka, van ogradā, pa ih ovo ne uvlači.
+    Što je van ogradā, `zakrpa.check` ionako odbija.
+
+    Ograda koja u radnom primerku ne postoji se preskače (`git add` bi na njoj
+    pukao); ako ne ostane nijedna, vraća se stari spisak fajlova.
+    """
+    postoje = [o for o in ograde if o and os.path.exists(os.path.join(radni, o))]
+    return postoje or fajlovi
+
+
 def _git_diff_cached(radni: str) -> str:
     r = subprocess.run(["git", "-C", radni, "diff", "--cached"],
                        check=True, capture_output=True, text=True)
@@ -445,6 +465,7 @@ def _aiderom(zadatak: CodeTask, tekst_prompta: str, b: dict):
         try:
             radni = os.path.join(temp, "radni")
             fajlovi = [f["path"] for f in (b.get("files") or [])]
+            ograde = list(b.get("allowed_paths") or [])
             citanja = [r["path"] for r in (b.get("reference") or [])]
 
             brif_put = os.path.join(temp, "brif.txt")
@@ -504,7 +525,7 @@ def _aiderom(zadatak: CodeTask, tekst_prompta: str, b: dict):
                     "tokens_sent/tokens_received nisu izmereni")
 
             try:
-                _git_add(radni, fajlovi)
+                _git_add(radni, _za_indeks(radni, ograde, fajlovi))
                 diff = _git_diff_cached(radni)
             except (subprocess.CalledProcessError, OSError) as e:
                 raise gateway.LLMError("AIDER_ERROR", str(e)) from e
