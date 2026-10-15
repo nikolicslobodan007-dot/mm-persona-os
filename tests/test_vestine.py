@@ -16,6 +16,7 @@ from django.core.management.base import CommandError
 
 from apps.memory.models import KnowledgeFact, KnowledgeSource
 from apps.memory.vestine import Vestina, uvezi
+from apps.observability.models import AuditEvent
 from common import enums as E
 from tests.conftest import requires_db
 
@@ -238,3 +239,37 @@ def test_spisak_filtrira_po_izvoru(db):
 
     assert "vestina iz izvora jedan" in izlaz
     assert "vestina iz izvora dva" not in izlaz
+
+
+@requires_db
+@pytest.mark.django_db
+def test_komanda_upisuje_coveka_u_audit_trag(db, tmp_path):
+    """ADR-0074: audit mora da vidi --actor, ne podrazumevani service:system."""
+    datoteka = tmp_path / "vestine.json"
+    datoteka.write_text(
+        json.dumps(
+            [
+                {
+                    "ime": "veština za audit",
+                    "koraci": ["korak 1"],
+                    "napomene": "",
+                    "pouzdanost": 0.5,
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    call_command(
+        "vestina",
+        "--izvor=Audit izvor",
+        "--uri=https://example.com/audit",
+        "--licenca=NEPOZNATA",
+        f"--datoteka={datoteka}",
+        "--actor=user:audit-qa",
+        stdout=io.StringIO(),
+    )
+
+    dogadjaj = AuditEvent.objects.get(event_key="memory.vestina.loaded")
+    assert dogadjaj.actor_ref == "user:audit-qa"
+    assert dogadjaj.actor_ref != "service:system"

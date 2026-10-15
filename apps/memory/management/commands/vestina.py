@@ -5,11 +5,16 @@ ADR-0074 insistira da materijal za ovu vrstu znanja daje čovek, agent
 ništa spolja ne radi, i ta granica se proverava ovde, pre nego što se
 bilo šta upiše.
 
+Ceo posao uvoza se izvršava unutar `bind(actor_id=actor)` (api/context.py) —
+isti obrazac kao `memory_eval.py` i `memory_seal.py` — jer bez toga audit
+trag (api/audit.py) ne vidi proveren identitet iz `--actor` nego podrazumevani
+`service:system`, čime se gubi upravo ono što ADR-0074 traži da se vidi.
+
 `--spisak` (ADR-0084) samo čita bazu znanja — ne upisuje ništa, pa ne traži
-ni `--actor` ni ostale argumente uvoza. Postoji da bi se videlo šta je već
-u bazi, pre nego što se nešto uveze po drugi put. Uz `--spisak`, `--izvor`
-filtrira po delu naslova izvora; bez `--spisak` to je pun naslov izvora koji
-se uvozi.
+ni `--actor` ni ostale argumente uvoza, i zato ne ulazi u `bind()` okvir.
+Postoji da bi se videlo šta je već u bazi, pre nego što se nešto uveze po
+drugi put. Uz `--spisak`, `--izvor` filtrira po delu naslova izvora; bez
+`--spisak` to je pun naslov izvora koji se uvozi.
 """
 
 from __future__ import annotations
@@ -19,6 +24,7 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 
+from api.context import bind
 from apps.memory.vestine import Vestina, spisak, uvezi
 from common import enums as E
 
@@ -83,49 +89,52 @@ class Command(BaseCommand):
                 "ADR-0074: --actor mora da počne sa 'user:' — ovaj uvoz pokreće čovek."
             )
 
-        if not options["izvor"]:
-            raise CommandError("--izvor je obavezan.")
-        if not options["uri"]:
-            raise CommandError("--uri je obavezan.")
-        if not options["licenca"]:
-            raise CommandError("--licenca je obavezan.")
-        try:
-            licenca = E.LicenseBox(options["licenca"])
-        except ValueError as exc:
-            validne = ", ".join(e.value for e in E.LicenseBox)
-            raise CommandError(
-                f"Nepoznata licenca: {options['licenca']!r}. Važeće: {validne}."
-            ) from exc
+        # Ceo posao uvoza ide pod proverenim identitetom iz --actor (ADR-0074),
+        # da bi audit trag (api/audit.py) video coveka, a ne service:system.
+        with bind(actor_id=actor):
+            if not options["izvor"]:
+                raise CommandError("--izvor je obavezan.")
+            if not options["uri"]:
+                raise CommandError("--uri je obavezan.")
+            if not options["licenca"]:
+                raise CommandError("--licenca je obavezan.")
+            try:
+                licenca = E.LicenseBox(options["licenca"])
+            except ValueError as exc:
+                validne = ", ".join(e.value for e in E.LicenseBox)
+                raise CommandError(
+                    f"Nepoznata licenca: {options['licenca']!r}. Važeće: {validne}."
+                ) from exc
 
-        naziv_licence = options["naziv_licence"]
-        if licenca == E.LicenseBox.SLOBODNA and not naziv_licence:
-            raise CommandError(
-                "ADR-0059: slobodna kutija mora da imenuje licencu (--naziv-licence)."
+            naziv_licence = options["naziv_licence"]
+            if licenca == E.LicenseBox.SLOBODNA and not naziv_licence:
+                raise CommandError(
+                    "ADR-0059: slobodna kutija mora da imenuje licencu (--naziv-licence)."
+                )
+
+            if not options["datoteka"]:
+                raise CommandError("--datoteka je obavezan.")
+            putanja = Path(options["datoteka"])
+            if not putanja.exists():
+                raise CommandError(f"Datoteka ne postoji: {putanja}")
+
+            sirovo = json.loads(putanja.read_text(encoding="utf-8"))
+            vestine = [
+                Vestina(
+                    ime=stavka["ime"],
+                    koraci=list(stavka["koraci"]),
+                    napomene=stavka.get("napomene", ""),
+                    pouzdanost=float(stavka["pouzdanost"]),
+                )
+                for stavka in sirovo
+            ]
+
+            broj = uvezi(
+                naslov_izvora=options["izvor"],
+                uri=options["uri"],
+                license_box=licenca,
+                license_note=naziv_licence,
+                vestine=vestine,
+                actor=actor,
             )
-
-        if not options["datoteka"]:
-            raise CommandError("--datoteka je obavezan.")
-        putanja = Path(options["datoteka"])
-        if not putanja.exists():
-            raise CommandError(f"Datoteka ne postoji: {putanja}")
-
-        sirovo = json.loads(putanja.read_text(encoding="utf-8"))
-        vestine = [
-            Vestina(
-                ime=stavka["ime"],
-                koraci=list(stavka["koraci"]),
-                napomene=stavka.get("napomene", ""),
-                pouzdanost=float(stavka["pouzdanost"]),
-            )
-            for stavka in sirovo
-        ]
-
-        broj = uvezi(
-            naslov_izvora=options["izvor"],
-            uri=options["uri"],
-            license_box=licenca,
-            license_note=naziv_licence,
-            vestine=vestine,
-            actor=actor,
-        )
         self.stdout.write(self.style.SUCCESS(f"Uvezeno: {broj}"))
