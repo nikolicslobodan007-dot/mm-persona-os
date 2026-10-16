@@ -870,6 +870,78 @@ def asset(request, public_id: str):
 
 
 @console_view
+def razgovor(request, razgovor_id=None):
+    """Nit razgovora sa direktorom. ADR-0105.
+
+    Jedna firma, jedan sagovornik: ako niti nema, pravi se sa direktorom
+    (radno mesto `DIR-00`). Ovo je ulaz u firmu — do sada ga nije bilo.
+    """
+    from apps.orchestration.models import Razgovor
+
+    vlasnik = principal_of(request.user)
+    nit = None
+    if razgovor_id is not None:
+        nit = Razgovor.objects.filter(pk=razgovor_id).first()
+        if nit is None:
+            raise Http404
+    else:
+        nit = (Razgovor.objects.filter(human_owner=vlasnik)
+               .order_by("-last_at").first())
+        if nit is None:
+            direktor = _direktor()
+            if direktor is None:
+                return render(request, "console/razgovor.html", _nav(request) | {
+                    "nit": None, "poruke": [], "greska": "Nema direktora "
+                    "(radno mesto DIR-00) — pokreni `seed_org`."})
+            nit = Razgovor.objects.create(
+                persona=direktor, human_owner=vlasnik,
+                naslov="Razgovor sa direktorom")
+    return render(request, "console/razgovor.html", _nav(request) | {
+        "nit": nit, "poruke": nit.poruke.select_related("plan").order_by("created_at"),
+        "sme": bool(_roles(request.user) & _DRAFTERS)})
+
+
+def _direktor():
+    """Agent na radnom mestu `DIR-00`, ili `None`."""
+    from apps.personas.models import Assignment
+
+    a = (Assignment.objects.filter(position__code="DIR-00", ended_at__isnull=True,
+                                   is_primary=True)
+         .select_related("persona").first())
+    return a.persona if a else None
+
+
+@console_view
+@require_POST
+def razgovor_poruka(request, razgovor_id):
+    """Čovekova poruka postaje posao. ADR-0105."""
+    from apps.orchestration import razgovor as nit_servis
+    from apps.orchestration.models import Razgovor
+
+    nit = Razgovor.objects.filter(pk=razgovor_id).first()
+    if nit is None:
+        raise Http404
+    if not (_roles(request.user) & _DRAFTERS):
+        messages.error(request, "Tvoja uloga ne zadaje posao.")
+        return redirect(f"/console/razgovor/{nit.id}")
+    # Akter je već vezan u `console_view` (`bind`), pa audit nosi čoveka.
+    try:
+        nit_servis.posalji(nit, request.POST.get("telo", ""),
+                           actor=principal_of(request.user))
+    except nit_servis.RazgovorError as e:
+        messages.error(request, str(e)[:300])
+    except plans_module().PlanError as e:
+        messages.error(request, f"Plan nije pokrenut: {e}"[:300])
+    return redirect(f"/console/razgovor/{nit.id}")
+
+
+def plans_module():
+    from apps.orchestration import plans
+
+    return plans
+
+
+@console_view
 @require_POST
 def content_document(request, item_id):
     """Pravi dokument od nacrta i vraća se na spisak. ADR-0104.

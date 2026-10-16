@@ -1,0 +1,41 @@
+{% extends "console/base.html" %}
+{% block title %}Razgovor{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Razgovor</h1>
+    <div class="sub">{% if nit %}{{ nit.persona.display_name }} — direktor korporacije. Ti kažeš šta treba; ona zadaje posao niz lanac.{% else %}{{ greska }}{% endif %}</div>
+  </div>
+</div>
+
+{% if nit %}
+{% for p in poruke %}
+  <div class="card mb12">
+    <div class="row">
+      {% if p.autor == "covek" %}<b>Ti</b>{% else %}<b>{{ nit.persona.display_name }}</b>
+        <span class="pill">{{ p.autor_ref }}</span>{% endif %}
+      <span class="spacer"></span>
+      <span class="small muted">{{ p.created_at|date:"d.m. H:i" }}</span>
+    </div>
+    <div class="post">{{ p.telo }}</div>
+    {% if p.plan %}
+      <div class="small muted">plan {{ p.plan.public_id }} · {{ p.plan.status }}</div>
+    {% endif %}
+  </div>
+{% empty %}
+  <div class="card"><p class="sub">Nit je prazna. Napiši šta treba da se uradi.</p></div>
+{% endfor %}
+
+{% if sme %}
+<div class="card">
+  <form method="post" action="/console/razgovor/{{ nit.id }}/poruka">{% csrf_token %}
+    <textarea name="telo" rows="4" style="width:100%"
+      placeholder="Na primer: napiši kratak tekst o tome čime se bavimo, za naslovnu stranu sajta."></textarea>
+    <div class="row"><button>Pošalji</button>
+      <span class="small muted">Posao se izvršava odmah — odgovor stiže kad lanac završi.</span></div>
+  </form>
+</div>
+{% else %}
+<div class="card"><p class="sub">Tvoja uloga ne zadaje posao.</p></div>
+{% endif %}
+{% endif %}
+{% endblock %}

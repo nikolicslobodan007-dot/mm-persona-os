@@ -582,3 +582,69 @@ class TaskPatch(UUIDModel):
 
     def __str__(self) -> str:
         return f"{self.task_id} {self.status} ({len(self.paths)} putanja)"
+
+
+class Razgovor(UUIDModel):
+    """Nit razgovora između čoveka i jedne persone. ADR-0105.
+
+    Čovek u ovoj firmi razgovara sa jednim agentom — direktorom — a direktor
+    posao spušta niz organizaciju (ADR-0017). Nit postoji da bi taj razgovor
+    imao mesto: do sada je svaki posao počinjao komandom u terminalu, pa firma
+    nije imala ulazna vrata.
+
+    Nit NIJE kanal: ovo je unutrašnji razgovor sa čovekom koji je vlasnik
+    sistema, ne poruka napolje. Zato ne prolazi kroz `ChannelAccount`, nema
+    oznaku objave i ne dira prekidač spoljnih radnji.
+    """
+
+    persona = models.ForeignKey(
+        "personas.Persona", on_delete=models.PROTECT, related_name="razgovori",
+        help_text="Sagovornik — agent sa kojim čovek priča (obično direktor).",
+    )
+    naslov = models.CharField(max_length=200, blank=True)
+    human_owner = models.CharField(
+        max_length=120, help_text="Čovek koji vodi nit (`user:…`)."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "orchestration_razgovor"
+        indexes = [models.Index(fields=["human_owner", "-last_at"])]
+
+    def __str__(self) -> str:
+        return f"{self.persona_id}: {self.naslov or '(bez naslova)'}"
+
+
+class Poruka(UUIDModel):
+    """Jedna poruka u niti. ADR-0105.
+
+    `plan` je veza ka poslu koji je ta poruka pokrenula — bez nje bi nit bila
+    ćaskanje, a ne nalog. Poruka agenta koja javlja ishod nosi isti plan, pa
+    se u niti vidi i šta je traženo i šta je urađeno.
+    """
+
+    OD_COVEKA = "covek"
+    OD_AGENTA = "agent"
+    AUTORI = ((OD_COVEKA, "čovek"), (OD_AGENTA, "agent"))
+
+    razgovor = models.ForeignKey(
+        Razgovor, on_delete=models.CASCADE, related_name="poruke"
+    )
+    autor = models.CharField(max_length=8, choices=AUTORI)
+    autor_ref = models.CharField(
+        max_length=120, help_text="`user:slobodan` ili `P-00003`."
+    )
+    telo = models.TextField()
+    plan = models.ForeignKey(
+        AgentPlan, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="poruke", help_text="Posao koji je ova poruka pokrenula ili javila.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "orchestration_poruka"
+        indexes = [models.Index(fields=["razgovor", "created_at"])]
+
+    def __str__(self) -> str:
+        return f"{self.autor_ref}: {self.telo[:40]}"
