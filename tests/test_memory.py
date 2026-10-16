@@ -350,6 +350,22 @@ class TestVestineInContext:
                                     query="logistika transport", now=NOW)
         assert len(sa_vestinom.record.memory_ids) == len(bez_vestine.record.memory_ids)
 
+    def test_dosije_firme_je_u_paketu(self, mila):
+        """ADR-0107 — agent zna gde radi, pre nego što bilo šta uradi."""
+        pack = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                             query="bilo šta", now=NOW)
+        assert "Web Korporacija" in pack.text
+        assert "Trenutno isključivo za vlasnika" in pack.text
+        assert "kocku i klađenje" in pack.text        # granice idu uz posao
+
+    def test_bez_dosijea_paket_i_dalje_radi(self, mila, monkeypatch):
+        """Fajla može da nema (tuđa grana, stari primerak) — to nije pad."""
+        monkeypatch.setattr(context, "_dosije_firme", lambda: "")
+        pack = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                             query="bilo šta", now=NOW)
+        assert "Web Korporacija" not in pack.text
+        assert pack.record.token_count > 0
+
     def test_vestina_iz_sektora_persone_ide_prva(self, mila):
         """ADR-0101 — sektor bije azbuku. Tuđa veština je azbučno prva, a
         ipak ide iza naše."""

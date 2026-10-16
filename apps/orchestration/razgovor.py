@@ -122,8 +122,14 @@ def razmisli(direktor, telo: str, *, run=None) -> dict:
     from apps.llm_gateway import gateway
     from common import enums as E
 
+    from apps.memory.context import _dosije_firme
+
     spisak = ", ".join(sorted(RECI_SEKTORA) + [PODRAZUMEVANI_SEKTOR])
-    prompt = (f"Sektori: {spisak}.\n\nPoruka vlasnika:\n{telo[:MAX_TELO]}")
+    # ADR-0107 — direktor pravi nalog znajući gde radi. Bez dosijea bi
+    # izmišljala kupce i usluge kojih nema.
+    dosije = _dosije_firme()
+    prompt = ((f"{dosije}\n\n---\n\n" if dosije else "")
+              + f"Sektori: {spisak}.\n\nPoruka vlasnika:\n{telo[:MAX_TELO]}")
     try:
         gen = gateway.generate(E.LLMPurpose.PLANNING, ODLUKA_SYSTEM, prompt,
                                persona=direktor, run=run,

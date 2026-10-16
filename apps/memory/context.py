@@ -28,11 +28,14 @@ Pravi tokenizer dolazi sa LLM gateway-om.
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import math
+import pathlib
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
@@ -118,6 +121,25 @@ def _vestina_line(fact: KnowledgeFact) -> str:
     return f"- [veština · izvor {fact.source.title}] {fact.subject}: {telo}"
 
 
+@functools.lru_cache(maxsize=1)
+def _dosije_firme() -> str:
+    """Dosije firme — ono što svaki agent zna o tome gde radi. ADR-0107.
+
+    Stoji u repozitorijumu (`firma/dosije.md`), ne u bazi: piše ga čovek,
+    menja se kroz izmenu koja prolazi kapije, i vidi se u istoriji ko ga je i
+    kada promenio. Keš je trajan za život procesa — izmena stiže sa novom
+    slikom, kao i kod ostalog koda.
+
+    Ako fajla nema, odeljak je prazan i ništa se ne lomi: agent tada radi bez
+    znanja o firmi, kao pre ADR-0107, a ne pada.
+    """
+    put = pathlib.Path(settings.BASE_DIR) / "firma" / "dosije.md"
+    try:
+        return put.read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
+
+
 def _sektor_persone(persona) -> str:
     """`Department.code` sektora u kome persona radi, preko otvorenog
     primarnog rasporeda (ADR-0017). Prazno kad persona nema raspored —
@@ -158,6 +180,9 @@ def build(persona, run, profile: E.RetrievalProfile, *, query: str = "",
     budget = max_tokens or (E.PROFILE_MEMORY_TOKENS[profile] + CORE_OVERHEAD_TOKENS)
     sections = {
         "persona_core": _core(persona),
+        # ADR-0107 — gde agent radi. Ide odmah iza toga ko je on, a pre svega
+        # ostalog: bez toga agent izmišlja kupce, cene i usluge kojih nema.
+        "firma": _dosije_firme(),
         "current_state": _state(persona),
         "task_goal": query,
         "policy_constraints": "\n".join(POLICY_LINES),
