@@ -4,6 +4,9 @@ Prati Memory v0.1 §20 i Definition of Done §21.1: idempotentnost, supersesija,
 protivrečnosti bez izmišljenog pobednika, izolacija persona, osetljivost po
 svrsi, bleđenje, konsolidacija sa lozom, tvrdi plafon tokena, brisanje sa
 propagacijom i zlatni skup kao regresiona kapija.
+
+TestVestineInContext (ADR-0096) proverava da veštine iz baze znanja stižu u
+paket svakog agenta, ne samo pisca koda.
 """
 
 from __future__ import annotations
@@ -19,12 +22,15 @@ from apps.behaviour import service, world
 from apps.memory import context, embeddings, lifecycle, retrieval
 from apps.memory.management.commands.memory_eval import run_eval
 from apps.memory.models import (
+    KnowledgeFact,
+    KnowledgeSource,
     MemoryContextPack,
     MemoryContradiction,
     MemoryEmbedding,
     MemoryItem,
     MemoryLink,
 )
+from apps.memory.vestine import PREDIKAT
 from apps.memory.writer import MemoryInput, MemoryRejected, write
 from apps.observability.models import EventOutbox
 from apps.orchestration.models import AgentRun
@@ -42,6 +48,24 @@ def _m(content, **kw):
     kw.setdefault("provenance", E.Provenance.OBSERVED)
     kw.setdefault("salience", 0.7)
     return MemoryInput(content=content, **kw)
+
+
+def _vestina(*, subject="veština test", license_box=E.LicenseBox.SLOBODNA,
+             license_note="MIT", is_active=True, koraci=None, napomene="",
+             confidence=0.8):
+    """Kreira `KnowledgeSource`/`KnowledgeFact` direktno, bez prolaska kroz
+    `uvezi()`, da testovi ADR-0096 mogu nezavisno da kontrolišu
+    `is_active`/`license_box` izvora."""
+    izvor = KnowledgeSource.objects.create(
+        persona=None, source_kind=E.SourceKind.FIRST_PARTY_USER_INPUT.value,
+        title=f"Izvor za {subject}", trust_score=1.0, is_active=is_active,
+        license_box=E.LicenseBox(license_box).value, license_note=license_note,
+    )
+    return KnowledgeFact.objects.create(
+        source=izvor, persona=None, subject=subject, predicate=PREDIKAT,
+        provenance=E.Provenance.USER_PROVIDED.value, confidence=confidence,
+        object_json={"koraci": koraci or ["korak jedan"], "napomene": napomene},
+    )
 
 
 @pytest.fixture
@@ -261,6 +285,63 @@ class TestContext:
         pack = context.build(mila, _run(mila), E.RetrievalProfile.CONTENT_CREATION,
                              query="publika grafikoni", now=NOW)
         assert "izvod, ne činjenica" in pack.text
+
+
+# ---------------------------------------------------------------- veštine (ADR-0096)
+
+
+@pytest.mark.django_db
+class TestVestineInContext:
+    """Veštine iz baze znanja stižu u paket svakog agenta, ne samo pisca koda."""
+
+    def test_slobodna_i_aktivna_ulazi_u_tekst_i_u_vestina_ids(self, mila):
+        fact = _vestina(subject="veština vidljiva u paketu")
+        pack = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                             query="bilo šta", now=NOW)
+        assert "veština vidljiva u paketu" in pack.text
+        assert str(fact.id) in pack.record.vestina_ids
+
+    def test_nedozvoljena_licenca_ne_ulazi(self, mila):
+        for box in (E.LicenseBox.ZARAZNA, E.LicenseBox.ZABRANJENA, E.LicenseBox.NEPOZNATA):
+            fact = _vestina(subject=f"veština kutija {box.value}", license_box=box)
+            pack = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                                 query="bilo šta", now=NOW)
+            assert fact.subject not in pack.text
+            assert str(fact.id) not in pack.record.vestina_ids
+
+    def test_neaktivan_izvor_ne_ulazi(self, mila):
+        fact = _vestina(subject="veština neaktivnog izvora", is_active=False)
+        pack = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                             query="bilo šta", now=NOW)
+        assert fact.subject not in pack.text
+        assert str(fact.id) not in pack.record.vestina_ids
+
+    def test_vestine_ne_oduzimaju_prostor_memoriji(self, mila):
+        """Isti broj memorija u paketu sa veštinom i bez nje, nad ISTOM personom.
+
+        Dve persone u poređenju bi unele i razliku koja sa ovim pitanjem nema
+        veze (npr. odsustvo `BehaviourState`). Ovde se, između dva merenja,
+        menja SAMO prisustvo veštine: prvo se paket gradi dok je izvor
+        aktivan, zatim se izvor deaktivira i paket se gradi ponovo.
+        """
+        content = "o logistici i transportu robe " + "reč " * 40
+        for i in range(40):
+            write(mila, _m(f"Memorijska {i} {content}", source_event_id=f"vest-{i}"))
+        fact = _vestina(subject="veština za poređenje")
+        sa_vestinom = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                                    query="logistika transport", now=NOW)
+        KnowledgeSource.objects.filter(pk=fact.source_id).update(is_active=False)
+        bez_vestine = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                                    query="logistika transport", now=NOW)
+        assert len(sa_vestinom.record.memory_ids) == len(bez_vestine.record.memory_ids)
+
+    def test_prekoracenje_plafona_vestina_postavlja_truncated(self, mila):
+        for i in range(5):
+            _vestina(subject=f"veština velika {i:02d}", napomene="x" * 1200)
+        pack = context.build(mila, _run(mila), E.RetrievalProfile.REFLECTION,
+                             query="bilo šta", now=NOW)
+        assert pack.record.truncated is True
+        assert 0 < len(pack.record.vestina_ids) < 5
 
 
 # ---------------------------------------------------------------- lifecycle

@@ -13,6 +13,15 @@ Pravila iz §12.2 koja se ovde sprovode, ne preporučuju:
   - osetljivo ulazi samo za dozvoljenu svrhu (filter je u retrieval-u);
   - tvrdi plafon tokena se nikad ne prelazi — višak se odseca i beleži.
 
+ADR-0096 — pored memorije persone, paket nosi i odeljak `vestine`: kućno
+znanje koje je čovek doneo i odobrio (ADR-0074), iz baze znanja
+(`KnowledgeFact`, predikat `vestina.postupak`). Ulaze samo veštine čiji je
+izvor aktivan i čija je kutija licence tačno `SLOBODNA` (ADR-0059) — provera
+ide OVDE, pri sastavljanju paketa, ne pri uvozu, jer se licenca izvora može
+promeniti posle uvoza (ADR-0095). Veštine imaju SVOJ plafon
+(`PROFILE_VESTINE_TOKENS`) koji se dodaje POVRH plafona memorije — ne smeju
+da joj oduzmu prostor.
+
 Procena tokena je ⌈znakova / 4⌉ — gruba, ali konzervativna za latinicu.
 Pravi tokenizer dolazi sa LLM gateway-om.
 """
@@ -30,7 +39,8 @@ from django.utils import timezone
 
 from apps.behaviour.models import BehaviourState
 from apps.memory import retrieval
-from apps.memory.models import MemoryContextPack, MemoryItem
+from apps.memory.models import KnowledgeFact, MemoryContextPack, MemoryItem
+from apps.memory.vestine import PREDIKAT as VESTINA_PREDIKAT
 from apps.observability import bus
 from apps.personas.models import Biography, TraitProfile
 from common import enums as E
@@ -96,6 +106,18 @@ def _line(sc: retrieval.Scored) -> str:
     return f"- {head} {body}"
 
 
+def _vestina_line(fact: KnowledgeFact) -> str:
+    """Red za jednu veštinu. Sadržaj je naš opis postupka (ADR-0074 tačka 3) —
+    baza znanja ne čuva sirov tekst izvora, pa ovde nema šta da se prepiše
+    doslovno. Izvor stoji uz nju: znanje bez porekla se ne šalje (ADR-0084)."""
+    koraci = fact.object_json.get("koraci") or []
+    napomene = fact.object_json.get("napomene") or ""
+    telo = "; ".join(str(k) for k in koraci)
+    if napomene:
+        telo = f"{telo} — {napomene}" if telo else str(napomene)
+    return f"- [veština · izvor {fact.source.title}] {fact.subject}: {telo}"
+
+
 def build(persona, run, profile: E.RetrievalProfile, *, query: str = "",
           max_tokens: int | None = None, now: datetime | None = None,
           memory_types: list[E.MemoryType] | None = None) -> Pack:
@@ -132,6 +154,36 @@ def build(persona, run, profile: E.RetrievalProfile, *, query: str = "",
         chosen.append(sc)
         lines.append(line)
         used += t
+
+    # ADR-0096 — veštine su kućno znanje; dobijaju SVOJ plafon POVRH onog za
+    # memoriju (zato se `budget`/`room` iznad ne diraju), i ne smeju da ga
+    # oduzmu memoriji. Ulaze samo činjenice čiji je izvor aktivan i čija je
+    # kutija licence tačno `SLOBODNA` — ZARAZNA, ZABRANJENA i NEPOZNATA ne
+    # ulaze nikad, ni uz napomenu (ADR-0059). Provera ide ovde, pri
+    # sastavljanju paketa, ne pri uvozu (ADR-0095). Izbor je prost: sve
+    # podobne, azbučnim redom po `subject`, dok ima mesta (ADR-0096 tačka 5).
+    vestina_budget = E.PROFILE_VESTINE_TOKENS[profile]
+    vestina_candidates = (
+        KnowledgeFact.objects
+        .filter(predicate=VESTINA_PREDIKAT, source__is_active=True,
+                source__license_box=E.LicenseBox.SLOBODNA.value)
+        .select_related("source")
+        .order_by("subject")
+    )
+    vestina_lines: list[str] = []
+    vestina_ids: list[str] = []
+    used_v = 0
+    for fact in vestina_candidates:
+        line = _vestina_line(fact)
+        t = tokens(line + "\n")
+        if used_v + t > vestina_budget:
+            truncated = True
+            continue
+        vestina_lines.append(line)
+        vestina_ids.append(str(fact.id))
+        used_v += t
+
+    sections["vestine"] = "\n".join(vestina_lines)
     sections["retrieved_memory"] = "\n".join(lines)
     text = render(sections)
     total = tokens(text)
@@ -140,6 +192,7 @@ def build(persona, run, profile: E.RetrievalProfile, *, query: str = "",
         record = MemoryContextPack.objects.create(
             persona=persona, run=run, purpose=E.PROFILE_PURPOSE[profile].value,
             query_text=query, memory_ids=[str(s.memory.id) for s in chosen],
+            vestina_ids=vestina_ids,
             scores={str(s.memory.id): {"R": s.score, **s.breakdown} for s in chosen},
             token_count=total, truncated=truncated,
             pack_hash=hashlib.sha256(text.encode()).hexdigest(), built_at=now,

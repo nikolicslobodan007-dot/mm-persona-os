@@ -349,6 +349,12 @@ class MemoryContextPack(UUIDModel):
     znalo bi se šta je u bazi, ali ne i šta je model video. Sadržaj se ne
     duplira — čuvaju se ID-jevi, skorovi i hash, pa se pakovanje može
     rekonstruisati i uporediti sa ishodom.
+
+    `vestina_ids` (ADR-0096) je isti obrazac kao `memory_ids`, ali za drugo
+    skladište: veštine iz baze znanja (`KnowledgeFact`, predikat
+    `vestina.postupak`) koje je čovek doneo i odobrio (ADR-0074). Bez ovog
+    polja ne bismo mogli da odgovorimo na pitanje „na šta se agent oslonio
+    kad je ovo napisao" za tu vrstu znanja.
     """
 
     persona = models.ForeignKey(
@@ -362,6 +368,9 @@ class MemoryContextPack(UUIDModel):
     purpose = models.CharField(max_length=24, choices=E.LLMPurpose.choices())
     query_text = models.TextField(blank=True)
     memory_ids = JSON_LIST(help_text="UUID-jevi odabranih memorija, redom.")
+    vestina_ids = JSON_LIST(
+        help_text="ADR-0096 — UUID-jevi veština (KnowledgeFact) koje su ušle u paket, redom."
+    )
     scores = JSON_DICT(help_text='{"<memory_id>": {"R": 0.81, "semantic": 0.74}}')
     token_count = models.PositiveIntegerField(default=0)
     truncated = models.BooleanField(default=False)

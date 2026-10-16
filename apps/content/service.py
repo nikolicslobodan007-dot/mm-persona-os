@@ -113,7 +113,8 @@ def _system_prompt(persona: Persona) -> str:
         "Vrati samo tekst objave: bez naslova, bez svog imena i potpisa, bez "
         "markdown-a (bez **, #, listi), bez hashtag-ova. Potpis i AI oznaku sistem dodaje sam.",
         "Tri do pet kratkih rečenica: jedan problem, jedan konkretan primer, jedan zaključak.",
-        "Kontekst iz memorije koristi kao znanje, ne prepisuj ga doslovno.",
+        # ADR-0096 — veštine su kućno znanje isto kao memorija: koriste se, ne prepisuju.
+        "Kontekst iz memorije i veštine koristi kao znanje, ne prepisuj ih doslovno.",
         f"Jezik: {lang}.",
     ])
 
@@ -409,4 +410,3 @@ def draft_now(persona: Persona, *, topic: str = "", now: datetime | None = None
     submit(item, account, now=now)
     item.refresh_from_db()
     return item, True
-
