@@ -1,0 +1,183 @@
+[
+ {
+  "ime": "business-growth-skills",
+  "koraci": [
+   "Routing table",
+   "Route to exactly one skill, then follow that skill's workflow. This router ships no tools of its own.",
+   "Use the skills' Python scorers for metrics, not manual estimates; deal/contract outputs are drafts for human legal/commercial review."
+  ],
+  "napomene": "Router/index for the 4 business & growth skills bundled in this plugin: customer-success-manager (health scoring, churn risk, expansion), sales-engineer (RFP analysis, competitive matrices, PoC planning), revenue-operations (pipeline, forecast accuracy, GTM efficiency), and contract-and-proposal-writer. Use when a growth/revenue request doesn't obviously match one skill and you need to pick the right one (e.g., 'which accounts are at risk', 'should we bid on this RFP'). | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl business-growth/skills/business-growth-skills/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "channel-economics",
+  "koraci": [
+   "What is the ROI of each channel under three lenses? (cash ROI year-1, LTV-adjusted ROI, marginal ROI — next dollar of investment)",
+   "What is the optimal channel mix subject to our strategic constraints? (minimum direct floor, maximum partner concentration ceiling, sensitivity to CAC shifts)",
+   "\"What's your fully-loaded cost-to-serve per channel — including channel-manager headcount, MDF, partner enablement time, and overhead allocation?\"",
+   "\"What is the retention differential between direct-sourced and partner-sourced customers?\"",
+   "\"What share of 'channel-sourced' pipeline did your team actually originate?\"",
+   "\"What is the marginal ROI of the next dollar invested in partner program vs. direct sales?\"",
+   "\"What's your MDF-to-attributable-pipeline ratio in the last 4 quarters?\"",
+   "\"Is your channel-mix dogma blocking a profitable segment?\""
+  ],
+  "napomene": "Use when reviewing or rebalancing direct vs. partner-led channel economics — computing fully-loaded cost-to-serve per channel, channel ROI with cash / LTV / marginal lenses, and optimal channel mix subject to constraints. For Head of Commercial, RevOps, and VP Sales doing quarterly channel review when pipeline is mixed (e.g., 60% direct + 40% partner-led) and nobody actually knows which channel makes money after CAC, support load, partner discount, deal-velocity differences, retention differential, and overhead allocation are all loaded in. Outputs cost to serve, channel ROI verdicts (DOUBLE-D | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl commercial/skills/channel-economics/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "commercial-forecaster",
+  "koraci": [
+   "What's the commit / best-case / pipe-only number? (3-tier bookings forecast with disclosed assumptions)",
+   "Which cohorts are leaking, and is the consolidated NRR hiding the leak? (per-cohort NRR/GRR projection over horizon)",
+   "Which funnel stages are reliable, and which are statistical noise? (per-stage coefficient-of-variation confidence band)",
+   "\"What conversion rate are you using, and is it last-4Q or last-12Q?\"",
+   "\"What's your pipeline coverage ratio, and is your commit above pipeline ÷ 3?\"",
+   "\"Can you show me NRR by cohort, not just consolidated?\"",
+   "\"What's the variance (CoV) on each stage's conversion rate over the last 12 quarters?\"",
+   "\"How long has each late-stage opp been in late-stage?\""
+  ],
+  "napomene": "Use when building a quarterly bookings forecast, ARR projection, pipeline forecast, NRR projection, or commit/best-case/pipe-only board number — especially when the CRO needs to walk the board through funnel math + cohort ARR + per-stage conversion assumptions without the theatre of a single undefended number. Decomposes pipeline into commit, best-case, and pipe-only tiers; projects cohort-level NRR/GRR to surface leaky cohorts before they show up in the consolidated number; scores per-stage funnel confidence so soft-floor stages get treated differently from high-confidence ones. Every output  | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl commercial/skills/commercial-forecaster/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "commercial-policy",
+  "koraci": [
+   "\"What's your observed discount distribution across the last 4 quarters — and is the median inside or outside your current matrix?\"",
+   "\"What's the win-rate AND the 12-month NRR for deals at your current 'max discount' band?\"",
+   "\"Who at the company owns the margin floor, AND who owns the discount-band cap — are those the same person?\"",
+   "\"How is 'strategic value' defined in your current policy — with concrete tests, or with adjectives?\"",
+   "\"For exceptions above your matrix max, what compensating commitments are required — and are they in writing before the approver signs?\"",
+   "\"Has the same kind of exception been approved 3+ times in the trailing quarter — and if so, is the matrix wrong?\"",
+   "\"When was the last time you re-ran the matrix against the previous 4 quarters of data?\"",
+   "\"For every exception in the last quarter, is there a machine-readable audit-trail record — or is the approval in Slack and email?\""
+  ],
+  "napomene": "Use when designing or revising a company's commercial policy — the rules of engagement governing discounts off list price, approver thresholds, exception flows, and the deal framework that Deal Desk and AEs operate under. Covers discount matrix design (ARR band x term length x payment terms x strategic value), commercial policy design, exception policy, discount governance, approval thresholds, deal framework structure, and policy linting (contradictions, gaps, cliff edges, gaming surfaces). For Head of Commercial, Head of Deal Desk, VP Sales, or RevOps at the policy-design moment — NOT per-de | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl commercial/skills/commercial-policy/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "commercial-skills",
+  "koraci": [
+   "Highest-confidence lane first → run sub-skill in forked context → digest",
+   "Ask: \"Now run [second lane]? Recommended: yes, because [dependency].\"",
+   "Confirm before chaining.",
+   "User has commercial authority OR is preparing analysis for someone who does.",
+   "User wants deterministic decision support, not the final answer — the human approves the deal, sets the price, signs the partner.",
+   "Inputs may be partial — every sub-skill ships templated dummy data so the user can see the shape before filling in their own."
+  ],
+  "napomene": "Use when reviewing, approving, or designing commercial motion — pricing models, deal review, discount approval, partnership economics, channel mix, commercial policy, RFP/RFI response, bookings forecast. Triggers on \"review this deal\", \"should we discount\", \"pricing model\", \"partner economics\", \"RFP response\", \"bookings forecast\", \"channel mix\". Forks context to route to one of seven Commercial sub-skills (pricing-strategist, deal-desk, partnerships-architect, channel-economics, commercial-policy, rfp-responder, commercial-forecaster) and returns a digest. Distinct from business-growth (sales  | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl commercial/skills/commercial-skills/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "contract-and-proposal-writer",
+  "koraci": [
+   "Missing IP assignment language - \"work for hire\" alone is insufficient in EU; need explicit assignment of Nutzungsrechte in DACH",
+   "Vague acceptance criteria - Always define what \"accepted\" means (written sign-off, X days to reject)",
+   "No change order process - Scope creep kills fixed-price projects; add a clause for out-of-scope work",
+   "Jurisdiction mismatch - Choosing Delaware law for a German-only project creates enforcement problems",
+   "Missing limitation of liability - Without a cap, one bug could mean unlimited damages",
+   "Oral amendments - Contracts modified verbally are hard to enforce; always require written amendments"
+  ],
+  "napomene": "Generate professional, jurisdiction-aware business documents: freelance contracts, project proposals, SOWs, NDAs, and MSAs. Structured Markdown output with docx conversion instructions. Covers US (Delaware), EU (GDPR), UK, and DACH (German law) jurisdictions. Not a substitute for legal counsel — use as strong starting points. Use when drafting a freelance contract, preparing a client proposal, writing an SOW for a new engagement, or producing an NDA before sharing sensitive material. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl business-growth/skills/contract-and-proposal-writer/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "customer-success-manager",
+  "koraci": [
+   "Combine signals: Use all three scripts together for a complete customer picture",
+   "Act on trends, not snapshots: A declining Green is more urgent than a stable Yellow",
+   "Calibrate thresholds: Adjust segment benchmarks based on your product and industry per references/health-scoring-framework.md",
+   "Prepare with data: Run scripts before every QBR and executive meeting; reference references/cs-playbooks.md for intervention guidance"
+  ],
+  "napomene": "Monitors customer health, predicts churn risk, and identifies expansion opportunities using weighted scoring models for SaaS customer success. Use when analyzing customer accounts, reviewing retention metrics, scoring at-risk customers, or when the user mentions churn, customer health scores, upsell opportunities, expansion revenue, retention analysis, or customer analytics. Runs three Python CLI tools to produce deterministic health scores, churn risk tiers, and prioritized expansion recommendations across Enterprise, Mid-Market, and SMB segments. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl business-growth/skills/customer-success-manager/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "deal-desk",
+  "koraci": [
+   "\"What's the gross margin at full discount, AND what does next quarter's pipeline look like at the same terms?\"",
+   "\"Is this discount inside or outside the standard discount matrix?\"",
+   "\"What's the strategic value beyond ARR — logo, reference, expansion path?\"",
+   "\"Has the customer signed an indemnity cap, a liability cap, and a DPA (if EU data)?\"",
+   "\"What payment terms — NET-30, NET-45, or NET-60+?\"",
+   "\"Is the term multi-year with annual prepay, or annual auto-renew?\"",
+   "\"Who is the named human approver at each hop of the discount chain?\""
+  ],
+  "napomene": "Use when reviewing a specific inbound deal before close — when sales has asked for a discount that exceeds AE authority, when the customer has redlined the MSA, when per-deal economics (margin after discount, multi-year payment shape, indemnity exposure) need to be quantified, or when discount approval needs to be routed to a named human approver (Sales Director, VP Sales, CFO, CRO, General Counsel). Covers deal review, discount approval routing, per-deal margin scoring, deal exception handling, MSA redline triage, contract landmine detection (uncapped indemnity, MFN, perpetual license-back, m | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl commercial/skills/deal-desk/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "partnerships-architect",
+  "koraci": [
+   "Is this a real partner, or someone hunting preferential terms without independent demand?",
+   "At what tier should we sign them? (Referral / Reseller / OEM / SI-Consulting / Strategic Alliance)",
+   "What's the 90-day joint GTM plan that proves the partnership works?",
+   "What revshare makes economic sense — and at what point does the partnership beat direct sale?",
+   "\"Name 5 end customers this partner has already sold to in the last 12 months — at companies you would target yourself.\"",
+   "\"Is this partner asking for preferential commercial terms, or asking how to bring you customers?\"",
+   "\"What's the joint value proposition in one sentence, and who is the named end-customer it serves?\"",
+   "\"At what % discount / revshare does this partnership beat the direct-sale economics, and at what scale?\""
+  ],
+  "napomene": "Use when a startup is approached by a prospective partner and someone has to decide should we sign this partner, at what partner tier (referral / reseller / OEM / SI-consulting / strategic alliance), with what joint GTM commitment, and at what revshare. Classifies partner tier from independent-demand evidence vs. preferential-terms hunting, designs a 90-day joint GTM plan, models revshare against direct-sale margin, and surfaces kill criteria for unwinding under-performing partnerships. For Head of Partnerships, Head of BD, and Founder-CEOs doing reseller agreement, OEM deal, or strategic alli | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl commercial/skills/partnerships-architect/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "pricing-strategist",
+  "koraci": [
+   "Which pricing model fits this product + customer + market? (subscription seat-based, usage-based, value-based, freemium, hybrid)",
+   "What does the customer actually pay before it feels too expensive? (Van Westendorp PSM on WTP survey responses)",
+   "How should we package this into tiers? (Good / Better / Best — with anti-pattern detection)",
+   "\"Is your customer paying for outcomes, seats, or usage?\"",
+   "\"Do you have a measurable value metric, or are you guessing?\"",
+   "\"What's the variance in customer usage across your top decile vs. median?\"",
+   "\"What's your competitor's pricing model, and why are you choosing the same or different?\"",
+   "\"What sample size do you have for WTP analysis, and is it segmented?\""
+  ],
+  "napomene": "Use when designing or revisiting product pricing — selecting a pricing model (subscription seat-based, usage-based, value-based, freemium, or hybrid), running Van Westendorp Price Sensitivity Meter analysis on WTP survey data, or designing Good/Better/Best packaging tiers. Recommends a model and a price range with trade-offs, never a single number. For Commercial leads, Product Marketing, and CMOs at the pricing-design moment — not deal-by-deal discounting, not brand positioning. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl commercial/skills/pricing-strategist/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "revenue-operations",
+  "koraci": [
+   "Verify input data: Confirm pipeline export is current and all required fields (stage, value, close_date, owner) are populated before proceeding.",
+   "Generate pipeline report",
+   "Cross-check output totals against your CRM source system to confirm data integrity.",
+   "Review key indicators",
+   "Document using template: Use assets/pipeline_review_template.md",
+   "Action items: Address aging deals, redistribute pipeline concentration, fill coverage gaps",
+   "Verify input data: Confirm all forecast periods have corresponding actuals and no periods are missing before running.",
+   "Generate accuracy report"
+  ],
+  "napomene": "Analyzes sales pipeline health, revenue forecasting accuracy, and go-to-market efficiency metrics for SaaS revenue optimization. Use when analyzing sales pipeline coverage, forecasting revenue, evaluating go-to-market performance, reviewing sales metrics, assessing pipeline analysis, tracking forecast accuracy with MAPE, calculating GTM efficiency, or measuring sales efficiency and unit economics for SaaS teams. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl business-growth/skills/revenue-operations/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "rfp-responder",
+  "koraci": [
+   "What is our win-theme strategy? (Shipley method: 3-5 themes that ladder up across requirements, not generic value-prop bullets)",
+   "Should we bid? (deterministic verdict: BID / PARTNER-BID / NO-BID with named factors driving the call)",
+   "\"What's your STRONG / PARTIAL / GAP split on the MANDATORY requirements?\"",
+   "\"Is there an incumbent, and how strong is their position?\"",
+   "\"Did you enter the conversation before or after the RFP issued?\"",
+   "\"What are your 3-5 win-themes, and does each thread through ≥2 requirements?\"",
+   "\"For every claim in the response, can you name the verifiable source?\"",
+   "\"What's the bid / no-bid threshold you committed to BEFORE seeing this RFP?\""
+  ],
+  "napomene": "Use when an RFP, RFI, RFQ, security questionnaire, vendor questionnaire, or proposal request arrives and the team needs a structured response — parsing multi-section buyer-dictated requirements (MANDATORY vs WEIGHTED vs NICE-TO-HAVE), building a Shipley-method proof-point matrix mapping each requirement to a verifiable proof point, articulating 3-5 win-themes that ladder up across requirements, and producing a Shipley-derived winrate estimate that informs a bid / no-bid / partner-bid recommendation. For Bid Managers, Proposal Leads, Directors of Sales, and Sales Engineers at the response-strat | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl commercial/skills/rfp-responder/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "sales-engineer",
+  "koraci": [
+   "5-Phase Workflow",
+   "Phase 1: Discovery & Research",
+   "Phase 2: Solution Design",
+   "Phase 3: Demo Preparation & Delivery",
+   "Phase 4: POC & Evaluation",
+   "Phase 5: Proposal & Closing",
+   "Python Automation Tools",
+   "1. RFP Response Analyzer"
+  ],
+  "napomene": "Analyzes RFP/RFI responses for coverage gaps, builds competitive feature comparison matrices, and plans proof-of-concept (POC) engagements for pre-sales engineering. Use when responding to RFPs, bids, or proposal requests; comparing product features against competitors; planning or scoring a customer POC or sales demo; preparing a technical proposal; or performing win/loss competitor analysis. Handles tasks described as 'RFP response', 'bid response', 'proposal response', 'competitor comparison', 'feature matrix', 'POC planning', 'sales demo prep', or 'pre-sales engineering'. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl business-growth/skills/sales-engineer/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ }
+]

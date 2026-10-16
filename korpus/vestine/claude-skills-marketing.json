@@ -1,0 +1,822 @@
+[
+ {
+  "ime": "ab-test-setup",
+  "koraci": [
+   "Test Context - What are you trying to improve? What change are you considering?",
+   "Current State - Baseline conversion rate? Current traffic volume?",
+   "Constraints - Technical complexity? Timeline? Tools available?",
+   "Reach sample size? If not, result is preliminary",
+   "Statistically significant? Check confidence intervals",
+   "Effect size meaningful? Compare to MDE, project impact",
+   "Secondary metrics consistent? Support the primary?",
+   "Guardrail concerns? Anything get worse?"
+  ],
+  "napomene": "When the user wants to plan, design, or implement an A/B test or experiment. Also use when the user mentions \"A/B test,\" \"split test,\" \"experiment,\" \"test this change,\" \"variant copy,\" \"multivariate test,\" \"hypothesis,\" \"conversion experiment,\" \"statistical significance,\" or \"test this.\" For tracking implementation, see analytics-tracking. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/ab-test-setup/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "ad-creative",
+  "koraci": [
+   "Extract the core message — what changes in the customer's life?",
+   "Map to funnel stage → select creative framework",
+   "Generate 5–10 headlines per formula type",
+   "Write body copy per platform (respecting character limits)",
+   "Apply quality checks before handing off",
+   "Audit current copy — what angle is each ad taking?",
+   "Identify the winning pattern (hook type, offer framing, emotional appeal)",
+   "Double down: 3–5 variations on the winning theme"
+  ],
+  "napomene": "When the user needs to generate, iterate, or scale ad creative for paid advertising. Use when they say 'write ad copy,' 'generate headlines,' 'create ad variations,' 'bulk creative,' 'iterate on ads,' 'ad copy validation,' 'RSA headlines,' 'Meta ad copy,' 'LinkedIn ad,' or 'creative testing.' This is pure creative production — distinct from paid-ads (campaign strategy). Use ad-creative when you need the copy, not the campaign plan. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/ad-creative/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "aeo",
+  "koraci": [
+   "Pre-flight: bot access",
+   "Audit existing content",
+   "Apply optimization recommendations",
+   "Publish + monitor",
+   "Report",
+   "Add author bio with credentials (Expertise +15)",
+   "Link to corrections policy from footer (Trustworthiness +12)",
+   "Inject FAQ schema for the 5 questions implicit in H2s (Authoritativeness +8)"
+  ],
+  "napomene": "Answer Engine Optimization (AEO) skill — optimize content to be cited by AI language models (ChatGPT, Perplexity, Claude, Gemini, Mistral) as authoritative sources. Distinct from SEO — AEO optimizes for citation in LLM-generated responses, not search rankings. Use when planning content for AI-first search audiences, auditing existing content for E-E-A-T signals, tracking which pages get cited by which LLMs, or building a citation-friendly content strategy. Triggers — 'AEO audit', 'optimize for ChatGPT', 'get cited by Perplexity', 'LLM citation strategy', 'answer engine optimization', 'content  | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/aeo/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "analytics-tracking",
+  "koraci": [
+   "Create property in GA4 → Admin → Properties → Create",
+   "Add web data stream with your domain",
+   "Enhanced Measurement — enable all, then review",
+   "Configure domains — add all subdomains used in your funnel",
+   "Create conversion action in Google Ads → Tools → Conversions",
+   "Import GA4 conversions (recommended — single source of truth) OR use the Google Ads tag",
+   "Set attribution model: Data-driven (if >50 conversions/month), otherwise Last click",
+   "Conversion window: 30 days for lead gen, 90 days for high-consideration purchases"
+  ],
+  "napomene": "Set up, audit, and debug analytics tracking implementation — GA4, Google Tag Manager, event taxonomy, conversion tracking, and data quality. Use when building a tracking plan from scratch, auditing existing analytics for gaps or errors, debugging missing events, or setting up GTM. Trigger keywords: GA4 setup, Google Tag Manager, GTM, event tracking, analytics implementation, conversion tracking, tracking plan, event taxonomy, custom dimensions, UTM tracking, analytics audit, missing events, tracking broken. NOT for analyzing marketing campaign data — use campaign-analytics for that. NOT for BI | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/analytics-tracking/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "app-store-optimization",
+  "koraci": [
+   "Define target audience and core app functions",
+   "Generate seed keywords from",
+   "Expand keyword list using",
+   "Evaluate each keyword",
+   "Score and prioritize keywords",
+   "Map keywords to metadata locations",
+   "Document keyword strategy for tracking",
+   "Validation: Keywords scored; placement mapped; no competitor brand names included; no plurals in iOS keyword field"
+  ],
+  "napomene": "App Store Optimization (ASO) toolkit for researching keywords, analyzing competitor rankings, generating metadata suggestions, and improving app visibility on Apple App Store and Google Play Store. Use when the user asks about ASO, app store rankings, app metadata, app titles and descriptions, app store listings, app visibility, or mobile app marketing on iOS or Android. Supports keyword research and scoring, competitor keyword analysis, metadata optimization, A/B test planning, launch checklists, and tracking ranking changes. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/app-store-optimization/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "brand-guidelines",
+  "koraci": [
+   "Identify whether they need to *apply* existing guidelines or *create* new ones",
+   "For Anthropic artifacts, use the Anthropic identity system below",
+   "For other brands, use the framework sections to assess and document their system",
+   "Always check for consistency before creativity",
+   "Are you applying existing guidelines or creating new ones?",
+   "What's the output format? (Digital, print, presentation, social)",
+   "Do you have existing brand assets? (Logo files, color codes, fonts)",
+   "Is there a brand foundation document? (Mission, values, positioning)"
+  ],
+  "napomene": "When the user wants to apply, document, or enforce brand guidelines for any product or company. Also use when the user mentions 'brand guidelines,' 'brand colors,' 'typography,' 'logo usage,' 'brand voice,' 'visual identity,' 'tone of voice,' 'brand standards,' 'style guide,' 'brand consistency,' or 'company design standards.' Covers color systems, typography, logo rules, imagery guidelines, and tone matrix for any brand — including Anthropic's official identity. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/brand-guidelines/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "business-name-fit",
+  "koraci": [
+   "Origin — the founder's culture/language or the company's home base (e.g. Persian/Iran, Swedish/Sweden, Mandarin/China).",
+   "Target market(s) — where the business will operate (e.g. international/English-speaking, EU, China, Arabic-speaking countries). There can be more than one.",
+   "Business area — the industry or field, because tone matters (a law firm and a candy brand need different feels).",
+   "Mode — do they want new name ideas, a check of names they already have, or both? (Already answered above if the skill opened with the find-or-check question.)",
+   "Existing names — if they're checking, collect the candidates.",
+   "Desired feel (optional) — modern, traditional, playful, premium, etc."
+  ],
+  "napomene": "Suggest, pick, or vet a business, startup, or product name that stays true to the founder's cultural origin while working professionally in the markets they want to sell into. Use when someone is naming a company, brand, or product and cares about how it lands across languages and regions — for example a name that sounds right at home but might read oddly to English speakers, or an authentic name they want to check before committing. Trigger this for any request about choosing a business name, checking if a name \"works\" abroad, spotting bad meanings in other languages, or making a name sound t | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/business-name-fit/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "campaign-analytics",
+  "koraci": [
+   "Use multiple attribution models -- Compare at least 3 models to triangulate channel value; no single model tells the full story.",
+   "Set appropriate lookback windows -- Match your time-decay half-life to your average sales cycle length.",
+   "Segment your funnels -- Compare segments (channel, cohort, geography) to identify performance drivers.",
+   "Benchmark against your own history first -- Industry benchmarks provide context, but historical data is the most relevant comparison.",
+   "Run ROI analysis at regular intervals -- Weekly for active campaigns, monthly for strategic review.",
+   "Include all costs -- Factor in creative, tooling, and labor costs alongside media spend for accurate ROI.",
+   "Document A/B tests rigorously -- Use the provided template to ensure statistical validity and clear decision criteria."
+  ],
+  "napomene": "Analyzes campaign performance with multi-touch attribution, funnel conversion analysis, and ROI calculation for marketing optimization. Use when analyzing marketing campaigns, ad performance, attribution models, conversion rates, or calculating marketing ROI, ROAS, CPA, and campaign metrics across channels. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/campaign-analytics/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "churn-prevention",
+  "koraci": [
+   "Before Starting",
+   "1. Current State",
+   "2. Business Context",
+   "3. Goals",
+   "How This Skill Works",
+   "Mode 1: Build Cancel Flow",
+   "Mode 2: Optimize Existing Flow",
+   "Mode 3: Set Up Dunning"
+  ],
+  "napomene": "Reduce voluntary and involuntary churn through cancel flow design, save offers, exit surveys, and dunning sequences. Use when designing or optimizing a cancel flow, building save offers, setting up dunning emails, or reducing failed-payment churn. Trigger keywords: cancel flow, churn reduction, save offers, dunning, exit survey, payment recovery, win-back, involuntary churn, failed payments, cancel page. NOT for customer health scoring or expansion revenue — use customer-success-manager for that. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/churn-prevention/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cold-email",
+  "koraci": [
+   "Understand the ICP, the problem, and the trigger",
+   "Choose the right framework (see references/frameworks.md)",
+   "Draft first email: subject line, opener, body, CTA",
+   "Review against the principles below — cut anything that doesn't earn its place",
+   "Deliver: email copy + 2-3 subject line variants + brief rationale",
+   "Start with the first email (Mode 1)",
+   "Plan follow-up angles — each email needs a different angle, not just a nudge",
+   "Set the gap cadence (Day 1, Day 4, Day 9, Day 16, Day 25)"
+  ],
+  "napomene": "When the user wants to write, improve, or build a sequence of B2B cold outreach emails to prospects who haven't asked to hear from them. Use when the user mentions 'cold email,' 'cold outreach,' 'prospecting emails,' 'SDR emails,' 'sales emails,' 'first touch email,' 'follow-up sequence,' or 'email prospecting.' Also use when they share an email draft that sounds too sales-y and needs to be humanized. Distinct from email-sequence (lifecycle/nurture to opted-in subscribers) — this is unsolicited outreach to new prospects. NOT for lifecycle emails, newsletters, or drip campaigns (use email-seque | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/cold-email/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "competitor-alternatives",
+  "koraci": [
+   "Your Product",
+   "Competitive Landscape",
+   "Why people look for alternatives (validate their pain)",
+   "Summary: You as the alternative (quick positioning)",
+   "Detailed comparison (features, service, pricing)",
+   "Who should switch (and who shouldn't)",
+   "Migration path",
+   "Social proof from switchers"
+  ],
+  "napomene": "When the user wants to create competitor comparison or alternative pages for SEO and sales enablement. Also use when the user mentions 'alternative page,' 'vs page,' 'competitor comparison,' 'comparison page,' '[Product] vs [Product],' '[Product] alternative,' 'competitive landing pages,' 'switch from competitor,' or 'comparison content.' Covers four formats: singular alternative, plural alternatives, you vs competitor, and competitor vs competitor. Emphasizes deep research, modular content architecture, and varied section types beyond feature tables. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/competitor-alternatives/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "content-creator",
+  "koraci": [
+   "Why the Change",
+   "Proactive Triggers",
+   "Output Artifacts",
+   "Communication",
+   "Related Skills"
+  ],
+  "napomene": "Deprecated redirect skill that routes legacy 'content creator' requests to the correct specialist. Use when a user invokes 'content creator', asks to write a blog post, article, guide, or brand voice analysis (routes to content-production), or asks to plan content, build a topic cluster, or create a content calendar (routes to content-strategy). Does not handle requests directly — identifies user intent and redirects to content-production for writing/SEO/brand-voice tasks or content-strategy for planning tasks. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/content-creator/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "content-humanizer",
+  "koraci": [
+   "Before Starting",
+   "What you need",
+   "How This Skill Works",
+   "Mode 1: Detect — AI Pattern Analysis",
+   "Mode 2: Humanize — Pattern Removal and Rhythm Fix",
+   "Mode 3: Voice Injection — Brand Character",
+   "The Core AI Tell Categories",
+   "Replace Filler Words"
+  ],
+  "napomene": "Makes AI-generated content sound genuinely human — not just cleaned up, but alive. Use when content feels robotic, uses too many AI clichés, lacks personality, or reads like it was written by committee. Triggers: 'this sounds like AI', 'make it more human', 'add personality', 'it feels generic', 'sounds robotic', 'fix AI writing', 'inject our voice'. NOT for initial content creation (use content-production). NOT for SEO optimization (use content-production Mode 3). | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/content-humanizer/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "content-production",
+  "koraci": [
+   "Identify the top 5-10 ranking pieces",
+   "Map their angles: Are they listicles? How-tos? Opinion pieces? Comparisons?",
+   "Find the gap: What's missing from the existing content? What angle is underserved?",
+   "Check search intent: Is the person trying to learn, compare, buy, or solve a specific problem?",
+   "Name the problem or situation the reader is in",
+   "Name what this piece does about it",
+   "Optionally: give them a reason to trust you on this topic",
+   "State the main point in the first sentence (don't save it for the end)"
+  ],
+  "napomene": "Full content production pipeline — takes a topic from blank page to published-ready piece. Use when you need to execute content: write a blog post, article, or guide end-to-end. Triggers: 'write a post about', 'draft an article', 'create content for', 'help me write', 'I need a blog post'. NOT for content strategy or calendar planning (use content-strategy). NOT for repurposing existing content (use content-repurposing). NOT for social captions only. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/content-production/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "content-strategy",
+  "koraci": [
+   "What patterns emerge from your last 10 customer conversations?",
+   "What questions keep coming up in sales calls?",
+   "Where are competitors' content efforts falling short?",
+   "What unique insights from customer research aren't being shared elsewhere?",
+   "Which existing content drives the most conversions, and why?"
+  ],
+  "napomene": "When the user wants to plan a content strategy, decide what content to create, or figure out what topics to cover. Also use when the user mentions \\\"content strategy,\\\" \\\"what should I write about,\\\" \\\"content ideas,\\\" \\\"blog strategy,\\\" \\\"topic clusters,\\\" or \\\"content planning.\\\" For writing individual pieces, see copywriting. For SEO-specific audits, see seo-audit. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/content-strategy/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "copy-editing",
+  "koraci": [
+   "Read through quickly, highlighting unclear parts the scorer can't see",
+   "Don't correct yet—just note problem areas",
+   "After marking issues, recommend specific edits",
+   "Verify edits maintain the original intent — re-run the scorer; the Flesch score should improve, not regress",
+   "Read aloud to hear inconsistencies",
+   "Mark where tone shifts unexpectedly",
+   "Recommend edits that smooth transitions",
+   "Ensure personality remains throughout"
+  ],
+  "napomene": "When the user wants to edit, review, or improve existing marketing copy. Also use when the user mentions 'edit this copy,' 'review my copy,' 'copy feedback,' 'proofread,' 'polish this,' 'make this better,' or 'copy sweep.' This skill provides a systematic approach to editing marketing copy through multiple focused passes. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/copy-editing/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "copywriting",
+  "koraci": [
+   "Simple over complex — \"Use\" not \"utilize,\" \"help\" not \"facilitate\"",
+   "Specific over vague — Avoid \"streamline,\" \"optimize,\" \"innovative\"",
+   "Active over passive — \"We generate reports\" not \"Reports are generated\"",
+   "Confident over qualified — Remove \"almost,\" \"very,\" \"really\"",
+   "Show over tell — Describe the outcome instead of using adverbs",
+   "Honest over sensational — Never fabricate statistics or testimonials"
+  ],
+  "napomene": "When the user wants to write, rewrite, or improve marketing copy for any page — including homepage, landing pages, pricing pages, feature pages, about pages, or product pages. Also use when the user says \\\"write copy for,\\\" \\\"improve this copy,\\\" \\\"rewrite this page,\\\" \\\"marketing copy,\\\" \\\"headline help,\\\" or \\\"CTA copy.\\\" For email copy, see email-sequence. For popup copy, see popup-cro. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/copywriting/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "email-sequence",
+  "koraci": [
+   "Sequence Type",
+   "Audience Context",
+   "What triggers entry to this sequence?",
+   "What's the primary goal/conversion action?",
+   "What do they already know about you?",
+   "What other emails are they receiving?",
+   "What's your current email performance?"
+  ],
+  "napomene": "When the user wants to create or optimize an email sequence, drip campaign, automated email flow, or lifecycle email program. Also use when the user mentions \"email sequence,\" \"drip campaign,\" \"nurture sequence,\" \"onboarding emails,\" \"welcome sequence,\" \"re-engagement emails,\" \"email automation,\" or \"lifecycle emails.\" For in-app onboarding, see onboarding-cro. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/email-sequence/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "form-cro",
+  "koraci": [
+   "Form Type",
+   "Current State",
+   "Business Context",
+   "What's your current form completion rate?",
+   "Do you have field-level analytics?",
+   "What happens with the data after submission?",
+   "Which fields are actually used in follow-up?",
+   "Are there compliance/legal requirements?"
+  ],
+  "napomene": "When the user wants to optimize any form that is NOT signup/registration — including lead capture forms, contact forms, demo request forms, application forms, survey forms, or checkout forms. Also use when the user mentions \"form optimization,\" \"lead form conversions,\" \"form friction,\" \"form fields,\" \"form completion rate,\" or \"contact form.\" For signup/registration forms, see signup-flow-cro. For popups containing forms, see popup-cro. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/form-cro/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "free-tool-strategy",
+  "koraci": [
+   "Score each idea against the 6-factor evaluation framework",
+   "Identify the highest-potential idea based on your specific goals and resources",
+   "Validate with keyword data before committing engineering time",
+   "Define the core value exchange (what the user inputs → what they get back)",
+   "Design the UX for minimum friction",
+   "Plan lead capture: where, what to ask, progressive profiling",
+   "Design shareable output (results page, generated report, embeddable badge)",
+   "Plan the SEO landing page structure"
+  ],
+  "napomene": "When the user wants to build a free tool for marketing — lead generation, SEO value, or brand awareness. Use when they mention 'engineering as marketing,' 'free tool,' 'calculator,' 'generator,' 'checker,' 'grader,' 'marketing tool,' 'lead gen tool,' 'build something for traffic,' 'interactive tool,' or 'free resource.' Covers idea evaluation, tool design, and launch strategy. For pure SEO content strategy (no tool), use seo-audit or content-strategy instead. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/free-tool-strategy/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "landing",
+  "koraci": [
+   "Invocation Triggers",
+   "Delivery Mode",
+   "Phase 0: Grill-Me Intake (4 forcing questions, one at a time)",
+   "Q1 (root) — Product / Service",
+   "Q2 (depends on Q1) — Audience Register",
+   "Q3 (always) — Brand Overrides",
+   "Q4 (depends on Q1) — Tone",
+   "Content Extraction (with Fallback Strategy)"
+  ],
+  "napomene": "Generates a premium single-page HTML landing page with 3D CSS animations, GSAP scroll effects, and mouse-parallax depth. Forcing intake (product + elevator pitch, audience register, brand overrides, tone) locks down positioning before any copy or markup is written, so the page reflects the actual product rather than generic boilerplate. Use whenever the user says 'landing for X', 'create a landing page', 'build a landing page', 'make a landing page for X', 'I need a web page for Y', or provides product/service details and wants a polished website. Also triggers on 'promotional page', 'product  | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing/landing/skills/landing/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "launch-strategy",
+  "koraci": [
+   "Pre-launch (2-6 weeks out): waitlist/early access, borrowed-channel outreach, asset production",
+   "Launch day: time-boxed checklist, all channels firing, founder availability for engagement",
+   "Post-launch (30 days): momentum content — comparison pages, case studies, roundup email, retargeting",
+   "What are you launching? (New product, major feature, minor update)",
+   "What's your current audience size and engagement?",
+   "What owned channels do you have? (Email list size, blog traffic, community)",
+   "What's your timeline for launch?",
+   "Have you launched before? What worked/didn't work?"
+  ],
+  "napomene": "When the user wants to plan a product launch, feature announcement, or release strategy. Also use when the user mentions 'launch,' 'Product Hunt,' 'feature release,' 'announcement,' 'go-to-market,' 'beta launch,' 'early access,' 'waitlist,' 'product update,' 'GTM plan,' 'launch checklist,' or 'launch momentum.' This skill covers phased launches, channel strategy, and ongoing launch momentum. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/launch-strategy/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "linkedin-analytics",
+  "koraci": [
+   "Under 10 posts, describe; do not conclude. Say so plainly.",
+   "A pattern in past posts is a hypothesis. Retrospective data is confounded — you made",
+   "Never benchmark against someone else's numbers. Different denominator, different",
+   "Follower count is not a success metric. Track inbound conversations, specific",
+   "Report the confidence level. LinkedIn-official 🟢, third-party study 🟡, folklore 🔴.",
+   "One good post is not evidence. It is the most common cause of a strategy change and the",
+   "references/linkedin_metrics_canon.md — what each number is, what it is not, and which three tiers to track (7 sources)",
+   "references/evidence_thresholds.md — the four gates, forking paths, and the uncomfortable arithmetic of LinkedIn A/B tests (7 sources)"
+  ],
+  "napomene": "Use when someone wants to understand their own LinkedIn numbers — which posts worked, why reach dropped, whether a pattern is real, or how to test a hypothesis. Triggers on \"why did my reach drop\", \"what's working on my LinkedIn\", \"analyze my posts\", \"do carousels do better for me\", \"should I test this\", \"LinkedIn analytics\". Reads your own exported post data, reports medians and outlier bands, tests candidate patterns against a permutation null, and sizes a real experiment — refusing to conclude anything below 10 posts. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing/linkedin/skills/linkedin-analytics/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "linkedin-content",
+  "koraci": [
+   "Never fabricate a number, a client, a result, or a quote. Not one, not as a placeholder.",
+   "Write to the mobile fold. A sentence completes before character 140.",
+   "Links in the first comment, and say so in the post.",
+   "No Unicode pseudo-bold, ever. It is an accessibility failure, not a style choice.",
+   "Alt text on every image; captions on every video. LinkedIn does not add them for you.",
+   "No engagement bait. Ask the question the post actually earned.",
+   "The author reads every line before it ships. They are the author of record.",
+   "references/hook_and_fold_mechanics.md — the first 140 characters, and the openers to delete on sight (7 sources)"
+  ],
+  "napomene": "Use when someone wants to write, edit, or lint a LinkedIn post — a story, how-to, opinion piece, carousel script, video script, or poll — or wants an article, talk, or transcript repurposed into posts. Triggers on \"write a LinkedIn post\", \"is this hook any good\", \"review my post\", \"turn this into LinkedIn posts\", \"carousel\", \"what format should this be\". Lints posts 0-100 on mechanics, hook, integrity, and accessibility; picks the format the material actually supports; and splits long sources into standalone units with a reuse ledger. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing/linkedin/skills/linkedin-content/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "linkedin-engagement",
+  "koraci": [
+   "Nothing is auto-sent. Ever. The user pastes and sends, one person at a time.",
+   "No engagement pods. Coordinated reciprocal commenting is inauthentic engagement under",
+   "Every message carries a line that could only have been written for that person.",
+   "Never paste the same comment twice. Identical comments at volume are the definition of",
+   "One follow-up, a week later, only with something new to say.",
+   "Agreement is not a comment. Add the counter-example, the number, or the case where it",
+   "references/comment_strategy.md — tiers, what a comment competes on, pods, replying to your own posts (7 sources)",
+   "references/outreach_ethics_and_benchmarks.md — the benchmark numbers with their provenance, and the personalisation claim corrected (7 sources)"
+  ],
+  "napomene": "Use when someone wants to grow reach through comments, replies, groups, or outreach on LinkedIn — a commenting roster, a connection request note, a DM or InMail, a networking plan, or a check on whether their outreach volume is safe. Triggers on \"who should I engage with\", \"write a connection request\", \"cold DM\", \"LinkedIn outreach\", \"networking strategy\", \"how many invites can I send\". Builds a weekly comment roster inside a real time budget, assembles one message at a time and refuses templates, and caps volume against LinkedIn's limits. Nothing is ever sent. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing/linkedin/skills/linkedin-engagement/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "linkedin-profile",
+  "koraci": [
+   "Never invent a credential, a metric, or a role. Every number on a profile is checkable",
+   "First person. A profile in third person reads as a press release someone else wrote.",
+   "The fold is the section. Whatever sits above \"…see more\" is what most readers get.",
+   "Front-load the headline. The strongest segment first; everything after is a bonus.",
+   "Do not fetch anything. The user describes their own profile; nothing is scraped.",
+   "references/profile_architecture.md — what each section is for, and the three readers (7 sources)",
+   "references/headline_and_positioning.md — the 220 characters that follow you everywhere (7 sources)",
+   "assets/profile_worksheet.md — fillable section-by-section worksheet"
+  ],
+  "napomene": "Use when someone wants their LinkedIn profile audited or rewritten — headline, About section, experience bullets, Featured, banner, recommendations — or says \"fix my headline\", \"my profile gets views but nothing happens\", \"optimize my LinkedIn profile\", \"what should my About section say\". Scores the headline on five dimensions, audits the whole profile 0-100 and ranks fixes by points per hour, and assembles an About section that survives the \"…see more\" fold. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing/linkedin/skills/linkedin-profile/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "linkedin-skills",
+  "koraci": [
+   "What has to be true in 90 days for this to have been worth it? *(Not a follower count.)*",
+   "Who is this for, specifically enough that someone is excluded?",
+   "How many minutes a week will you protect — measured from a bad week?",
+   "What proof already exists? *(If none, the first pillar is process, not results.)*",
+   "What will you not post about?"
+  ],
+  "napomene": "Use when someone wants to grow an organic LinkedIn presence — a content strategy for a career change or consulting or thought leadership, a rewritten profile or headline, post drafts and hooks, a posting cadence or newsletter plan, connection notes and outreach, a commenting strategy, repurposing an article or talk into posts, or a read on why their reach dropped. Triggers on \"grow my LinkedIn\", \"fix my headline\", \"write a LinkedIn post\", \"what should I post about\", \"LinkedIn strategy\", \"connection request\", \"my reach dropped\". Forks context to route to one of five sub-skills, and refuses auto | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing/linkedin/skills/linkedin-skills/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "linkedin-strategy",
+  "koraci": [
+   "One objective. Two objectives serve neither; the audiences overlap less than they look.",
+   "The exclusion list is the positioning. Refuse to skip it.",
+   "Price the week from a bad week, not a good one.",
+   "Consistency over volume. A skipped week is fine; a skipped month resets you.",
+   "Review the brief quarterly, not weekly. A brief revised monthly is a mood.",
+   "references/objective_to_pillars.md — the six objectives and the pillar arithmetic (7 sources)",
+   "references/cadence_and_consistency.md — what a post really costs and why the floor exists (7 sources)",
+   "references/newsletter_playbook.md — eligibility, cadence as a promise, the stop rule (7 sources)"
+  ],
+  "napomene": "Use when someone needs a LinkedIn plan rather than a post — content pillars, positioning for a career change or consulting or thought leadership, a sustainable posting cadence, or a newsletter decision. Triggers on \"what should I post about\", \"how often should I post\", \"LinkedIn content strategy\", \"should I start a LinkedIn newsletter\", \"grow my following\", \"90-day plan\". Validates the positioning brief, sizes the week against real hours and refuses a plan that will not survive week five, and gates a newsletter against eligibility and a six-month cadence commitment. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing/linkedin/skills/linkedin-strategy/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "local-seo-manager",
+  "koraci": [
+   "Business basics — Name, address (or service-area-only?), phone, website URL",
+   "Services — Primary + secondary services (e.g., appliance repair: washer, dryer, refrigerator, dishwasher, oven)",
+   "Service areas — Which cities, neighborhoods, zip codes do you cover?",
+   "Current presence — GBP claimed? Any existing service area pages? Any directory listings?",
+   "Competitors — Who ranks in the Map Pack for your top service keywords?",
+   "Relevance — Does the category and description match the search query?",
+   "Proximity — How close is the business to the searcher?",
+   "Prominence — Reviews count, rating, response rate, posting frequency, backlinks"
+  ],
+  "napomene": "Manage local SEO for service-area businesses — appliance repair, HVAC, plumbing, cleaning, and any business that serves customers at their location. Use when the user wants to: audit Google Business Profile, generate neighborhood service area pages, check NAP consistency across directories, create LocalBusiness schema, or write review responses. Triggers: 'local SEO', 'Google Business Profile', 'GBP', 'service area page', 'NAP consistency', 'local citations', 'LocalBusiness schema', 'review responses', 'Google Maps ranking'. NOT for national SEO (use seo-audit). NOT for general schema (use sch | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/local-seo-manager/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "marketing-context",
+  "koraci": [
+   "How This Skill Works",
+   "Mode 1: Auto-Draft from Codebase",
+   "Mode 2: Guided Interview",
+   "Mode 3: Update Existing",
+   "Sections to Capture",
+   "1. Product Overview",
+   "2. Target Audience",
+   "3. Personas"
+  ],
+  "napomene": "Create and maintain the marketing context document that all marketing skills read before starting. Use when the user mentions 'marketing context,' 'brand voice,' 'set up context,' 'target audience,' 'ICP,' 'style guide,' 'who is my customer,' 'positioning,' or wants to avoid repeating foundational information across marketing tasks. Run this at the start of any new project before using other marketing skills. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/marketing-context/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "marketing-demand-acquisition",
+  "koraci": [
+   "Define objective, budget, duration, audience",
+   "Select channels based on funnel stage",
+   "Create campaign in HubSpot with proper UTM structure",
+   "Configure lead scoring and assignment rules",
+   "Launch with test budget, validate tracking",
+   "Validation: UTM parameters appear in HubSpot contact records",
+   "Create campaign group for initiative",
+   "Structure: Awareness → Consideration → Conversion campaigns"
+  ],
+  "napomene": "Creates demand generation campaigns, optimizes paid ad spend across LinkedIn, Google, and Meta, develops SEO strategies, and structures partnership programs. Use when planning demand gen strategy, growth marketing, advertising campaigns, PPC optimization, lead generation, pipeline generation, or marketing budgets. Covers multi-channel acquisition (Google Ads, LinkedIn Ads, Meta Ads), CAC analysis, MQL/SQL workflows, attribution modeling, technical SEO, and co-marketing partnerships. Default calibration profile is a Series A+ B2B SaaS scaling internationally (EU/US/Canada, hybrid PLG/Sales-Led) | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/marketing-demand-acquisition/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "marketing-ideas",
+  "koraci": [
+   "Ask about their product, audience, and current stage if not clear",
+   "Suggest 3-5 most relevant ideas based on their context",
+   "Provide details on implementation for chosen ideas",
+   "Consider their resources (time, budget, team size)",
+   "What's your current stage and main growth goal?",
+   "What's your marketing budget and team size?",
+   "What have you already tried that worked or didn't?",
+   "What competitor tactics do you admire?"
+  ],
+  "napomene": "When the user needs marketing ideas, inspiration, or strategies for their SaaS or software product. Also use when the user asks for 'marketing ideas,' 'growth ideas,' 'how to market,' 'marketing strategies,' 'marketing tactics,' 'ways to promote,' or 'ideas to grow.' This skill provides 139 proven marketing approaches organized by category. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/marketing-ideas/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "marketing-ops",
+  "koraci": [
+   "marketing-context (ensure foundation exists)",
+   "launch-strategy (plan the launch)",
+   "content-strategy (plan content around launch)",
+   "copywriting (write landing page)",
+   "email-sequence (write launch emails)",
+   "social-content (write social posts)",
+   "paid-ads + ad-creative (paid promotion)",
+   "analytics-tracking (set up tracking)"
+  ],
+  "napomene": "Central router for the marketing skill ecosystem. Use when unsure which marketing skill to use, when orchestrating a multi-skill campaign, or when coordinating across content, SEO, CRO, channels, and analytics. Also use when the user mentions 'marketing help,' 'campaign plan,' 'what should I do next,' 'marketing priorities,' or 'coordinate marketing. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/marketing-ops/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "marketing-psychology",
+  "koraci": [
+   "What's the desired behavior? (Click, buy, share, return?)",
+   "What's the current friction? (Too many choices, unclear value, no urgency?)",
+   "What's the emotional state? (Excited, skeptical, confused, impatient?)",
+   "What's the context? (First visit, returning user, comparing options?)",
+   "What's the risk tolerance? (High-stakes B2B? Low-stakes consumer impulse?)"
+  ],
+  "napomene": "When the user wants to apply psychological principles, mental models, or behavioral science to marketing. Also use when the user mentions 'psychology,' 'mental models,' 'cognitive bias,' 'persuasion,' 'behavioral science,' 'why people buy,' 'decision-making,' or 'consumer behavior.' This skill provides 70+ mental models organized for marketing application. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/marketing-psychology/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "marketing-skills",
+  "koraci": [
+   "Start Here",
+   "Route Table",
+   "Foundation + Ops",
+   "SEO + AEO",
+   "CRO (conversion)",
+   "Channels",
+   "Intelligence + Sales Enablement",
+   "Python Tools"
+  ],
+  "napomene": "Directory and router for the marketing skills library. Use when you need to find the right marketing skill for a task, see what marketing capabilities exist, or get oriented in this plugin. 44 specialist skills across 8 pods (content, SEO + AEO, CRO, channels, growth, intelligence, sales enablement, ops), 59 stdlib Python tools. Routes to one skill — it does not execute marketing work itself. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/marketing-skills/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "marketing-strategy-pmm",
+  "koraci": [
+   "Analyze existing customers (top 20% by LTV)",
+   "Identify common firmographics (size, industry, revenue)",
+   "Map technographics (tools, maturity, integrations)",
+   "Document psychographics (pain level, motivation, risk tolerance)",
+   "Define 3-5 buyer personas (economic, technical, user)",
+   "Validate against sales cycle and churn data",
+   "Score prospects A/B/C/D based on ICP fit",
+   "Validation: A-fit customers have lowest churn and fastest close"
+  ],
+  "napomene": "Product marketing skill for positioning, GTM strategy, competitive intelligence, and product launches. Use when the user asks about product positioning, go-to-market planning, competitive analysis, target audience definition, ICP definition, market research, launch plans, or sales enablement. Covers April Dunford positioning, ICP definition, competitive battlecards, launch playbooks, and international market entry. Produces deliverables including positioning statements, battlecard documents, launch plans, and go-to-market strategies. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/marketing-strategy-pmm/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "onboarding-cro",
+  "koraci": [
+   "Product Context - What type of product? B2B or B2C? Core value proposition?",
+   "Activation Definition - What's the \"aha moment\"? What action indicates a user \"gets it\"?",
+   "Current State - What happens after signup? Where do users drop off?",
+   "Email sequence - Reminder of value, address blockers, offer help",
+   "In-app recovery - Welcome back, pick up where left off",
+   "Human touch - For high-value accounts, personal outreach",
+   "What action most correlates with retention?",
+   "What happens immediately after signup?"
+  ],
+  "napomene": "When the user wants to optimize post-signup onboarding, user activation, first-run experience, or time-to-value. Also use when the user mentions \"onboarding flow,\" \"activation rate,\" \"user activation,\" \"first-run experience,\" \"empty states,\" \"onboarding checklist,\" \"aha moment,\" or \"new user experience.\" For signup/registration optimization, see signup-flow-cro. For ongoing email sequences, see email-sequence. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/onboarding-cro/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "page-cro",
+  "koraci": [
+   "Page Type: Homepage, landing page, pricing, feature, blog, about, other",
+   "Primary Conversion Goal: Sign up, request demo, purchase, subscribe, download, contact sales",
+   "Traffic Context: Where are visitors coming from? (organic, paid, email, social)",
+   "What's your current conversion rate and goal?",
+   "Where is traffic coming from?",
+   "What does your signup/purchase flow look like after this page?",
+   "Do you have user research, heatmaps, or session recordings?",
+   "What have you already tried?"
+  ],
+  "napomene": "When the user wants to optimize, improve, or increase conversions on any marketing page — including homepage, landing pages, pricing pages, feature pages, or blog posts. Also use when the user says \"CRO,\" \"conversion rate optimization,\" \"this page isn't converting,\" \"improve conversions,\" or \"why isn't this page working.\" For signup/registration flows, see signup-flow-cro. For post-signup activation, see onboarding-cro. For forms outside of signup, see form-cro. For popups/modals, see popup-cro. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/page-cro/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "paid-ads",
+  "koraci": [
+   "Hook (0-3 sec): Pattern interrupt, question, or bold statement",
+   "Problem (3-8 sec): Relatable pain point",
+   "Solution (8-20 sec): Show product/benefit",
+   "CTA (20-30 sec): Clear next step",
+   "Concept/angle (biggest impact)",
+   "Hook/headline",
+   "Visual style",
+   "Body copy"
+  ],
+  "napomene": "When the user wants help with paid advertising campaigns on Google Ads, Meta (Facebook/Instagram), LinkedIn, Twitter/X, or other ad platforms. Also use when the user mentions 'PPC,' 'paid media,' 'ad copy,' 'ad creative,' 'ROAS,' 'CPA,' 'ad campaign,' 'retargeting,' or 'audience targeting.' This skill covers campaign strategy, ad creation, audience targeting, and optimization. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/paid-ads/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "paywall-upgrade-cro",
+  "koraci": [
+   "Upgrade Context - Freemium → Paid? Trial → Paid? Tier upgrade? Feature upsell? Usage limit?",
+   "Product Model - What's free? What's behind paywall? What triggers prompts? Current conversion rate?",
+   "User Journey - When does this appear? What have they experienced? What are they trying to do?",
+   "Headline - Focus on what they get: \"Unlock [Feature] to [Benefit]\"",
+   "Value Demonstration - Preview, before/after, \"With Pro you could...\"",
+   "Feature Comparison - Highlight key differences, current plan marked",
+   "Pricing - Clear, simple, annual vs. monthly options",
+   "Social Proof - Customer quotes, \"X teams use this\""
+  ],
+  "napomene": "When the user wants to create or optimize in-app paywalls, upgrade screens, upsell modals, or feature gates. Also use when the user mentions \"paywall,\" \"upgrade screen,\" \"upgrade modal,\" \"upsell,\" \"feature gate,\" \"convert free to paid,\" \"freemium conversion,\" \"trial expiration screen,\" \"limit reached screen,\" \"plan upgrade prompt,\" or \"in-app pricing.\" Distinct from public pricing pages (see page-cro) — this skill focuses on in-product upgrade moments where the user has already experienced value. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/paywall-upgrade-cro/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "popup-cro",
+  "koraci": [
+   "Popup Purpose",
+   "Current State",
+   "Traffic Context",
+   "Entry/scroll: First-purchase discount",
+   "Exit intent: Bigger discount or reminder",
+   "Cart abandonment: Complete your order",
+   "Click-triggered: Demo request, lead magnets",
+   "Scroll: Newsletter/blog subscription"
+  ],
+  "napomene": "When the user wants to create or optimize popups, modals, overlays, slide-ins, or banners for conversion purposes. Also use when the user mentions \"exit intent,\" \"popup conversions,\" \"modal optimization,\" \"lead capture popup,\" \"email popup,\" \"announcement banner,\" or \"overlay.\" For forms outside of popups, see form-cro. For general page conversion optimization, see page-cro. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/popup-cro/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "pricing-strategy",
+  "koraci": [
+   "What makes a customer willing to pay more? → That's your value metric",
+   "Does the metric scale with their success? → If they grow, you grow",
+   "Is it easy to understand? → Complexity kills conversion",
+   "Is it hard to game? → Customers shouldn't be able to work around it",
+   "At what price would this product be so cheap you'd question its quality?",
+   "At what price would this product be a bargain — great deal?",
+   "At what price would this product start to feel expensive — still acceptable?",
+   "At what price would this product be too expensive to consider?"
+  ],
+  "napomene": "Design, optimize, and communicate SaaS pricing — tier structure, value metrics, pricing pages, and price increase strategy. Use when building a pricing model from scratch, redesigning existing pricing, planning a price increase, or improving a pricing page. Trigger keywords: pricing tiers, pricing page, price increase, packaging, value metric, per seat pricing, usage-based pricing, freemium, good-better-best, pricing strategy, monetization, pricing page conversion, Van Westendorp. NOT for broader product strategy — use product-strategist for that. NOT for customer success or renewals — use cus | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/pricing-strategy/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "programmatic-seo",
+  "koraci": [
+   "Business Context",
+   "Opportunity Assessment",
+   "Competitive Landscape",
+   "Proprietary (you created it)",
+   "Product-derived (from your users)",
+   "User-generated (your community)",
+   "Licensed (exclusive access)",
+   "Public (anyone can use—weakest)"
+  ],
+  "napomene": "When the user wants to create SEO-driven pages at scale using templates and data. Also use when the user mentions \"programmatic SEO,\" \"template pages,\" \"pages at scale,\" \"directory pages,\" \"location pages,\" \"[keyword] + [city] pages,\" \"comparison pages,\" \"integration pages,\" or \"building many pages for SEO.\" For auditing existing SEO issues, see seo-audit. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/programmatic-seo/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "prompt-engineer-toolkit",
+  "koraci": [
+   "Store baseline version.",
+   "Propose prompt edits.",
+   "Re-run A/B test.",
+   "Promote only if score and safety constraints improve.",
+   "Picking prompts from single-case outputs — use a realistic, edge-case-rich test suite.",
+   "Changing prompt and model simultaneously — always isolate variables.",
+   "Missing must_not_contain (forbidden-content) checks in evaluation criteria.",
+   "Editing prompts without version metadata, author, or change rationale."
+  ],
+  "napomene": "Turns marketing prompts into tested, versioned production assets: A/B prompt evaluation against structured test cases, immutable prompt version history with diffs, ready-to-use marketing prompt templates (ad copy, email campaigns, social posts, landing pages, SEO meta), and an LLM-governance playbook for marketing teams (claim discipline, disclosure rules, human-review gates). Use when a marketing team relies on AI-generated content and needs prompt quality to be measurable and safe — or when the user mentions 'prompt engineering,' 'improve my prompts,' 'prompt templates,' 'prompt versioning,' | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/prompt-engineer-toolkit/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "referral-program",
+  "koraci": [
+   "Define the referral loop (4 stages)",
+   "Choose program type (customer referral vs. affiliate)",
+   "Design the incentive structure (what, when, for whom)",
+   "Identify trigger moments (when to ask for referrals)",
+   "Plan the share mechanics (how referrals actually happen)",
+   "Define measurement framework",
+   "Audit current metrics against benchmarks",
+   "Identify the specific weak point (low awareness, low share rate, low conversion, reward friction)"
+  ],
+  "napomene": "When the user wants to design, launch, or optimize a referral or affiliate program. Use when they mention 'referral program,' 'affiliate program,' 'word of mouth,' 'refer a friend,' 'incentive program,' 'customer referrals,' 'brand ambassador,' 'partner program,' 'referral link,' or 'growth through referrals.' Covers program mechanics, incentive design, and optimization — not just the idea of referrals but the actual system. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/referral-program/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "schema-markup",
+  "koraci": [
+   "Run scripts/schema_validator.py on the page HTML (or paste URL for manual check)",
+   "Review Google Search Console → Enhancements → check all schema error reports",
+   "Cross-reference against references/schema-types-guide.md for required fields",
+   "Deliver audit report: what's present, what's broken, what's missing, priority order",
+   "Identify the page type and the right schema types (see schema selection table below)",
+   "Pull the JSON-LD pattern from references/implementation-patterns.md",
+   "Populate with real page content",
+   "Advise on placement (inline <script> in <head>, CMS plugin, GTM injection)"
+  ],
+  "napomene": "When the user wants to implement, audit, or validate structured data (schema markup) on their website. Use when the user mentions 'structured data,' 'schema.org,' 'JSON-LD,' 'rich results,' 'rich snippets,' 'schema markup,' 'FAQ schema,' 'Product schema,' 'HowTo schema,' or 'structured data errors in Search Console.' Also use when someone asks why their content isn't showing rich results or wants to improve AI search visibility. NOT for general SEO audits (use seo-audit) or technical SEO crawl issues (use site-architecture). | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/schema-markup/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "seo-audit",
+  "koraci": [
+   "Site Context",
+   "Current State",
+   "Critical fixes (blocking indexation/ranking)",
+   "High-impact improvements",
+   "Quick wins (easy, immediate benefit)",
+   "Long-term recommendations",
+   "What pages/keywords matter most?",
+   "Do you have Search Console access?"
+  ],
+  "napomene": "When the user wants to audit, review, or diagnose SEO issues on their site. Also use when the user mentions \"SEO audit,\" \"technical SEO,\" \"why am I not ranking,\" \"SEO issues,\" \"on-page SEO,\" \"meta tags review,\" or \"SEO health check.\" For building pages at scale to target keywords, see programmatic-seo. For adding structured data, see schema-markup. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/seo-audit/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "signup-flow-cro",
+  "koraci": [
+   "Flow Type",
+   "Current State",
+   "Business Constraints",
+   "Quick wins (same-day fixes)",
+   "High-impact changes (week-level effort)",
+   "Test hypotheses (things to A/B test)",
+   "Email + Password (or Google auth)",
+   "Name + Company (optional: role)"
+  ],
+  "napomene": "When the user wants to optimize signup, registration, account creation, or trial activation flows. Also use when the user mentions \"signup conversions,\" \"registration friction,\" \"signup form optimization,\" \"free trial signup,\" \"reduce signup dropoff,\" or \"account creation flow.\" For post-signup onboarding, see onboarding-cro. For lead capture forms (not account creation), see form-cro. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/signup-flow-cro/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "site-architecture",
+  "koraci": [
+   "Run scripts/sitemap_analyzer.py on their sitemap.xml (or paste sitemap content)",
+   "Review: depth distribution, URL patterns, potential orphans, duplicate paths",
+   "Evaluate navigation by reviewing the site manually or from their description",
+   "Identify the top structural problems by SEO impact",
+   "Deliver a prioritized audit with quick wins and structural recommendations",
+   "Map business goals to site sections",
+   "Design URL hierarchy (flat vs layered by content type)",
+   "Define content silos for topical authority"
+  ],
+  "napomene": "When the user wants to audit, redesign, or plan their website's structure, URL hierarchy, navigation design, or internal linking strategy. Use when the user mentions 'site architecture,' 'URL structure,' 'internal links,' 'site navigation,' 'breadcrumbs,' 'topic clusters,' 'hub pages,' 'orphan pages,' 'silo structure,' 'information architecture,' or 'website reorganization.' Also use when someone has SEO problems and the root cause is structural (not content or schema). NOT for content strategy decisions about what to write (use content-strategy) or for schema markup (use schema-markup). | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/site-architecture/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "social-content",
+  "koraci": [
+   "What unique perspective do you have?",
+   "What questions does your audience ask?",
+   "What content has performed well before?",
+   "What can you create consistently?",
+   "What aligns with business goals?",
+   "Create pillar content (blog, video, podcast)",
+   "Extract key insights (3-5 per piece)",
+   "Adapt to each platform (format and tone)"
+  ],
+  "napomene": "When the user wants help creating, scheduling, or optimizing social media content for LinkedIn, Twitter/X, Instagram, TikTok, Facebook, or other platforms. Also use when the user mentions 'LinkedIn post,' 'Twitter thread,' 'social media,' 'content calendar,' 'social scheduling,' 'engagement,' or 'viral content.' This skill covers content creation, repurposing, and platform-specific strategies. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/social-content/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "social-media-analyzer",
+  "koraci": [
+   "Validate input data completeness (reach > 0, dates valid)",
+   "Calculate engagement metrics per post",
+   "Aggregate campaign-level metrics",
+   "Calculate ROI if ad spend provided",
+   "Compare against platform benchmarks",
+   "Identify top and bottom performers",
+   "Generate recommendations",
+   "Validation: Engagement rate < 100%, ROI matches spend data"
+  ],
+  "napomene": "Social media campaign analysis and performance tracking. Calculates engagement rates, ROI, and benchmarks across platforms. Use when analyzing social media performance, calculating engagement rate, measuring campaign ROI, comparing platform metrics, or benchmarking against industry standards. Also use when the user mentions \"social media audit,\" \"engagement rate,\" or \"which platform performs best. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/social-media-analyzer/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "social-media-manager",
+  "koraci": [
+   "Consistency — Post on schedule. Algorithms reward reliability.",
+   "Engagement bait done right — Genuine questions, not \"like if you agree.\" Polls work. Hot takes work. Asking for opinions works.",
+   "Collaboration — Co-create content with complementary accounts.",
+   "Repurposing — One blog post → 5-10 social posts across platforms.",
+   "Trend riding — Jump on relevant trends fast, but only if authentic to your brand.",
+   "Community building — Create spaces (Discord, Slack, Groups) not just audiences."
+  ],
+  "napomene": "When the user wants to develop social media strategy, plan content calendars, manage community engagement, or grow their social presence across platforms. Also use when the user mentions 'social media strategy,' 'social calendar,' 'community management,' 'social media plan,' 'grow followers,' 'engagement rate,' 'social media audit,' or 'which platforms should I use.' For writing individual social posts, see social-content. For analyzing social performance data, see social-media-analyzer. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/social-media-manager/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "video-content-strategist",
+  "koraci": [
+   "How-to tutorials -- step-by-step implementation (highest search volume)",
+   "Tool reviews and comparisons -- evaluation content (high commercial intent)",
+   "Case studies and teardowns -- authority building (highest trust)",
+   "Opinion and hot takes -- algorithm-friendly, shareable",
+   "Identify source -- which blog/podcast/webinar has the highest traffic or engagement?",
+   "Extract the hook -- what is the single most compelling insight or result?",
+   "Write the short script -- 60 seconds max, hook, value, CTA",
+   "Adapt for each platform -- same core, different framing and caption style"
+  ],
+  "napomene": "Use when planning video content strategy, writing video scripts, optimizing YouTube channels, building short-form video pipelines (Reels, TikTok, Shorts), or repurposing long-form content into video. Triggers: 'start a YouTube channel', 'video content strategy', 'write a video script', 'repurpose into video', 'YouTube SEO', 'short-form video'. NOT for written blog content (use content-production). NOT for social captions without video (use social-media-manager). | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/video-content-strategist/skills/video-content-strategist/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "webinar-marketing",
+  "koraci": [
+   "Lock the promise and pick the format that fits the goal (see references/webinar-formats.md)",
+   "Map the funnel targets backward from the business goal (see funnel math below)",
+   "Build the promotion plan across the runway (see references/promotion-playbook.md)",
+   "Design the show-up sequence and the live-to-close moment",
+   "Plan the segmented follow-up for attendees vs. no-shows",
+   "Deliver: a full webinar plan (use templates/webinar-plan-template.md), promo calendar, and email/copy drafts",
+   "Get the actual numbers: invited → registered → showed up → engaged → converted",
+   "Score the funnel with scripts/webinar_funnel_scorer.py to find the weakest stage"
+  ],
+  "napomene": "When the user wants to plan, promote, run, or improve a webinar or virtual event to generate and convert demand. Use when the user mentions 'webinar,' 'virtual event,' 'online event,' 'live demo,' 'virtual summit,' 'workshop,' 'masterclass,' 'fireside chat,' 'roundtable,' 'registration funnel,' 'show-up rate,' 'attendance rate,' 'webinar promotion,' 'webinar follow-up,' or 'on-demand webinar.' Also use when they have a webinar that isn't converting — low registrations, low show-up, or attendees who don't buy — and want to diagnose and fix it. Covers the full funnel: registration, promotion, sh | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/webinar-marketing/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "x-twitter-growth",
+  "koraci": [
+   "Search site:x.com \"topic\" min_faves:100 via Brave to find high-performing content",
+   "Identify 5-10 accounts in your niche with strong engagement",
+   "For each, analyze: posting frequency, content types, hook patterns, engagement rates",
+   "Run: python3 scripts/competitor_analyzer.py --handles @acc1 @acc2 @acc3",
+   "Optimize bio and pinned tweet (Step 1)",
+   "Identify 20 accounts in your niche to engage with daily",
+   "Reply 10-20 times per day to larger accounts (genuine value only)",
+   "Post 2-3 atomic tweets per day testing different formats"
+  ],
+  "napomene": "X/Twitter growth engine for building audience, crafting viral content, and analyzing engagement. Use when the user wants to grow on X/Twitter, write tweets or threads, analyze their X profile, research competitors on X, plan a posting strategy, or optimize engagement. Complements social-content (generic multi-platform) with X-specific depth: algorithm mechanics, thread engineering, reply strategy, profile optimization, and competitive intelligence via web search. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/x-twitter-growth/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "youtube-full",
+  "koraci": [
+   "Search (/search?q=...) — pick the most relevant results",
+   "Fetch transcripts (/transcript?video_url=...) for selected videos",
+   "Summarize or extract quotes from transcript text",
+   "channel/latest (free) — check for new uploads",
+   "If new videos found, fetch transcripts",
+   "Extract signal (announcements, topics)",
+   "playlist/videos — get all video IDs in the playlist",
+   "Batch-fetch transcripts, pausing if near credit limit"
+  ],
+  "napomene": "Use when the user needs YouTube transcripts, video search, channel browsing, playlist extraction, or content monitoring. Trigger phrases: 'get the transcript for', 'search YouTube for', 'what are the latest videos on', 'list this playlist', 'monitor this channel', or any request involving a YouTube URL, video ID, or @handle. Do NOT use for downloading video or audio files, YouTube engagement data (likes, comments), or private/age-restricted videos. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl marketing-skill/skills/youtube-full/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ }
+]

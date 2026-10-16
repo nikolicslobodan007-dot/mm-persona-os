@@ -1,0 +1,217 @@
+[
+ {
+  "ime": "clinical-research",
+  "koraci": [
+   "Draft the synopsis — Fill assets/protocol_synopsis_template.md (objectives, design, population, endpoints, statistical plan placeholder, owners-to-sign).",
+   "Score feasibility — Run phase_gate_scorer.py --input study.json --profile <same> --phase {1|2|3|4}. Read the verdict + blockers + named owners.",
+   "\"Is your primary endpoint a clinical outcome or a surrogate — and if surrogate, is it on FDA's validated table?\"",
+   "\"What's the minimal clinically important difference you're powering for — and where did that number come from?\"",
+   "\"What dropout rate are you assuming, and is the sample size inflated for it?\"",
+   "\"Single primary endpoint or multiple — and if multiple, what's the multiplicity control?\"",
+   "\"Who is the named biostatistician / medical monitor / regulatory owner signing this synopsis?\""
+  ],
+  "napomene": "Use when designing a prospective clinical study before submission — selecting and classifying endpoints (primary / key-secondary / exploratory, with surrogate-endpoint flagging), estimating sample size and power for two-arm designs (means / proportions / survival), or scoring a study plan for feasibility and a GO / GO-WITH-CONDITIONS / REDESIGN / NO-GO phase-gate decision. Every output is an ESTIMATE plus a named human owner (clinician / biostatistician / regulatory owner) — never clinical fact, never a finished protocol. Distinct from ra-qm-team, which handles the regulatory/QM submission (IS | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research-ops/skills/clinical-research/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "deep-research",
+  "koraci": [
+   "How it differs from a quick research router",
+   "The pipeline (9 phases)",
+   "Core mechanisms",
+   "Output structure",
+   "Cross-References"
+  ],
+  "napomene": "Run a disciplined, multi-source research investigation for a high-stakes question or decision — fan-out web search across many channels, parallel sub-agents, source triangulation (each claim backed by ≥3 independent sources), an adversarial review pass, and every source saved to its own file with verbatim quotes for reuse. Use when a low-quality answer is expensive: strategy work, comparing N products/methods/markets, validating a hypothesis with external data, or mapping how a field works. NOT for quick fact-checks (answer directly), structured 12-dimension competitor scoring (use competitive | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research/deep-research/skills/deep-research/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "deepread",
+  "koraci": [
+   "Identify the source type: pasted text, local file, webpage, PDF, or document set.",
+   "Confirm that extraction is usable before analyzing it.",
+   "For PDFs, check page count, missing pages, broken text, and whether OCR is required.",
+   "Preserve page, section, chapter, paragraph, or heading locations whenever available.",
+   "If extraction is incomplete, state the gap and stop claims that depend on the missing material.",
+   "Author's stated position — faithful reconstruction of what the author says.",
+   "Source fact or data — explicitly present and traceable in the supplied material.",
+   "Reasoned inference — derived from the source but not explicitly stated."
+  ],
+  "napomene": "Use when the user asks to deeply read a book, article, PDF, or document set; extract claims and evidence; build a knowledge map; or learn through Feynman explanation and recall. Covers quick, deep, map, Feynman, and whole-book reading modes. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research/deepread/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "dossier",
+  "koraci": [
+   "Identity Facts Table — founded/born, location, size/stage, current role, key affiliations. All cells sourced; hover-text tier.",
+   "12-Month Activity Timeline — News, funding, hires, departures, product launches, controversies. Reverse chronological. Each entry hyperlinked.",
+   "Network Signals — Collaborators / investors / associates. 5-10 entries, ranked by relevance to hypothesis.",
+   "Reputation Signals — Sentiment from news, Glassdoor for companies, peer mentions for people. Caveat: reputation data is noisy.",
+   "Red Flags + Hidden Patterns — Litigation, regulatory actions, unusual departures, financial signals, reputation hits. Tiered.",
+   "Conversation Hooks — 3-5 specific hooks tied to findings. Each: hook + finding + suggested framing."
+  ],
+  "napomene": "Decision-grade entity research skill — produces a hypothesis-tested dossier on a specific company, person, nonprofit, or government org, not a generic profile. Forcing intake makes the user state their hypothesis upfront (what they already believe and want to verify or disprove) so the dossier tests it rather than confirms it. Output is an editable Word document (.docx) with verdict on the hypothesis, identity facts, 12-month activity timeline, network and reputation signals, red flags, conversation hooks tied to specific findings, and source-provenance audit log. Uses WebSearch + WebFetch + f | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research/dossier/skills/dossier/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "grants",
+  "koraci": [
+   "Established — \"<research idea>\" established evidence — what's known",
+   "Stakes — \"<topic>\" mortality OR burden OR cost OR prevalence — why it matters",
+   "Current Approaches — \"<topic>\" current treatment OR standard of care OR approach — state of the art",
+   "Adjacent Methods — \"<related technique>\" applied to <topic> — methodological possibilities",
+   "Gaps — \"<topic>\" limitations OR unanswered OR future directions OR challenge — gap signals",
+   "Executive Summary — title + career stage + environment + 3-4 key findings bullets",
+   "Research Positioning — 3-5 gap quotes (italicized, inline Consensus citations) + 2-3 paragraph positioning narrative + supporting evidence table",
+   "Target Institutes — ranking table (institute, project count in window, % match to your idea) + 2-3 sentence interpretation"
+  ],
+  "napomene": "NIH grant research skill for clinical researchers. Grill-me intake (research idea + career stage + preliminary data + environment + submission posture + known institute targets) locks down the funding strategy before any search runs. Runs a 5-facet Consensus positioning analysis (with draft Significance/Innovation language), maps the research to the right NIH institutes and study sections via RePORTER, finds NOSIs and funded overlap, and produces an editable Word document (.docx) with budget/scope-aware mechanism recommendations, submission timelines, and a mandatory program officer recommenda | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research/grants/skills/grants/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "litreview",
+  "koraci": [
+   "Search → PMIDs: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=<urlencoded-query>&retmode=json&retmax=20&sort=relevance",
+   "PMIDs → metadata: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=<pmid1,pmid2,...>&retmode=json",
+   "Era-gating: append &datetype=pdat&mindate=2021&maxdate=3000 (recent) or &maxdate=2015 (historical).",
+   "Paper URL: https://pubmed.ncbi.nlm.nih.gov/<PMID>/.",
+   "Search: https://api.openalex.org/works?search=<urlencoded-query>&per-page=20&mailto=<email>",
+   "Era-gating: &filter=from_publication_date:2021-01-01 or &filter=to_publication_date:2015-12-31.",
+   "Review articles: &filter=type:review.",
+   "Repeat-hit papers — same paper appearing in 3+ sub-area searches = likely foundational"
+  ],
+  "napomene": "Academic literature orientation skill that searches papers via free keyless APIs (PubMed E-utilities + OpenAlex) by default — with the Consensus MCP as an optional enhancement lane when connected — builds a strategic search plan using PICO (default) or SPIDER / Decomposition / hybrid as fallbacks, and synthesizes findings into a formatted Word (.docx) research guide. Grill-me intake (research question specificity + framework hint + tentative depth) before the recon search; a second forcing checkpoint after Phase 2 confirms framework + sub-areas + depth before searches consume budget. Configura | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research/litreview/skills/litreview/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "market-research",
+  "koraci": [
+   "Write the brief — Fill assets/market_research_brief_template.md (objective, the decision this informs, sizing approach, sampling plan, assumptions register).",
+   "Plan the survey — Run sample_size_planner.py --input survey.json. Fund the per-segment floors, not just the overall n.",
+   "Score the segments — Run segmentation_scorer.py --input segments.json --profile <same>. Drop segments failing the substantiality/accessibility gate.",
+   "Assemble the evidence pack — Combine into a brief. Every number carries its method + assumptions + confidence.",
+   "\"Is your TAM top-down or bottoms-up — and have you computed it both ways to triangulate?\"",
+   "\"What decision will this market size actually drive — and at what precision does it matter?\"",
+   "\"What's your target margin of error and confidence — and does your sample clear it per segment, not just overall?\"",
+   "\"Are your survey questions free of leading and double-barreled wording?\""
+  ],
+  "napomene": "Use when doing upstream market-research methodology — sizing a market as TAM/SAM/SOM computed BOTH top-down and bottoms-up (never a single unsourced number), planning a survey sample size with finite-population correction and per-segment minimums, or scoring candidate market segments against Kotler's measurable/substantial/accessible/differentiable/actionable criteria. Outputs always show the method and the assumptions. For market-research analysts and product-marketing at the sizing/survey/segmentation moment. Distinct from marketing-skill (campaign analytics, attribution, demand-gen) — this  | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research-ops/skills/market-research/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "notebooklm",
+  "koraci": [
+   "Check whether browser-control tools are loaded in the harness (screenshot, click, find-element, navigate)",
+   "If available → take initial screenshot, navigate to https://notebooklm.google.com",
+   "Navigate to homepage → screenshot",
+   "If user provided URL → navigate directly",
+   "If user provided name",
+   "Locate \"New notebook\" button on homepage",
+   "Click → set title from Q2",
+   "Add initial sources per Q3"
+  ],
+  "napomene": "Browser automation skill for controlling Google's NotebookLM. Use when the user wants anything done in NotebookLM (e.g., 'open NotebookLM', 'check my [name] notebook', 'ask my notebook about X', 'add [source] to NotebookLM', 'generate a Video Overview from my notebook', 'use NotebookLM Studio'). Handles reading and querying notebooks, adding sources (URLs, text, files, YouTube links, synthesized content), generating Studio outputs (Audio/Video Overviews, Mind Maps, Reports incl. Briefing Doc/Study Guide/FAQ, Flashcards, Quiz, slide decks, infographics — discover the exact set from the live Stu | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research/notebooklm/skills/notebooklm/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "patent",
+  "koraci": [
+   "Google Patents (https://patents.google.com) — workhorse, no auth required, broad coverage",
+   "Espacenet (https://worldwide.espacenet.com) — global coverage, good for non-US art",
+   "USPTO PPS (https://ppubs.uspto.gov) — US deep dive",
+   "Lens.org (https://www.lens.org) — citation graph, BYOK API key required",
+   "Executive Summary + Verdict — Sub-use-case banner + one-line verdict (NOVEL / FLAGGED / etc.) + 3-4 key findings + legal disclaimer footer",
+   "Geographic Coverage — Filings by jurisdiction for top 10 hits. Only for FTO, landscape, diligence; skipped for novelty and litigation.",
+   "Strategy + Recommendations — Sub-use-case-specific"
+  ],
+  "napomene": "Patent prior-art and landscape intelligence skill — not generic patent help. Commits to one of five sub-use-cases via forcing intake (novelty search / freedom-to-operate / competitive landscape / acquisition diligence / litigation prior-art) before any search runs. Searches Google Patents, Espacenet, USPTO, and optionally Lens.org for citation-graph signals. Output is an editable Word document (.docx) with verdict, ranked closest art (claim-text extracted), CPC-class-aware landscape, family-resolved hits, geographic coverage, FTO flags where applicable, strategy recommendations, and full audit | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research/patent/skills/patent/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "product-research",
+  "koraci": [
+   "Frame the study — Fill assets/research_plan_template.md (research questions, method rationale, participant criteria, analysis plan, repository tagging scheme).",
+   "Size it — Run saturation_planner.py --method {usability|thematic|evaluative-coverage} --segments N. Record the confidence label and limits.",
+   "File in the repository — Tag insights to the atomic schema at synthesis time, with their evidence and confidence.",
+   "\"Is this study generative (discover problems) or evaluative (test a solution)?\"",
+   "\"What's your sample size and saturation rationale — and at what confidence?\"",
+   "\"How many independent participants support each insight — or is it a single-source anecdote?\"",
+   "\"Are your interview / usability tasks framed as outcomes (jobs) or as feature reactions?\"",
+   "\"Where does this land in the repository, and how is it tagged for reuse?\""
+  ],
+  "napomene": "Use when planning and synthesizing product/user research as a method-and-repository discipline — selecting the right method for the goal (generative interviews vs usability test vs concept test vs validation), computing method-based saturation/sample size with an explicit confidence level, or synthesizing coded observations into insights while flagging single-source anecdotes. Never fabricates user insight; an insight requires recurrence across independent participants. Distinct from product-team/ux-researcher-designer (persona/journey artifacts), product-discovery (discovery-sprint planning), | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research-ops/skills/product-research/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "pulse",
+  "koraci": [
+   "sort=top&t=<window>&q=<topic> — top posts in window",
+   "sort=new&t=<window>&q=<topic> — new posts in window (catches breaking signal)",
+   "For each of the top 3–5 posts by score: fetch the comments JSON (<post-url>.json?limit=top) for the top 10–20 comments.",
+   "search?query=<topic>&numericFilters=created_at_i><timestamp>&tags=story — stories in window",
+   "search?query=<topic>&numericFilters=created_at_i><timestamp>&tags=comment — comments in window (catches discussion signal)",
+   "Trusted publishers — \"<topic>\" site:nytimes.com OR site:wsj.com OR site:wired.com OR site:theverge.com OR site:techcrunch.com after:<date>",
+   "Recent reviews — \"<topic>\" review <year> or \"<topic>\" \"honest review\" after:<date>",
+   "Honest-opinion sources — \"<topic>\" problems OR complaints OR \"worth it\" after:<date>"
+  ],
+  "napomene": "Multi-source recency research skill that takes the pulse of any topic across Reddit, Hacker News, the open web, and optionally X/Twitter within a configurable recent window (default 30 days). Forcing intake clarifies topic specificity, angle (trend/sentiment/problems/opportunities/comparison), time window, and platform scope before searching. Returns a synthesized briefing with citations, engagement metrics, and cross-platform pattern analysis. Use when the user requests multi-source recency intelligence on a topic (e.g., 'pulse on [topic]', 'what's happening with [topic]', 'what are people sa | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research/pulse/skills/pulse/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "research",
+  "koraci": [
+   "Delegation — Classified as specialist-domain. Routes there. User sees the specialist's output.",
+   "Fallback execution — Classified as general research. Runs own plan → search → synthesize workflow.",
+   "Pass the user's question verbatim plus the output preference (Q2)",
+   "Let the specialist run its own grill-me intake — do NOT pre-answer specialist questions",
+   "Return specialist output as the user-visible result",
+   "Tag the result with [Delegated to: research → {specialist}] in the chat output so the user knows what skill produced it",
+   "Tag the audit log via scripts/routing_transparency_logger.py --action record_delegation",
+   "Search — sequential per sub-question, 1 q/sec, 2–4 queries per source, broad-to-narrow."
+  ],
+  "napomene": "Default entry point for any research request — a hybrid router that classifies the question deterministically and either delegates to a specialist research skill (pulse for trends/sentiment, grants for NIH funding, litreview for academic literature, syllabus for course reading, patent for prior-art + IP landscape, dossier for entity research, deepread for evidence-first reading of supplied documents) or runs its own plan-decompose-multi-source-search-synthesize-cite fallback workflow when no specialist matches. Always surfaces the routing decision so users can override. Use when the user makes | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research/research/skills/research/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "research-finance",
+  "koraci": [
+   "Lay out the program — Fill assets/rd_program_budget_template.md with work-package lines, categories, and per-period amounts.",
+   "Track burn & runway — Run burn_runway_tracker.py --input ledger.json --threshold-months 6. Read runway + milestone verdicts + flags.",
+   "Assemble the review — Combine into a program-finance packet. Every number carries its assumptions; treatment calls carry a named owner.",
+   "\"Is this spend in the research phase or the development phase — and can you evidence technical feasibility?\"",
+   "\"What F&A / indirect rate are you applying, and is it your negotiated NICRA, a de minimis 10%, or an assumption?\"",
+   "\"What's runway in months at current burn, and does it clear the next value-inflection milestone?\"",
+   "\"Is portfolio ROI risk-adjusted (rNPV / probability-of-success weighted) or raw NPV?\"",
+   "\"Who is the named finance / controller owner who signs the capitalize-vs-expense treatment?\""
+  ],
+  "napomene": "Use when managing the money for an internal R&D program or portfolio — building a multi-period program budget with the F&A (indirect) split, tracking burn rate and runway against value-inflection milestones, or routing R&D cost items to a capitalize-vs-expense determination. Every budget output surfaces its assumptions block; capitalize-vs-expense is decision-support only and routes to a named finance owner — it never books an entry or decides accounting treatment. Distinct from finance/financial-analysis (corporate DCF, close, valuation) and research/grants (funding discovery — this manages m | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research-ops/skills/research-finance/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "research-ops-skills",
+  "koraci": [
+   "Highest-confidence lane first → run sub-skill in forked context → digest",
+   "Ask: \"Now run [second lane]? Recommended: yes, because [dependency].\"",
+   "Confirm before chaining.",
+   "User has research authority OR is preparing analysis for someone who does.",
+   "Inputs may be partial — every sub-skill ships a templated sample so the user can see the shape before filling in their own."
+  ],
+  "napomene": "Use when planning, funding, scoping, or synthesizing enterprise research across workstreams — clinical study design, R&D program finance, market sizing/surveys, or product/user research. Triggers on \"design this clinical study\", \"what sample size\", \"R&D budget\", \"burn rate\", \"capitalize or expense\", \"TAM SAM SOM\", \"market sizing\", \"survey design\", \"segment the market\", \"plan user interviews\", \"usability test\", \"synthesize research insights\". Forks context to route to one of four Research-Operations sub-skills (clinical-research, research-finance, market-research, product-research) and returns  | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research-ops/skills/research-ops-skills/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "syllabus",
+  "koraci": [
+   "Course title + instructor + term",
+   "Topic list (lecture titles, week-by-week breakdown, etc.)",
+   "Learning outcomes (if explicit; if missing, infer 3-5 from description)",
+   "Construct query: \"{topic-keywords} {applied-domain-angle}\" + year_min from Q3",
+   "Submit to Consensus (sequential, 1 q/sec gap enforced by citation_tracker)",
+   "Receive results",
+   "(If thin) submit one fallback query without applied-domain angle",
+   "Select 1-3 papers per section (15-25 total across all sections)"
+  ],
+  "napomene": "Generates a curated supplementary reading list from any course syllabus using Consensus academic search. Grill-me intake (syllabus input format + course audience + year range) plus a grouping forcing-options checkpoint before any search runs — so the reading list matches the course's level and recency need. Parses the syllabus to extract topics and learning outcomes, searches Consensus for recent peer-reviewed papers per topic, and produces a professionally formatted .docx with clickable Consensus links, plain-language summaries calibrated to audience level, and Bloom-higher-order discussion q | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl research/syllabus/skills/syllabus/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ }
+]

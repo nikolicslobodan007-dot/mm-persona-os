@@ -1,0 +1,859 @@
+[
+ {
+  "ime": "agent-protocol",
+  "koraci": [
+   "Flag the conflict explicitly",
+   "State the resolution approach",
+   "Never silently pick one — surface the conflict to the user.",
+   "Founder approves → log decision (Layer 2), assign actions",
+   "Founder modifies → update analysis with corrections, re-verify changed parts",
+   "Founder rejects → log rejection with DO_NOT_RESURFACE, understand WHY",
+   "Founder asks follow-up → deepen analysis on specific point, re-verify",
+   "[Action] → [Owner] → [Deadline]"
+  ],
+  "napomene": "Inter-agent communication protocol for C-suite agent teams. Defines invocation syntax, loop prevention, isolation rules, and response formats. Use when C-suite agents need to query each other, coordinate cross-functional analysis, or run board meetings with multiple agent roles. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/agent-protocol/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "arquiteto-de-empresa",
+  "koraci": [
+   "Bundle = directory of .md. Each file is one concept; its identity is the path without .md.",
+   "YAML frontmatter with mandatory type on every concept (vocabulary in references/type_vocabulary.md).",
+   "Relations = markdown links in the body (Identity), forming a graph — not arrays in the frontmatter.",
+   "index.md and log.md are reserved (folder listing / decision history) and do not carry type.",
+   "Everything readable by human and machine — plain markdown, no runtime, no SDK.",
+   "Interview before building. Never generate a concept without having asked the phase's questions.",
+   "One phase at a time. Complete and validate before advancing.",
+   "Lean questions. At most 3 to 5 per block, numbered. Re-ask only what was missing."
+  ],
+  "napomene": "Company Architect: builds a business from scratch as an OKF (Open Knowledge Format) bundle — a tree of version-controllable .md files with frontmatter type, links forming a graph, and reserved index.md/log.md, readable by humans and agents. Guides the founder through a 12-phase interview (foundation, strategy, market, financial, sales, marketing, product, operations, tech, people, legal, governance), one phase at a time, few questions per block, and generates the concepts as conformant markdown. Trigger when the user wants to create, structure, or document an entire company in folders and .md  | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/arquiteto-de-empresa/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "board-deck-builder",
+  "koraci": [
+   "Where we said we'd be (last quarter's targets)",
+   "Where we actually are (honest assessment)",
+   "Why the gap exists (one cause per variance, not excuses)",
+   "What we're doing about it (specific, dated actions)",
+   "State it plainly — \"We missed Q3 ARR target by $300K (12% gap)\"",
+   "Own the cause — \"Primary driver was longer-than-expected sales cycle in enterprise segment\"",
+   "Show you understand it — \"We analyzed 8 lost/stalled deals; the pattern is X\"",
+   "Present the fix — \"We've made 3 changes: [specific, dated changes]\""
+  ],
+  "napomene": "Assembles comprehensive board and investor update decks by pulling perspectives from all C-suite roles. Use when preparing board meetings, investor updates, quarterly business reviews, or fundraising narratives. Covers structure, narrative framework, bad news delivery, and common mistakes. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/board-deck-builder/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "board-meeting",
+  "koraci": [
+   "Load ~/.claude/company-context.md",
+   "Load Layer 2 approved decisions from ~/.claude/decisions/approved/ (Layer 2 ONLY — never raw transcripts)",
+   "Reset session state — no bleed from previous conversations",
+   "Present agenda + activated roles → wait for founder confirmation"
+  ],
+  "napomene": "Multi-agent board meeting protocol for strategic decisions. Runs a structured 6-phase deliberation: context loading, independent C-suite contributions (isolated, no cross-pollination), critic analysis, synthesis, founder review, and decision extraction. Use when the user invokes /cs:boardroom, calls a board meeting, or wants structured multi-perspective executive deliberation on a strategic question. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/board-meeting/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "board-prep",
+  "koraci": [
+   "Where we are (honest) — Current state of business, the real number, not the smoothed one",
+   "What we learned — What the data is telling us that we didn't know 90 days ago",
+   "What we got wrong — Name it directly. Don't make them ask.",
+   "What we're doing about it — Specific, dated, owned actions",
+   "What we need from this room — Concrete ask. Not \"support\" — specific introductions, decisions, resources."
+  ],
+  "napomene": "Board meeting preparation for the adversarial scenario, not the friendly one. Forces numbers-cold mastery, anticipates hard questions, builds a narrative that acknowledges weakness without losing the room. Use when preparing for a board meeting, an investor update, fundraising presentation, or any high-stakes adversarial review where every number must live in your head not just on a slide. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/executive-mentor/skills/board-prep/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "boardroom",
+  "koraci": [
+   "CRITICAL — <concern> — Mitigation: <plan>",
+   "HIGH — <concern> — Mitigation: <plan>",
+   "MEDIUM — <concern> — Mitigation: <plan>",
+   "Read brief from ~/.claude/briefs/<file>",
+   "Identify affected roles",
+   "Invoke each cs-* advisor independently (Phase 2)",
+   "Collect positions",
+   "Run cross-examination round (Phase 3)"
+  ],
+  "napomene": "/cs:boardroom <brief> — 6-phase multi-role deliberation across the C-suite with Phase 2 isolation, critic pre-screen, and synthesis. Outputs a board memo. Use when a decision spans multiple executive domains — e.g. a pricing change touching finance, positioning, and product, or a raise-vs-cut runway call. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/boardroom/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "brief",
+  "koraci": [
+   "Option A: <name> — <one-sentence summary>",
+   "Option B: <name> — <one-sentence summary>",
+   "Option C: <name> — <one-sentence summary>",
+   "Load company-context.md via context-engine",
+   "If input is office-hours output, parse the 6 answers",
+   "If input is a raw topic, prompt the founder for the missing pieces",
+   "Draft 2-3 options (never just one — every brief needs a counterfactual)",
+   "Make assumptions and constraints explicit"
+  ],
+  "napomene": "/cs:brief <topic> — Generate a one-page strategy brief from an office-hours intake. First step in the strategic sprint pipeline. Use when a strategic question needs to be framed before boardroom deliberation — e.g. locking options, assumptions, and success criteria for a pricing change or a market-entry decision. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/brief/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "c-level-agents",
+  "koraci": [
+   "Voice is bookended, analysis is neutral.",
+   "Artifacts over chat. Every command produces a Markdown artifact the next command consumes.",
+   "Phase 2 isolation in boardroom. Independent thinking before cross-examination.",
+   "Graceful degradation. /cs:cross-eval falls back to Claude-only.",
+   "No paid dependencies. All Python tools are stdlib-only."
+  ],
+  "napomene": "Founder-mode executive team. 13 cs-* C-suite agents (CFO, CMO, CRO, CPO, COO, CHRO, CISO, GC, CDO, CAIO, CCO, VPE, Chief of Staff) and 21 /cs:* slash commands for forcing-question office hours, multi-role boardroom deliberation, strategic sprint pipeline, and meta routing. Use when the founder needs a virtual executive team, when invoking /cs:* commands, or when orchestrating multi-role decisions. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/c-level-agents/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "c-level-skills",
+  "koraci": [
+   "Start Here",
+   "What's in the Bundle (33 skills)",
+   "Routing Quick Reference",
+   "Related Layers"
+  ],
+  "napomene": "Index and router for the C-level advisory bundle: 33 skills covering 14 C-suite roles, orchestration, cross-cutting capabilities, and culture. Use when exploring what the c-level-advisor bundle contains, deciding which advisor skill fits a question, or finding the entry points (cs-onboard interview, chief-of-staff routing, board-meeting protocol). | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/c-level-skills/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "caio-review",
+  "koraci": [
+   "When to Run",
+   "The Six CAIO Questions",
+   "1. What does this AI need to be good at, and how would you measure it?",
+   "2. What's the SLO on hallucination / error rate, and what's the fallback?",
+   "3. What's the risk tier under EU AI Act, and is conformity assessment required?",
+   "4. API, fine-tune, or build?",
+   "5. What's the 12-month cost trajectory at expected scale?",
+   "6. What role unblocks this — and have we hired prerequisites first?"
+  ],
+  "napomene": "/cs:caio-review <plan> — Eval-demanding Chief AI Officer interrogation of any plan that involves AI: model selection, risk classification, cost economics, or AI hiring. Use when shipping an AI feature without an eval set, choosing between API, fine-tune, and self-hosted, or classifying a use case under the EU AI Act. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/caio-review/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cco-review",
+  "koraci": [
+   "When to Run",
+   "The Six CCO Questions",
+   "1. What's the GROSS retention rate?",
+   "2. What's the #1 reason customers leave?",
+   "3. What's the median time-to-value (TTV) by segment?",
+   "4. Which customer would you fire today?",
+   "5. What's the ARR-per-CSM ratio, and is the model pooled or named?",
+   "6. Is CS in your comp plan, and how is it different from Sales comp?"
+  ],
+  "napomene": "/cs:cco-review <plan> — Retention-obsessed Chief Customer Officer interrogation of any plan that touches customer retention, segmentation, CS team sizing, or CS team hiring. Use when gross retention is slipping, before approving CSM headcount, or when deciding which customer segments to keep or fire. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/cco-review/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cdo-review",
+  "koraci": [
+   "When to Run",
+   "The Six CDO Questions",
+   "1. What decision does this data drive?",
+   "2. What's the consent provenance for every source?",
+   "3. Who consumes this internally — and how many distinct functional domains?",
+   "4. What's the M&A diligence impact?",
+   "6. What role unblocks this — and is it the right next hire?",
+   "Output Format"
+  ],
+  "napomene": "/cs:cdo-review <plan> — Decision-driven Chief Data Officer interrogation of any plan that touches training data, data architecture, data productization, or data team hiring. Use when validating training-data rights before model work, choosing warehouse vs lakehouse vs mesh, or valuing data assets for productization or M&A. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/cdo-review/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "ceo-advisor",
+  "koraci": [
+   "Keep the lights on (operations, must-haves)",
+   "Protect the core (retention, quality, security)",
+   "Grow the core (expansion of what works)",
+   "Fund new bets (innovation, new products/markets)",
+   "Customers (they pay the bills)",
+   "Team (they build the product)",
+   "Board/Investors (they fund the mission)",
+   "Partners (they extend your reach)"
+  ],
+  "napomene": "Executive leadership guidance for strategic decision-making, organizational development, and stakeholder management. Use when planning strategy, preparing board presentations, managing investors, developing organizational culture, making executive decisions, fundraising, or when user mentions CEO, strategic planning, board meetings, investor updates, organizational leadership, or executive strategy. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/ceo-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cfo-advisor",
+  "koraci": [
+   "Keywords",
+   "Key Questions (ask these first)",
+   "Core Responsibilities",
+   "CFO Metrics Dashboard",
+   "Red Flags",
+   "Integration with Other C-Suite Roles",
+   "Proactive Triggers",
+   "Output Artifacts"
+  ],
+  "napomene": "Financial leadership for startups and scaling companies. Financial modeling, unit economics, fundraising strategy, cash management, and board financial packages. Use when building financial models, analyzing unit economics, planning fundraising, managing cash runway, preparing board materials, or when user mentions CFO, burn rate, runway, fundraising, unit economics, LTV, CAC, term sheets, or financial strategy. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/cfo-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cfo-review",
+  "koraci": [
+   "Run the numbers",
+   "Answer all six questions with numbers, not adjectives.",
+   "Apply the verdict"
+  ],
+  "napomene": "/cs:cfo-review <plan> — Numerate-skeptic interrogation of any plan that touches money. Unit economics, runway, dilution, capital allocation. Use when a plan commits meaningful spend — e.g. a hiring wave, a fundraise decision, or a new channel budget. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/cfo-review/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "challenge",
+  "koraci": [
+   "[Assumption] — Confidence: [H/M/L/?] — Impact if wrong: [Critical/High/Medium/Low]",
+   "[Specific validation to do before proceeding]",
+   "[Alternative approach to consider]",
+   "[Contingency to build into the plan]"
+  ],
+  "napomene": "Pre-mortem plan analysis. Imagine the plan failed 12 months from now and work backwards to find the weaknesses. Surfaces assumptions, dependencies, and execution risks before committing resources. Use when before significant resource commitment, before presenting to a board or investors, when feedback has been one-sidedly positive, or when there is pressure to move fast and figure it out later. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/executive-mentor/skills/challenge/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "change-management",
+  "koraci": [
+   "Week -2: Announce the why + go-live date",
+   "Week -1: Training sessions available",
+   "Week 0 (go-live): Launch + point person available",
+   "Week 2: Adoption check-in (who's using it? Who isn't?)",
+   "Week 4: Feedback collection + public wins",
+   "Week 8: Old system deprecated",
+   "Day 0: Announce the change with the \"why\" — in person or synchronous video",
+   "Day 1: 1:1s with most affected team members by their manager"
+  ],
+  "napomene": "Framework for rolling out organizational changes without chaos. Covers the ADKAR model adapted for startups, communication templates, resistance patterns, and change fatigue management. Handles process changes, org restructures, strategy pivots, and culture changes. Use when announcing a reorg, switching tools, pivoting strategy, killing a product, changing leadership, or when user mentions change management, change rollout, managing resistance, org change, reorg, or pivot communication. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/change-management/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "chief-ai-officer-advisor",
+  "koraci": [
+   "Should we use an API, fine-tune, or build our own? — model build-vs-buy with 3-year TCO",
+   "Is this AI use case high-risk under regulation, and how do we govern it? — EU AI Act + NIST AI RMF + US state patchwork",
+   "When do we switch from API to self-hosted, and at what cost? — token economics with breakeven analysis",
+   "What AI role do we hire next? — stage-to-role map (AI engineer ≠ ML engineer ≠ research scientist)",
+   "List top 5 AI capabilities the product needs in 12 months",
+   "Map each capability to the role that ships it (see ai_team_org_evolution.md)",
+   "Sequence hires (one role at a time, ramp before next)",
+   "Cross-check with cs-chro-advisor on comp + leveling"
+  ],
+  "napomene": "Chief AI Officer advisory for startups: model build-vs-buy decisions (API vs fine-tune vs in-house), AI risk classification under EU AI Act + US state patchwork, AI cost economics (API-to-self-hosted breakeven), and AI team org evolution. Use when deciding whether to call an API or fine-tune, classifying AI use cases for regulatory risk, calculating when self-hosting pays off, sequencing AI hires, or when user mentions CAIO, AI strategy, model selection, foundation model, fine-tuning, EU AI Act, NIST AI RMF, AI governance, model risk, or AI economics. Strategic only — does not duplicate engine | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/chief-ai-officer-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "chief-customer-officer-advisor",
+  "koraci": [
+   "How do we segment customers for differential investment? — tier design + ICP fit scoring + investment-per-segment math",
+   "What's the CS team's coverage model — and when do we go pooled vs named? — coverage ratio calculator + transition thresholds",
+   "What CS role do we hire next? — stage-to-role map (CS ≠ Support ≠ AM ≠ Implementation)",
+   "List top 5 customer outcomes the company is failing to deliver",
+   "Map each outcome to the role that unblocks it (CSM / AM / IM / Support / CS Ops)",
+   "Sequence hires; respect prerequisite order",
+   "Cross-check with cs-chro-advisor"
+  ],
+  "napomene": "Chief Customer Officer advisory for startups: retention decomposition (gross retention vs NRR honesty, churn root-cause taxonomy), customer segmentation strategy (differential investment across tiers + ICP fit scoring), CS team coverage model (pooled vs named CSM thresholds + ratio math), and CS team org evolution (CS vs Support vs AM distinctions). Use when designing retention strategy, segmenting customers for differential investment, sizing CS team, or sequencing CS hires. Strategic only — does not duplicate engineering/business-growth tactical skills. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/chief-customer-officer-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "chief-data-officer-advisor",
+  "koraci": [
+   "Can we train our model on this data? — origin × consent × use-case matrix",
+   "Warehouse, lakehouse, or mesh — and what do we build vs buy? — stage-driven architecture",
+   "What is our customer data worth? — strategic value + M&A multiplier + productization paths",
+   "What data role do we hire next? — stage-to-role map, centralize-vs-embed trigger",
+   "Inventory the corpus: size, freshness, exclusivity, customer overlap, contractual restrictions",
+   "Run data_asset_valuator.py",
+   "Run the M&A diligence prep checklist in customer_data_as_asset.md",
+   "Surface contractual carve-outs to cs-general-counsel-advisor for re-papering plan"
+  ],
+  "napomene": "Chief Data Officer advisory for startups: AI training data rights and consent provenance, data product strategy (warehouse vs lakehouse vs mesh, build-vs-buy), B2B customer-data-as-asset valuation and M&A readiness, data team org evolution. Use when deciding whether to train models on customer data, choosing data architecture, valuing data for fundraising or M&A, sequencing data hires, or when user mentions CDO, chief data officer, data strategy, data mesh, lakehouse, training data, data product, data monetization, or customer data asset. NOT a tactical data engineering skill — strategic decis | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/chief-data-officer-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "chief-of-staff",
+  "koraci": [
+   "Load company context via context-engine skill",
+   "Score decision complexity",
+   "Route to role(s) or trigger board meeting",
+   "Synthesize output",
+   "Log decision if reached",
+   "Chief of Staff cannot invoke itself.",
+   "Maximum depth: 2. Chief of Staff → Role → stop.",
+   "Circular blocking. A→B→A is blocked. Log it."
+  ],
+  "napomene": "C-suite orchestration layer. Routes founder questions to the right advisor role(s), triggers multi-role board meetings for complex decisions, synthesizes outputs, and tracks decisions. Every C-suite interaction starts here. Loads company context automatically. Use when a founder question needs routing to the right advisor — e.g. 'should we raise now or cut burn?' — or when a multi-domain decision needs a board meeting convened. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/chief-of-staff/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "chro-advisor",
+  "koraci": [
+   "Keywords",
+   "Core Responsibilities",
+   "1. People Strategy & Headcount Planning",
+   "2. Compensation Design",
+   "3. Org Design",
+   "4. Retention & Performance",
+   "5. Culture & Engagement",
+   "Key Questions a CHRO Asks"
+  ],
+  "napomene": "People leadership for scaling companies. Hiring strategy, compensation design, org structure, culture, and retention. Use when building hiring plans, designing comp frameworks, restructuring teams, managing performance, building culture, or when user mentions CHRO, HR, people strategy, talent, headcount, compensation, org design, retention, or performance management. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/chro-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "ciso-advisor",
+  "koraci": [
+   "Keywords",
+   "Core Responsibilities",
+   "1. Risk Quantification",
+   "2. Compliance Roadmap",
+   "3. Security Architecture Strategy",
+   "4. Incident Response Leadership",
+   "5. Security Budget Justification",
+   "6. Vendor Security Assessment"
+  ],
+  "napomene": "Security leadership for growth-stage companies. Risk quantification in dollars, compliance roadmap (SOC 2/ISO 27001/HIPAA/GDPR), security architecture strategy, incident response leadership, and board-level security reporting. Use when building security programs, justifying security budget, selecting compliance frameworks, managing incidents, assessing vendor risk, or when user mentions CISO, security strategy, compliance roadmap, zero trust, or board security reporting. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/ciso-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "ciso-review",
+  "koraci": [
+   "When to Run",
+   "The Six CISO Questions",
+   "1. Threat Model",
+   "2. Blast Radius",
+   "3. Detection",
+   "4. Response",
+   "5. Regulatory Window",
+   "6. Vendor & Supply Chain"
+  ],
+  "napomene": "/cs:ciso-review <plan> — Risk-paranoid interrogation of any plan that touches data, compliance, or production access. Use when launching features that handle customer data, before a SOC 2 / ISO audit, or after any incident or near-miss. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/ciso-review/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cmo-advisor",
+  "koraci": [
+   "Who are we for? — ICP, positioning, category",
+   "Why do they choose us? — Differentiation, messaging, brand",
+   "How do they find us? — Growth model, channel mix, demand gen",
+   "Is it working? — CAC, LTV:CAC, pipeline contribution, payback period"
+  ],
+  "napomene": "Marketing leadership for scaling companies. Brand positioning, growth model design, marketing budget allocation, and marketing org design. Use when designing brand strategy, selecting growth models (PLG vs sales-led vs community-led), allocating marketing budgets, building marketing teams, or when user mentions CMO, brand strategy, growth model, CAC, LTV, channel mix, or marketing ROI. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/cmo-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cmo-review",
+  "koraci": [
+   "Run the models",
+   "Answer the six questions in writing.",
+   "Apply the verdict"
+  ],
+  "napomene": "/cs:cmo-review <plan> — Narrative-first interrogation of positioning, ICP, message house, and channel mix. Use when launching a campaign or repositioning, or when CAC is rising and the one-sentence positioning test fails. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/cmo-review/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "company-os",
+  "koraci": [
+   "List all functions the company performs",
+   "Assign one owner per function — no exceptions",
+   "Identify gaps (functions nobody owns) and overlaps (functions two people think they own)",
+   "Publish it. Update it when something changes.",
+   "Good news (5 min) — personal + business",
+   "Scorecard review (5 min) — flag red items only",
+   "Rock review (5 min) — on/off track for each rock",
+   "Customer/employee headlines (5 min)"
+  ],
+  "napomene": "The meta-framework for how a company runs — the connective tissue between all C-suite roles. Covers operating system selection (EOS, Scaling Up, OKR-native, hybrid), accountability charts, scorecards, meeting pulse, issue resolution, and 90-day rocks. Use when setting up company operations, selecting a management framework, designing meeting rhythms, building accountability systems, implementing OKRs, or when user mentions EOS, Scaling Up, operating system, L10 meetings, rocks, scorecard, accountability chart, or quarterly planning. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/company-os/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "competitive-intel",
+  "koraci": [
+   "\"Walk me through your evaluation process\"",
+   "\"Who else were you considering?\"",
+   "\"What were the top 3 criteria in your decision?\"",
+   "\"Where did [our product] fall short?\"",
+   "\"What was the deciding factor?\"",
+   "\"What would have changed your decision?\""
+  ],
+  "napomene": "Systematic competitor tracking that feeds CMO positioning, CRO battlecards, and CPO roadmap decisions. Use when analyzing competitors, building sales battlecards, tracking market moves, positioning against alternatives, or when user mentions competitive intelligence, competitive analysis, competitor research, battlecards, win/loss, or market positioning. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/competitive-intel/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "context-engine",
+  "koraci": [
+   "Note internally: [CONTEXT UPDATE: {what was learned}]",
+   "At session end: *\"I picked up a few things to add to your context. Want me to update the file?\"*",
+   "If yes: append to the relevant dimension, update timestamp."
+  ],
+  "napomene": "Loads and manages company context for all C-suite advisor skills. Reads ~/.claude/company-context.md, detects stale context (>90 days), enriches context during conversations, and enforces privacy/anonymization rules before external API calls. Use when starting any C-suite advisor session, when context looks stale or missing, or before sending company data to an external service. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/context-engine/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "coo-advisor",
+  "koraci": [
+   "Keywords",
+   "Core Responsibilities",
+   "1. Strategy Execution",
+   "2. Process Design",
+   "3. Operational Cadence",
+   "4. Scaling Operations",
+   "5. Cross-Functional Coordination",
+   "Key Questions a COO Asks"
+  ],
+  "napomene": "Operations leadership for scaling companies. Process design, OKR execution, operational cadence, and scaling playbooks. Use when designing operations, setting up OKRs, building processes, scaling teams, analyzing bottlenecks, planning operational cadence, or when user mentions COO, operations, process improvement, OKRs, scaling, operational efficiency, or execution. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/coo-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cpo-advisor",
+  "koraci": [
+   "Keywords",
+   "Score Your Product-Market Fit",
+   "Analyze Your Product Portfolio",
+   "The CPO's Core Responsibilities",
+   "Diagnostic Questions",
+   "Product Metrics Hierarchy",
+   "The CPO Dashboard",
+   "Investment Postures"
+  ],
+  "napomene": "Product leadership for scaling companies. Product vision, portfolio strategy, product-market fit, and product org design. Use when setting product vision, managing a product portfolio, measuring PMF, designing product teams, prioritizing at the portfolio level, reporting to the board on product, or when user mentions CPO, product strategy, product-market fit, product organization, portfolio prioritization, or roadmap strategy. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/cpo-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cpo-review",
+  "koraci": [
+   "Run the analyses",
+   "Answer the six questions.",
+   "Apply the verdict."
+  ],
+  "napomene": "/cs:cpo-review <plan> — JTBD-driven interrogation of product roadmap, PMF signal, and portfolio focus. Use when committing a quarter's roadmap, deciding whether to kill a feature, or claiming PMF without a retention curve. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/cpo-review/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cro-advisor",
+  "koraci": [
+   "Keywords",
+   "Revenue Forecasting",
+   "Churn & Retention Analysis",
+   "Diagnostic Questions",
+   "Core Responsibilities (Overview)",
+   "Revenue Metrics",
+   "Board-Level (monthly/quarterly)",
+   "Revenue Waterfall"
+  ],
+  "napomene": "Revenue leadership for B2B SaaS companies. Revenue forecasting, sales model design, pricing strategy, net revenue retention, and sales team scaling. Use when designing the revenue engine, setting quotas, modeling NRR, evaluating pricing, building board forecasts, or when user mentions CRO, chief revenue officer, revenue strategy, sales model, ARR growth, NRR, expansion revenue, churn, pricing strategy, or sales capacity. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/cro-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cro-review",
+  "koraci": [
+   "When to Run",
+   "The Six CRO Questions",
+   "1. Pipeline Coverage",
+   "2. Win Rate Trajectory",
+   "3. NRR Decomposition",
+   "4. Ramp Time",
+   "5. Discount Discipline",
+   "6. Pipeline Source Mix"
+  ],
+  "napomene": "/cs:cro-review <plan> — Pipeline-paranoid interrogation of revenue, win rate, NRR, and ramp time. Use when the forecast misses pipeline coverage, win rates drop, or before scaling the sales team. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/cro-review/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cross-eval",
+  "koraci": [
+   "Claude (primary, always available) — the boardroom's native voice",
+   "Codex / OpenAI (if OPENAI_API_KEY or codex CLI available)",
+   "Gemini (if GEMINI_API_KEY or gemini CLI available)",
+   "Read the memo / brief",
+   "Probe environment for available model CLIs / API keys",
+   "For each available model",
+   "Collect three independent reviews",
+   "Reconcile: where do they agree? Where do they diverge?"
+  ],
+  "napomene": "/cs:cross-eval <memo> — Multi-model consensus on a board memo or strategy brief. Claude + Codex + Gemini cross-review with graceful degradation. Use when a high-stakes memo needs an independent sanity check before the boardroom — e.g. a bet-the-company pivot or fundraise terms. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/cross-eval/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cs-onboard",
+  "koraci": [
+   "Identity: same mission or shifted?",
+   "Scale: team, revenue, runway now?",
+   "Founder: role or what's stretching you?",
+   "Team: any leadership changes?",
+   "Market: any competitive surprises?",
+   "Challenges: #1 problem now vs 90 days ago?",
+   "Goals: still on track for 12-month target?"
+  ],
+  "napomene": "Founder onboarding interview that captures company context across 7 dimensions. Invoke with /cs:setup for initial interview or /cs:update for quarterly refresh. Generates ~/.claude/company-context.md used by all C-suite advisor skills. Use when setting up the C-suite advisors for the first time, or when company context is missing or more than 90 days old — e.g. after a fundraise or pivot. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/cs-onboard/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cto-advisor",
+  "koraci": [
+   "Keywords",
+   "Core Responsibilities",
+   "1. Technology Strategy",
+   "2. Engineering Team Leadership",
+   "3. Architecture Governance",
+   "4. Vendor & Platform Management",
+   "5. Crisis Management",
+   "Workflows"
+  ],
+  "napomene": "Technical leadership guidance for engineering teams, architecture decisions, and technology strategy. Use when assessing technical debt, scaling engineering teams, evaluating technologies, making architecture decisions, establishing engineering metrics, or when user mentions CTO, tech debt, technical debt, team scaling, architecture decisions, technology evaluation, engineering metrics, DORA metrics, or technology strategy. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/cto-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "cto-review",
+  "koraci": [
+   "Run the tech debt analyzer + team scaling calculator",
+   "Define the scaling-cliff hypothesis explicitly",
+   "Cross-check with cs-ciso-advisor for security implications",
+   "Apply the verdict"
+  ],
+  "napomene": "/cs:cto-review <plan> — Architecture and scaling interrogation. Tech debt, scaling cliffs, team scaling, build-vs-buy. Use when committing to an architecture, planning for 10x load, or weighing a rebuild against a vendor. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/cto-review/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "culture-architect",
+  "koraci": [
+   "Who we are (mission + context)",
+   "Who thrives here (specific behaviors, not adjectives)",
+   "Who doesn't thrive here (honest — this is the useful part)",
+   "How we make decisions",
+   "How we communicate",
+   "How we grow people",
+   "What we expect of leaders",
+   "Psychological safety — \"Can I raise a concern without fear?\""
+  ],
+  "napomene": "Build, measure, and evolve company culture as operational behavior — not wall posters. Covers mission/vision/values workshops, values-to-behaviors translation, culture code creation, culture health assessment, and cultural rituals by stage. Use when building company values, assessing culture health, designing cultural rituals, creating culture codes, handling culture clashes, or when user mentions culture, values, culture debt, founder culture, or culture code. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/culture-architect/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "decide",
+  "koraci": [
+   "Approved decisions — only the founder-signed memos. Stored under ~/.claude/decisions/approved/. Feeds into future /cs:office-hours and /cs:founder-mode calls.",
+   "Read the memo path",
+   "Verify it has founder approval (status: APPROVED)",
+   "Extract structured decision record",
+   "Append to ~/.claude/decisions/approved/<YYYY-MM-DD>-<slug>.md",
+   "Update the raw transcript pointer",
+   "If llm-wiki bridge configured, write to vault (~/company-vault/10-decisions/)",
+   "Schedule auto-revisit (90 days)"
+  ],
+  "napomene": "/cs:decide <memo> — Log a decision to two-layer memory via decision-logger. Approved memo becomes durable; raw transcripts kept for reference. Use when the founder has approved a boardroom memo and the decision must become durable company memory — e.g. right after /cs:boardroom concludes. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/decide/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "decision-logger",
+  "koraci": [
+   "DO_NOT_RESURFACE violations — new decision matches a rejected proposal",
+   "Topic contradictions — two active decisions on same topic with different conclusions",
+   "Owner conflicts — same action assigned to different people in different decisions",
+   "Founder approves synthesis",
+   "Write Layer 1 raw transcript → ~/.claude/decisions/raw/YYYY-MM-DD-<slug>.md",
+   "Check conflicts against ~/.claude/decisions/approved/decisions.md",
+   "Surface conflicts → wait for founder resolution",
+   "Write the approved record to ~/.claude/decisions/approved/YYYY-MM-DD-<slug>.md and append to the index decisions.md"
+  ],
+  "napomene": "Two-layer memory architecture for board meeting decisions. Manages raw transcripts (Layer 1) and approved decisions (Layer 2). Use when logging decisions after a board meeting, reviewing past decisions with /cs:decisions, or checking overdue action items with /cs:review. Invoked automatically by the board-meeting skill after Phase 5 founder approval. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/decision-logger/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "execute",
+  "koraci": [
+   "Read the decision record",
+   "Decompose the chosen option into 3-6 workstreams",
+   "Name a DRI for each workstream",
+   "Reverse-engineer 12 weekly milestones from the checkpoint date",
+   "Set the cadence (weekly + bi-weekly + 30/60/90 checkpoints)",
+   "Build the risk register (cross-reference original Phase 4 devil's-advocate concerns)",
+   "Save and notify DRIs"
+  ],
+  "napomene": "/cs:execute <decision> — Generate a 90-day execution plan with weekly milestones, DRIs, and check-in cadence from an approved decision. Use when a logged decision needs to become an operating plan — e.g. turning an approved market-entry call into weekly milestones with DRIs. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/execute/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "executive-mentor",
+  "koraci": [
+   "The Difference",
+   "Keywords",
+   "Commands",
+   "When to Use This",
+   "Commands in Detail",
+   "/em:challenge <plan>",
+   "/em:board-prep <agenda>",
+   "/em:hard-call <decision>"
+  ],
+  "napomene": "Adversarial thinking partner for founders and executives. Stress-tests plans, prepares for brutal board meetings, dissects decisions with no good options, and forces honest post-mortems. Use when you need someone to find the holes before the board does, make a decision you've been avoiding, or understand what actually went wrong. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/executive-mentor/skills/executive-mentor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "founder-coach",
+  "koraci": [
+   "\"Nobody does it as well as I do\" (often true short-term, fatal long-term)",
+   "\"It takes longer to explain than to do it\" (true once; not true the 10th time)",
+   "\"I lose control if I don't do it myself\" (control is an illusion at scale)",
+   "\"If it fails, it's my fault\" (it's your fault if you never let anyone else try)",
+   "\"Do exactly what I tell you\" — not delegation, instruction",
+   "\"Research this and report back\" — information gathering",
+   "\"Propose a solution and I'll decide\" — thinking delegation",
+   "\"Decide and tell me what you decided\" — decision delegation with review"
+  ],
+  "napomene": "Personal leadership development for founders and first-time CEOs. Covers founder archetype identification, delegation frameworks, energy management, CEO calendar audits, leadership style evolution, blind spot identification, imposter syndrome, founder mental health, and succession planning. Use when a founder feels like the bottleneck, struggles to delegate, is burning out, transitioning from IC to executive, managing a board, or when user mentions founder mode, CEO growth, leadership development, delegation, burnout, or imposter syndrome. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/founder-coach/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "founder-mode",
+  "koraci": [
+   "Parse the question for role signals",
+   "If exactly one role: invoke that cs-* agent directly",
+   "If 2+ roles: build a brief via /cs:brief and trigger /cs:boardroom",
+   "If ambiguous / no signal match: trigger /cs:office-hours to force the founder to sharpen",
+   "Log the routing decision (raw layer) via decision-logger"
+  ],
+  "napomene": "/cs:founder-mode <question> — Auto-routes any founder question to the right C-role advisor or to /cs:boardroom for multi-role topics. The single-command entry point. Use when a founder asks any strategic question without knowing which advisor or command fits — e.g. 'runway pressure' routes to the CFO, 'gross retention dropped' routes to the CCO. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/founder-mode/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "freeze",
+  "koraci": [
+   "Read the decision record",
+   "Validate it has APPROVED status",
+   "Apply freeze: write freeze_until: YYYY-MM-DD to the decision record",
+   "Add to active-freezes index at ~/.claude/freezes/active.md",
+   "cs-chief-of-staff router now refuses to re-route this topic to the boardroom until"
+  ],
+  "napomene": "/cs:freeze <decision> <days> — Lock a strategic decision for a cooldown period to prevent impulse reversal. Mirrors gstack's safety primitives for the business layer. Use when an irreversible decision was made under pressure — e.g. a layoff plan or multi-year contract — and deserves a cooling-off lock before execution. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/freeze/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "gc-review",
+  "koraci": [
+   "Read the contract / term sheet end to end",
+   "Run the six questions",
+   "Identify the top-3 issues that need outside counsel review",
+   "Apply the verdict"
+  ],
+  "napomene": "/cs:gc-review <plan> — General Counsel interrogation of contracts, IP, regulatory, term sheets, and employment-law surface. Use when reviewing a term sheet before signing, redlining a customer MSA, or checking IP assignment and regulatory exposure on a new product. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/gc-review/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "general-counsel-advisor",
+  "koraci": [
+   "Save the contract as plain text",
+   "Run contract_risk_scanner.py path/to/contract.txt",
+   "For each HIGH risk finding, draft a counter-proposal",
+   "Bring the redline + counter-proposals to outside counsel",
+   "Log the decision via /cs:decide",
+   "Save the term sheet as a JSON file matching the schema in term_sheet_analyzer.py --help",
+   "Run python scripts/term_sheet_analyzer.py path/to/term_sheet.json",
+   "Review the founder-friendliness score and per-clause flags"
+  ],
+  "napomene": "General Counsel advisory for startups: contract review (MSA, SaaS, NDA, DPA, employment), IP strategy, term sheet decoding, and regulatory landscape mapping. Use when reviewing any contract or term sheet, deciding when to engage outside counsel, defining IP strategy, evaluating regulatory exposure (HIPAA, GDPR, FDA, fintech), or when user mentions general counsel, GC, legal review, contract risk, term sheet, IP assignment, or regulatory exposure. NOT a substitute for licensed counsel — surfaces questions to bring to qualified attorneys. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/general-counsel-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "hard-call",
+  "koraci": [
+   "Real people are affected — someone loses a job, a relationship ends, a team is hurt",
+   "You've been avoiding the decision — which means the problem is already worse than it was",
+   "Irreversibility — unlike most business decisions, you can't undo this easily",
+   "You have skin in the game — your judgment about the right call is clouded by your feelings about it"
+  ],
+  "napomene": "/em:hard-call — Framework for decisions with no good options. Use when every option is painful and a structured 10/10/10 + regret-minimization pass is needed — e.g. choosing between a layoff and a down round, or killing a beloved product line. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/executive-mentor/skills/hard-call/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "internal-narrative",
+  "koraci": [
+   "CEO or relevant leader sends an internal message",
+   "Acknowledge what happened factually",
+   "State what you know and what you don't know yet",
+   "Tell people what you're doing about it",
+   "Tell people what they should do if they're asked about it",
+   "External statement (press, social) only if the event is public",
+   "Consistent with the internal message — same facts, audience-appropriate framing",
+   "Legal review if any claims or liability involved"
+  ],
+  "napomene": "Build and maintain one coherent company story across all audiences — employees, investors, customers, candidates, and partners. Detects narrative contradictions and ensures the same truth is framed for each audience's needs. Use when preparing investor updates, all-hands presentations, board communications, recruiting narratives, crisis communications, or when user mentions company narrative, messaging consistency, storytelling, all-hands, investor update, or crisis communication. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/internal-narrative/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "intl-expansion",
+  "koraci": [
+   "Keywords",
+   "Market Selection Framework",
+   "Scoring Matrix",
+   "Entry Modes",
+   "Localization Checklist",
+   "Go-to-Market",
+   "Operations",
+   "Key Questions"
+  ],
+  "napomene": "International market expansion strategy. Market selection, entry modes, localization, regulatory compliance, and go-to-market by region. Use when expanding to new countries, evaluating international markets, planning localization, or building regional teams. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/intl-expansion/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "ma-playbook",
+  "koraci": [
+   "Clean up financials (audited if possible)",
+   "Document all IP and contracts",
+   "Reduce customer concentration",
+   "Lock up key employees",
+   "Build the data room",
+   "Engage an M&A advisor",
+   "Valuation math → cfo-advisor tools for the quantitative model; this playbook stays qualitative."
+  ],
+  "napomene": "M&A strategy for acquiring companies or being acquired. Due diligence, valuation, integration, and deal structure. Use when evaluating acquisitions, preparing for acquisition, M&A due diligence, integration planning, or deal negotiation. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/ma-playbook/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "office-hours",
+  "koraci": [
+   "When to Run",
+   "The Six Questions",
+   "1. Problem",
+   "2. Customer",
+   "3. Distribution",
+   "4. Defensibility",
+   "5. Capital",
+   "6. Founder Fit"
+  ],
+  "napomene": "/cs:office-hours <topic> — YC-style 6-question founder interrogation before any advice. Forces clarity on problem, customer, distribution, defensibility, capital, and founder fit. Use when a founder question is too vague to route — e.g. 'should we grow faster?' — or before drafting a strategy brief. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/office-hours/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "onboard",
+  "koraci": [
+   "Company name and one-sentence pitch.",
+   "Stage: pre-seed / seed / Series A / Series B / Series C+ / public",
+   "Headcount: total, by function (eng / product / GTM / ops / G&A)",
+   "Geographic distribution: HQ + remote split, key countries",
+   "Revenue model: SaaS subscription / usage / transaction / marketplace / hardware / services",
+   "ICP: name one real customer and describe what they have in common with others",
+   "ACV: median and range; deal count last 12 months",
+   "Growth rate: ARR YoY; if pre-revenue, leading metric (users, MAU, etc.)"
+  ],
+  "napomene": "/cs:onboard — Founder interview that populates ~/.claude/company-context.md using the canonical 7-dimension cs-onboard schema. The first command to run when starting with c-level-agents. Use when setting up the virtual C-suite for a new company, or when advisors lack company context — e.g. before a first /cs:boardroom or after a fundraise changes the numbers. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/onboard/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "org-health-diagnostic",
+  "koraci": [
+   "Keywords",
+   "The 8 Dimensions",
+   "1. 💰 Financial Health (CFO)",
+   "2. 📈 Revenue Health (CRO)",
+   "3. 🚀 Product Health (CPO)",
+   "4. ⚙️ Engineering Health (CTO)",
+   "5. 👥 People Health (CHRO)",
+   "6. 🔄 Operational Health (COO)"
+  ],
+  "napomene": "Cross-functional organizational health check combining signals from all C-suite roles. Scores 8 dimensions on a traffic-light scale with drill-down recommendations. Use when assessing overall company health, preparing for board reviews, identifying at-risk functions, or when user mentions org health, health check, or health dashboard. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/org-health-diagnostic/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "post-mortem",
+  "koraci": [
+   "Pipeline Position",
+   "When to Run",
+   "Output: Post-Mortem Record",
+   "Outcome Scoring (against pre-committed criteria)",
+   "What We Got Right",
+   "What We Got Wrong",
+   "Preserved Dissent — Revisited",
+   "Assumption Audit"
+  ],
+  "napomene": "/cs:post-mortem <decision> — Honest retrospective on an executed decision, scored against original assumptions and dissent. Closes the strategic sprint loop. Use when a decision hits its 90-day review checkpoint or its kill criteria trigger — e.g. scoring last quarter's pricing change against its pre-committed success metrics. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/post-mortem/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "postmortem",
+  "koraci": [
+   "[Why did X happen?] → Because [Y]",
+   "[Why did Y happen?] → Because [Z]",
+   "[Why did Z happen?] → Because [A]",
+   "[Why did A happen?] → Because [B]",
+   "[Why did B happen?] → Because [ROOT CAUSE]"
+  ],
+  "napomene": "/em:postmortem — Honest analysis of what went wrong. Use after a failed launch, missed quarter, or bad hire to run a blameless 5-Whys retrospective with a change register — e.g. dissecting why the Q3 release slipped six weeks. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/executive-mentor/skills/postmortem/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "scenario-war-room",
+  "koraci": [
+   "Keywords",
+   "What This Is Not",
+   "Framework: 6-Step Cascade Model",
+   "Step 1: Define Scenario Variables (max 3)",
+   "Step 2: Domain Impact Mapping",
+   "Step 3: Cascade Effect Mapping",
+   "Step 4: Severity Matrix",
+   "Step 5: Trigger Points (Early Warning Signals)"
+  ],
+  "napomene": "Cross-functional what-if modeling for cascading multi-variable scenarios. Unlike single-assumption stress testing, this models compound adversity across all business functions simultaneously. Use when facing complex risk scenarios, strategic decisions with major downside, or when the user asks 'what if X AND Y both happen? | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/scenario-war-room/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "strategic-alignment",
+  "koraci": [
+   "Incentive misalignment: Teams rewarded for local metrics don't optimize for company metrics",
+   "No shared goals: When teams share a goal, they coordinate. When they don't, they drift.",
+   "No shared language: Engineering doesn't understand sales metrics; sales doesn't understand technical debt",
+   "Geography or time zones: Silos accelerate when teams don't interact organically"
+  ],
+  "napomene": "Cascades strategy from boardroom to individual contributor. Detects and fixes misalignment between company goals and team execution. Covers strategy articulation, cascade mapping, orphan goal detection, silo identification, communication gap analysis, and realignment protocols. Use when teams are pulling in different directions, OKRs don't connect, departments optimize locally at company expense, or when user mentions alignment, strategy cascade, silo, conflicting OKRs, or strategy communication. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/strategic-alignment/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "stress-test",
+  "koraci": [
+   "Why Most Assumptions Are Wrong",
+   "The Stress-Test Methodology",
+   "Step 1: Isolate the Assumption",
+   "Step 2: Find the Counter-Evidence",
+   "Step 3: Model the Downside",
+   "Step 4: Calculate Sensitivity",
+   "Step 5: Propose the Hedge",
+   "Stress Test Patterns by Assumption Type"
+  ],
+  "napomene": "/em:stress-test — Business assumption stress testing. Use before betting on a plan whose core assumptions are unvalidated — e.g. stress-testing 'enterprise buyers will tolerate a 6-month pilot' or a hockey-stick revenue model. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/executive-mentor/skills/stress-test/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "vpe-advisor",
+  "koraci": [
+   "Are we delivering at the right throughput? — DORA 4 metrics + bottleneck identification (where work waits)",
+   "How do we scale the eng hiring funnel? — funnel math + pipeline gap + time-to-fill discipline",
+   "What's our team structure — and when do we add a tech-lead manager? — squad/tribe/chapter design + manager-trigger",
+   "What's our production discipline? — on-call rotation, deployment cadence, postmortem culture (reference-only)",
+   "Inventory: on-call coverage, incident frequency by severity, MTTR trend",
+   "Confirm every customer-facing service has SLOs (pair with engineering/slo-architect/)",
+   "Review last 5 postmortems — are they blameless? Are action items closed?",
+   "Cross-check deployment cadence against DORA verdict"
+  ],
+  "napomene": "VP of Engineering advisory for startups: delivery throughput (DORA 4 metrics + bottleneck identification), engineering hiring funnel (sourcing → screen → onsite → offer conversion + time-to-fill + pipeline gap), engineering team structure (squad/tribe/chapter design + tech-lead manager-trigger thresholds), and production discipline (on-call, deployment cadence, postmortem culture). Use when sprint velocity is dropping, eng hiring is broken, team structure is unclear, or deciding when to add a tech-lead manager. NOT a CTO skill (which owns architecture) — VPE owns delivery operations and how th | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-advisor/skills/vpe-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "vpe-review",
+  "koraci": [
+   "When to Run",
+   "The Six VPE Questions",
+   "1. What's the cycle time, and where does work wait?",
+   "2. What's the DORA performance level on all 4 metrics?",
+   "3. Where is the hiring funnel leaking?",
+   "4. Is the team structure healthy for the headcount?",
+   "5. What's the production discipline maturity?",
+   "6. Are we adding a VPE separately, or is CTO doing both?"
+  ],
+  "napomene": "/cs:vpe-review <plan> — Throughput-first VP of Engineering interrogation of any plan that touches delivery, eng hiring, team structure, or production discipline. Use when cycle time balloons, DORA metrics slide, or before committing to an eng hiring wave or a reorg. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl c-level-agents/skills/vpe-review/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ }
+]

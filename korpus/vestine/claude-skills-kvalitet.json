@@ -1,0 +1,245 @@
+[
+ {
+  "ime": "agent-decision-receipts",
+  "koraci": [
+   "Does this action need a receipt? — side-effecting + consequential + later-provable = yes.",
+   "Mint the receipt — build the action manifest, sign it with the OAO primitive.",
+   "Verify it — recompute the hash, check each signature leg, from the cert alone."
+  ],
+  "napomene": "Mint a tamper-evident, post-quantum-signed receipt for a consequential agent action (deploy, delete, pay, grant-access, model decision) so it can be verified later from the certificate alone. Use when an autonomous agent takes a side-effecting action that may need to be proven later, or when satisfying EU AI Act Article 12 record-keeping. Three decisions: whether an action needs a receipt, minting it, verifying it. Signing is delegated to the open-source OpenAgentOntology package. Not after-the-fact log analysis; not a hosted notary; not a legal opinion. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/agent-decision-receipts/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "capa-officer",
+  "koraci": [
+   "Document trigger event with objective evidence",
+   "Assess significance and determine CAPA necessity",
+   "Form investigation team with relevant expertise",
+   "Collect data and evidence systematically",
+   "Select and apply appropriate RCA methodology",
+   "Identify root cause(s) with supporting evidence",
+   "Develop corrective and preventive actions",
+   "Validation: Root cause explains all symptoms; if eliminated, problem would not recur"
+  ],
+  "napomene": "CAPA system management for medical device QMS. Covers root cause analysis, corrective action planning, effectiveness verification, and CAPA metrics. Use when running CAPA investigations, 5-Why analysis, fishbone diagrams, root cause determination, corrective action tracking, effectiveness verification, or CAPA program optimization. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/capa-officer/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "eu-ai-act-specialist",
+  "koraci": [
+   "What tier is this AI system? — prohibited (Article 5) / high-risk (Article 6 + Annex III) / limited-risk transparency (Article 50) / minimal-risk",
+   "For high-risk systems, what's the conformity assessment route + documentation pack? — Article 43 Module A vs Module H + Annex IV technical documentation",
+   "Per organizational role, what are the obligations? — provider / deployer / importer / distributor / authorized representative matrix per Article 16, 22, 25, 26",
+   "General description of the AI system (intended purpose, identification, version)",
+   "Detailed description of system elements (architecture, training data, validation procedures)",
+   "Information about monitoring, functioning and control",
+   "Description of risk management system (Article 9)",
+   "Description of changes after placing on market"
+  ],
+  "napomene": "EU AI Act (Regulation (EU) 2024/1689) operational compliance for compliance teams. Three Article-level decisions: (1) What's the risk tier of this AI system — prohibited (Art. 5), high-risk (Art. 6 + Annex III), limited-risk (Art. 50), or minimal-risk? (2) For high-risk systems, what's the Article 43 conformity assessment route (Module A internal control vs Module H full QMS + notified body) and what goes in the Annex IV technical documentation? (3) Per organizational role (provider / deployer / importer / distributor / authorized representative), what are the active obligations and deadlines? | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/eu-ai-act-specialist/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "fda-consultant-specialist",
+  "koraci": [
+   "Identify product code and classification",
+   "Search 510(k) database for predicates",
+   "Assess substantial equivalence feasibility",
+   "Prepare Q-Sub questions for FDA",
+   "Schedule Pre-Sub meeting if needed",
+   "Identify: Document nonconformity or potential problem",
+   "Investigate: Perform root cause analysis (5 Whys, Fishbone)",
+   "Plan: Define corrective/preventive actions"
+  ],
+  "napomene": "FDA regulatory consultant for medical device companies. Provides 510(k)/PMA/De Novo pathway guidance, QMSR (21 CFR 820, which incorporates ISO 13485:2016 by reference since 2026-02-02; formerly QSR) compliance, HIPAA assessments, and device cybersecurity. Use when user mentions FDA submission, 510(k), PMA, De Novo, QMSR, QSR, ISO 13485 for FDA, premarket, predicate device, substantial equivalence, HIPAA medical device, or FDA cybersecurity. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/fda-consultant-specialist/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "gdpr-dsgvo-expert",
+  "koraci": [
+   "GDPR Compliance Checker",
+   "DPIA Generator",
+   "Data Subject Rights Tracker",
+   "Reference Guides",
+   "GDPR Compliance Guide",
+   "German BDSG Requirements",
+   "DPIA Methodology",
+   "Workflows"
+  ],
+  "napomene": "GDPR and German DSGVO compliance automation. Scans codebases for privacy risks, generates DPIA documentation, tracks data subject rights requests with Art. 12(3) one-month deadlines. Use when running GDPR compliance assessments, privacy audits, data protection planning, DPIA generation, or data subject rights (DSAR) management (e.g., 'check this service for GDPR risks', 'track an access request deadline'). Final compliance determinations route to the DPO or legal counsel. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/gdpr-dsgvo-expert/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "information-security-manager-iso27001",
+  "koraci": [
+   "Isolate affected systems",
+   "Preserve evidence",
+   "Block threat vectors",
+   "Remove malicious artifacts",
+   "Restore systems from clean backups",
+   "Verify integrity before reconnection",
+   "Document timeline and actions",
+   "Conduct post-incident review"
+  ],
+  "napomene": "ISO 27001 ISMS implementation and cybersecurity governance for HealthTech and MedTech companies. Use when designing an ISMS, running security risk assessments, implementing controls, pursuing ISO 27001 certification, preparing security audits, responding to security incidents, or verifying compliance. Covers ISO 27001, ISO 27002, healthcare security, and medical device cybersecurity. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/information-security-manager-iso27001/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "isms-audit-expert",
+  "koraci": [
+   "Review previous audit findings and risk assessment results",
+   "Identify high-risk controls and recent security incidents",
+   "Determine audit scope based on ISMS boundaries",
+   "Assign auditors ensuring independence from audited areas",
+   "Create audit schedule with resource allocation",
+   "Obtain management approval for audit plan",
+   "Validation: Audit plan covers all Annex A controls within certification cycle",
+   "Review ISMS documentation (policies, SoA, risk assessment)"
+  ],
+  "napomene": "Information Security Management System (ISMS) audit expert for ISO 27001 compliance verification, security control assessment, and certification support. Use when the user mentions ISO 27001, ISMS audit, Annex A controls, Statement of Applicability (SOA), gap analysis, nonconformity management, internal audit, surveillance audit, or security certification preparation. Helps review control implementation evidence, document audit findings, classify nonconformities, generate risk-based audit plans, map controls to Annex A requirements, prepare Stage 1 and Stage 2 audit documentation, and support  | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/isms-audit-expert/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "iso42001-specialist",
+  "koraci": [
+   "Where are the AIMS gaps against Clauses 4–10? — coverage scoring per clause + remediation priority",
+   "What's the AI risk register, and which controls treat each risk? — Annex A.2–A.10 control mapping per ISO 23894 risk method",
+   "What's the Clause 9.2 internal audit plan? — 12-month schedule with scope, frequency, auditor independence checks",
+   "Pull existing ISO 27001 Annex A controls + ISO 13485 procedures relevant to the system",
+   "Add the AI-specific overlay only where the existing control doesn't cover it",
+   "Document mapping in the AIMS scope statement (Clause 4.3)"
+  ],
+  "napomene": "ISO/IEC 42001:2023 AI Management System (AIMS) specialist for compliance teams running internal audits. Three decisions: (1) Where are the gaps against Clauses 4-10 and what do we close first? (2) What goes in the AI risk register and which Annex A controls treat each risk? (3) What's the 12-month internal audit plan that satisfies Clause 9.2? Use when preparing for certification, scoping internal audit cycles, or onboarding AI systems into an existing ISMS (27001) / QMS (13485) program. NOT an executive AI strategy skill (see chief-ai-officer-advisor). NOT EU AI Act compliance (see compliance | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/iso42001-specialist/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "mdr-745-specialist",
+  "koraci": [
+   "Identify device duration (transient, short-term, long-term)",
+   "Determine invasiveness level (non-invasive, body orifice, surgical)",
+   "Assess body system contact (CNS, cardiac, other)",
+   "Check if active device (energy dependent)",
+   "Apply classification rules 1-22",
+   "For software, apply MDCG 2019-11 algorithm",
+   "Document classification rationale",
+   "Validation: Classification confirmed with Notified Body"
+  ],
+  "napomene": "EU MDR 2017/745 compliance specialist for medical device classification, technical documentation, clinical evidence, and post-market surveillance. Covers Annex VIII classification rules, Annex II/III technical files, Annex XIV clinical evaluation, Art. 86 PSUR schedules, and EUDAMED integration. Use when classifying a medical device under MDR, building or gap-checking a technical file, planning clinical evaluation or PMS/PSUR cadence, or preparing for notified body review (e.g., 'what class is my device under MDR', 'review my PSUR schedule'). | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/mdr-745-specialist/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "qms-audit-expert",
+  "koraci": [
+   "List all QMS processes requiring audit",
+   "Assign risk level to each process (High/Medium/Low)",
+   "Review previous audit findings and trends",
+   "Determine audit frequency by risk level",
+   "Assign qualified auditors (verify independence)",
+   "Create annual audit schedule",
+   "Communicate schedule to process owners",
+   "Validation: All ISO 13485 clauses covered within cycle"
+  ],
+  "napomene": "ISO 13485 internal audit expertise for medical device QMS. Covers audit planning, execution, nonconformity classification, and CAPA verification. Use when planning internal audits, executing audits, classifying findings, preparing for external audits, or managing an audit program. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/qms-audit-expert/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "quality-documentation-manager",
+  "koraci": [
+   "Assign document number per numbering procedure",
+   "Create document using controlled template",
+   "Route for review to required reviewers",
+   "Address review comments and document responses",
+   "Obtain required approval signatures",
+   "Assign effective date and distribute",
+   "Update Document Master List",
+   "Validation: Document accessible at point of use; obsolete versions removed"
+  ],
+  "napomene": "Document control system management for medical device QMS. Covers document numbering, version control, change management, and 21 CFR Part 11 compliance. Use when working on document control procedures, change control workflows, document numbering, version management, electronic signature compliance, or regulatory documentation review. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/quality-documentation-manager/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "quality-manager-qmr",
+  "koraci": [
+   "Schedule management review (minimum annually, typically quarterly or semi-annually)",
+   "Notify all required attendees minimum 2 weeks prior",
+   "Collect required inputs from process owners",
+   "Compile input summary report with trend analysis",
+   "Prepare presentation materials with supporting data",
+   "Distribute agenda and input package 1 week prior",
+   "Conduct review meeting per agenda",
+   "Validation: All required inputs reviewed; decisions documented with owners and due dates"
+  ],
+  "napomene": "Senior Quality Manager Responsible Person (QMR) for HealthTech and MedTech companies. Provides quality system governance, management review leadership, regulatory compliance oversight, and quality performance monitoring per ISO 13485 Clause 5.5.2. Use when leading management reviews, setting quality policy and objectives, monitoring quality KPIs and cost of quality, or exercising QMR governance and regulatory oversight responsibilities. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/quality-manager-qmr/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "quality-manager-qms-iso13485",
+  "koraci": [
+   "Conduct gap analysis against ISO 13485:2016 requirements",
+   "Document current state vs. required state for each clause",
+   "Prioritize gaps by",
+   "Develop implementation roadmap with milestones",
+   "Establish Quality Manual per Clause 4.2.2",
+   "Create required documented procedures — see Mandatory Documented Procedures for the full list",
+   "Deploy processes with training",
+   "Validation: Gap analysis complete; Quality Manual approved; all required procedures documented and trained"
+  ],
+  "napomene": "ISO 13485 Quality Management System implementation and maintenance for medical device organizations. Provides QMS design, documentation control, internal auditing, CAPA management, and certification support. Use when working with medical device quality systems, preparing for ISO 13485 audits, managing regulatory compliance documentation, setting up corrective actions, or building audit preparation programs. Useful for quality management, audit preparation, regulatory compliance, medical device documentation, and corrective action workflows. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/quality-manager-qms-iso13485/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "ra-qm-skills",
+  "koraci": [
+   "Route to exactly one skill, then follow that skill's workflow. This router ships no tools of its own.",
+   "All outputs are decision support: final compliance determinations route to the named human owner (QMR, DPO, regulatory counsel) — never auto-decide.",
+   "Verify regulatory citations against the current text (e.g., FDA QMSR effective 2026-02-02 replaced the legacy QSR subsections)."
+  ],
+  "napomene": "Router/index for the 15 regulatory & quality-management skills bundled in this plugin (ISO 13485 QMS, EU MDR 2017/745, FDA submissions under QMSR, ISO 14971 risk, CAPA, document control, ISO 27001/ISMS, ISO 42001 AIMS, EU AI Act, GDPR/DSGVO, SOC 2, auditing). Use when a compliance request doesn't obviously match one skill and you need to pick the right one (e.g., 'prepare us for an ISO 13485 audit', 'is my AI system high-risk under the AI Act'). | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/ra-qm-skills/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "regulatory-affairs-head",
+  "koraci": [
+   "Gather product information",
+   "Identify applicable regulations per target market",
+   "Determine optimal regulatory pathway",
+   "Develop regulatory timeline with milestones",
+   "Estimate resource requirements and budget",
+   "Identify regulatory risks and mitigation strategies",
+   "Obtain stakeholder alignment and approval",
+   "Validation: Strategy document approved; timeline accepted; resources allocated"
+  ],
+  "napomene": "Senior Regulatory Affairs Manager for HealthTech and MedTech companies. Prepares FDA 510(k), De Novo, and PMA submission packages; analyzes regulatory pathways for new medical devices; drafts responses to FDA deficiency letters and Notified Body queries; develops CE marking technical documentation under EU MDR 2017/745; coordinates multi-market approval strategies across FDA, EU, Health Canada, PMDA, and NMPA; and maintains regulatory intelligence on evolving standards. Use when users need to plan or execute FDA submissions, navigate 510(k) or PMA approval processes, achieve CE marking, prepar | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/regulatory-affairs-head/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "risk-management-specialist",
+  "koraci": [
+   "Define scope of risk management activities",
+   "Establish risk acceptability criteria",
+   "Assign responsibilities",
+   "Define verification activities",
+   "Plan production and post-production activities",
+   "Obtain plan approval",
+   "Establish risk management file",
+   "Validation: Plan approved; acceptability criteria defined; responsibilities assigned; file established"
+  ],
+  "napomene": "Medical device risk management specialist implementing ISO 14971 throughout product lifecycle. Provides risk analysis, risk evaluation, risk control, and post-production information analysis. Use when user mentions risk management, ISO 14971, risk analysis, FMEA, fault tree analysis, hazard identification, risk control, risk matrix, benefit-risk analysis, residual risk, risk acceptability, or post-market risk. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/risk-management-specialist/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "soc2-compliance",
+  "koraci": [
+   "Select applicable TSC categories based on business needs",
+   "Run control_matrix_builder.py to generate the baseline matrix",
+   "Customize controls to match your actual environment",
+   "Assign owners and evidence requirements",
+   "Validate coverage — every selected TSC criterion must have at least one control",
+   "Document existing controls — inventory all security policies, procedures, and technical controls",
+   "Map to TSC — align existing controls to Trust Service Criteria",
+   "Collect evidence samples — gather proof that controls exist and operate"
+  ],
+  "napomene": "Use when the user asks to prepare for SOC 2 audits, map Trust Service Criteria, build control matrices, collect audit evidence, perform gap analysis, or assess SOC 2 Type I vs Type II readiness. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl ra-qm-team/skills/soc2-compliance/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ }
+]

@@ -1,0 +1,133 @@
+[
+ {
+  "ime": "atlassian-admin",
+  "koraci": [
+   "Create user account: admin.atlassian.com > User management > Invite users",
+   "Add to appropriate groups: admin.atlassian.com > User management > Groups > [group] > Add members",
+   "Assign product access (Jira, Confluence) via admin.atlassian.com > Products > [product] > Access",
+   "Configure default permissions per group scheme",
+   "Send welcome email with onboarding info",
+   "NOTIFY: Relevant team leads of new member",
+   "VERIFY: Confirm user appears active at admin.atlassian.com/o/{orgId}/users and can log in",
+   "CRITICAL: Audit user's owned content and tickets"
+  ],
+  "napomene": "Atlassian Administrator for managing and organizing Atlassian products (Jira, Confluence, Bitbucket, Trello), users, permissions, security, integrations, system configuration, and org-wide governance. Use when asked to add users to Jira, change Confluence permissions, configure access control, update admin settings, manage Atlassian groups, set up SSO, install marketplace apps, review security policies, or handle any org-wide Atlassian administration task. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl project-management/skills/atlassian-admin/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "atlassian-templates",
+  "koraci": [
+   "Discover: Interview stakeholders to understand needs",
+   "Analyze: Review existing content patterns",
+   "Design: Create template structure and placeholders",
+   "Implement: Build template with macros and formatting",
+   "Test: Validate with sample data — confirm template renders correctly in preview before publishing",
+   "Document: Create usage instructions",
+   "Publish: Deploy to appropriate space/project via MCP (see MCP Operations below)",
+   "Verify: Confirm deployment success; roll back to previous version if errors occur"
+  ],
+  "napomene": "Atlassian Template and Files Creator/Modifier expert for creating, modifying, and managing Jira and Confluence templates, blueprints, custom layouts, reusable components, and standardized content structures. Use when building org-wide templates, custom blueprints, page layouts, and automated content generation. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl project-management/skills/atlassian-templates/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "confluence-expert",
+  "koraci": [
+   "Generate the recommended hierarchy from a team description",
+   "Determine space type (Team, Project, Knowledge Base, Personal)",
+   "Create space with clear name and description (web UI / REST)",
+   "Set space homepage with overview",
+   "Configure space permissions",
+   "Create initial page tree structure",
+   "Add space shortcuts for navigation",
+   "Verify: Navigate to the space URL and confirm the homepage loads; check that a non-admin test user sees the correct permission level"
+  ],
+  "napomene": "Atlassian Confluence expert for creating and managing spaces, knowledge bases, and documentation. Configures space permissions and hierarchies, creates page templates with macros, sets up documentation taxonomies, designs page layouts, and manages content governance. Use when users need to build or restructure a Confluence space, design page hierarchies with permission structures, author or standardise documentation templates, embed Jira reports in pages, run knowledge base audits, or establish documentation standards and collaborative workflows. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl project-management/skills/confluence-expert/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "jira-expert",
+  "koraci": [
+   "Determine project type (Scrum, Kanban, Bug Tracking, etc.)",
+   "Create project with appropriate template (web UI / REST)",
+   "Configure project settings",
+   "Set up issue types and workflows",
+   "Configure custom fields if needed",
+   "Create initial board/backlog view",
+   "HANDOFF TO: Scrum Master for team onboarding",
+   "Map out process states (To Do → In Progress → Done)"
+  ],
+  "napomene": "Atlassian Jira expert for creating and managing projects, planning, product discovery, JQL queries, workflows, custom fields, automation, reporting, and all Jira features. Use when setting up or configuring Jira projects, writing JQL and advanced searches, creating dashboards, designing workflows, or performing technical Jira operations. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl project-management/skills/jira-expert/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "meeting-analyzer",
+  "koraci": [
+   "Core Workflow",
+   "1. Ingest & Inventory",
+   "2. Normalize Transcripts",
+   "3. Analyze",
+   "4. Output the Report",
+   "Top 3 Findings",
+   "Detailed Analysis",
+   "Speaking Dynamics"
+  ],
+  "napomene": "Analyzes meeting transcripts and recordings to surface behavioral patterns, communication anti-patterns, and actionable coaching feedback. Use this skill whenever the user uploads or points to meeting transcripts (.txt, .md, .vtt, .srt, .docx), asks about their communication habits, wants feedback on how they run meetings, requests speaking ratio analysis, mentions filler words or conflict avoidance, or wants to compare their communication across time periods. Also trigger when users mention tools like Granola, Otter, Fireflies, or Zoom transcripts. Even if the user just says \"look at my meeti | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl project-management/skills/meeting-analyzer/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "pm-skills",
+  "koraci": [
+   "Observe — pull fresh state: mcp__atlassian__searchJiraIssuesUsingJql (get",
+   "Choose — route the next task with pm_goal_router.py; one task at a time.",
+   "Act — execute with the routed sub-skill's own tools per its SKILL.md.",
+   "Verify — gate the plan and every close with",
+   "Record / Repeat-or-stop — for multi-task goals, run the state through the repo-wide",
+   "Agents are contributors, never owners (Linear model): every loop task carries a",
+   "Acceptance must be machine-checkable — a command, or a criterion with a threshold.",
+   "Every Jira/Confluence write is auditable and reversible-first (Rovo discipline)"
+  ],
+  "napomene": "Use when coordinating project-delivery work across the 8 project-management sub-skills — sprint/velocity analytics, portfolio health, Jira/JQL, Confluence, Atlassian admin, templates, meeting analysis, team comms. Triggers on 'our sprints feel off', 'project health report', 'audit our Jira permissions', 'when will it be done', 'run the delivery loop'. Forks context to route to one sub-skill via a deterministic signal router and returns a digest; can also drive a full goal→plan→execute→verify→close delivery loop through the repo-wide agent-harness with Jira MCP data bridged into the domain's an | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl project-management/skills/pm-skills/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "scrum-master",
+  "koraci": [
+   "Run velocity analysis: python velocity_analyzer.py sprint_data.json --format text",
+   "Use the 70% confidence interval as the recommended commitment ceiling for the sprint backlog.",
+   "Review the health scorer's Commitment Reliability and Scope Stability scores to calibrate negotiation with the Product Owner.",
+   "If Monte Carlo output shows high volatility (CV >20%), surface this to stakeholders with range estimates rather than single-point forecasts.",
+   "Document capacity assumptions (leave, dependencies) for retrospective comparison.",
+   "Track participation and help-seeking patterns — feed ceremony data into sprint_health_scorer.py at sprint end.",
+   "Log each blocker with date opened; resolution time feeds the Blocker Resolution dimension.",
+   "If a blocker is unresolved after 2 days, escalate proactively and note in sprint data."
+  ],
+  "napomene": "Advanced Scrum Master skill for data-driven agile team analysis and coaching. Use when the user asks about sprint planning, velocity tracking, retrospectives, standup facilitation, backlog grooming, story points, burndown charts, blocker resolution, or agile team health. Runs Python scripts to analyse sprint JSON exports from Jira or similar tools: velocity_analyzer.py for Monte Carlo sprint forecasting, sprint_health_scorer.py for multi-dimension health scoring, and retrospective_analyzer.py for action-item and theme tracking. Produces confidence-interval forecasts, health grade reports, and  | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl project-management/skills/scrum-master/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "senior-pm",
+  "koraci": [
+   "Probability Assessment (1-5 scale): Historical data, expert judgment, Monte Carlo inputs",
+   "Impact Analysis (1-5 scale): Financial, schedule, quality, and strategic impact vectors",
+   "Category Weighting: Technical (1.2x), Resource (1.1x), Financial (1.4x), Schedule (1.0x)",
+   "EMV Calculation",
+   "Data Collection & Validation",
+   "Risk Assessment Update",
+   "Capacity Analysis",
+   "Executive Summary Generation"
+  ],
+  "napomene": "Senior Project Manager for enterprise software, SaaS, and digital transformation projects. Specializes in portfolio management, quantitative risk analysis, resource optimization, stakeholder alignment, and executive reporting. Uses advanced methodologies including EMV analysis, Monte Carlo simulation, WSJF prioritization, and multi-dimensional health scoring. Use when a user needs help with project plans, project status reports, risk assessments, resource allocation, project roadmaps, milestone tracking, team capacity planning, portfolio health reviews, program management, or executive-level p | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl project-management/skills/senior-pm/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "team-communications",
+  "koraci": [
+   "Read the reference file for the matched type. Follow its formatting exactly.",
+   "Clarify scope. Confirm: team name (for 3Ps), time period, audience, and any specific items the user wants included or excluded.",
+   "Draft. Follow the format, tone, and length constraints from the reference file precisely. Do not invent a new format.",
+   "Present the draft and ask if anything needs to be added, removed, or reworded."
+  ],
+  "napomene": "Write internal company communications — 3P updates (Progress/Plans/Problems), company-wide newsletters, FAQ roundups, incident reports, leadership updates, status reports, project updates, and general internal comms. Use this skill any time the user asks to draft, edit, or format something meant for internal audiences. Trigger on keywords like \"3P\", \"weekly update\", \"newsletter\", \"FAQ\", \"internal comms\", \"status report\", \"company update\", \"team update\", \"incident report\", or any request to summarize work for leadership, teammates, or the broader company. Even casual requests like \"write my upd | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl project-management/skills/team-communications/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ }
+]

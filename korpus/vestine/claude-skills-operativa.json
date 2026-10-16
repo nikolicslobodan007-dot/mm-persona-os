@@ -1,0 +1,277 @@
+[
+ {
+  "ime": "andreessen",
+  "koraci": [
+   "Market dominates. Team is second. Product is third. \"When a great team meets a lousy market,",
+   "The only milestone that matters is product/market fit. Before PMF, do whatever is required to",
+   "Bias to build. Once the market gate passes and PMF signals are warm, the verdict tilts to",
+   "**What is the market, specifically — and is it pulling product out of you, or are you pushing",
+   "Why now? What changed in the world to make this possible today and not three years ago?",
+   "Are you before or after product/market fit — and what's the single signal that proves it?",
+   "If this is before PMF, what are you willing to change to get there — product, segment, or team?",
+   "Where is the software leverage — what compounds without linear cost? *(Recommended: identify"
+  ],
+  "napomene": "Marc Andreessen-mode decision and productivity skill. A blunt, market-first operator that pressure-tests ideas, ventures, features, and career bets through Andreessen's actual frameworks — market dominates team and product; the only milestone that matters is product/market fit; bias to build over deliberate. Use when the user says 'andreessen', 'pmarca mode', 'should I build this', 'is there a market', 'are we at product/market fit', 'pmf check', 'pressure-test this idea', 'be brutal about this venture', 'market-first take', or wants a no-disclaimers, no-hedging, confidence-leveled verdict on  | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl productivity/andreessen/skills/andreessen/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "business-operations-skills",
+  "koraci": [
+   "Resolve the higher-confidence lane first → run that sub-skill in forked context → return digest",
+   "Ask: \"Should we now run [second lane]? My recommendation: yes, because [dependency reason].\"",
+   "Only after explicit user confirmation, run the second sub-skill",
+   "The user is acting on behalf of an organization with ≥ 10 employees (smaller orgs don't need this surface).",
+   "The user has access to the data the sub-skill needs (process docs, vendor list, spend export, etc.) — or accepts the skill's templated dummy data.",
+   "The user wants deterministic, repeatable analysis over LLM-flavored prose. Every sub-skill ships stdlib-only Python tools."
+  ],
+  "napomene": "Use when running, diagnosing, or designing internal business operations — process documentation, vendor SLAs, capacity planning, internal comms, SOP/runbook authoring, procurement spend. Triggers on \"BizOps review\", \"where's the bottleneck\", \"vendor health\", \"internal SOP\", \"all-hands deck\", \"spend categorization\", \"capacity for Q3\", \"process mapping\". Forks context to route to one of six BizOps sub-skills (process-mapper, vendor-management, capacity-planner, internal-comms, knowledge-ops, procurement-optimizer) and returns a digest. Distinct from business-growth (external sales motion) and c- | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl business-operations/skills/business-operations-skills/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "capacity-planner",
+  "koraci": [
+   "Capacity sizing at 70/80/90% utilization against P50/P90/P99",
+   "Utilization health at the per-member traffic-light level plus a",
+   "12-month quarterly hiring plan accounting for ramp curves,",
+   "Intake demand. Pull P50/P90/P99 daily ticket/case volume from",
+   "Model throughput. Run capacity_modeler.py with your demand,",
+   "Flag utilization risk. Run utilization_analyzer.py against",
+   "Sequence hiring. Run hiring_sequencer.py with current FTE,",
+   "Walk the Forcing-question library (see below). One question at"
+  ],
+  "napomene": "Use when an ops leader (Director of CX, Head of Support, VP Ops, Head of BizOps, Head of IT ops, Head of Finance ops) is sizing ops capacity, building a headcount plan, modeling utilization risk, planning Q3 capacity or annual support capacity, or designing CS coverage — and needs Erlang-C queueing math, P90 demand sizing, shrinkage-adjusted FTE, manager-trigger thresholds, and a quarterly hiring sequence with ramp + attrition. Apply when sustained team utilization is above 80% or when the team is growing >50% in 12 months. Run before committing the headcount budget. This is NOT engineering ca | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl business-operations/skills/capacity-planner/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "capture",
+  "koraci": [
+   "Capture everything. Zero loss. Trivial items go in; the user prunes later. Never silently drop something because it \"seemed unimportant\".",
+   "Be honest about ambiguity. If you're unsure what something means, flag it. Don't guess silently.",
+   "No action without approval. The ONLY immediate action is the organization itself. Every offer in Section 4 waits for the user's explicit pick.",
+   "Match dump items to existing content — files / folders relating to dumped items, prior thinking in documents, in-progress projects with overlap.",
+   "Surface dependencies within the dump — items that affect each other, themes, ordering implications."
+  ],
+  "napomene": "Captures and organizes chaotic brain dumps into a structured, actionable system with zero information loss. Use this skill whenever the user says 'capture this', 'brain dump', 'let me dump some ideas', 'I've got a bunch of thoughts', 'here's everything on my mind', 'idea dump', 'let me get this out of my head', 'I need to organize my thoughts', 'here's what I'm thinking', or any variation where someone is unloading a messy stream of ideas, tasks, thoughts, and plans wanting them turned into something coherent. Also trigger when the user pastes or dictates a long, unstructured block of mixed id | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl productivity/capture/skills/capture/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "deep-work",
+  "koraci": [
+   "What this does",
+   "Step 1 — Classify and budget the shallow",
+   "Step 2 — Block the day",
+   "Step 3 — Log the session, keep the streak",
+   "Step 4 — Shutdown ritual",
+   "Distinct From (don't reach for the wrong skill)"
+  ],
+  "napomene": "Use when someone wants to plan a deep work day, time-block their calendar or task list, budget or cut shallow work, protect focus hours, track deep-work sessions and streaks, run an end-of-day shutdown ritual, or says \"/deep-work\" or \"/time-block\". Classifies tasks deep vs shallow, builds an energy-first time-blocked schedule that refuses deep demand past the 4-hour ceiling, batches shallow work into at most two windows, and logs focus sessions against a weekly target. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl productivity/deep-work/skills/deep-work/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "fable-goal",
+  "koraci": [
+   "The philosophy",
+   "1. Extract what the ramble already contains",
+   "2. Fill gaps with defaults; ask only when it matters",
+   "3. Verify before you name",
+   "4. Write the prompt: the seven-part anatomy",
+   "5. Self-check, then deliver"
+  ],
+  "napomene": "Convert a rambling description of a desired outcome into one polished, autonomous /goal prompt ready to paste into a fresh session. Use when the user says \"/fable-goal\", \"turn this into a goal prompt\", \"write me a fable prompt\", \"write the prompt that builds X\", or rambles about something they want made and asks for the prompt that makes it happen. The output is a single copy-paste prompt, never the build itself. Do NOT use when the user wants the thing built right now in this session — only when they want the PROMPT that will make it happen in a fresh session. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl productivity/fable-goal/skills/fable-goal/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "handoff",
+  "koraci": [
+   "Invocation Triggers",
+   "First-Run Setup",
+   "Output Path",
+   "Section Template",
+   "The Agent's Job",
+   "Redaction",
+   "SessionStart Auto-Load",
+   "SessionEnd Reminder"
+  ],
+  "napomene": "Compact the current conversation into a handoff document for another agent to pick up. Save to a user-configured location (OS temp, home folder, or per-project .handoff/), redact secrets before write, suggest skills for the next session, and auto-load the latest handoff on the next SessionStart. First-run setup asks where to save so the project folder never gets cluttered. Use when the user says 'hand this off', 'handoff doc', 'summarize this for a new session', 'compact this conversation', 'I'm ending this session', 'pick this up later', or any variation signaling intent to pass work to a fre | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl productivity/handoff/skills/handoff/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "inbox-setup",
+  "koraci": [
+   "Detect ${WORKSPACE}/Email/",
+   "For each existing file, ask per-file: replace / merge / skip",
+   "Walk only the sections whose files the user chose to update",
+   "Skip sections whose files the user kept"
+  ],
+  "napomene": "One-time setup skill that builds a personalized inbox triage knowledge base via interactive interview. Interviews the user about their email patterns, business context, reply style, and priorities using grill-me discipline (one question at a time, forcing format where possible, dependency-ordered, each question explains why I'm asking), then generates the knowledge base files that power the companion 'inbox-triage' skill. Run this once before using inbox-triage for the first time. Re-run when business, pricing, or priorities change significantly. Triggers: 'set up my inbox', 'configure inbox t | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl productivity/email/skills/inbox-setup/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "inbox-triage",
+  "koraci": [
+   "Check blocklist.md → if matched, auto-skip",
+   "Check tracker.md → if known thread, note existing context",
+   "For opportunity senders (per evaluation framework): web search for company legitimacy, social presence, intermediary status",
+   "Overview — 2–3 sentences. What happened? Anything urgent?",
+   "Stats — Counts: processed, drafts created, action needed, skipped.",
+   "Action Needed — Overdue items, decisions, drafts to review, deadlines.",
+   "Quick Reference — One line per email, alphabetical by sender. Sender — one-sentence summary + recommendation.",
+   "Footer — Generation timestamp + KB update summary."
+  ],
+  "napomene": "Runs a full inbox triage using the knowledge base created by the 'inbox-setup' skill. Light-intake by design (most invocations skip questions and run with KB-default preferences); asks at most 2 grill-me override questions when invocation is outside normal cadence or includes category-skip intent. Searches recent emails, classifies them via the user's taxonomy, researches new senders, generates recommendations, drafts replies (NEVER sends), delivers a report in the user's preferred format, and updates the knowledge base with learnings. Designed to run on a recurring schedule (1-3x daily) or on | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl productivity/email/skills/inbox-triage/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "internal-comms",
+  "koraci": [
+   "No touchpoint sequencing — one Slack post is treated as \"the comms plan.\" Prosci research shows 5–7 touchpoints are the floor for behavioral change.",
+   "The decision being announced is already made. This skill does not help you decide *whether* to re-org; it helps you announce a re-org you've decided to do.",
+   "The effective date is fixed. Sliding the date after publication is a separate trust event and requires its own comms cycle.",
+   "\"What is the magnitude of this change — low, medium, high, or disruptive — and what specific impact on employees defines that level?\"",
+   "\"Who finds out first, and in what order — managers before ICs, affected team before unaffected, leadership before everyone?\"",
+   "\"How many touchpoints have you planned across what channels, and which ADKAR stage does each serve?\"",
+   "\"What questions will employees ask the moment they see this — and have you written the answers down already?\"",
+   "\"Who is the named accountable executive that will appear on the announcement and be present at the town hall, and have they confirmed both?\""
+  ],
+  "napomene": "Use when a Head of People Ops, BizOps lead, or Internal Communications owner needs to draft and sequence an internal-only change-management communication — a re-org announcement, a tool rollout, a policy change, a leadership transition, a layoff, an acquisition close, or an internal product launch — and the audience is employees (not customers). Pairs Prosci ADKAR and Kotter's 8-step change model with deterministic stdlib-only Python tools to produce a sequenced touchpoint calendar, a Kotter-compliant primary announcement, an audience-segmented FAQ, and manager cascade talking points; industry | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl business-operations/skills/internal-comms/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "knowledge-ops",
+  "koraci": [
+   "No owner — 40% of SOPs name \"the team\" instead of a person. When the doc rots, nobody is accountable.",
+   "No last-reviewed date — a years-old vendor-offboarding SOP still references a procurement tool that was sunset over a year ago.",
+   "Vague success signals — runbook step 4 says \"verify the service is up\". A new operator can't tell what that means.",
+   "No rollback path — incident-comms cascade runbook tells you how to send the alert. It doesn't tell you how to retract it when the alert was wrong.",
+   "Orphan pages — half the KB has no inbound links. Nobody finds them via navigation; they only exist because somebody knew the URL.",
+   "Glossary drift — \"CSM\" means Customer Success Manager in three docs and Customer Solutions Manager in five. New hires guess wrong for six months.",
+   "Happy-path-only SOPs — the doc covers what happens when everything works. It doesn't cover the 30% case where it doesn't.",
+   "The user is not asking for a personal PKM. Personal Karpathy-style second-brain work belongs in engineering/llm-wiki."
+  ],
+  "napomene": "Use when a Head of Ops, Knowledge Manager, or TPM-Internal needs to author, validate, or clean up company SOPs and internal runbooks (procurement intake, vendor offboarding, incident-comms cascade, employee onboarding) — including 5W2H completeness checks (Who-What-When-Where-Why-How-HowMuch), cross-link and orphan-page validation across a sprawling Notion/Confluence/Obsidian wiki, KB ingestion + hygiene reporting, and runbook step verification (named owner, expected duration, observable success signal, rollback path, escalation contact). Pairs Ishikawa's 5W2H method, Gawande's *The Checklist  | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl business-operations/skills/knowledge-ops/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "loop-library",
+  "koraci": [
+   "When web access is available, read the live",
+   "If the live catalog is unavailable, say that published-loop discovery is",
+   "Search Use when, Prompt, Verify, and keyword fields by the user's",
+   "Rank candidates by outcome fit, available inputs and tools, verification",
+   "Recommend at most three. For each, give its exact published title and link,",
+   "Prefer adapting a strong match over inventing a nearly identical loop. If no",
+   "\"What would you like the agent to get done?\"",
+   "\"When should it run: when you ask, on a schedule, or after something"
+  ],
+  "napomene": "Discover, find, compare, audit, repair, adapt, and design repeatable AI-agent loops with explicit triggers, actions, verification, stopping conditions, guardrails, and handoffs. Use when a user asks to analyze a codebase for potential loops, mine coding-thread history for work done more than once, turn repeated engineering work into a loop, find or recommend a published loop, create a recurring agent workflow or automation cadence, turn an outcome into a bounded copy-ready loop, or review an existing loop for weak checks, unsafe authority, unbounded repetition, stale state, or unclear stopping | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl loop-library/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "meetings",
+  "koraci": [
+   "What this does",
+   "Workflow — gate → agenda → run → extract",
+   "Distinct From (don't reach for the wrong skill)"
+  ],
+  "napomene": "Use when someone wants to decide whether a meeting is worth calling, price a meeting in dollars, build a timeboxed agenda with desired outcomes, or turn messy meeting notes into owned action items — or says \"should this be a meeting\", \"/cs:meeting-prep\", or \"/cs:meeting-actions\". Runs a cost gate (ASYNC / NOT-READY / MEET), builds a decision-first agenda, and extracts an owner + due-date checklist that flags every orphan. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl productivity/meetings/skills/meetings/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "process-mapper",
+  "koraci": [
+   "Implicit process — the steps exist only in tribal knowledge, so handoffs drop and onboarding takes weeks.",
+   "Invisible waiting — most of the elapsed time on any business process is queue / wait / approval time, not actual work; teams optimize the wrong stage.",
+   "Local optimization — Goldratt's Theory of Constraints is ignored; resources are added to non-constraint stages, gaining nothing.",
+   "The user can provide stage-level cycle-time data (even rough P50 / P90 estimates). If they cannot, the first step is to instrument the process — not to map it.",
+   "\"Process\" here means a repeatable business workflow with discrete stages, not a one-off project.",
+   "The user has authority to act on bottlenecks (or can route findings to someone who does). Without that, the output is academic.",
+   "\"Do you have measured cycle times for the top-3 longest stages, or only estimates?\"",
+   "\"Are you mapping the *current* process (as-is) or the *intended* process (to-be)?\""
+  ],
+  "napomene": "Use when a BizOps lead, COO, or process-improvement owner needs to document an end-to-end business process (procurement, employee onboarding, incident handoff, customer-onboarding, claims adjudication) in BPMN-style notation, measure cycle times by stage, surface where work spends most of its time waiting vs. being worked, and quantify the gap between processing time and total elapsed time. Pairs Lean / Six Sigma / Theory-of-Constraints canon with deterministic stdlib-only Python tools to produce a process map, a ranked bottleneck list (with severity + root-cause hypothesis), and a cycle-time  | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl business-operations/skills/process-mapper/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "procurement-optimizer",
+  "koraci": [
+   "Prior-year spend is preferred (for YoY) but optional; the categorizer degrades gracefully if absent.",
+   "Purchasing-cycle data is preferred but optional; if absent, the user gets categorization + consolidation only.",
+   "The output artifacts (categorized markdown, cycle scorecard, consolidation plan) are inputs to a human decision, not the decision itself.",
+   "\"Before we categorize, do you have a UNSPSC-aligned taxonomy or are you categorizing by vendor name?\"",
+   "\"Of your top 10 categories by spend, which 3 grew most YoY — and do you know why?\"",
+   "\"For each duplicate-function cluster (e.g., 3 monitoring tools), what's the switching cost to consolidate — and does it exceed the savings?\"",
+   "\"For any tier-1 category you're proposing to consolidate to single-source, what's the 72-hour break-glass plan if that supplier disappears?\"",
+   "\"What % of your spend goes through a PO vs. expense reimbursement vs. shadow IT? Where's the maverick spend?\""
+  ],
+  "napomene": "Use when running an annual SaaS audit, doing category-level spend review, or rationalizing the supplier base — when the user needs a spend audit, spend categorization (UNSPSC-aligned with Pareto breakdown and industry profiles), purchasing-cycle analysis (bottleneck categories per Goldratt's Theory of Constraints), or risk-balanced supplier consolidation that refuses single-source recommendations for tier-1 categories without a documented break-glass plan. Triggers on \"spend audit\", \"SaaS audit\", \"spend categorization\", \"supplier rationalization\", \"supplier consolidation\", \"category strategy\", | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl business-operations/skills/procurement-optimizer/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "reflect",
+  "koraci": [
+   "Invocation Triggers",
+   "Stop Directive (Before Reassessing)",
+   "Grill-Me Optional Clarifier",
+   "Q1 (optional, asked only when context is too thin to reassess)",
+   "The 5-Dimension Analysis Framework",
+   "1. Macro Perspective",
+   "2. Gap Analysis",
+   "3. Reflective Inquiry"
+  ],
+  "napomene": "Mid-conversation reflection skill that pauses execution and zooms out from detail-mode to honestly reassess direction, assumptions, and bias. Use when the user says 'reflect', 'take a step back', 'step back', 'zoom out', 'are we missing something', 'bigger picture', 'sanity check this', 'are we on track', 'are we overthinking this', 'forest for the trees', or any variation signaling intent to break out of detail-mode and reassess. Also trigger when the conversation has gone deep on implementation details without strategic check-in, or when the user shows signs of being stuck — that's often a s | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl productivity/reflect/skills/reflect/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "roast",
+  "koraci": [
+   "The idea in one or two sentences (what it is, what it does).",
+   "Who it's for and how it makes money (the buyer + the price/model).",
+   "Your edge — relevant skills, audience, or assets you already have.",
+   "Constraints — budget, timeline, how fast you need first dollar."
+  ],
+  "napomene": "Use when someone asks to roast an idea, pressure-test or stress-test an idea, validate a business idea, \"convene the panel\", get a brutal second opinion before building something, or says \"/roast\". Spins up a 5-angle panel (Critic, Champion, Analyst, Investigator, Customer) that attacks the idea from every angle, then a Judge returns one GO / RESHAPE / KILL verdict with the cheapest test to de-risk it. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl productivity/roast/skills/roast/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "swedish-mentor",
+  "koraci": [
+   "If no level is given, start with a short CEFR self-assessment (max 2 questions), or offer to skip it.",
+   "Confirm or assign a level: A1-A2 / B1 / B2+. If the user seems unsure what a level means, show them the CEFR level guide below in plain language.",
+   "Suggest a concise learning path covering listening, reading, writing, speaking.",
+   "Prefer channels and podcasts with track records of positive, authentic feedback, for example",
+   "For speaking: prioritize shadowing, dialogue practice, and normal-speed speech.",
+   "For listening at A2-B1: favor podcasts with transcripts or slow, clear delivery.",
+   "Keep responses concise — short sentences, and a table or simple progress map (current level → next milestone) when useful.",
+   "Response pattern: state the assumed level (and whether it's approximate) → give 2-3 concrete recommendations or a short plan → end with one clear next step."
+  ],
+  "napomene": "Mentor Swedish language learners by selecting YouTube video clips and podcast episodes by CEFR level and skill (listening, reading, writing, speaking), and building a simple learning path. Use when the user asks about a Swedish learning path, YouTube clips or podcasts for Swedish, SFI videos, level assessment for svenska, or requests for Peter SFI / Lätt Svenska med Oskar / Radio Sweden på lätt svenska / Klartext-style recommendations. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl productivity/swedish-mentor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "vendor-management",
+  "koraci": [
+   "Data sensitivity — PII / PHI / cardholder / source code access",
+   "Financial exposure — annual spend × tier multiplier",
+   "Operational dependency — tier-1 + no break-glass = Critical",
+   "Regulatory exposure — industry profile drives weighting (e.g., healthcare: HIPAA-without-BAA = Critical)",
+   "The user has a vendor catalog or can construct one from procurement records, the SaaS management tool (Vendr / Tropic / Zylo), or a spend export.",
+   "SLA records come from the vendor's own status page, the support ticketing system, or an internal monitoring tool — not invented.",
+   "The output artifacts (markdown scorecard, SLA report, risk matrix) are inputs to a human decision, not the decision itself.",
+   "\"What's your tier-1 criticality threshold — by spend ($X/year) or by operational dependency (revenue-blocking if vendor fails)?\""
+  ],
+  "napomene": "Use when reviewing, scoring, or auditing third-party SaaS / vendor relationships — running a vendor scorecard with industry tuning, tracking SLA compliance with credit-claim flags, classifying third-party risk across 4 risk vectors, preparing a tier-1 vendor review, or auditing the SaaS portfolio. Forks context so large vendor catalogs (50-500 line items) and SLA logs don't pollute the parent thread. Triggers on \"vendor SLA\", \"vendor scorecard\", \"third-party risk\", \"TPRM\", \"vendor review\", \"supplier performance\", \"vendor health check\", \"renewal review\". | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl business-operations/skills/vendor-management/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "weekly-review",
+  "koraci": [
+   "What this does",
+   "Phase 1 — GET CLEAR (steps 1-3)",
+   "Phase 2 — GET CURRENT (steps 4-8, all mandatory)",
+   "Phase 3 — GET CREATIVE (steps 9-10)",
+   "Distinct From (don't reach for the wrong sibling)"
+  ],
+  "napomene": "Use when someone wants to run a weekly review, close open loops, audit stalled projects and commitments, get their system back to trusted, restart a lapsed review habit, or says \"/cs:weekly-review\". Walks David Allen's three-phase loop — GET CLEAR, GET CURRENT, GET CREATIVE — with deterministic scripts that inventory open loops, gate the checklist with named gaps, and score commitment health 0-100. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl productivity/weekly-review/skills/weekly-review/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ }
+]

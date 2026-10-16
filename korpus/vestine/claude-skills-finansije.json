@@ -1,0 +1,65 @@
+[
+ {
+  "ime": "business-investment-advisor",
+  "koraci": [
+   "Rank all options by IRR (highest first)",
+   "Fund in order until budget is exhausted",
+   "Exception: fund anything with payback <6 months first (quick wins)",
+   "Never fund negative NPV unless strategic reason — name it explicitly",
+   "[Risk + mitigation]"
+  ],
+  "napomene": "Business investment analysis and capital allocation advisor. Use when evaluating whether to invest in equipment, real estate, a new business, hiring, technology, or any capital expenditure. Also use for ROI calculations, IRR, NPV, payback period, build vs buy decisions, lease vs buy analysis, vendor evaluation, or deciding where to allocate limited budget for maximum return. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl finance/business-investment-advisor/skills/business-investment-advisor/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "finance-skills",
+  "koraci": [
+   "finance/business-investment-advisor/ — investment thesis evaluation, ROI modeling (prompt-only skill, separate nested plugin)",
+   "Root commands /financial-health and /saas-health wrap these skills' scripts.",
+   "Route to exactly one skill, then follow that skill's workflow. This router ships no tools of its own.",
+   "Always validate financial outputs against the user's source data; outputs are analysis support, not investment advice."
+  ],
+  "napomene": "Router/index for the 2 finance skills bundled in this plugin: financial-analyst (ratio analysis, DCF valuation, budget variance, rolling forecasts) and saas-metrics-coach (ARR/MRR, churn, CAC/LTV, NRR, quick ratio). Use when a finance request doesn't obviously match one skill and you need to pick the right one (e.g., 'analyze these financials', 'how healthy are my SaaS metrics'). | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl finance/skills/finance-skills/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "financial-analyst",
+  "koraci": [
+   "5-Phase Workflow",
+   "Phase 1: Scoping",
+   "Phase 2: Data Analysis & Modeling",
+   "Phase 3: Insight Generation",
+   "Phase 4: Reporting",
+   "Phase 5: Follow-up",
+   "1. Ratio Calculator (scripts/ratio_calculator.py)",
+   "2. DCF Valuation (scripts/dcf_valuation.py)"
+  ],
+  "napomene": "Performs financial ratio analysis, DCF valuation, budget variance analysis, and rolling forecast construction for strategic decision-making. Use when analyzing financial statements, building valuation models, assessing budget variances, or constructing financial projections and forecasts. Also applicable when users mention financial modeling, cash flow analysis, company valuation, financial projections, or spreadsheet analysis. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl finance/skills/financial-analyst/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "saas-metrics-coach",
+  "koraci": [
+   "Step 1 — Collect Inputs",
+   "Step 2 — Calculate Metrics",
+   "Step 3 — Benchmark Each Metric",
+   "Step 4 — Prioritize and Recommend",
+   "Step 5 — Output Format",
+   "Metrics at a Glance",
+   "Overall Picture",
+   "Priority Issues"
+  ],
+  "napomene": "SaaS financial health advisor. Use when a user shares revenue or customer numbers, or mentions ARR, MRR, churn, LTV, CAC, NRR, or asks how their SaaS business is doing. | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl finance/skills/saas-metrics-coach/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ },
+ {
+  "ime": "stock-analysis",
+  "koraci": [
+   "Primary filings — annual report / 10-K, exchange filings (NSE/BSE, SEC EDGAR), quarterly results, the offer document (DRHP/RHP/S-1), audited statements.",
+   "Company-published secondary — concall transcripts, investor presentations, earnings releases.",
+   "Regulator / third-party primary — SEBI/MCA/ROC records, credit-rating rationales, exchange shareholding and pledge data."
+  ],
+  "napomene": "Produce a rigorous, sector-relative, multi-factor fundamental analysis of a publicly listed company — Indian (NSE/BSE) or US/global. Use when the user asks to analyse, research, evaluate, or value a stock, ticker, or listed company; asks whether a business is fundamentally strong, cheap, or expensive; compares companies or benchmarks one against its sector; or mentions OPM, ROCE, ROE, ROIC, P/E, EV/EBITDA, free cash flow, NIM, GNPA, CASA, promoter holding or pledging. Use it for accounting-quality and forensic questions — \"is the profit real\", \"why is profit rising but cash isn't\", auditor qua | Uvezeno iz alirezarezvani/claude-skills (MIT), fajl finance/skills/stock-analysis/SKILL.md. Jezik izvornika: engleski.",
+  "pouzdanost": 0.7
+ }
+]
