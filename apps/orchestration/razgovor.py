@@ -14,6 +14,9 @@ Tri granice, namerno:
   - **Direktor ne dobija nijednu novu dozvolu.** Delegiranje ne daje prava
     (ADR-0017); izvršilac radi sa svojim poverenjem. Nit ne dira prekidač
     spoljnih radnji i ne objavljuje ništa.
+  - **Sektor bez šefa ne obara posao.** Direktor ga daje upravi i to kaže u
+    odgovoru. Posao koji stane zato što neko radno mesto nije popunjeno nije
+    organizacija nego prepreka.
   - **Razvrstavanje po sektorima je zasad tabela reči**, ne model. To je
     svesna privremena stvar i piše ovde, a ne u ADR-u kao da je trajno
     rešenje: kad direktor bude birala sektor modelom, menja se samo
@@ -161,9 +164,17 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str) -> Poruka:
 
     kod = odredi_sektor(telo)
     sef = _sef_sektora(direktor, kod)
+    rezerva = ""
+    if sef is None and kod != PODRAZUMEVANI_SEKTOR:
+        # Sektor bez šefa nije razlog da posao stane: direktor ga daje svom
+        # asistentu i to kaže čoveku. Izmereno 16.10.2026 — u organizaciji
+        # zaista postoje sektori bez popunjenog mesta šefa.
+        rezerva, kod = kod, PODRAZUMEVANI_SEKTOR
+        sef = _sef_sektora(direktor, kod)
     if sef is None:
         raise RazgovorError(
-            f"{direktor.public_id} nema potčinjenog koji vodi sektor {kod}.")
+            f"{direktor.public_id} nema nijednog potčinjenog kome bi zadala "
+            f"posao (traženo: {rezerva or kod}).")
     zasto = can_delegate(direktor, sef)
     if zasto:
         raise RazgovorError(zasto)
@@ -173,14 +184,18 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str) -> Poruka:
                        actor=actor)
     audit.record("razgovor.zadato", persona=direktor,
                  details={"razgovor": str(razgovor.id), "plan": plan.public_id,
-                          "sektor": kod, "sef": sef.public_id,
+                          "sektor": kod, "umesto": rezerva, "sef": sef.public_id,
                           "izvrsilac": getattr(izvrsilac, "public_id", ""),
                           "actor": actor})
     plans.advance(plan)
     plan.refresh_from_db()
 
+    tekst = _odgovor(plan, sef, izvrsilac)
+    if rezerva:
+        tekst = (f"Sektor {rezerva} nema šefa, pa sam posao zadala upravi.\n\n"
+                 + tekst)
     odgovor = Poruka.objects.create(
         razgovor=razgovor, autor=Poruka.OD_AGENTA, autor_ref=direktor.public_id,
-        telo=_odgovor(plan, sef, izvrsilac), plan=plan)
+        telo=tekst, plan=plan)
     razgovor.save(update_fields=["updated_at"])  # auto_now; `.update()` ga ne dira
     return odgovor

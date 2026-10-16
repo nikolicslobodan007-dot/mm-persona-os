@@ -29,10 +29,22 @@ pytestmark = [requires_db]
 
 @pytest.fixture
 def firma(db, mila):
-    """Organizacija sa direktorom, šefovima i izvršiocima (ADR-0017/0028)."""
+    """Organizacija sa direktorom, šefovima i izvršiocima (ADR-0017/0028).
+
+    Spisak ekipe (`apps/personas/ekipa.py`) **nema** `SEF-MKT` ni `URE-SR` —
+    izmereno 16.10.2026, Mila i Jovan u produkciji nisu došli odatle. Zato se
+    marketing ovde popunjava izričito: inače bi test merio prazan sektor, a
+    ne lanac.
+    """
+    from apps.personas import hiring, org
+    from apps.personas.models import Position
+
     with bind(actor_id="user:qa"):
         call_command("seed_org", stdout=io.StringIO())
         call_command("seed_ekipa", stdout=io.StringIO())
+        org.assign(mila, Position.objects.get(code="SEF-MKT"), actor="user:qa")
+        hiring.hire(name="Jovan Ilić", position=Position.objects.get(code="URE-SR"),
+                    actor="user:qa")
     return Persona.objects.get(assignments__position__code="DIR-00",
                                assignments__ended_at__isnull=True)
 
@@ -83,6 +95,17 @@ class TestPorukaPostajePosao:
         tudji = AgentPlan.objects.exclude(persona=firma)
         assert tudji.exists(), "nijedan agent ispod direktora nije dobio posao"
         assert odgovor.plan.persona_id == firma.pk
+
+    def test_sektor_bez_sefa_ide_upravi_i_to_se_kaze(self, nit, firma):
+        """ADR-0105 — nepopunjeno radno mesto ne sme da zaustavi posao."""
+        from apps.personas.models import Assignment
+
+        Assignment.objects.filter(position__code="SEF-IST",
+                                  ended_at__isnull=True).delete()
+        odgovor = nit_servis.posalji(nit, "Istraži šta radi konkurencija.",
+                                     actor="user:slobodan")
+        assert "ISTRAZIVANJE nema šefa" in odgovor.telo
+        assert odgovor.plan is not None
 
     def test_prazna_poruka_ne_pravi_nista(self, nit):
         with pytest.raises(nit_servis.RazgovorError, match="Prazna"):
