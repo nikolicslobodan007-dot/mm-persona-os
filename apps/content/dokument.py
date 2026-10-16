@@ -16,6 +16,11 @@ Dve vrste formata, i razlika je bitna:
     `libreoffice --headless`. **Bez LibreOffice-a u slici oni ne rade** i
     ovde se to kaže jasnom greškom, a ne tihim praznim fajlom.
 
+Ključ u skladištu se računa iz posla (`id` nacrta, format, `content_hash`),
+a NE iz otiska bajtova: ODF je ZIP i u sebe upisuje vreme pravljenja, pa isti
+nacrt dva puta daje različite bajtove. Otisak bajtova ostaje u `sha256` reda,
+jer to jeste checksum tog fajla.
+
 Pravljenje dokumenta nema spoljašnji efekat: ništa ne izlazi iz sistema, kao
 ni kod `content.draft`. Zato ne traži ni odobrenje ni novu dozvolu
 (ADR-0024). Objava i slanje su i dalje odvojena stvar i prolaze kroz svoja
@@ -97,6 +102,20 @@ def napravi(item, *, oblik: str = "odt", actor: str = "") -> MediaAsset:
         raise DokumentError("Nacrt je prazan — nema šta da se upiše u dokument.")
 
     mime, treba_lo = FORMATI[oblik]
+    persona = item.persona
+
+    # Ključ se računa iz POSLA, ne iz bajtova. ODF je ZIP, a ZIP u sebe
+    # upisuje vreme pravljenja — isti nacrt dva puta daje različite bajtove i
+    # različit otisak, pa bi otisak fajla pravio nov red pri svakom pozivu.
+    # Izmereno testom `test_isti_nacrt_ne_pravi_drugi_red` (16.10.2026).
+    logicki = storage.sha256(
+        f"{item.id}:{oblik}:{item.content_hash}".encode())
+    kljuc = storage.key_for(persona.public_id, logicki, mime)
+
+    postojeci = MediaAsset.objects.filter(storage_key=kljuc).first()
+    if postojeci is not None:
+        return postojeci
+
     lo_dokument, lo_pisac, lo_izvoz = _biblioteka()
     projekat = _projekat(item, lo_dokument, lo_pisac)
 
@@ -119,20 +138,13 @@ def napravi(item, *, oblik: str = "odt", actor: str = "") -> MediaAsset:
         raise DokumentError(
             f"Dokument je {len(podaci)} bajtova, granica je {MAX_BAJTOVA}.")
 
-    persona = item.persona
-    otisak = storage.sha256(podaci)
-    kljuc = storage.key_for(persona.public_id, otisak, mime)
-
-    postojeci = MediaAsset.objects.filter(storage_key=kljuc).first()
-    if postojeci is not None:
-        return postojeci
-
     storage.put(podaci, key=kljuc, mime=mime)
     asset = MediaAsset.objects.create(
         public_id=I.media_asset_public_id(persona.public_id,
                                           next_sequence(persona)),
         persona=persona, kind=E.AssetKind.DOCUMENT.value, storage_key=kljuc,
-        mime_type=mime, sha256=otisak, origin=ORIGIN, rights_note=NAPOMENA)
+        mime_type=mime, sha256=storage.sha256(podaci), origin=ORIGIN,
+        rights_note=NAPOMENA)
     audit.record("content.document.created", persona=persona,
                  details={"asset": asset.public_id, "oblik": oblik,
                           "sadrzaj": str(item.id), "bajtova": len(podaci),

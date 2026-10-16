@@ -58,7 +58,16 @@ Public_id ostaje `IMG-…` jer tako kaže Canon §2.2 za `MediaAsset` — vrstu
 nosi `kind`, ne prefiks, i prefiks se ne menja usput.
 
 **6. Isti nacrt u istom formatu daje isti ključ u skladištu**, pa drugi poziv
-vraća postojeći red umesto da pravi duplikat.
+vraća postojeći red umesto da pravi duplikat. Ključ se računa iz **posla**
+(`id` nacrta, format, `content_hash`), ne iz otiska bajtova.
+
+Zašto baš tako — izmereno, ne pretpostavljeno: prvo sam ključ vezao za otisak
+fajla i test `test_isti_nacrt_ne_pravi_drugi_red` je pao. **ODF je ZIP, a ZIP u
+sebe upisuje vreme pravljenja**, pa isti nacrt dva puta daje različite bajtove
+i time nov red pri svakom pozivu. Otisak bajtova ostaje upisan u `sha256`
+reda — to jeste checksum tog fajla — ali identitet dokumenta nosi posao.
+Provera postojećeg reda ide **pre** izvoza, pa se drugi put ne radi ni
+posao.
 
 **7. Novi korak plana `content.document`.** Uzima poslednji nacrt iz istog
 plana i pravi fajl. Format se zadaje u koraku.
