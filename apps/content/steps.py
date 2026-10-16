@@ -11,6 +11,9 @@ Ovde su dva koraka od kojih posao počinje:
   - `content.document` — od nacrta napravi stvaran fajl (ADR-0103). Fajl
     ostaje kod nas, u našem skladištu; ništa ne izlazi napolje, pa ni ovaj
     korak ne traži odobrenje.
+  - `content.review` — šef pregleda nacrt pre nego što ga vrati nalogodavcu
+    (ADR-0108). Nema spoljašnjeg efekta; vraćen nacrt obara korak, pa se u
+    nit vraća razlog, a ne tiho prihvaćen tekst.
   - `content.submit` — pošalji nacrt na odobrenje za objavu. Ovo **jeste**
     spoljašnji efekat, pa korak čeka čoveka kao i svaki drugi (Canon §15.2).
 
@@ -81,6 +84,36 @@ def _dokument(step: plans.PlanStep, state: dict) -> plans.Outcome:
         return plans.Failed(str(e)[:300])
     return plans.Done({"asset": asset.public_id, "oblik": oblik,
                        "kljuc": asset.storage_key, "sadrzaj": str(item.id)})
+
+
+@plans.handler("content.review")
+def _pregled(step: plans.PlanStep, state: dict) -> plans.Outcome:
+    """Šef čita nacrt koji mu je izvršilac vratio. ADR-0108.
+
+    Nacrt se traži i u planovima ispod, jer ga je pisao izvršilac u svom
+    planu, a ne šef u ovom. Čita se **cela** `ContentItem`, ne skraćeni
+    izlaz koraka: pregled polovine teksta nije pregled.
+    """
+    from apps.content import pregled
+    from apps.content.models import ContentItem
+
+    nacrt = (state.get("by_handler", {}).get("content.draft") or [{}])[-1]
+    if not nacrt.get("item"):
+        nacrt = plans.output_in_chain(step.plan, "content.draft") or {}
+    kljuc = nacrt.get("item") or ""
+    item = ContentItem.objects.filter(pk=kljuc).first() if kljuc else None
+    if item is None:
+        return plans.Failed("Nema nacrta za pregled.")
+
+    nalog = (step.input_json or {}).get("nalog") or state.get("goal", "")
+    ishod = pregled.oceni(step.plan.persona, nalog, item.body or "",
+                          run=step.plan.run)
+    if ishod.prihvacen:
+        return plans.Done({"prihvacen": True, "primedba": ishod.primedba,
+                           "presudio": ishod.presudio, "item": str(item.id),
+                           "pregledao": step.plan.persona.public_id})
+    return plans.Failed(f"{step.plan.persona.display_name} vraća nacrt: "
+                        f"{ishod.primedba}"[:300])
 
 
 @plans.handler("content.submit")

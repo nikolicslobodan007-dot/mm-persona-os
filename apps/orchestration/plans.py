@@ -338,6 +338,38 @@ def depth_of(plan: AgentPlan, limit: int = 10) -> int:
     return depth
 
 
+#: Koliko duboko se traži izlaz kroz lanac delegiranja. Lanac je i tako
+#: ograničen na `MAX_DELEGATION_DEPTH`; ovo je zaštita od ciklusa u podacima.
+MAX_CHAIN_LOOKUP = 5
+
+
+def output_in_chain(plan: AgentPlan, handler_name: str, depth: int = 0) -> dict | None:
+    """Izlaz prvog završenog koraka `handler_name` u planu ili ispod njega.
+
+    Ide po `waiting_for_plan`, koji `advance` upisuje PRE nego što izvršilac
+    krene — zato je veza pouzdana i kad je posao već gotov. Tako nalogodavac
+    vidi šta je urađeno dva nivoa niže, a da ne pamti ko je kome zadao.
+
+    Gleda se samo korak koji je **završen**; u lanac se silazi i kad je korak
+    pao, jer se nacrt koji nije prošao pregled i dalje nalazi ispod.
+    """
+    if depth > MAX_CHAIN_LOOKUP:
+        return None
+    for s in plan.steps.order_by("sequence"):
+        izlaz = s.output_json or {}
+        if (izlaz and s.status == SS.DONE.value
+                and (s.input_json or {}).get("handler") == handler_name):
+            return izlaz
+        dete = izlaz.get("waiting_for_plan")
+        if dete:
+            d = AgentPlan.objects.filter(public_id=dete).first()
+            if d is not None:
+                nadjeno = output_in_chain(d, handler_name, depth + 1)
+                if nadjeno:
+                    return nadjeno
+    return None
+
+
 @handler("plan.note")
 def _step_note(step: PlanStep, state: dict) -> Outcome:
     """Beleška u planu — korak bez spoljašnjeg efekta.

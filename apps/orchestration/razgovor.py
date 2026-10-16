@@ -20,6 +20,9 @@ Tri granice, namerno:
   - **Sektor bez šefa ne obara posao.** Direktor ga daje upravi i to kaže u
     odgovoru. Posao koji stane zato što neko radno mesto nije popunjeno nije
     organizacija nego prepreka.
+  - **Šef pregleda pre nego što vrati** (ADR-0108). Nije poštar: nacrt koji
+    ne odgovara nalogu vraća sa primedbom i posao staje, a čovek vidi i
+    razlog i nacrt koji nije prošao.
   - **Razvrstavanje po sektorima je zasad tabela reči**, ne model. To je
     svesna privremena stvar i piše ovde, a ne u ADR-u kao da je trajno
     rešenje: kad direktor bude birala sektor modelom, menja se samo
@@ -177,8 +180,11 @@ def _koraci(tema: str, sef: Persona, izvrsilac: Persona | None) -> list[dict]:
                        "steps": [{"handler": "content.draft",
                                   "description": "Napiši nacrt",
                                   "input": {"tema": tema}}]}},
-            {"handler": "plan.note", "description": "Preuzmi gotov posao",
-             "input": {"note": f"Nacrt preuzet od {izvrsilac.public_id}."}},
+            # ADR-0108 — šef ne preuzima nepročitano. Korak je njegov posao,
+            # pa ga izvršava on, svojim poverenjem, u svom planu.
+            {"handler": "content.review",
+             "description": f"Pregledaj nacrt: {izvrsilac.display_name}",
+             "input": {"nalog": tema}},
         ]
     return [
         {"handler": "org.delegate", "description": f"Zadaj: {sef.display_name}",
@@ -188,26 +194,19 @@ def _koraci(tema: str, sef: Persona, izvrsilac: Persona | None) -> list[dict]:
     ]
 
 
-def _nacrt_iz_lanca(plan: AgentPlan, dubina: int = 0) -> dict | None:
-    """Traži izlaz koraka `content.draft` kroz ceo lanac delegiranja.
+#: Oznaka AI persone na kraju nacrta (`content.service.disclosure_line`).
+_POTPIS = re.compile(r"\n*—\s*[^\n]{1,80}·\s*AI persona\s*$")
 
-    Ide po `waiting_for_plan`, koji `advance` upisuje PRE nego što izvršilac
-    krene — zato je veza pouzdana i kad je posao već gotov.
+
+def _bez_potpisa(tekst: str) -> str:
+    """Potpis izvršioca ne ide u direktorovu poruku.
+
+    Oznaka je obavezna (Canon §17) i ostaje na nacrtu u bazi i na svemu što
+    izlazi napolje. Ovde se skida samo iz onoga što direktor prepisuje u nit:
+    poruku u niti potpisuje direktor, pa bi inače u jednoj poruci stajala dva
+    potpisa i čovek bi mislio da mu piše izvršilac.
     """
-    if dubina > 5:
-        return None
-    for s in plan.steps.order_by("sequence"):
-        izlaz = s.output_json or {}
-        if (s.input_json or {}).get("handler") == "content.draft" and izlaz.get("item"):
-            return izlaz
-        dete = izlaz.get("waiting_for_plan")
-        if dete:
-            d = AgentPlan.objects.filter(public_id=dete).first()
-            if d is not None:
-                nadjeno = _nacrt_iz_lanca(d, dubina + 1)
-                if nadjeno:
-                    return nadjeno
-    return None
+    return _POTPIS.sub("", tekst or "").rstrip()
 
 
 def _odgovor(plan: AgentPlan, sef: Persona, izvrsilac: Persona | None) -> str:
@@ -215,16 +214,31 @@ def _odgovor(plan: AgentPlan, sef: Persona, izvrsilac: Persona | None) -> str:
     from common import enums as E
 
     ko = (izvrsilac or sef).display_name
+    nacrt = plans.output_in_chain(plan, "content.draft") or {}
+    tekst = _bez_potpisa(nacrt.get("tekst", ""))
+
     if plan.status == E.PlanStatus.COMPLETED.value:
-        nacrt = _nacrt_iz_lanca(plan)
-        if nacrt:
-            return (f"Urađeno. Zadala sam {sef.display_name}, posao je uradio "
-                    f"{ko}.\n\n{nacrt.get('tekst', '')}")
-        return (f"Posao je završen preko {sef.display_name}, ali nacrt nije "
-                f"stigao do mene. Plan: {plan.public_id}.")
+        if not nacrt:
+            return (f"Posao je završen preko {sef.display_name}, ali nacrt nije "
+                    f"stigao do mene. Plan: {plan.public_id}.")
+        redovi = [f"Urađeno. Zadala sam {sef.display_name}, posao je uradio {ko}."]
+        # ADR-0108 — pregled se javlja samo ako ga je stvarno bilo. Bez modela
+        # nacrt prolazi, ali direktor onda ne sme da tvrdi da je pregledan.
+        pregled = plans.output_in_chain(plan, "content.review") or {}
+        if pregled.get("presudio"):
+            nota = pregled.get("primedba") or "bez primedbe"
+            redovi.append(f"Pregled ({sef.display_name}): prihvaćeno — {nota}")
+        redovi.append(tekst)
+        return "\n\n".join(r for r in redovi if r)
+
     razlog = plans.failure_reason(plan) or plan.status
-    return (f"Nije urađeno. Zadala sam {sef.display_name}, a posao je stao: "
-            f"{razlog}. Plan: {plan.public_id}.")
+    redovi = [f"Nije urađeno. Zadala sam {sef.display_name}, a posao je stao: "
+              f"{razlog}. Plan: {plan.public_id}."]
+    if tekst:
+        # Nacrt koji je šef vratio čovek i dalje treba da vidi — da zna o čemu
+        # se spor vodi i da sam presudi.
+        redovi += ["Nacrt koji nije prošao:", tekst]
+    return "\n\n".join(redovi)
 
 
 def posalji(razgovor: Razgovor, telo: str, *, actor: str) -> Poruka:

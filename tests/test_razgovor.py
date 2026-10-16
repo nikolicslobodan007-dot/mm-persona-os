@@ -7,7 +7,9 @@ proveravaju vrata:
   - razvrstavanje po sektorima radi i kad čovek piše sa dijakritikom;
   - poruka pravi plan direktora, lanac ide naniže i odgovor se vraća u nit;
   - prazna i predugačka poruka se odbijaju pre nego što išta nastane;
-  - kad direktor nema koga da zaduži, to se kaže, a ne ćuti.
+  - kad direktor nema koga da zaduži, to se kaže, a ne ćuti;
+  - šef pregleda nacrt pre nego što ga vrati, i vraćen nacrt staje sa
+    razlogom (ADR-0108).
 """
 
 from __future__ import annotations
@@ -235,3 +237,99 @@ class TestKonzola:
         assert nit.poruke.count() == 2
         telo = c.get(f"/console/razgovor/{nit.id}").content.decode()
         assert "Napiši tekst za sajt." in telo
+
+
+@pytest.mark.django_db
+class TestSefPregleda:
+    """ADR-0108 — šef nije poštar: čita nacrt pre nego što ga vrati.
+
+    Model se ne zove stvarno. Zamenjuje se samo svrha `EVALUATE` (pregled),
+    a nacrt se i dalje piše kako se piše — da test meri pregled, a ne pisca.
+    """
+
+    @staticmethod
+    def _ocena(monkeypatch, tekst):
+        from apps.llm_gateway import gateway
+
+        pravi = gateway.generate
+
+        class Lazna:
+            def __init__(self, t):
+                self.text = t
+
+        def umesto(purpose, system, prompt, **kw):
+            if purpose == E.LLMPurpose.EVALUATE:
+                return Lazna(tekst)
+            return pravi(purpose, system, prompt, **kw)
+
+        monkeypatch.setattr(gateway, "generate", umesto)
+
+    def test_korak_pregleda_je_u_sefovom_planu(self, nit, firma):
+        """Pregled izvršava šef, u svom planu — ne direktor umesto njega."""
+        from apps.orchestration.models import PlanStep
+
+        nit_servis.posalji(nit, "Napiši tekst za sajt.", actor="user:slobodan")
+        koraci = [s for s in PlanStep.objects.select_related("plan__persona")
+                  if (s.input_json or {}).get("handler") == "content.review"]
+        assert koraci, "nijedan plan nema korak pregleda"
+        assert all(s.plan.persona_id != firma.pk for s in koraci)
+
+    def test_prihvacen_nacrt_nosi_pregled_u_odgovoru(self, nit, firma, monkeypatch):
+        self._ocena(monkeypatch, '{"prihvatam": true, "primedba": '
+                                 '"U redu, samo skrati naslov."}')
+        odgovor = nit_servis.posalji(nit, "Napiši tekst za sajt.",
+                                     actor="user:slobodan")
+        assert "Pregled (" in odgovor.telo
+        assert "U redu, samo skrati naslov." in odgovor.telo
+        assert odgovor.plan.status == E.PlanStatus.COMPLETED.value
+
+    def test_vracen_nacrt_zaustavlja_posao_i_kaze_zasto(self, nit, firma, monkeypatch):
+        self._ocena(monkeypatch, '{"prihvatam": false, "primedba": '
+                                 '"Tekst ne odgovara nalogu."}')
+        odgovor = nit_servis.posalji(nit, "Napiši tekst za sajt.",
+                                     actor="user:slobodan")
+        assert "Nije urađeno" in odgovor.telo
+        assert "Tekst ne odgovara nalogu." in odgovor.telo
+        # Čovek i dalje vidi o čemu se spor vodi.
+        assert "Nacrt koji nije prošao:" in odgovor.telo
+        assert odgovor.plan.status == E.PlanStatus.ABANDONED.value
+
+    def test_bez_suda_nacrt_prolazi_i_pregled_se_ne_tvrdi(self, nit, firma, monkeypatch):
+        """Lokalni šablon ne ume JSON. Tada nema pregleda — ni u odgovoru."""
+        self._ocena(monkeypatch, "Mislim da je ovo sasvim u redu.")
+        odgovor = nit_servis.posalji(nit, "Napiši tekst za sajt.",
+                                     actor="user:slobodan")
+        assert odgovor.plan.status == E.PlanStatus.COMPLETED.value
+        assert "Pregled (" not in odgovor.telo
+
+    def test_vracanje_bez_razloga_nije_pregled(self, db, mila, monkeypatch):
+        """„Ne prihvatam" bez primedbe je prepreka, ne pregled."""
+        from apps.content import pregled
+
+        self._ocena(monkeypatch, '{"prihvatam": false, "primedba": ""}')
+        with bind(actor_id="user:qa"):
+            ishod = pregled.oceni(mila, "Napiši tekst", "Nekakav nacrt.")
+        assert ishod.prihvacen is True
+        assert ishod.presudio is False
+
+    def test_prazan_nacrt_se_vraca_bez_modela(self, db, mila):
+        from apps.content import pregled
+
+        ishod = pregled.oceni(mila, "Napiši tekst", "   ")
+        assert ishod.prihvacen is False
+        assert ishod.presudio is True
+
+
+class TestPotpis:
+    """ADR-0108 — oznaka izvršioca ostaje na nacrtu, ne na direktorovoj poruci."""
+
+    def test_potpis_na_kraju_se_skida(self):
+        tekst = "Tekst nacrta.\n\n— Jovan Ilić · AI persona"
+        assert nit_servis._bez_potpisa(tekst) == "Tekst nacrta."
+
+    def test_tekst_bez_potpisa_ostaje_ceo(self):
+        assert nit_servis._bez_potpisa("Prvi red\n\nDrugi red") == "Prvi red\n\nDrugi red"
+
+    def test_potpis_u_sredini_se_ne_dira(self):
+        tekst = "— Mila Vuković · AI persona\n\nOvo je nastavak teksta."
+        assert nit_servis._bez_potpisa(tekst) == tekst
