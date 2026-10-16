@@ -11,6 +11,17 @@ trenucima, pa sam `uri` ne kaže ŠTA je tačno pročitano. Oba polja su prazna
 za izvore koji nisu iz repozitorijuma — ne pretpostavljaju se, prosleđuje ih
 onaj ko uvozi.
 
+ADR-0095 dodaje: pri PONOVNOM uvozu istog izvora, pet polja koje čovek
+donosi pri SVAKOM uvozu (`uri`, `license_box`, `license_note`, `commit_sha`,
+`file_path`) se osvežavaju na postojećem redu. Bez toga je `get_or_create`
+sa `defaults=` upisivao te vrednosti SAMO pri prvom pravljenju reda, pa je
+ponovni uvoz sa novim zastavicama ostavljao stare podatke — izmereno na
+`docs/adr` korpusu: posle uvoza sa novim zastavicama red je i dalje nosio
+stari `uri` i prazne `commit_sha`/`file_path`, iako je uvoz prijavio da je
+upisao i obrisao činjenice. `ingested_at` (ADR-0076 §2), `persona`, `title`
+(ključ pretrage), `trust_score`, `source_kind` i `is_active` se NE diraju
+ovim osvežavanjem.
+
 Jedna veština je jedan `KnowledgeFact`: `subject` je ime veštine,
 `predicate` je `vestina.postupak`, `object_json` nosi korake i napomene —
 naš opis postupka, nikad doslovan prepis izvora (ADR-0074 tačka 3): takvo
@@ -33,6 +44,10 @@ from apps.memory.models import KnowledgeFact, KnowledgeSource
 from common import enums as E
 
 PREDIKAT = "vestina.postupak"
+
+#: ADR-0095 — polja koja čovek donosi pri SVAKOM uvozu i koja se zato
+#: osvežavaju i na postojećem redu, ne samo pri prvom pravljenju.
+_POLJA_ZA_OSVEZAVANJE = ("uri", "license_box", "license_note", "commit_sha", "file_path")
 
 
 @dataclass(frozen=True)
@@ -61,8 +76,10 @@ def uvezi(
     `commit_sha` i `file_path` (ADR-0077 §3) su prazni za izvore koji nisu iz
     repozitorijuma — ne pretpostavljaju se, prosleđuje ih pozivalac.
 
-    Ponovni uvoz **briše i upisuje ponovo** postojeće `KnowledgeFact` za taj
-    izvor sa predikatom `vestina.postupak` — isti obrazac kao u Rečniku
+    Ponovni uvoz **osvežava** `uri`, `license_box`, `license_note`,
+    `commit_sha` i `file_path` na postojećem redu (ADR-0095), i **briše i
+    upisuje ponovo** postojeće `KnowledgeFact` za taj izvor sa predikatom
+    `vestina.postupak` — isti obrazac kao u Rečniku
     (apps/content/recnik.py), iz istog razloga: spajanje red po red ne bi
     ništa dobilo, a ostavilo bi staro da živi pored novog. Sve u jednoj
     transakciji.
@@ -79,7 +96,7 @@ def uvezi(
         )
 
     with transaction.atomic():
-        izvor, _ = KnowledgeSource.objects.get_or_create(
+        izvor, napravljen = KnowledgeSource.objects.get_or_create(
             persona=None, title=naslov_izvora,
             defaults={"source_kind": E.SourceKind.FIRST_PARTY_USER_INPUT.value,
                       "trust_score": 1.0, "uri": uri,
@@ -88,6 +105,17 @@ def uvezi(
                       "commit_sha": commit_sha,
                       "file_path": file_path,
                       "is_active": True})
+        if not napravljen:
+            # ADR-0095 — red već postoji; osvežavamo tačno pet polja koja
+            # čovek donosi pri svakom uvozu. `ingested_at`, `persona`,
+            # `title`, `trust_score`, `source_kind` i `is_active` ostaju
+            # netaknuti ovim upisom.
+            izvor.uri = uri
+            izvor.license_box = E.LicenseBox(license_box).value
+            izvor.license_note = license_note
+            izvor.commit_sha = commit_sha
+            izvor.file_path = file_path
+            izvor.save(update_fields=list(_POLJA_ZA_OSVEZAVANJE))
         obrisano = KnowledgeFact.objects.filter(source=izvor, predicate=PREDIKAT).delete()[0]
         KnowledgeFact.objects.bulk_create([
             KnowledgeFact(

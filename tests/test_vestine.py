@@ -1,4 +1,5 @@
-"""Testovi za uvoz veština (ADR-0074), komit/putanju (ADR-0077 §3) i spisak (ADR-0084).
+"""Testovi za uvoz veština (ADR-0074), komit/putanju (ADR-0077 §3),
+osvežavanje pri ponovnom uvozu (ADR-0095) i spisak (ADR-0084).
 
 Komanda `vestina` i modul `apps/memory/vestine.py` su u pogonu od 04.10. i
 do sada ih je čuvao jedino CHECK u bazi. Ovi testovi proveravaju ugovor koji
@@ -298,3 +299,114 @@ def test_uvoz_bez_commit_i_putanje_ostavlja_prazno(db, tmp_path):
     assert izvor.file_path == ""
     assert izvor.commit_sha is not None
     assert izvor.file_path is not None
+
+
+@requires_db
+@pytest.mark.django_db
+def test_ponovni_uvoz_osvezava_pet_polja(db):
+    """ADR-0095 — uri, license_box, license_note, commit_sha i file_path
+
+    se osvežavaju na postojećem redu pri ponovnom uvozu istog naslova.
+    """
+    uvezi(
+        naslov_izvora="Izvor za osvežavanje",
+        uri="https://example.com/staro",
+        license_box=E.LicenseBox.NEPOZNATA,
+        license_note="",
+        commit_sha="a" * 40,
+        file_path="stara/putanja.json",
+        vestine=[_vestina()],
+        actor="user:qa",
+    )
+
+    uvezi(
+        naslov_izvora="Izvor za osvežavanje",
+        uri="https://example.com/novo",
+        license_box=E.LicenseBox.SLOBODNA,
+        license_note="MIT",
+        commit_sha="b" * 40,
+        file_path="nova/putanja.json",
+        vestine=[_vestina()],
+        actor="user:qa",
+    )
+
+    izvor = KnowledgeSource.objects.get(title="Izvor za osvežavanje")
+    assert izvor.uri == "https://example.com/novo"
+    assert izvor.license_box == E.LicenseBox.SLOBODNA.value
+    assert izvor.license_note == "MIT"
+    assert izvor.commit_sha == "b" * 40
+    assert izvor.file_path == "nova/putanja.json"
+
+
+@requires_db
+@pytest.mark.django_db
+def test_ponovni_uvoz_sa_praznim_spiskom_ne_dira_ingested_at_ni_trust_score(db):
+    """ADR-0095 — osvežavanje pet polja ne dira `ingested_at` (ADR-0076 §2) ni `trust_score`.
+
+    Drugi uvoz šalje PRAZAN spisak veština. Blok iz ADR-0076 §2 koji upisuje
+    `ingested_at` se izvršava samo `if vestine:` — sa praznim spiskom se
+    uopšte ne izvršava, pa je jedini kod koji sme da dirne red osvežavanje
+    pet polja iz ADR-0095. Ako `ingested_at` i `trust_score` posle ovog
+    uvoza ostanu nepromenjeni, to stvarno dokazuje da ih osvežavanje pet
+    polja ne dira — za razliku od testa sa zamrznutim satom i nepraznim
+    spiskom na oba poziva, koji bi prošao i da je osvežavanje pokvarilo to
+    polje, jer bi ADR-0076 §2 blok svejedno prepisao `ingested_at` istom
+    (zamrznutom) vrednošću.
+    """
+    uvezi(
+        naslov_izvora="Izvor stabilnih polja",
+        uri="https://example.com/stabilno-1",
+        license_box=E.LicenseBox.NEPOZNATA,
+        license_note="",
+        vestine=[_vestina()],
+        actor="user:qa",
+    )
+    izvor_pre = KnowledgeSource.objects.get(title="Izvor stabilnih polja")
+    ingested_at_pre = izvor_pre.ingested_at
+    trust_score_pre = izvor_pre.trust_score
+    assert ingested_at_pre is not None
+
+    uvezi(
+        naslov_izvora="Izvor stabilnih polja",
+        uri="https://example.com/stabilno-2",
+        license_box=E.LicenseBox.ZARAZNA,
+        license_note="GPL-3.0",
+        vestine=[],
+        actor="user:qa",
+    )
+
+    izvor_posle = KnowledgeSource.objects.get(title="Izvor stabilnih polja")
+    assert izvor_posle.ingested_at == ingested_at_pre
+    assert izvor_posle.trust_score == trust_score_pre
+    # Pet polja se osvežava i kad je spisak veština prazan (ADR-0095) —
+    # ovaj uvoz nije "ništa ne radi", samo ne dira pečat ni poverenje.
+    assert izvor_posle.uri == "https://example.com/stabilno-2"
+    assert izvor_posle.license_box == E.LicenseBox.ZARAZNA.value
+    assert izvor_posle.license_note == "GPL-3.0"
+
+
+@requires_db
+@pytest.mark.django_db
+def test_prvi_uvoz_pravi_red_sa_svim_vrednostima(db):
+    """ADR-0095 — prvi uvoz i dalje pravi nov red sa svim vrednostima, bez regresije."""
+    uvezi(
+        naslov_izvora="Izvor prvog uvoza",
+        uri="https://example.com/prvi",
+        license_box=E.LicenseBox.SLOBODNA,
+        license_note="MIT",
+        commit_sha="c" * 40,
+        file_path="putanja/prva.json",
+        vestine=[_vestina()],
+        actor="user:qa",
+    )
+
+    izvor = KnowledgeSource.objects.get(title="Izvor prvog uvoza")
+    assert izvor.uri == "https://example.com/prvi"
+    assert izvor.license_box == E.LicenseBox.SLOBODNA.value
+    assert izvor.license_note == "MIT"
+    assert izvor.commit_sha == "c" * 40
+    assert izvor.file_path == "putanja/prva.json"
+    assert izvor.source_kind == E.SourceKind.FIRST_PARTY_USER_INPUT.value
+    assert izvor.trust_score == 1.0
+    assert izvor.is_active is True
+    assert izvor.ingested_at is not None
