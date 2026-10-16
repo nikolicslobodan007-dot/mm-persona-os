@@ -15,6 +15,10 @@ ni `--actor` ni ostale argumente uvoza, i zato ne ulazi u `bind()` okvir.
 Postoji da bi se videlo šta je već u bazi, pre nego što se nešto uveze po
 drugi put. Uz `--spisak`, `--izvor` filtrira po delu naslova izvora; bez
 `--spisak` to je pun naslov izvora koji se uvozi.
+
+`--commit` i `--putanja` (ADR-0077 §3) su neobavezni: popunjavaju se samo
+kada korpus dolazi iz repozitorijuma, jer isti `uri` tamo daje različit
+sadržaj u različitim trenucima.
 """
 
 from __future__ import annotations
@@ -45,6 +49,12 @@ class Command(BaseCommand):
         parser.add_argument("--naziv-licence", default="",
                              help="Naziv licence — obavezan kada je --licenca SLOBODNA "
                                   "(ADR-0059 tačka 2).")
+        parser.add_argument("--commit", default="",
+                             help="Commit iz kog je pročitan sadržaj — samo za korpus iz "
+                                  "repozitorijuma (ADR-0077 §3). Neobavezan.")
+        parser.add_argument("--putanja", default="",
+                             help="Putanja fajla u repozitorijumu — samo za korpus iz "
+                                  "repozitorijuma (ADR-0077 §3). Neobavezan.")
         parser.add_argument("--datoteka", default="",
                              help="Putanja do JSON datoteke sa veštinama. Obavezna pri uvozu.")
         parser.add_argument("--actor", default="",
@@ -134,6 +144,8 @@ class Command(BaseCommand):
                 uri=options["uri"],
                 license_box=licenca,
                 license_note=naziv_licence,
+                commit_sha=options["commit"],
+                file_path=options["putanja"],
                 vestine=vestine,
                 actor=actor,
             )

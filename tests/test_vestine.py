@@ -1,4 +1,4 @@
-"""Testovi za uvoz veština (ADR-0074) i za spisak veština (ADR-0084).
+"""Testovi za uvoz veština (ADR-0074), komit/putanju (ADR-0077 §3) i spisak (ADR-0084).
 
 Komanda `vestina` i modul `apps/memory/vestine.py` su u pogonu od 04.10. i
 do sada ih je čuvao jedino CHECK u bazi. Ovi testovi proveravaju ugovor koji
@@ -28,6 +28,24 @@ def _vestina(ime="oparivanje testa", pouzdanost=0.8):
         napomene="radi bolje leti",
         pouzdanost=pouzdanost,
     )
+
+
+def _datoteka(tmp_path, ime="veština iz datoteke"):
+    putanja = tmp_path / "vestine.json"
+    putanja.write_text(
+        json.dumps(
+            [
+                {
+                    "ime": ime,
+                    "koraci": ["korak 1"],
+                    "napomene": "",
+                    "pouzdanost": 0.5,
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+    return putanja
 
 
 @requires_db
@@ -81,20 +99,7 @@ def test_pouzdanost_van_opsega_die_pre_transakcije(db):
 @requires_db
 @pytest.mark.django_db
 def test_slobodna_kutija_bez_naziva_licence_staje_u_komandi(db, tmp_path):
-    datoteka = tmp_path / "vestine.json"
-    datoteka.write_text(
-        json.dumps(
-            [
-                {
-                    "ime": "test veština",
-                    "koraci": ["korak 1"],
-                    "napomene": "",
-                    "pouzdanost": 0.5,
-                }
-            ]
-        ),
-        encoding="utf-8",
-    )
+    datoteka = _datoteka(tmp_path, "test veština")
 
     with pytest.raises(CommandError):
         call_command(
@@ -113,20 +118,7 @@ def test_slobodna_kutija_bez_naziva_licence_staje_u_komandi(db, tmp_path):
 @requires_db
 @pytest.mark.django_db
 def test_actor_koji_ne_pocinje_sa_user_staje_u_komandi(db, tmp_path):
-    datoteka = tmp_path / "vestine.json"
-    datoteka.write_text(
-        json.dumps(
-            [
-                {
-                    "ime": "test veština",
-                    "koraci": ["korak 1"],
-                    "napomene": "",
-                    "pouzdanost": 0.5,
-                }
-            ]
-        ),
-        encoding="utf-8",
-    )
+    datoteka = _datoteka(tmp_path, "test veština")
 
     with pytest.raises(CommandError):
         call_command(
@@ -245,20 +237,7 @@ def test_spisak_filtrira_po_izvoru(db):
 @pytest.mark.django_db
 def test_komanda_upisuje_coveka_u_audit_trag(db, tmp_path):
     """ADR-0074: audit mora da vidi --actor, ne podrazumevani service:system."""
-    datoteka = tmp_path / "vestine.json"
-    datoteka.write_text(
-        json.dumps(
-            [
-                {
-                    "ime": "veština za audit",
-                    "koraci": ["korak 1"],
-                    "napomene": "",
-                    "pouzdanost": 0.5,
-                }
-            ]
-        ),
-        encoding="utf-8",
-    )
+    datoteka = _datoteka(tmp_path, "veština za audit")
 
     call_command(
         "vestina",
@@ -273,3 +252,49 @@ def test_komanda_upisuje_coveka_u_audit_trag(db, tmp_path):
     dogadjaj = AuditEvent.objects.get(event_key="memory.vestina.loaded")
     assert dogadjaj.actor_ref == "user:audit-qa"
     assert dogadjaj.actor_ref != "service:system"
+
+
+@requires_db
+@pytest.mark.django_db
+def test_uvoz_sa_commit_i_putanjom_upisuje_vrednosti(db, tmp_path):
+    """ADR-0077 §3 — korpus iz repozitorijuma nosi commit i putanju fajla."""
+    datoteka = _datoteka(tmp_path, "veština sa commitom")
+
+    call_command(
+        "vestina",
+        "--izvor=Izvor sa commitom",
+        "--uri=https://example.com/repo",
+        "--licenca=NEPOZNATA",
+        f"--datoteka={datoteka}",
+        "--actor=user:qa",
+        "--commit=" + "a" * 40,
+        "--putanja=korpus/vestine/nasi-adr.json",
+        stdout=io.StringIO(),
+    )
+
+    izvor = KnowledgeSource.objects.get(title="Izvor sa commitom")
+    assert izvor.commit_sha == "a" * 40
+    assert izvor.file_path == "korpus/vestine/nasi-adr.json"
+
+
+@requires_db
+@pytest.mark.django_db
+def test_uvoz_bez_commit_i_putanje_ostavlja_prazno(db, tmp_path):
+    """ADR-0077 §3 — izvor koji nije iz repozitorijuma nosi prazna polja, ne None."""
+    datoteka = _datoteka(tmp_path, "veština bez commita")
+
+    call_command(
+        "vestina",
+        "--izvor=Izvor bez commita",
+        "--uri=https://example.com/dokument",
+        "--licenca=NEPOZNATA",
+        f"--datoteka={datoteka}",
+        "--actor=user:qa",
+        stdout=io.StringIO(),
+    )
+
+    izvor = KnowledgeSource.objects.get(title="Izvor bez commita")
+    assert izvor.commit_sha == ""
+    assert izvor.file_path == ""
+    assert izvor.commit_sha is not None
+    assert izvor.file_path is not None

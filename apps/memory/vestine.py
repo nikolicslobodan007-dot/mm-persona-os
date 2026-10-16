@@ -5,6 +5,12 @@ ne radi. Zato `uvezi()` ne pretpostavlja ni `uri` ni `license_box` — ona
 dolaze kao argumenti, jer ih je čovek doneo uz materijal, i ne izmišljaju se
 ovde.
 
+ADR-0077 §3 dodaje `commit_sha` i `file_path` za korpus koji dolazi iz
+repozitorijuma: isti `uri` tamo daje različit sadržaj u različitim
+trenucima, pa sam `uri` ne kaže ŠTA je tačno pročitano. Oba polja su prazna
+za izvore koji nisu iz repozitorijuma — ne pretpostavljaju se, prosleđuje ih
+onaj ko uvozi.
+
 Jedna veština je jedan `KnowledgeFact`: `subject` je ime veštine,
 `predicate` je `vestina.postupak`, `object_json` nosi korake i napomene —
 naš opis postupka, nikad doslovan prepis izvora (ADR-0074 tačka 3): takvo
@@ -45,10 +51,15 @@ def uvezi(
     uri: str,
     license_box: E.LicenseBox,
     license_note: str = "",
+    commit_sha: str = "",
+    file_path: str = "",
     vestine: list[Vestina],
     actor: str,
 ) -> dict[str, int]:
     """Upisuje veštine u `KnowledgeSource`/`KnowledgeFact`. Vraća prebrojano.
+
+    `commit_sha` i `file_path` (ADR-0077 §3) su prazni za izvore koji nisu iz
+    repozitorijuma — ne pretpostavljaju se, prosleđuje ih pozivalac.
 
     Ponovni uvoz **briše i upisuje ponovo** postojeće `KnowledgeFact` za taj
     izvor sa predikatom `vestina.postupak` — isti obrazac kao u Rečniku
@@ -74,6 +85,8 @@ def uvezi(
                       "trust_score": 1.0, "uri": uri,
                       "license_box": E.LicenseBox(license_box).value,
                       "license_note": license_note,
+                      "commit_sha": commit_sha,
+                      "file_path": file_path,
                       "is_active": True})
         obrisano = KnowledgeFact.objects.filter(source=izvor, predicate=PREDIKAT).delete()[0]
         KnowledgeFact.objects.bulk_create([

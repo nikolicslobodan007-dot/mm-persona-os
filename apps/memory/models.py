@@ -416,6 +416,23 @@ class KnowledgeSource(UUIDModel):
         help_text="Tačan naziv licence kako stoji na izvoru (npr. `MIT`, `AGPL-3.0`).",
     )
 
+    # --- ADR-0077 §3: korpus iz repozitorijuma nosi commit i putanju -----
+    #
+    # Isti `uri` u repozitorijumu daje različit sadržaj u različitim
+    # trenucima — sama adresa ne kaže ŠTA je tačno pročitano. Oba polja su
+    # prazna za izvore koji nisu iz repozitorijuma (web, korisnički unos…).
+    # Ime `commit_sha` je po kućnom obrascu — isto kao `TaskPatch.base_sha`.
+    commit_sha = models.CharField(
+        max_length=40, blank=True,
+        help_text="ADR-0077 §3 — commit iz kog je pročitan sadržaj. Prazno za "
+                  "izvore koji nisu iz repozitorijuma.",
+    )
+    file_path = models.TextField(
+        blank=True,
+        help_text="ADR-0077 §3 — putanja fajla u repozitorijumu. Prazno za "
+                  "izvore koji nisu iz repozitorijuma.",
+    )
+
     class Meta:
         db_table = "memory_knowledge_source"
         indexes = [
