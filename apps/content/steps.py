@@ -8,6 +8,9 @@ Ovde su dva koraka od kojih posao počinje:
   - `content.draft` — napiši nacrt na zadatu temu. Nema spoljašnjeg efekta,
     pa ne traži odobrenje; tekst iz modela prolazi iste tvrde zabrane kao i
     objava (ADR-0009).
+  - `content.document` — od nacrta napravi stvaran fajl (ADR-0103). Fajl
+    ostaje kod nas, u našem skladištu; ništa ne izlazi napolje, pa ni ovaj
+    korak ne traži odobrenje.
   - `content.submit` — pošalji nacrt na odobrenje za objavu. Ovo **jeste**
     spoljašnji efekat, pa korak čeka čoveka kao i svaki drugi (Canon §15.2).
 
@@ -52,6 +55,32 @@ def _ko_je_pisao(item) -> str:
     pr = (PromptRecord.objects.filter(run=item.run).select_related("route")
           .order_by("-started_at").first())
     return f"{pr.route.provider}/{pr.route.model_key}" if pr else "—"
+
+
+@plans.handler("content.document")
+def _dokument(step: plans.PlanStep, state: dict) -> plans.Outcome:
+    """Pretvara poslednji nacrt u fajl. ADR-0103.
+
+    Format se zadaje u koraku (`oblik`); podrazumevan je `odt`, jedini koji
+    sigurno radi i bez LibreOffice-a u slici.
+    """
+    from apps.content import dokument
+    from apps.content.models import ContentItem
+
+    nacrti = state.get("by_handler", {}).get("content.draft") or []
+    if not nacrti:
+        return plans.Failed("Nema nacrta — korak `content.draft` nije prošao.")
+    item = ContentItem.objects.filter(pk=nacrti[-1].get("item", "")).first()
+    if item is None:
+        return plans.Failed("Nacrt više ne postoji.")
+    oblik = (step.input_json or {}).get("oblik", "odt")
+    try:
+        asset = dokument.napravi(item, oblik=oblik,
+                                 actor=f"agent:{step.plan.persona.public_id}")
+    except dokument.DokumentError as e:
+        return plans.Failed(str(e)[:300])
+    return plans.Done({"asset": asset.public_id, "oblik": oblik,
+                       "kljuc": asset.storage_key, "sadrzaj": str(item.id)})
 
 
 @plans.handler("content.submit")

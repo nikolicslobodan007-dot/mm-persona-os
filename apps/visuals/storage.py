@@ -15,7 +15,20 @@ import hashlib
 from django.conf import settings
 
 #: Šta smemo da upišemo. Sve ostalo se odbija pre poziva storage-a.
-ALLOWED_MIME = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp"}
+#: Mime → nastavak. Slike su od ADR-0018; dokumenti su dodati u ADR-0103 —
+#: isto skladište, ista provera, samo druga vrsta fajla (`AssetKind.DOCUMENT`).
+ALLOWED_MIME = {
+    "image/png": ".png",
+    "image/jpeg": ".jpg",
+    "image/webp": ".webp",
+    # ADR-0103 — dokumenti koje agent sam napravi od svog nacrta.
+    "application/vnd.oasis.opendocument.text": ".odt",
+    "application/vnd.openxmlformats-officedocument."
+    "wordprocessingml.document": ".docx",
+    "application/pdf": ".pdf",
+    "text/html": ".html",
+    "text/plain": ".txt",
+}
 
 
 class StorageError(Exception):
