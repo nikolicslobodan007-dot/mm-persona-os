@@ -129,10 +129,20 @@ class TestFlow:
         types = set(EventOutbox.objects.values_list("event_type", flat=True))
         assert {"action.proposed", "policy.decision.created", "action.queued"} <= types
 
+    @staticmethod
+    def _uzivo(persona):
+        """Persona iz `seed_agent_001` je u SIMULATION. Bez ovoga nijedan test
+        oko prekidača ništa ne meri: okruženje bi samo oborilo živo izvršenje,
+        pa bi tvrdnja o prekidaču prošla iz pogrešnog razloga."""
+        Persona.objects.filter(pk=persona.pk).update(
+            runtime_environment=E.RuntimeEnvironment.CONTROLLED_LIVE.value)
+        return Persona.objects.get(pk=persona.pk)
+
     @override_settings(GLOBAL_EXTERNAL_ACTIONS_ENABLED=False,
                        GLOBAL_PUBLIC_READS_ENABLED=True)
     def test_uzi_prekidac_pusta_citanje_uzivo(self, mila):
         """ADR-0099 — čitanje javne stranice ide uživo pod užim prekidačem."""
+        self._uzivo(mila)
         c = gateway.authorize(_propose(mila, "browser.page.read", _read(7)).action)
         assert c["dry_run"] is False
 
@@ -141,19 +151,26 @@ class TestFlow:
     def test_uzi_prekidac_ne_pusta_objavu(self, mila, page):
         """ADR-0099 — uži prekidač ne sme da otvori ništa što nije čitanje.
 
-        Ovo je test protiv „ili": da je uslov napisan kao `veliki ili uži`,
-        objava bi ovde izašla uživo dok je veliki prekidač ugašen.
+        Test protiv „ili": da je uslov napisan kao `veliki ili uži`, objava bi
+        ovde smela uživo dok je veliki prekidač ugašen.
+
+        Meri se `external_live` neposredno, ne kroz ceo `authorize`: tamo bi
+        odbijanje zbog odobrenja ili poverenja dalo zelen test iz razloga koji
+        sa prekidačem nema veze.
         """
-        a = _propose(mila, "channel.post.create", {"text": "Ne sme uživo"},
-                     channel=page).action
-        if a.status == E.ActionStatus.BLOCKED:
-            return  # politika je odbila ranije — spoljni efekat ionako ne nastaje
-        assert gateway.authorize(a)["dry_run"] is True
+        živa = self._uzivo(mila)
+        citanje = _propose(mila, "browser.page.read", _read(9)).action
+        objava = _propose(mila, "channel.post.create", {"text": "Ne sme uživo"},
+                          channel=page).action
+        assert citanje.persona.runtime_environment == živa.runtime_environment
+        assert gateway.external_live(citanje) is True, "čitanje mora da prođe"
+        assert gateway.external_live(objava) is False, "objava ne sme da prođe"
 
     @override_settings(GLOBAL_EXTERNAL_ACTIONS_ENABLED=False,
                        GLOBAL_PUBLIC_READS_ENABLED=False)
     def test_bez_uzeg_prekidaca_citanje_ostaje_suvo(self, mila):
         """ADR-0099 — podrazumevano stanje se ne menja ovom odlukom."""
+        self._uzivo(mila)
         c = gateway.authorize(_propose(mila, "browser.page.read", _read(8)).action)
         assert c["dry_run"] is True
 

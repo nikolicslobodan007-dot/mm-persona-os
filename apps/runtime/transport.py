@@ -125,7 +125,7 @@ def resolve_secret(credential_ref: str) -> str:
     return value
 
 
-def _cisto_citanje(req: "Request") -> bool:
+def _cisto_citanje(req: Request) -> bool:
     """Da li zahtev po SVOM OBLIKU ne može da promeni stanje na drugoj strani.
 
     ADR-0099 tačka 3 — ova provera namerno ne gleda nalepnicu `action_type`
@@ -147,7 +147,7 @@ def _cisto_citanje(req: "Request") -> bool:
     )
 
 
-def _guard(req: "Request | None" = None) -> None:
+def _guard(req: Request | None = None) -> None:
     """Druga, nezavisna provera prekidača (ADR-0008).
 
     ADR-0099 — kad je veliki prekidač ugašen a uži upaljen, prolazi samo ono
