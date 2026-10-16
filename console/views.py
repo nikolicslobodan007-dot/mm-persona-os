@@ -965,6 +965,11 @@ def content_document(request, item_id):
         messages.error(request, str(e)[:300])
     else:
         messages.success(request, f"Dokument {a.public_id} je napravljen.")
+    # ADR-0110 — dugme stoji i u niti, pa se vraća tamo odakle je pritisnuto.
+    # Prima se samo putanja unutar konzole: sve ostalo je otvoreno preusmerenje.
+    nazad = request.POST.get("nazad", "")
+    if nazad.startswith("/console/") and "//" not in nazad[1:]:
+        return redirect(nazad)
     return redirect("/console/content")
 
 

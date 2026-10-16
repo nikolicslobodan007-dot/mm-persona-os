@@ -228,35 +228,63 @@ def _tekst_nacrta(nacrt: dict) -> str:
     return plans.shorten(_bez_potpisa(telo), MAX_PRIKAZ)
 
 
-def _odgovor(plan: AgentPlan, sef: Persona, izvrsilac: Persona | None) -> str:
-    """Šta direktor javlja čoveku kad se lanac vrati."""
+def _ishod(plan: AgentPlan, sef: Persona, izvrsilac: Persona | None) -> dict:
+    """Ishod lanca, razložen na delove. ADR-0110.
+
+    Jedan izvor za oboje: iz ovoga se gradi i zapis (`telo`) i prikaz
+    (`delovi`), pa poruka u niti i tekst u bazi ne mogu da se raziđu.
+    """
     from common import enums as E
 
-    ko = (izvrsilac or sef).display_name
     nacrt = plans.output_in_chain(plan, "content.draft") or {}
-    tekst = _tekst_nacrta(nacrt)
+    d: dict = {"plan": plan.public_id, "nacrt": _tekst_nacrta(nacrt),
+               "item": str(nacrt.get("item") or ""), "sef": sef.display_name,
+               "izvrsilac": (izvrsilac or sef).display_name}
 
     if plan.status == E.PlanStatus.COMPLETED.value:
         if not nacrt:
-            return (f"Posao je završen preko {sef.display_name}, ali nacrt nije "
-                    f"stigao do mene. Plan: {plan.public_id}.")
-        redovi = [f"Urađeno. Zadala sam {sef.display_name}, posao je uradio {ko}."]
+            return d | {"stanje": "nejasno", "nacrt": "", "item": "",
+                        "glava": (f"Posao je završen preko {sef.display_name}, ali "
+                                  f"nacrt nije stigao do mene. "
+                                  f"Plan: {plan.public_id}.")}
+        ko = (izvrsilac or sef).display_name
+        d |= {"stanje": "uradjeno",
+              "glava": (f"Urađeno. Zadala sam {sef.display_name}, "
+                        f"posao je uradio {ko}.")}
         # ADR-0108 — pregled se javlja samo ako ga je stvarno bilo. Bez modela
         # nacrt prolazi, ali direktor onda ne sme da tvrdi da je pregledan.
         pregled = plans.output_in_chain(plan, "content.review") or {}
         if pregled.get("presudio"):
-            nota = pregled.get("primedba") or "bez primedbe"
-            redovi.append(f"Pregled ({sef.display_name}): prihvaćeno — {nota}")
-        redovi.append(tekst)
-        return "\n\n".join(r for r in redovi if r)
+            d["pregled"] = {"ko": sef.display_name,
+                            "primedba": pregled.get("primedba") or "bez primedbe"}
+        return d
 
     razlog = plans.failure_reason(plan) or plan.status
-    redovi = [f"Nije urađeno. Zadala sam {sef.display_name}, a posao je stao: "
-              f"{razlog}. Plan: {plan.public_id}."]
-    if tekst:
-        # Nacrt koji je šef vratio čovek i dalje treba da vidi — da zna o čemu
-        # se spor vodi i da sam presudi.
-        redovi += ["Nacrt koji nije prošao:", tekst]
+    return d | {"stanje": "stalo", "razlog": razlog,
+                "glava": (f"Nije urađeno. Zadala sam {sef.display_name}, a posao "
+                          f"je stao: {razlog}. Plan: {plan.public_id}.")}
+
+
+def _tekst(d: dict) -> str:
+    """Zapis poruke — isti sadržaj kao delovi, u rečenicama.
+
+    Ovo je ono što ostaje u bazi i u izvozu. Konzola čita `delovi`, ali tekst
+    mora da stoji sam za sebe: poruka bez prikaza i dalje mora da se razume.
+    """
+    redovi: list[str] = []
+    if d.get("rezerva"):
+        redovi.append(d["rezerva"])
+    if d.get("nalog"):
+        redovi.append(f"Zadatak koji sam prosledila: „{d['nalog']}“")
+    if d.get("glava"):
+        redovi.append(d["glava"])
+    if d.get("pregled"):
+        redovi.append(f"Pregled ({d['pregled']['ko']}): prihvaćeno — "
+                      f"{d['pregled']['primedba']}")
+    if d.get("nacrt"):
+        if d.get("stanje") == "stalo":
+            redovi.append("Nacrt koji nije prošao:")
+        redovi.append(d["nacrt"])
     return "\n\n".join(redovi)
 
 
@@ -283,7 +311,8 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str) -> Poruka:
                      details={"razgovor": str(razgovor.id), "actor": actor})
         pitanje = Poruka.objects.create(
             razgovor=razgovor, autor=Poruka.OD_AGENTA,
-            autor_ref=direktor.public_id, telo=odluka["pitanje"])
+            autor_ref=direktor.public_id, telo=odluka["pitanje"],
+            delovi={"stanje": "pitanje", "glava": odluka["pitanje"]})
         razgovor.save(update_fields=["updated_at"])
         return pitanje
 
@@ -317,15 +346,14 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str) -> Poruka:
     plans.advance(plan)
     plan.refresh_from_db()
 
-    tekst = _odgovor(plan, sef, izvrsilac)
+    delovi = _ishod(plan, sef, izvrsilac)
     if odluka.get("nalog") and odluka["nalog"] != telo:
-        tekst = (f"Zadatak koji sam prosledila: „{odluka['nalog']}“"
-                 "\n\n" + tekst)
+        delovi["nalog"] = odluka["nalog"]
     if rezerva:
-        tekst = (f"Sektor {rezerva} nema šefa, pa sam posao zadala upravi.\n\n"
-                 + tekst)
+        delovi["rezerva"] = (f"Sektor {rezerva} nema šefa, pa sam posao zadala "
+                             "upravi.")
     odgovor = Poruka.objects.create(
         razgovor=razgovor, autor=Poruka.OD_AGENTA, autor_ref=direktor.public_id,
-        telo=tekst, plan=plan)
+        telo=_tekst(delovi), plan=plan, delovi=delovi)
     razgovor.save(update_fields=["updated_at"])  # auto_now; `.update()` ga ne dira
     return odgovor

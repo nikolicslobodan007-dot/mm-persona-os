@@ -641,6 +641,10 @@ class Poruka(UUIDModel):
         AgentPlan, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="poruke", help_text="Posao koji je ova poruka pokrenula ili javila.",
     )
+    #: ADR-0110 — isti sadržaj kao `telo`, ali razložen na delove, da konzola
+    #: ne mora da čita rečenice. `telo` ostaje potpuno: ono je zapis, ovo je
+    #: prikaz, i poruka iz starije niti bez ovoga i dalje radi.
+    delovi = models.JSONField(default=dict, blank=True)
 
     class Meta:
         db_table = "orchestration_poruka"

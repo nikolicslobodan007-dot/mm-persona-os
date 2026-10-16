@@ -210,3 +210,39 @@ td.pick input,th.pick input{width:17px;height:17px;accent-color:var(--accent);cu
   h1{font-size:23px}
   th:nth-child(n+4),td:nth-child(n+4){display:none}
 }
+
+/* ---------------------------------------------------------------- nit (ADR-0110)
+   Nit je razgovor vlasnika sa firmom, pa mora da se čita kao razgovor:
+   čovekova poruka i agentova se razlikuju na prvi pogled, a agentov odgovor
+   je razložen (nalog, pregled, nacrt), ne jedan blok teksta. */
+.nit{display:flex;flex-direction:column;gap:14px;max-width:84ch;margin-bottom:18px}
+.rec{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:16px 18px;box-shadow:var(--shadow)}
+.rec.ja{background:var(--panel-2);border-left:3px solid var(--line)}
+.rec.agent{border-left:3px solid var(--accent)}
+.rec-glava{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px}
+.rec-telo{white-space:pre-wrap;font-size:15.5px;line-height:1.6;color:var(--ink)}
+.rec-telo.pitanje{font-size:17px;line-height:1.55}
+.avatar{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;
+  border-radius:50%;background:var(--accent-bg);color:var(--accent);font-weight:700;font-size:14px}
+.rec .glava{margin:4px 0 10px;font-size:15px;color:var(--ink-2)}
+.rec .glava b{color:var(--ink)}
+.ok-ink{color:var(--ok)}
+.bad-ink{color:var(--bad)}
+.oznaka{font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted)}
+.deo{margin:10px 0 14px;padding-left:12px;border-left:2px solid var(--line)}
+.deo .rec-telo{font-size:15px;color:var(--ink-2)}
+.nota{font-size:14px;padding:9px 13px;border-radius:var(--r-sm);margin:10px 0}
+.nota.ok{background:var(--ok-bg);color:var(--ok)}
+.nota.bad{background:var(--bad-bg);color:var(--bad)}
+.nota.warn{background:var(--warn-bg);color:var(--warn)}
+.nacrt{border:1px solid var(--line);border-radius:var(--r-sm);margin-top:12px;overflow:hidden}
+.nacrt-glava{display:flex;align-items:center;gap:10px;padding:9px 13px;
+  background:var(--panel-2);border-bottom:1px solid var(--line)}
+.nacrt-glava form{margin:0}
+.nacrt .post{margin:0;border-left:0;border-radius:0;background:var(--panel)}
+button.mini{padding:5px 11px;font-size:13px;box-shadow:none}
+.podnozje{margin-top:12px;padding-top:10px;border-top:1px solid var(--line-2)}
+.pisanje{max-width:84ch}
+.pisanje textarea{min-height:92px}

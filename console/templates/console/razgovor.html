@@ -8,27 +8,84 @@
 </div>
 
 {% if nit %}
+<div class="nit">
 {% for p in poruke %}
-  <div class="card mb12">
-    <div class="row">
-      {% if p.autor == "covek" %}<b>Ti</b>{% else %}<b>{{ nit.persona.display_name }}</b>
-        <span class="pill">{{ p.autor_ref }}</span>{% endif %}
+  {% if p.autor == "covek" %}
+  <article class="rec ja">
+    <div class="rec-glava"><b>Ti</b><span class="spacer"></span>
+      <span class="small muted">{{ p.created_at|date:"d.m. H:i" }}</span></div>
+    <div class="rec-telo">{{ p.telo }}</div>
+  </article>
+  {% else %}
+  <article class="rec agent">
+    <div class="rec-glava">
+      <span class="avatar">{{ nit.persona.display_name|slice:":1" }}</span>
+      <b>{{ nit.persona.display_name }}</b>
+      <span class="pill">{{ p.autor_ref }}</span>
       <span class="spacer"></span>
       <span class="small muted">{{ p.created_at|date:"d.m. H:i" }}</span>
     </div>
-    <div class="post">{{ p.telo }}</div>
-    {% if p.plan %}
-      <div class="small muted">plan {{ p.plan.public_id }} · {{ p.plan.status }}</div>
+
+    {% with d=p.delovi %}
+    {% if d.rezerva %}<div class="nota warn">{{ d.rezerva }}</div>{% endif %}
+
+    {% if d.stanje == "pitanje" %}
+      <div class="rec-telo pitanje">{{ d.glava }}</div>
+    {% elif d.stanje %}
+      {% if d.nalog %}
+        <div class="deo">
+          <div class="oznaka">Nalog koji je prosledila</div>
+          <div class="rec-telo">{{ d.nalog }}</div>
+        </div>
+      {% endif %}
+
+      {% if d.stanje == "uradjeno" %}
+        <p class="glava ok-ink">Urađeno · zadala <b>{{ d.sef }}</b> · uradio <b>{{ d.izvrsilac }}</b></p>
+      {% elif d.stanje == "stalo" %}
+        <p class="glava bad-ink">Nije urađeno · zadala <b>{{ d.sef }}</b></p>
+        <div class="nota bad">{{ d.razlog }}</div>
+      {% else %}
+        <p class="glava">{{ d.glava }}</p>
+      {% endif %}
+
+      {% if d.pregled %}
+        <div class="nota ok">Pregled · {{ d.pregled.ko }} — prihvaćeno{% if d.pregled.primedba %}: {{ d.pregled.primedba }}{% endif %}</div>
+      {% endif %}
+
+      {% if d.nacrt %}
+        <div class="nacrt">
+          <div class="nacrt-glava">
+            <span class="oznaka">{% if d.stanje == "stalo" %}Nacrt koji nije prošao{% else %}Nacrt{% endif %}</span>
+            <span class="spacer"></span>
+            {% if d.item and sme %}
+            <form method="post" action="/console/content/{{ d.item }}/dokument">{% csrf_token %}
+              <input type="hidden" name="nazad" value="/console/razgovor/{{ nit.id }}">
+              <button class="mini">Napravi dokument</button>
+            </form>
+            {% endif %}
+          </div>
+          <div class="post">{{ d.nacrt }}</div>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="post">{{ p.telo }}</div>
     {% endif %}
-  </div>
+    {% endwith %}
+
+    {% if p.plan %}
+      <div class="small muted podnozje">plan {{ p.plan.public_id }} · {{ p.plan.status }}</div>
+    {% endif %}
+  </article>
+  {% endif %}
 {% empty %}
-  <div class="card"><p class="sub">Nit je prazna. Napiši šta treba da se uradi.</p></div>
+  <div class="card"><p class="sub">Nit je prazna. Napiši šta treba da se uradi — ako nalog bude nejasan, direktor će pitati.</p></div>
 {% endfor %}
+</div>
 
 {% if sme %}
-<div class="card">
+<div class="card pisanje">
   <form method="post" action="/console/razgovor/{{ nit.id }}/poruka">{% csrf_token %}
-    <textarea name="telo" rows="4" cols="80"
+    <textarea name="telo" rows="3"
       placeholder="Na primer: napiši kratak tekst o tome čime se bavimo, za naslovnu stranu sajta."></textarea>
     <div class="row"><button>Pošalji</button>
       <span class="small muted">Posao se izvršava odmah — odgovor stiže kad lanac završi.</span></div>

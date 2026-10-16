@@ -107,6 +107,7 @@ class TestDirektorProcenjuje:
                                  '"Za koju stranu i koliko dugačak tekst?"}')
         odgovor = nit_servis.posalji(nit, "napiši nešto", actor="user:slobodan")
         assert odgovor.telo == "Za koju stranu i koliko dugačak tekst?"
+        assert odgovor.delovi["stanje"] == "pitanje"
         assert odgovor.plan is None
         assert AgentPlan.objects.count() == 0
 
@@ -227,6 +228,37 @@ class TestKonzola:
         assert nit.persona_id == firma.pk
         assert nit.human_owner == "user:sef105"
 
+    def test_dugme_za_dokument_vodi_nazad_u_nit(self, sef, firma):
+        """ADR-0110 — nacrt se pretvara u dokument iz niti, bez obilaska."""
+        from apps.content.models import ContentItem
+
+        c = self._konzola(sef)
+        c.get("/console/razgovor")
+        nit = Razgovor.objects.get()
+        c.post(f"/console/razgovor/{nit.id}/poruka", {"telo": "Napiši tekst za sajt."})
+        item = ContentItem.objects.order_by("-created_at").first()
+        assert item is not None
+        strana = c.get(f"/console/razgovor/{nit.id}").content.decode()
+        assert f"/console/content/{item.id}/dokument" in strana
+
+        r = c.post(f"/console/content/{item.id}/dokument",
+                   {"nazad": f"/console/razgovor/{nit.id}"})
+        assert r.status_code == 302
+        assert r["Location"] == f"/console/razgovor/{nit.id}"
+
+    def test_tudja_adresa_u_nazad_se_ne_prihvata(self, sef, firma):
+        """Otvoreno preusmerenje: prima se samo putanja unutar konzole."""
+        from apps.content.models import ContentItem
+
+        c = self._konzola(sef)
+        c.get("/console/razgovor")
+        nit = Razgovor.objects.get()
+        c.post(f"/console/razgovor/{nit.id}/poruka", {"telo": "Napiši tekst za sajt."})
+        item = ContentItem.objects.order_by("-created_at").first()
+        for adresa in ("https://zlo.example/", "//zlo.example/", "/admin/"):
+            r = c.post(f"/console/content/{item.id}/dokument", {"nazad": adresa})
+            assert r["Location"] == "/console/content", adresa
+
     def test_slanje_iz_konzole_pravi_dve_poruke(self, sef, firma):
         c = self._konzola(sef)
         c.get("/console/razgovor")
@@ -324,6 +356,27 @@ class TestSefPregleda:
                                      actor="user:slobodan")
         assert odgovor.plan.status == E.PlanStatus.COMPLETED.value
         assert "Pregled (" not in odgovor.telo
+
+    def test_odgovor_nosi_delove_za_prikaz(self, nit, firma, monkeypatch):
+        """ADR-0110 — konzola čita delove, ne rečenice; zapis ostaje potpun."""
+        self._ocena(monkeypatch, '{"prihvatam": true, "primedba": "U redu."}')
+        odgovor = nit_servis.posalji(nit, "Napiši tekst za sajt.",
+                                     actor="user:slobodan")
+        d = odgovor.delovi
+        assert d["stanje"] == "uradjeno"
+        assert d["sef"] and d["izvrsilac"] and d["item"] and d["nacrt"]
+        assert d["pregled"]["primedba"] == "U redu."
+        # Zapis i prikaz ne smeju da se raziđu.
+        assert d["nacrt"] in odgovor.telo
+        assert d["pregled"]["primedba"] in odgovor.telo
+
+    def test_vracen_nacrt_nosi_razlog_u_delovima(self, nit, firma, monkeypatch):
+        self._ocena(monkeypatch, '{"prihvatam": false, "primedba": '
+                                 '"Ne odgovara nalogu."}')
+        odgovor = nit_servis.posalji(nit, "Napiši tekst za sajt.",
+                                     actor="user:slobodan")
+        assert odgovor.delovi["stanje"] == "stalo"
+        assert "Ne odgovara nalogu." in odgovor.delovi["razlog"]
 
     def test_vracanje_bez_razloga_nije_pregled(self, db, mila, monkeypatch):
         """„Ne prihvatam" bez primedbe je prepreka, ne pregled."""
