@@ -20,7 +20,8 @@ import pytest
 from django.core.management import call_command
 
 from api.context import bind
-from apps.orchestration import plans, razgovor as nit_servis
+from apps.orchestration import plans
+from apps.orchestration import razgovor as nit_servis
 from apps.orchestration.models import AgentPlan, Poruka, Razgovor
 from apps.personas.models import Persona
 from common import enums as E
