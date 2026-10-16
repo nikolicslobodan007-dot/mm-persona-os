@@ -2,6 +2,11 @@
 
 Do sada je svaki posao počinjao komandom u terminalu: firma nije imala
 ulazna vrata. Ove dve tabele su ta vrata.
+
+`created_at` i `updated_at` dolaze iz `UUIDModel` (common/models.py) i zato
+stoje i ovde — prvi pokušaj ih je izostavio, pa kolone nisu nastale i svaki
+upis je pucao. Imena indeksa su naša i upisana u modelu, da ih Django ne bi
+preimenovao pri sledećoj proveri migracija.
 """
 
 import uuid
@@ -23,11 +28,11 @@ class Migration(migrations.Migration):
             fields=[
                 ("id", models.UUIDField(default=uuid.uuid4, editable=False,
                                         primary_key=True, serialize=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
                 ("naslov", models.CharField(blank=True, max_length=200)),
                 ("human_owner", models.CharField(
                     help_text="Čovek koji vodi nit (`user:…`).", max_length=120)),
-                ("created_at", models.DateTimeField(auto_now_add=True)),
-                ("last_at", models.DateTimeField(auto_now=True)),
                 ("persona", models.ForeignKey(
                     help_text="Sagovornik — agent sa kojim čovek priča (obično direktor).",
                     on_delete=django.db.models.deletion.PROTECT,
@@ -40,12 +45,13 @@ class Migration(migrations.Migration):
             fields=[
                 ("id", models.UUIDField(default=uuid.uuid4, editable=False,
                                         primary_key=True, serialize=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
                 ("autor", models.CharField(
                     choices=[("covek", "čovek"), ("agent", "agent")], max_length=8)),
                 ("autor_ref", models.CharField(
                     help_text="`user:slobodan` ili `P-00003`.", max_length=120)),
                 ("telo", models.TextField()),
-                ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("plan", models.ForeignKey(
                     blank=True,
                     help_text="Posao koji je ova poruka pokrenula ili javila.",
@@ -59,8 +65,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="razgovor",
-            index=models.Index(fields=["human_owner", "-last_at"],
-                               name="orch_razg_owner_last_idx"),
+            index=models.Index(fields=["human_owner", "-updated_at"],
+                               name="orch_razgovor_owner_idx"),
         ),
         migrations.AddIndex(
             model_name="poruka",

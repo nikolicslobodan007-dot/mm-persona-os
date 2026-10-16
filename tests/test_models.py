@@ -78,6 +78,8 @@ class TestAppOwnership:
             # ADR-0035 — zadatak programerskog sektora
             "CodeTask", "GateResult", "ReviewFinding",
             "TaskPatch",   # ADR-0038 — predata izmena i ishod provere
+            # ADR-0105 — ulazna vrata firme: nit razgovora sa direktorom
+            "Razgovor", "Poruka",
         },
         "policy": {
             "PolicyRule", "PolicyDecision", "ApprovalRequest", "CapabilityGrant",

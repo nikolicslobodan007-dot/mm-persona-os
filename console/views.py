@@ -886,7 +886,7 @@ def razgovor(request, razgovor_id=None):
             raise Http404
     else:
         nit = (Razgovor.objects.filter(human_owner=vlasnik)
-               .order_by("-last_at").first())
+               .order_by("-updated_at").first())
         if nit is None:
             direktor = _direktor()
             if direktor is None:

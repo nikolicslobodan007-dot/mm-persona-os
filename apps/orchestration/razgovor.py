@@ -25,8 +25,6 @@ Tri granice, namerno:
 
 from __future__ import annotations
 
-from django.utils import timezone
-
 from api import audit
 from apps.memory import embeddings
 from apps.orchestration import plans
@@ -184,5 +182,5 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str) -> Poruka:
     odgovor = Poruka.objects.create(
         razgovor=razgovor, autor=Poruka.OD_AGENTA, autor_ref=direktor.public_id,
         telo=_odgovor(plan, sef, izvrsilac), plan=plan)
-    Razgovor.objects.filter(pk=razgovor.pk).update(last_at=timezone.now())
+    razgovor.save(update_fields=["updated_at"])  # auto_now; `.update()` ga ne dira
     return odgovor

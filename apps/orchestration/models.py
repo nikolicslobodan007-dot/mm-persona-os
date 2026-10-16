@@ -605,12 +605,13 @@ class Razgovor(UUIDModel):
     human_owner = models.CharField(
         max_length=120, help_text="Čovek koji vodi nit (`user:…`)."
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    last_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "orchestration_razgovor"
-        indexes = [models.Index(fields=["human_owner", "-last_at"])]
+        # `created_at` i `updated_at` dolaze iz `UUIDModel`; svoja vremena se
+        # ne dodaju. Ime indeksa je naše, da ga Django ne preimenuje sam.
+        indexes = [models.Index(fields=["human_owner", "-updated_at"],
+                                name="orch_razgovor_owner_idx")]
 
     def __str__(self) -> str:
         return f"{self.persona_id}: {self.naslov or '(bez naslova)'}"
@@ -640,11 +641,11 @@ class Poruka(UUIDModel):
         AgentPlan, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="poruke", help_text="Posao koji je ova poruka pokrenula ili javila.",
     )
-    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "orchestration_poruka"
-        indexes = [models.Index(fields=["razgovor", "created_at"])]
+        indexes = [models.Index(fields=["razgovor", "created_at"],
+                                name="orch_poruka_nit_idx")]
 
     def __str__(self) -> str:
         return f"{self.autor_ref}: {self.telo[:40]}"

@@ -28,7 +28,7 @@
 {% if sme %}
 <div class="card">
   <form method="post" action="/console/razgovor/{{ nit.id }}/poruka">{% csrf_token %}
-    <textarea name="telo" rows="4" style="width:100%"
+    <textarea name="telo" rows="4" cols="80"
       placeholder="Na primer: napiši kratak tekst o tome čime se bavimo, za naslovnu stranu sajta."></textarea>
     <div class="row"><button>Pošalji</button>
       <span class="small muted">Posao se izvršava odmah — odgovor stiže kad lanac završi.</span></div>
