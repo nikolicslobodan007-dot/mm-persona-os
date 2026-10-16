@@ -84,8 +84,11 @@ class Command(BaseCommand):
                     persona=p,
                     before={"runtime_environment": staro},
                     after={"runtime_environment": na},
+                    # `before`/`after` se u auditu čuvaju samo kao otisak
+                    # (api/audit.py), a baš za ovaj događaj čovek čita „iz čega
+                    # u šta" — zato ide i u `details`, koji se čuva ceo.
                     details={"actor": actor, "razlog": razlog.strip(),
-                             "zivo": na in ZIVA},
+                             "iz": staro, "u": na, "zivo": na in ZIVA},
                 )
 
         strelica = "→ ŽIVO" if na in ZIVA else "→ zatvoreno"

@@ -45,11 +45,14 @@ class TestOkruzenje:
         p = Persona.objects.get(pk=mila.pk)
         assert p.runtime_environment == E.RuntimeEnvironment.CONTROLLED_LIVE.value
 
-        ev = AuditEvent.objects.filter(event_key=DOGADJAJ).latest("created_at")
+        ev = AuditEvent.objects.filter(event_key=DOGADJAJ).latest("occurred_at")
         assert ev.payload["details"]["razlog"] == RAZLOG
-        assert ev.payload["details"]["actor"] == "user:slobodan"
-        assert ev.payload["before"]["runtime_environment"] == "SIMULATION"
-        assert ev.payload["after"]["runtime_environment"] == "CONTROLLED_LIVE"
+        assert ev.payload["declared_actor"] == "user:slobodan"
+        # `before`/`after` audit čuva samo kao otisak (api/audit.py), pa se
+        # „iz čega u šta" čita iz `details` — tamo i mora da stoji.
+        assert ev.payload["details"]["iz"] == "SIMULATION"
+        assert ev.payload["details"]["u"] == "CONTROLLED_LIVE"
+        assert ev.payload["before_hash"] and ev.payload["after_hash"]
 
     def test_bez_razloga_se_odbija(self, mila):
         _u_statusu(mila, E.PersonaStatus.READY.value)
