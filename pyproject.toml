@@ -19,8 +19,7 @@ dependencies = [
     # ADR-0103: nacrt postaje dokument (.odt/.docx/.pdf). Tuđi kod, Apache-2.0,
     # uzet ceo i zakucan na commit — isti URL u drugom trenutku daje drugi
     # sadržaj (isti razlog kao `commit_sha` u ADR-0077 §3).
-    "cli-anything-libreoffice @ git+https://github.com/HKUDS/CLI-Anything.git"
-    "@34f519533bc175d2fe287ab8316b0dd99bb9cc43#subdirectory=libreoffice/agent-harness",
+    "cli-anything-libreoffice @ git+https://github.com/HKUDS/CLI-Anything.git@34f519533bc175d2fe287ab8316b0dd99bb9cc43#subdirectory=libreoffice/agent-harness",
 ]
 
 [project.optional-dependencies]
