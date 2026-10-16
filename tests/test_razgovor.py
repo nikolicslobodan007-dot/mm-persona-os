@@ -215,6 +215,22 @@ class TestKonzola:
         call_command("console_totp", user="sef105", stdout=io.StringIO())
         return u
 
+    @pytest.fixture
+    def skladiste(self, monkeypatch):
+        """Isto kao u `tests/test_dokument.py`: merimo svoj kod, ne MinIO.
+
+        Kapije nemaju skladište, pa bi pravi `storage.put` oborio pogled —
+        izmereno 16.10.2026., pytest je pao baš na ovome.
+        """
+        from apps.visuals import storage
+
+        fajlovi: dict[str, bytes] = {}
+        monkeypatch.setattr(
+            storage, "put",
+            lambda data, *, key, mime: fajlovi.__setitem__(key, data) or key)
+        monkeypatch.setattr(storage, "get", lambda key: fajlovi[key])
+        return fajlovi
+
     def _konzola(self, korisnik):
         from django.test import Client
 
@@ -229,7 +245,7 @@ class TestKonzola:
         assert nit.persona_id == firma.pk
         assert nit.human_owner == "user:sef105"
 
-    def test_dugme_za_dokument_vodi_nazad_u_nit(self, sef, firma):
+    def test_dugme_za_dokument_vodi_nazad_u_nit(self, sef, firma, skladiste):
         """ADR-0110 — nacrt se pretvara u dokument iz niti, bez obilaska."""
         from apps.content.models import ContentItem
 
@@ -247,7 +263,7 @@ class TestKonzola:
         assert r.status_code == 302
         assert r["Location"] == f"/console/razgovor/{nit.id}"
 
-    def test_tudja_adresa_u_nazad_se_ne_prihvata(self, sef, firma):
+    def test_tudja_adresa_u_nazad_se_ne_prihvata(self, sef, firma, skladiste):
         """Otvoreno preusmerenje: prima se samo putanja unutar konzole."""
         from apps.content.models import ContentItem
 
