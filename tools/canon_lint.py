@@ -64,6 +64,26 @@ ALLOWLIST = {
     "CHANGELOG.md",
 }
 
+# ADR-0102 — korpus znanja koji je napisao neko drugi nije naš rečnik.
+# Canon §19 čuva imena KOJA MI DAJEMO stvarima u kodu. Tuđa veština je
+# tekst, podatak: reč „behavior" u engleskoj rečenici nije ime našeg
+# modula, a „workload" u tuđoj rečenici nije naš `cognitive_load`.
+# Ispravljati tuđi tekst da prođe naš lint značilo bi menjati sadržaj
+# izvora, što ADR-0074 tačka 3 i ADR-0098 izričito zabranjuju.
+#
+# Granica je po imenu fajla, ne po folderu: naši sopstveni korpusi nose
+# prefiks `nasi-` i oni se PROVERAVAJU kao i svaki drugi naš izvor.
+NASI_KORPUSI_PREFIKS = "nasi-"
+TUDJI_KORPUS_DIR = "korpus/vestine/"
+
+
+def _tudji_korpus(rel: str) -> bool:
+    """Tačno: fajl u `korpus/vestine/` koji nije naš (`nasi-*`)."""
+    if not rel.startswith(TUDJI_KORPUS_DIR):
+        return False
+    ime = rel[len(TUDJI_KORPUS_DIR):]
+    return not ime.startswith(NASI_KORPUSI_PREFIKS)
+
 SOURCE_SUFFIXES = {".py", ".yaml", ".yml", ".json", ".toml", ".cfg", ".ini"}
 SKIP_DIRS = {".git", "__pycache__", ".venv", "venv", "node_modules", ".mypy_cache",
              ".pytest_cache", "schemas"}
@@ -119,7 +139,7 @@ def check_retired_names() -> list[Violation]:
     out: list[Violation] = []
     compiled = [(re.compile(p), r) for p, r in RETIRED_NAMES.items()]
     for path, rel in _iter_sources():
-        if any(rel.startswith(a) for a in ALLOWLIST):
+        if any(rel.startswith(a) for a in ALLOWLIST) or _tudji_korpus(rel):
             continue
         for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
             if "canon-lint: allow" in line:

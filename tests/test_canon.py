@@ -384,3 +384,36 @@ class TestConfigs:
         """Canon §3.16 — kanal bez oznake praktično ne prolazi."""
         data = self._load("policy/risk_weights.yaml")
         assert data["identity_risk"]["disclosure_missing"] >= 50
+
+
+class TestObimLinta:
+    """ADR-0102 — tuđi korpus znanja nije naš rečnik.
+
+    Canon §19 čuva imena koja MI dajemo stvarima u kodu. Tekst tuđe
+    veštine je podatak, i ne sme da se prepravlja da bi prošao naš lint
+    (ADR-0074 tačka 3, ADR-0098). Granica je po imenu fajla: naši korpusi
+    nose prefiks `nasi-` i proveravaju se kao i sve naše.
+    """
+
+    @staticmethod
+    def _tudji(rel: str) -> bool:
+        from tools.canon_lint import _tudji_korpus
+
+        return _tudji_korpus(rel)
+
+    @pytest.mark.parametrize("rel", [
+        "korpus/vestine/claude-skills-razvoj.json",
+        "korpus/vestine/marketingskills-marketing.json",
+        "korpus/vestine/agency-agents-01.json",
+    ])
+    def test_tudji_korpus_se_preskace(self, rel):
+        assert self._tudji(rel) is True
+
+    @pytest.mark.parametrize("rel", [
+        "korpus/vestine/nasi-adr.json",
+        "apps/memory/context.py",
+        "policy/capabilities.yaml",
+        "korpus/drugo/nesto.json",
+    ])
+    def test_nase_se_i_dalje_proverava(self, rel):
+        assert self._tudji(rel) is False

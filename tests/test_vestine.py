@@ -16,9 +16,9 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from apps.memory.models import KnowledgeFact, KnowledgeSource
-from apps.personas.models import Department
 from apps.memory.vestine import Vestina, uvezi
 from apps.observability.models import AuditEvent
+from apps.personas.models import Department
 from common import enums as E
 from tests.conftest import requires_db
 
