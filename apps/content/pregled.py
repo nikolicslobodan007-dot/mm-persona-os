@@ -27,7 +27,7 @@ from common import enums as E
 
 #: Koliko nacrta ide u pregled. Duži se seče — šef čita početak, kao i čovek.
 MAX_NACRT = 4000
-MAX_PRIMEDBA = 300
+MAX_PRIMEDBA = 600
 MAX_NALOG = 600
 
 PREGLED_SYSTEM = (

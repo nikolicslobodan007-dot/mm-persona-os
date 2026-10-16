@@ -20,7 +20,7 @@ import pytest
 from django.core.management import call_command
 
 from api.context import bind
-from apps.orchestration import razgovor as nit_servis
+from apps.orchestration import plans, razgovor as nit_servis
 from apps.orchestration.models import AgentPlan, Poruka, Razgovor
 from apps.personas.models import Persona
 from common import enums as E
@@ -283,6 +283,29 @@ class TestSefPregleda:
         assert "U redu, samo skrati naslov." in odgovor.telo
         assert odgovor.plan.status == E.PlanStatus.COMPLETED.value
 
+    def test_duga_primedba_se_ne_sece_usred_reci(self, nit, firma, monkeypatch):
+        """ADR-0109 — izmereno u produkciji: primedba je stala na „za vla."."""
+        primedba = ("Nalog je nejasan i previše uopšten, pa je izvršilac morao "
+                    "da nagađa: " + "trebalo je pitati vlasnika za koju stranu "
+                    "sajta, koliko dugačak tekst i kojoj publici se obraća. " * 3)
+        self._ocena(monkeypatch, '{"prihvatam": false, "primedba": "'
+                                 + primedba + '"}')
+        odgovor = nit_servis.posalji(nit, "Napiši tekst za sajt.",
+                                     actor="user:slobodan")
+        # Cela primedba, od prve do poslednje reči — bez „…" na kraju.
+        assert primedba.strip() in odgovor.telo
+
+    def test_u_niti_stoji_ceo_nacrt_iz_baze(self, nit, firma, monkeypatch):
+        """Izlaz koraka nosi 400 znakova; čovek dobija ono što je u bazi."""
+        from apps.content.models import ContentItem
+
+        self._ocena(monkeypatch, '{"prihvatam": true, "primedba": ""}')
+        odgovor = nit_servis.posalji(nit, "Napiši tekst za sajt.",
+                                     actor="user:slobodan")
+        item = ContentItem.objects.order_by("-created_at").first()
+        assert item is not None
+        assert nit_servis._bez_potpisa(item.body) in odgovor.telo
+
     def test_vracen_nacrt_zaustavlja_posao_i_kaze_zasto(self, nit, firma, monkeypatch):
         self._ocena(monkeypatch, '{"prihvatam": false, "primedba": '
                                  '"Tekst ne odgovara nalogu."}')
@@ -333,3 +356,17 @@ class TestPotpis:
     def test_potpis_u_sredini_se_ne_dira(self):
         tekst = "— Mila Vuković · AI persona\n\nOvo je nastavak teksta."
         assert nit_servis._bez_potpisa(tekst) == tekst
+
+
+class TestSkracivanje:
+    """ADR-0109 — poruka koja se seče usred reči nije razlog nego zagonetka."""
+
+    def test_kratak_tekst_ostaje_ceo(self):
+        assert plans.shorten("Kratko i jasno.", 100) == "Kratko i jasno."
+
+    def test_dug_tekst_se_sece_na_rec(self):
+        izlaz = plans.shorten("jedan dva tri četiri pet", 12)
+        assert izlaz == "jedan dva…"
+
+    def test_granica_ne_dodaje_tri_tacke(self):
+        assert plans.shorten("tačno tu", 8) == "tačno tu"

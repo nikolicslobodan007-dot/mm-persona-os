@@ -112,8 +112,8 @@ def _pregled(step: plans.PlanStep, state: dict) -> plans.Outcome:
         return plans.Done({"prihvacen": True, "primedba": ishod.primedba,
                            "presudio": ishod.presudio, "item": str(item.id),
                            "pregledao": step.plan.persona.public_id})
-    return plans.Failed(f"{step.plan.persona.display_name} vraća nacrt: "
-                        f"{ishod.primedba}"[:300])
+    return plans.Failed(plans.shorten(
+        f"{step.plan.persona.display_name} vraća nacrt: {ishod.primedba}", 700))
 
 
 @plans.handler("content.submit")

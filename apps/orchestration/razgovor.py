@@ -209,13 +209,32 @@ def _bez_potpisa(tekst: str) -> str:
     return _POTPIS.sub("", tekst or "").rstrip()
 
 
+#: Koliko nacrta staje u jednu poruku u niti. ADR-0109.
+MAX_PRIKAZ = 4000
+
+
+def _tekst_nacrta(nacrt: dict) -> str:
+    """Ceo nacrt iz baze, ne skraćeni izlaz koraka. ADR-0109.
+
+    Izlaz koraka `content.draft` nosi prvih 400 znakova — dovoljno za zapis,
+    premalo za čoveka koji treba da presudi. Ako nacrta više nema u bazi,
+    vraća se ono što je ostalo u koraku: bolje početak nego ništa.
+    """
+    from apps.content.models import ContentItem
+
+    kljuc = nacrt.get("item") or ""
+    item = ContentItem.objects.filter(pk=kljuc).first() if kljuc else None
+    telo = (item.body if item is not None else "") or nacrt.get("tekst", "")
+    return plans.shorten(_bez_potpisa(telo), MAX_PRIKAZ)
+
+
 def _odgovor(plan: AgentPlan, sef: Persona, izvrsilac: Persona | None) -> str:
     """Šta direktor javlja čoveku kad se lanac vrati."""
     from common import enums as E
 
     ko = (izvrsilac or sef).display_name
     nacrt = plans.output_in_chain(plan, "content.draft") or {}
-    tekst = _bez_potpisa(nacrt.get("tekst", ""))
+    tekst = _tekst_nacrta(nacrt)
 
     if plan.status == E.PlanStatus.COMPLETED.value:
         if not nacrt:

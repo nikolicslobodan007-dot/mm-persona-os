@@ -210,7 +210,8 @@ def _resume_parent(child: AgentPlan, status: E.PlanStatus, reason: str) -> None:
         return
     done = status == E.PlanStatus.COMPLETED
     reason = reason or failure_reason(child)
-    out = {**(step.output_json or {}), "child_status": status.value, "reason": reason[:300]}
+    out = {**(step.output_json or {}), "child_status": status.value,
+           "reason": shorten(reason, MAX_HANDBACK_REASON)}
     PlanStep.objects.filter(pk=step.pk).update(
         status=SS.DONE.value if done else SS.FAILED.value, output_json=out)
     parent = step.plan
@@ -336,6 +337,20 @@ def depth_of(plan: AgentPlan, limit: int = 10) -> int:
         depth += 1
         current = parent
     return depth
+
+
+#: Koliko razloga staje u predaju posla nagore. Poruka koja se seče usred
+#: reči nije razlog nego zagonetka — izmereno 16.10.2026. na pregledu šefa.
+MAX_HANDBACK_REASON = 1000
+
+
+def shorten(text: str, limit: int) -> str:
+    """Seče na razmak, nikad usred reči; tri tačke samo ako je stvarno skraćeno."""
+    t = (text or "").strip()
+    if len(t) <= limit:
+        return t
+    rez = t[:limit].rsplit(" ", 1)[0].rstrip(" ,.;:—-")
+    return f"{rez}…"
 
 
 #: Koliko duboko se traži izlaz kroz lanac delegiranja. Lanac je i tako
