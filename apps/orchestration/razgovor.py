@@ -14,6 +14,9 @@ Tri granice, namerno:
   - **Direktor ne dobija nijednu novu dozvolu.** Delegiranje ne daje prava
     (ADR-0017); izvršilac radi sa svojim poverenjem. Nit ne dira prekidač
     spoljnih radnji i ne objavljuje ništa.
+  - **Direktor prvo procenjuje** (ADR-0106): od poruke pravi nalog svojim
+    rečima ili postavlja jedno pitanje ako posao ne može da se uradi kako je
+    napisan. Procena je **dodatak, ne uslov** — bez modela radi kao pre.
   - **Sektor bez šefa ne obara posao.** Direktor ga daje upravi i to kaže u
     odgovoru. Posao koji stane zato što neko radno mesto nije popunjeno nije
     organizacija nego prepreka.
@@ -27,6 +30,9 @@ Tri granice, namerno:
 """
 
 from __future__ import annotations
+
+import json
+import re
 
 from api import audit
 from apps.memory import embeddings
@@ -58,6 +64,75 @@ MAX_TELO = 4000
 
 class RazgovorError(Exception):
     """Poruka nije mogla da postane posao — razlog je u poruci."""
+
+
+#: ADR-0106 — direktor ne prosleđuje rečenicu nego od nje pravi nalog.
+ODLUKA_SYSTEM = (
+    "Ti si direktor korporacije u kojoj poslove obavljaju AI agenti. Čovek "
+    "koji je vlasnik firme ti je napisao poruku. Tvoj posao NIJE da uradiš "
+    "zadatak, nego da od poruke napraviš jasan nalog za sektor, ili da "
+    "postaviš jedno pitanje ako poruka ne može da se izvrši kako jeste.\n"
+    "Odgovaraš ISKLJUČIVO jednim JSON objektom, bez teksta oko njega:\n"
+    '{"sektor": "<šifra>", "nalog": "<šta tačno treba uraditi>", '
+    '"pitanje": "<jedno pitanje ili prazno>"}\n'
+    "Pravila: ako postavljaš pitanje, `nalog` ostaje prazan i obrnuto. "
+    "Pitaj samo kad bez odgovora posao ne može da se uradi — ne pitaj za "
+    "sitnice koje možeš sama da odlučiš. `nalog` piši kao uputstvo "
+    "izvršiocu, u jednoj do tri rečenice, na srpskom."
+)
+
+#: Koliko dugačko sme da bude ono što direktor vrati.
+MAX_NALOG = 600
+MAX_PITANJE = 300
+
+_JSON = re.compile(r"\{.*\}", re.S)
+
+
+def _procitaj_odluku(tekst: str, dozvoljeni: set[str]) -> dict:
+    """Vadi odluku iz modelovog odgovora. Smeće se tiho odbacuje.
+
+    Lokalni šablon (`apps/llm_gateway/local.py`) ne ume JSON i to je u redu:
+    tada ovo vraća prazno, a direktor radi kao pre — po tabeli reči. Agent
+    bez ključa ne sme da ostane bez posla, samo bez procene.
+    """
+    m = _JSON.search(tekst or "")
+    if not m:
+        return {}
+    try:
+        sirovo = json.loads(m.group(0))
+    except (ValueError, TypeError):
+        return {}
+    if not isinstance(sirovo, dict):
+        return {}
+    sektor = str(sirovo.get("sektor", "")).strip().upper()
+    return {
+        "sektor": sektor if sektor in dozvoljeni else "",
+        "nalog": str(sirovo.get("nalog", "")).strip()[:MAX_NALOG],
+        "pitanje": str(sirovo.get("pitanje", "")).strip()[:MAX_PITANJE],
+    }
+
+
+def razmisli(direktor, telo: str, *, run=None) -> dict:
+    """Direktorova procena poruke: koji sektor, koji nalog, ili koje pitanje.
+
+    Nikad ne podiže grešku: ako model nije dostupan ili vrati nešto što nije
+    JSON, vraća prazan rečnik i posao ide dalje po tabeli reči (ADR-0105).
+    Procena je dodatak, ne uslov.
+    """
+    from apps.llm_gateway import gateway
+    from common import enums as E
+
+    spisak = ", ".join(sorted(RECI_SEKTORA) + [PODRAZUMEVANI_SEKTOR])
+    prompt = (f"Sektori: {spisak}.\n\nPoruka vlasnika:\n{telo[:MAX_TELO]}")
+    try:
+        gen = gateway.generate(E.LLMPurpose.PLANNING, ODLUKA_SYSTEM, prompt,
+                               persona=direktor, run=run,
+                               brief={"tema": telo[:200], "jezik": "sr-Latn"})
+    except Exception as e:  # noqa: BLE001 — procena ne sme da obori nalog
+        audit.record("razgovor.procena.pala", persona=direktor,
+                     details={"razlog": f"{type(e).__name__}: {e}"[:200]})
+        return {}
+    return _procitaj_odluku(gen.text, set(RECI_SEKTORA) | {PODRAZUMEVANI_SEKTOR})
 
 
 def odredi_sektor(tekst: str) -> str:
@@ -162,7 +237,20 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str) -> Poruka:
     Poruka.objects.create(razgovor=razgovor, autor=Poruka.OD_COVEKA,
                           autor_ref=actor, telo=telo)
 
-    kod = odredi_sektor(telo)
+    # ADR-0106 — direktor prvo procenjuje. Ako model nije dostupan, procena
+    # je prazna i sve ide kao pre (ADR-0105): tabela reči i doslovna tema.
+    odluka = razmisli(direktor, telo)
+    if odluka.get("pitanje") and not odluka.get("nalog"):
+        audit.record("razgovor.pitanje", persona=direktor,
+                     details={"razgovor": str(razgovor.id), "actor": actor})
+        pitanje = Poruka.objects.create(
+            razgovor=razgovor, autor=Poruka.OD_AGENTA,
+            autor_ref=direktor.public_id, telo=odluka["pitanje"])
+        razgovor.save(update_fields=["updated_at"])
+        return pitanje
+
+    tema = odluka.get("nalog") or telo
+    kod = odluka.get("sektor") or odredi_sektor(telo)
     sef = _sef_sektora(direktor, kod)
     rezerva = ""
     if sef is None and kod != PODRAZUMEVANI_SEKTOR:
@@ -180,17 +268,21 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str) -> Poruka:
         raise RazgovorError(zasto)
     izvrsilac = _izvrsilac(sef)
 
-    plan = plans.start(direktor, telo[:2000], _koraci(telo, sef, izvrsilac),
+    plan = plans.start(direktor, tema[:2000], _koraci(tema, sef, izvrsilac),
                        actor=actor)
     audit.record("razgovor.zadato", persona=direktor,
                  details={"razgovor": str(razgovor.id), "plan": plan.public_id,
                           "sektor": kod, "umesto": rezerva, "sef": sef.public_id,
+                          "procenila": bool(odluka), "nalog": tema[:200],
                           "izvrsilac": getattr(izvrsilac, "public_id", ""),
                           "actor": actor})
     plans.advance(plan)
     plan.refresh_from_db()
 
     tekst = _odgovor(plan, sef, izvrsilac)
+    if odluka.get("nalog") and odluka["nalog"] != telo:
+        tekst = (f"Zadatak koji sam prosledila: „{odluka['nalog']}“"
+                 "\n\n" + tekst)
     if rezerva:
         tekst = (f"Sektor {rezerva} nema šefa, pa sam posao zadala upravi.\n\n"
                  + tekst)

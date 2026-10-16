@@ -73,6 +73,69 @@ class TestRazvrstavanje:
 
 
 @pytest.mark.django_db
+class TestDirektorProcenjuje:
+    """ADR-0106 — direktor od poruke pravi nalog, ili postavi jedno pitanje.
+
+    Model se ovde ne zove stvarno: merimo šta radimo sa njegovim odgovorom,
+    ne šta model kaže.
+    """
+
+    @staticmethod
+    def _model(monkeypatch, tekst):
+        from apps.llm_gateway import gateway
+
+        class Lazna:
+            def __init__(self, t):
+                self.text = t
+
+        monkeypatch.setattr(gateway, "generate",
+                            lambda *a, **kw: Lazna(tekst))
+
+    def test_nalog_zamenjuje_sirovu_recenicu(self, nit, firma, monkeypatch):
+        self._model(monkeypatch, '{"sektor": "MARKETING", "nalog": '
+                                 '"Napiši uvodni pasus za naslovnu stranu, '
+                                 'do 80 reči.", "pitanje": ""}')
+        odgovor = nit_servis.posalji(nit, "treba mi nesto za sajt",
+                                     actor="user:slobodan")
+        assert "do 80 reči" in odgovor.telo
+        assert odgovor.plan.goal.startswith("Napiši uvodni pasus")
+
+    def test_pitanje_ne_pokrece_posao(self, nit, firma, monkeypatch):
+        self._model(monkeypatch, '{"sektor": "", "nalog": "", "pitanje": '
+                                 '"Za koju stranu i koliko dugačak tekst?"}')
+        odgovor = nit_servis.posalji(nit, "napiši nešto", actor="user:slobodan")
+        assert odgovor.telo == "Za koju stranu i koliko dugačak tekst?"
+        assert odgovor.plan is None
+        assert AgentPlan.objects.count() == 0
+
+    def test_smece_od_modela_ne_obara_posao(self, nit, firma, monkeypatch):
+        """Lokalni šablon ne ume JSON — tada radi tabela reči, kao pre."""
+        self._model(monkeypatch, "Evo teksta o tome čime se bavimo…")
+        odgovor = nit_servis.posalji(nit, "Napiši tekst za sajt.",
+                                     actor="user:slobodan")
+        assert odgovor.plan is not None
+        assert odgovor.plan.goal == "Napiši tekst za sajt."
+
+    def test_pad_modela_ne_obara_posao(self, nit, firma, monkeypatch):
+        from apps.llm_gateway import gateway
+
+        def pukni(*a, **kw):
+            raise RuntimeError("nema rute")
+
+        monkeypatch.setattr(gateway, "generate", pukni)
+        odgovor = nit_servis.posalji(nit, "Napiši tekst za sajt.",
+                                     actor="user:slobodan")
+        assert odgovor.plan is not None
+
+    def test_izmisljen_sektor_se_ne_prihvata(self):
+        odluka = nit_servis._procitaj_odluku(
+            '{"sektor": "SVEMIR", "nalog": "nešto", "pitanje": ""}',
+            {"MARKETING", "UPRAVA"})
+        assert odluka["sektor"] == ""
+        assert odluka["nalog"] == "nešto"
+
+
+@pytest.mark.django_db
 class TestPorukaPostajePosao:
 
     def test_odgovor_se_vraca_u_nit_sa_planom(self, nit, firma):
