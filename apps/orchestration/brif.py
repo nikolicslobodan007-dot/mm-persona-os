@@ -99,6 +99,12 @@ REFERENCA: tuple[str, ...] = (
 #: 3.426 B (1,7 % plafona) i u njemu se vidi `payload`.
 _KLASA = re.compile(r"^class \w+")
 _CLAN = re.compile(r"^    [A-Za-z_][A-Za-z0-9_]* = ")
+#: ADR-0097 — i dodele uz levu ivicu fajla. `_CLAN` traži četiri razmaka, pa
+#: je izvod `common/enums.py` od 516 redova 16.10. nosio nula od četiri
+#: rečnika `PROFILE_*`. Pisac ih nije video, pa je po ADR-0033 ispravno odbio
+#: da pretpostavi — i prolaz je prošao bez ijednog reda koda. `(?!=)` drži
+#: poređenje `x == y` van izvoda; anotacija tipa pre `=` je dozvoljena.
+_MODUL = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\s*:[^=]+)?\s*=(?!=)")
 
 
 def _koren() -> Path:
@@ -170,6 +176,9 @@ def _izvod(tekst: str) -> str:
     polje modela su za pisca ista vrsta činjenice — ime koje sme da napiše a ne
     sme da izmisli. Fajl bez ijedne klase (npr. `api/audit.py`) vraća se ceo.
 
+    ADR-0097 — hvata se i dodela na nivou modula. Rečnik sistema koji prećuti
+    imena uz levu ivicu nije rečnik nego polovina rečnika.
+
     ADR-0075 — ovaj izvod hvata samo dodele unutar klase. Fajl čija je vrednost u
     *funkciji* (`apps/memory/vestine.py`, `apps/content/recnik.py`) kroz njega
     prođe prazan ili skoro prazan: pisac dobije `class Vestina:` i ništa više.
@@ -186,6 +195,8 @@ def _izvod(tekst: str) -> str:
             izlaz.append(red)
         elif red and not red.startswith((" ", ")")):
             u_klasi = False
+            if _MODUL.match(red):
+                izlaz.append(red)
     return "\n".join(izlaz) + "\n" if izlaz else tekst
 
 

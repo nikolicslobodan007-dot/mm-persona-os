@@ -49,8 +49,25 @@ znao **šta postoji**, i kad mu to ne kaže, on po ADR-0033 ispravno odbija da
 pretpostavi — pa prolaz prođe bez ijednog reda koda. Rečnik sistema koji
 prećuti četrdeset tri imena nije rečnik nego polovina rečnika.
 
-Cena je merena, ne procenjena: 43 reda povrh 443, na izvodu od 15.874 B. To je
-manje od jednog procenta plafona brifa.
+Cena je merena posle izmene, ne procenjena unapred — i veća je nego što sam
+napisao pre merenja:
+
+| Mera | Pre | Posle |
+|---|---|---|
+| izvod `common/enums.py` | 16.153 B | **19.229 B** |
+| udeo u `MAX_TOTAL_BYTES` (200.000 B) | 8,1 % | **9,6 %** |
+
+Kapija u `tests/test_brif.py` traži ispod 10 %. Rezerva je **771 bajta**.
+
+Prvobitno sam u ovaj ADR upisao „manje od jednog procenta plafona". To je bila
+procena pre merenja i netačna je; izmereno je 1,5 procentnog poena. Red ostaje
+zapisan jer greška u proceni pripada zapisu isto koliko i ispravka (ADR-0033).
+
+Kapija se **ne diže** da bi primila ovu izmenu. Guranje granice da bi stala
+sopstvena promena je isto što i prazna straža — straža koja propušta ono zbog
+čega postoji. Ostaje na 10 %, pa će je sledeće dodavanje enuma oboriti i
+naterati nas da odluku o skraćivanju izvoda donesemo sa merenjem u ruci, a ne
+usput.
 
 ## Šta se ovim NE menja
 

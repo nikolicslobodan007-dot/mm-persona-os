@@ -513,6 +513,59 @@ class TestReferencaNosiModelIAudit:
         assert n < 0.10 * brif.MAX_TOTAL_BYTES, f"izvod enuma je narastao na {n} B"
         assert n < len(tekst.encode()) / 2, "izvod mora da ostane bitno manji od fajla"
 
+    def test_izvod_hvata_dodelu_na_nivou_modula(self):
+        """ADR-0097 — ime uz levu ivicu je činjenica kao i član klase.
+
+        Uzorak je nepromenljiv namerno (isti razlog kao u testu iznad): mera nad
+        `common/enums.py` dokazuje pravilo samo onog dana kad je izmerena.
+        """
+        uzorak = (
+            "PLAFON: dict[str, int] = {\n"
+            '    "a": 1,\n'
+            "}\n"
+            "PRAG = 25\n"
+            "\n"
+            "class Model(Base):\n"
+            "    polje = models.CharField()\n"
+        )
+        izvod = brif._izvod(uzorak)
+        assert "PLAFON: dict[str, int] = {" in izvod, "anotirana dodela mora da udje"
+        assert "PRAG = 25" in izvod, "dodela bez anotacije mora da udje"
+        assert "class Model(Base):" in izvod, "zaglavlje klase se ne sme izgubiti"
+        assert "    polje = models.CharField()" in izvod, "clan klase se ne sme izgubiti"
+
+    def test_izvod_ne_hvata_poredjenje_ni_definiciju(self):
+        """ADR-0097 — u izvod ide samo dodela, ne i svaki red uz levu ivicu."""
+        uzorak = (
+            "class Model(Base):\n"
+            "    polje = models.CharField()\n"
+            "\n"
+            "assert PRAG == 25\n"
+            "def van_klase(a=1):\n"
+            "    return a\n"
+        )
+        izvod = brif._izvod(uzorak)
+        assert "==" not in izvod, "poredjenje nije dodela"
+        assert "def van_klase" not in izvod, "definicija funkcije nije dodela"
+
+    def test_izvod_nosi_profile_recnike_iz_enuma(self):
+        """ADR-0097 — merenje koje je 16.10. palo: nijedan `PROFILE_*` u izvodu.
+
+        Ovde se ne meri broj bajtova nego prisustvo imena koja postoje u fajlu.
+        Dok ti rečnici stoje u `common/enums.py` na nivou modula, izvod mora da
+        ih nosi; ako ih neko premesti ili ukloni, test pada i to je tačno.
+        """
+        from pathlib import Path
+
+        from django.conf import settings
+        tekst = (Path(settings.BASE_DIR) / "common/enums.py").read_text(encoding="utf-8")
+        u_fajlu = [r.split(":")[0].split(" ")[0]
+                   for r in tekst.splitlines() if r.startswith("PROFILE_")]
+        assert u_fajlu, "u enums.py nema nijednog PROFILE_ recnika — test vise nista ne meri"
+        izvod = brif._izvod(tekst)
+        nedostaju = [ime for ime in u_fajlu if ime not in izvod]
+        assert not nedostaju, f"izvod ne nosi: {nedostaju}"
+
     def test_fajl_bez_klase_ide_ceo(self):
         assert brif._izvod("def f():\n    return 1\n") == "def f():\n    return 1\n"
 
