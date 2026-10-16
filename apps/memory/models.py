@@ -442,6 +442,20 @@ class KnowledgeSource(UUIDModel):
                   "izvore koji nisu iz repozitorijuma.",
     )
 
+    # --- ADR-0101: kom sektoru korporacije korpus pripada ----------------
+    #
+    # Bez ovog polja izbor veština za paket pada na azbuku (ADR-0096 tačka
+    # 5). Izmereno 16.10.2026: u bazi 452 veštine, u paket ulazi 9, i to
+    # uvek istih devet — one koje su azbučno prve. Vokabular nisu nove reči
+    # nego `Department.code` iz ADR-0017 (UPRAVA, MARKETING, RAZVOJ…), jer
+    # organizacija već postoji i drugu podelu ne treba izmišljati. Prazno
+    # znači „važi za sve" — takav izvor ulazi u obzir kod svake persone.
+    sector = models.CharField(
+        max_length=32, blank=True,
+        help_text="ADR-0101 — Department.code sektora kome korpus pripada. "
+                  "Prazno znači da važi za sve sektore.",
+    )
+
     class Meta:
         db_table = "memory_knowledge_source"
         indexes = [

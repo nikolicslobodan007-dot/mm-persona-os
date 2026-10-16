@@ -18,7 +18,14 @@ sa `defaults=` upisivao te vrednosti SAMO pri prvom pravljenju reda, pa je
 ponovni uvoz sa novim zastavicama ostavljao stare podatke — izmereno na
 `docs/adr` korpusu: posle uvoza sa novim zastavicama red je i dalje nosio
 stari `uri` i prazne `commit_sha`/`file_path`, iako je uvoz prijavio da je
-upisao i obrisao činjenice. `ingested_at` (ADR-0076 §2), `persona`, `title`
+upisao i obrisao činjenice.
+
+ADR-0101 dodaje šesto takvo polje: `sector` — kom sektoru korporacije
+korpus pripada (`Department.code`, ADR-0017). Bez osvežavanja bi ponovni
+uvoz sa ispravljenim sektorom ostavljao stari. Prazno znači „važi za sve
+sektore".
+
+`ingested_at` (ADR-0076 §2), `persona`, `title`
 (ključ pretrage), `trust_score`, `source_kind` i `is_active` se NE diraju
 ovim osvežavanjem.
 
@@ -47,7 +54,8 @@ PREDIKAT = "vestina.postupak"
 
 #: ADR-0095 — polja koja čovek donosi pri SVAKOM uvozu i koja se zato
 #: osvežavaju i na postojećem redu, ne samo pri prvom pravljenju.
-_POLJA_ZA_OSVEZAVANJE = ("uri", "license_box", "license_note", "commit_sha", "file_path")
+_POLJA_ZA_OSVEZAVANJE = ("uri", "license_box", "license_note", "commit_sha",
+                         "file_path", "sector")
 
 
 @dataclass(frozen=True)
@@ -68,6 +76,7 @@ def uvezi(
     license_note: str = "",
     commit_sha: str = "",
     file_path: str = "",
+    sector: str = "",
     vestine: list[Vestina],
     actor: str,
 ) -> dict[str, int]:
@@ -104,6 +113,7 @@ def uvezi(
                       "license_note": license_note,
                       "commit_sha": commit_sha,
                       "file_path": file_path,
+                      "sector": sector,
                       "is_active": True})
         if not napravljen:
             # ADR-0095 — red već postoji; osvežavamo tačno pet polja koja
@@ -115,6 +125,7 @@ def uvezi(
             izvor.license_note = license_note
             izvor.commit_sha = commit_sha
             izvor.file_path = file_path
+            izvor.sector = sector
             izvor.save(update_fields=list(_POLJA_ZA_OSVEZAVANJE))
         obrisano = KnowledgeFact.objects.filter(source=izvor, predicate=PREDIKAT).delete()[0]
         KnowledgeFact.objects.bulk_create([

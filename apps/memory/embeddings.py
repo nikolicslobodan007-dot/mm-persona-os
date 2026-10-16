@@ -38,6 +38,17 @@ def normalize(text: str) -> str:
     return " ".join(_WORD.findall(text.lower()))
 
 
+def stems(text: str) -> set[str]:
+    """Koreni reči za grubo leksičko poklapanje: prvih pet slova, reči
+    kraće od tri slova se preskaču.
+
+    ADR-0101 — isti postupak koristi i pretraga memorije
+    (`apps/memory/retrieval.py`) i izbor veština (`apps/memory/context.py`),
+    pa stoji ovde jednom umesto dva puta.
+    """
+    return {w[:5] for w in normalize(text).split() if len(w) >= 3}
+
+
 def text_hash(text: str) -> str:
     return hashlib.sha256(normalize(text).encode()).hexdigest()
 

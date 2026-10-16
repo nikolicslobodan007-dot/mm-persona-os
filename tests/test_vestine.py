@@ -16,6 +16,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from apps.memory.models import KnowledgeFact, KnowledgeSource
+from apps.personas.models import Department
 from apps.memory.vestine import Vestina, uvezi
 from apps.observability.models import AuditEvent
 from common import enums as E
@@ -276,6 +277,79 @@ def test_uvoz_sa_commit_i_putanjom_upisuje_vrednosti(db, tmp_path):
     izvor = KnowledgeSource.objects.get(title="Izvor sa commitom")
     assert izvor.commit_sha == "a" * 40
     assert izvor.file_path == "korpus/vestine/nasi-adr.json"
+
+
+@requires_db
+@pytest.mark.django_db
+def test_izmisljen_sektor_se_odbija(db, tmp_path):
+    """ADR-0101 — sektor se proverava po `Department.code`, pre upisa.
+
+    Da greška u imenu sektora ne bude otkrivena tek onda kad agent ostane
+    bez veština u paketu, a niko ne zna zašto.
+    """
+    datoteka = _datoteka(tmp_path, "veština u izmišljenom sektoru")
+
+    with pytest.raises(CommandError, match="Nepoznat sektor"):
+        call_command(
+            "vestina",
+            "--izvor=Izvor sa lošim sektorom",
+            "--uri=https://example.com/repo",
+            "--licenca=NEPOZNATA",
+            f"--datoteka={datoteka}",
+            "--actor=user:qa",
+            "--sektor=MARKETINK",
+            stdout=io.StringIO(),
+        )
+
+    assert not KnowledgeSource.objects.filter(title="Izvor sa lošim sektorom").exists()
+
+
+@requires_db
+@pytest.mark.django_db
+def test_sektor_se_upisuje_i_osvezava_pri_ponovnom_uvozu(db, tmp_path):
+    """ADR-0101 uz ADR-0095 — sektor je šesto polje koje čovek donosi pri
+    svakom uvozu, pa se pri ponovnom uvozu osvežava, a ne ostaje staro."""
+    Department.objects.create(code="MARKETING", name="Marketing i sadržaj")
+    Department.objects.create(code="RAZVOJ", name="Razvoj i održavanje")
+    datoteka = _datoteka(tmp_path, "veština sa sektorom")
+
+    def uvezi_sa(sektor):
+        call_command(
+            "vestina",
+            "--izvor=Izvor sa sektorom",
+            "--uri=https://example.com/repo",
+            "--licenca=NEPOZNATA",
+            f"--datoteka={datoteka}",
+            "--actor=user:qa",
+            f"--sektor={sektor}",
+            stdout=io.StringIO(),
+        )
+
+    uvezi_sa("razvoj")  # mala slova — komanda ih podiže
+    assert KnowledgeSource.objects.get(title="Izvor sa sektorom").sector == "RAZVOJ"
+
+    uvezi_sa("MARKETING")
+    assert KnowledgeSource.objects.get(title="Izvor sa sektorom").sector == "MARKETING"
+
+
+@requires_db
+@pytest.mark.django_db
+def test_uvoz_bez_sektora_ostavlja_prazno(db, tmp_path):
+    """ADR-0101 — bez `--sektor` korpus važi za sve sektore, i to je
+    prazan niz znakova, ne None."""
+    datoteka = _datoteka(tmp_path, "veština bez sektora")
+
+    call_command(
+        "vestina",
+        "--izvor=Izvor bez sektora",
+        "--uri=https://example.com/dokument",
+        "--licenca=NEPOZNATA",
+        f"--datoteka={datoteka}",
+        "--actor=user:qa",
+        stdout=io.StringIO(),
+    )
+
+    assert KnowledgeSource.objects.get(title="Izvor bez sektora").sector == ""
 
 
 @requires_db

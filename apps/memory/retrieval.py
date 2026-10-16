@@ -54,7 +54,8 @@ class Scored:
 
 
 def _stems(text: str) -> set[str]:
-    return {w[:5] for w in embeddings.normalize(text).split() if len(w) >= 3}
+    #: ADR-0101 — jedan postupak za korene reči, deljen sa izborom veština.
+    return embeddings.stems(text)
 
 
 def effective_salience(m: MemoryItem, now: datetime) -> float:

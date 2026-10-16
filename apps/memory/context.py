@@ -38,11 +38,11 @@ from django.db.models import F
 from django.utils import timezone
 
 from apps.behaviour.models import BehaviourState
-from apps.memory import retrieval
+from apps.memory import embeddings, retrieval
 from apps.memory.models import KnowledgeFact, MemoryContextPack, MemoryItem
 from apps.memory.vestine import PREDIKAT as VESTINA_PREDIKAT
 from apps.observability import bus
-from apps.personas.models import Biography, TraitProfile
+from apps.personas.models import Assignment, Biography, TraitProfile
 from common import enums as E
 
 #: Memory v0.1 §12 — fiksni deo konteksta pored memorije.
@@ -118,6 +118,39 @@ def _vestina_line(fact: KnowledgeFact) -> str:
     return f"- [veština · izvor {fact.source.title}] {fact.subject}: {telo}"
 
 
+def _sektor_persone(persona) -> str:
+    """`Department.code` sektora u kome persona radi, preko otvorenog
+    primarnog rasporeda (ADR-0017). Prazno kad persona nema raspored —
+    tada sektor ništa ne odlučuje i ostaje poklapanje sa zadatkom i azbuka.
+    """
+    raspored = (
+        Assignment.objects
+        .filter(persona=persona, ended_at__isnull=True, is_primary=True)
+        .select_related("position__department")
+        .first()
+    )
+    return raspored.position.department.code if raspored else ""
+
+
+def _vestina_kljuc(fact: KnowledgeFact, upit: set[str], sektor: str) -> tuple:
+    """Redosled veština za paket (ADR-0101): prvo sektor persone, pa izvori
+    bez sektora („za sve"), pa poklapanje sa tekstom zadatka, pa azbuka.
+
+    Poklapanje je grubo i leksičko (`embeddings.stems`) i namerno je TREĆE
+    po redu: korpus je engleski, zadatak je obično srpski, pa poklapanje
+    često bude nula. Kad je nula, odlučuje sektor — ne azbuka, kao do sada.
+    """
+    izvor_sektor = fact.source.sector
+    svoj = 1 if izvor_sektor and izvor_sektor == sektor else 0
+    za_sve = 1 if not izvor_sektor else 0
+    pogodak = 0
+    if upit:
+        napomene = str(fact.object_json.get("napomene") or "")
+        pogodak = (3 * len(upit & embeddings.stems(fact.subject))
+                   + len(upit & embeddings.stems(napomene)))
+    return (-svoj, -za_sve, -pogodak, fact.subject)
+
+
 def build(persona, run, profile: E.RetrievalProfile, *, query: str = "",
           max_tokens: int | None = None, now: datetime | None = None,
           memory_types: list[E.MemoryType] | None = None) -> Pack:
@@ -160,15 +193,24 @@ def build(persona, run, profile: E.RetrievalProfile, *, query: str = "",
     # oduzmu memoriji. Ulaze samo činjenice čiji je izvor aktivan i čija je
     # kutija licence tačno `SLOBODNA` — ZARAZNA, ZABRANJENA i NEPOZNATA ne
     # ulaze nikad, ni uz napomenu (ADR-0059). Provera ide ovde, pri
-    # sastavljanju paketa, ne pri uvozu (ADR-0095). Izbor je prost: sve
-    # podobne, azbučnim redom po `subject`, dok ima mesta (ADR-0096 tačka 5).
+    # sastavljanju paketa, ne pri uvozu (ADR-0095).
+    #
+    # ADR-0101 menja ono što je ADR-0096 tačka 5 ostavila otvoreno: izbor
+    # više nije azbučni. Redosled je sektor persone → izvori bez sektora →
+    # poklapanje sa zadatkom → azbuka. Razlog je izmeren 16.10.2026: sa 452
+    # veštine u bazi, u paket je ulazilo 9 i to uvek istih devet, a 443 nisu
+    # stizale ni do koga. Rangiranje se radi u Pythonu, nad svim podobnim
+    # redovima — merenje kaže da ih je reda nekoliko stotina, pa to prolazi;
+    # kad korpus naraste, ovo je prvo mesto koje treba ponovo izmeriti.
     vestina_budget = E.PROFILE_VESTINE_TOKENS[profile]
-    vestina_candidates = (
+    sektor = _sektor_persone(persona)
+    upit_koreni = embeddings.stems(query) if query.strip() else set()
+    vestina_candidates = sorted(
         KnowledgeFact.objects
         .filter(predicate=VESTINA_PREDIKAT, source__is_active=True,
                 source__license_box=E.LicenseBox.SLOBODNA.value)
-        .select_related("source")
-        .order_by("subject")
+        .select_related("source"),
+        key=lambda f: _vestina_kljuc(f, upit_koreni, sektor),
     )
     vestina_lines: list[str] = []
     vestina_ids: list[str] = []

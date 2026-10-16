@@ -34,7 +34,7 @@ from apps.memory.vestine import PREDIKAT
 from apps.memory.writer import MemoryInput, MemoryRejected, write
 from apps.observability.models import EventOutbox
 from apps.orchestration.models import AgentRun
-from apps.personas.models import Persona
+from apps.personas.models import Assignment, Department, Persona, Position
 from common import enums as E
 from tests.conftest import requires_db
 
@@ -50,9 +50,23 @@ def _m(content, **kw):
     return MemoryInput(content=content, **kw)
 
 
+def _rasporedi(persona, sektor: str, now=None):
+    """Stavlja personu u sektor (ADR-0017), da bi izbor veština po sektoru
+    (ADR-0101) imao šta da pročita. Sektor se pravi ovde, bez `seed_org`,
+    da test zavisi od što manje tuđeg stanja."""
+    dep = Department.objects.create(code=sektor, name=f"Sektor {sektor}")
+    poz = Position.objects.create(
+        department=dep, code=f"{sektor}-TEST", title=f"Radno mesto {sektor}",
+        duties=[], needs=[],
+    )
+    return Assignment.objects.create(
+        persona=persona, position=poz, started_at=now or NOW, is_primary=True,
+    )
+
+
 def _vestina(*, subject="veština test", license_box=E.LicenseBox.SLOBODNA,
              license_note="MIT", is_active=True, koraci=None, napomene="",
-             confidence=0.8):
+             confidence=0.8, sector=""):
     """Kreira `KnowledgeSource`/`KnowledgeFact` direktno, bez prolaska kroz
     `uvezi()`, da testovi ADR-0096 mogu nezavisno da kontrolišu
     `is_active`/`license_box` izvora."""
@@ -60,6 +74,7 @@ def _vestina(*, subject="veština test", license_box=E.LicenseBox.SLOBODNA,
         persona=None, source_kind=E.SourceKind.FIRST_PARTY_USER_INPUT.value,
         title=f"Izvor za {subject}", trust_score=1.0, is_active=is_active,
         license_box=E.LicenseBox(license_box).value, license_note=license_note,
+        sector=sector,
     )
     return KnowledgeFact.objects.create(
         source=izvor, persona=None, subject=subject, predicate=PREDIKAT,
@@ -334,6 +349,46 @@ class TestVestineInContext:
         bez_vestine = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
                                     query="logistika transport", now=NOW)
         assert len(sa_vestinom.record.memory_ids) == len(bez_vestine.record.memory_ids)
+
+    def test_vestina_iz_sektora_persone_ide_prva(self, mila):
+        """ADR-0101 — sektor bije azbuku. Tuđa veština je azbučno prva, a
+        ipak ide iza naše."""
+        _rasporedi(mila, "MARKETING")
+        tudja = _vestina(subject="a tuđa veština", sector="RAZVOJ")
+        nasa = _vestina(subject="z naša veština", sector="MARKETING")
+        pack = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                             query="bilo šta", now=NOW)
+        assert pack.record.vestina_ids[0] == str(nasa.id)
+        assert pack.record.vestina_ids.index(str(tudja.id)) > 0
+
+    def test_izvor_bez_sektora_ide_ispred_tudjeg_sektora(self, mila):
+        """ADR-0101 — prazan sektor znači „za sve", pa dolazi pre tuđeg."""
+        _rasporedi(mila, "MARKETING")
+        tudja = _vestina(subject="a tuđa veština", sector="RAZVOJ")
+        za_sve = _vestina(subject="z veština za sve", sector="")
+        pack = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                             query="bilo šta", now=NOW)
+        assert pack.record.vestina_ids.index(str(za_sve.id)) < \
+            pack.record.vestina_ids.index(str(tudja.id))
+
+    def test_unutar_istog_sektora_odlucuje_poklapanje_sa_zadatkom(self, mila):
+        """ADR-0101 — kad je sektor isti, bira tekst zadatka, pa tek onda azbuka."""
+        _rasporedi(mila, "MARKETING")
+        prva_azbucno = _vestina(subject="a nevezana veština", sector="MARKETING")
+        pogodjena = _vestina(subject="z pisanje ponude", sector="MARKETING")
+        pack = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                             query="treba mi pisanje ponude za kupca", now=NOW)
+        assert pack.record.vestina_ids[0] == str(pogodjena.id)
+        assert str(prva_azbucno.id) in pack.record.vestina_ids
+
+    def test_bez_rasporeda_sektor_ne_odlucuje_nista(self, mila):
+        """ADR-0101 — persona bez rasporeda nema sektor; tada vredi stari
+        redosled, azbučni, i ništa se ne lomi."""
+        prva = _vestina(subject="a veština", sector="RAZVOJ")
+        druga = _vestina(subject="b veština", sector="MARKETING")
+        pack = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                             query="", now=NOW)
+        assert pack.record.vestina_ids == [str(prva.id), str(druga.id)]
 
     def test_prekoracenje_plafona_vestina_postavlja_truncated(self, mila):
         for i in range(5):

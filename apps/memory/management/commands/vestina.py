@@ -16,6 +16,11 @@ Postoji da bi se videlo šta je već u bazi, pre nego što se nešto uveze po
 drugi put. Uz `--spisak`, `--izvor` filtrira po delu naslova izvora; bez
 `--spisak` to je pun naslov izvora koji se uvozi.
 
+`--sektor` (ADR-0101) kaže kom sektoru korporacije korpus pripada i time
+odlučuje čije pakete te veštine uopšte vide. Prazno znači „za sve". Vrednost
+se proverava po `Department.code` (ADR-0017) — izmišljen sektor se odbija
+pre upisa, da se greška ne otkrije tek kad agent ostane bez veština.
+
 `--commit` i `--putanja` (ADR-0077 §3) su neobavezni: popunjavaju se samo
 kada korpus dolazi iz repozitorijuma, jer isti `uri` tamo daje različit
 sadržaj u različitim trenucima.
@@ -30,6 +35,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from api.context import bind
 from apps.memory.vestine import Vestina, spisak, uvezi
+from apps.personas.models import Department
 from common import enums as E
 
 
@@ -55,6 +61,9 @@ class Command(BaseCommand):
         parser.add_argument("--putanja", default="",
                              help="Putanja fajla u repozitorijumu — samo za korpus iz "
                                   "repozitorijuma (ADR-0077 §3). Neobavezan.")
+        parser.add_argument("--sektor", default="",
+                             help="Department.code sektora kome korpus pripada "
+                                  "(ADR-0101). Prazno znači da važi za sve.")
         parser.add_argument("--datoteka", default="",
                              help="Putanja do JSON datoteke sa veštinama. Obavezna pri uvozu.")
         parser.add_argument("--actor", default="",
@@ -122,6 +131,15 @@ class Command(BaseCommand):
                     "ADR-0059: slobodna kutija mora da imenuje licencu (--naziv-licence)."
                 )
 
+            sektor = options["sektor"].strip().upper()
+            if sektor and not Department.objects.filter(code=sektor).exists():
+                postojeci = ", ".join(
+                    Department.objects.order_by("sort_order").values_list("code", flat=True)
+                )
+                raise CommandError(
+                    f"Nepoznat sektor: {sektor!r}. Postojeći: {postojeci}."
+                )
+
             if not options["datoteka"]:
                 raise CommandError("--datoteka je obavezan.")
             putanja = Path(options["datoteka"])
@@ -146,6 +164,7 @@ class Command(BaseCommand):
                 license_note=naziv_licence,
                 commit_sha=options["commit"],
                 file_path=options["putanja"],
+                sector=sektor,
                 vestine=vestine,
                 actor=actor,
             )
