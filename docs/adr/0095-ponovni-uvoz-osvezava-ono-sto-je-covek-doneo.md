@@ -61,3 +61,41 @@ sam izvor, i njegova promena je zasebna odluka.
 Posle ove izmene `uri` više ne nosi commit ugurat kao niz znakova
 (`…/docs/adr@bb52d10`) — to je bila privremena zakrpa od 15.10. dok polja nije
 bilo. Prvi uvoz posle ove izmene je ispravlja.
+
+## Ispravka — `ingested_at` se prepisuje pri svakom uvozu (16.10., posle prve zakrpe)
+
+Odeljak „Šta se ovim NE menja" je tačan ali nedovoljno precizan, i brif koji
+je iz njega napisan bio je netačan. Zato ovde stoji mereno stanje.
+
+U `apps/memory/vestine.py`, na kraju iste transakcije, stoji od ADR-0076 §2:
+
+```python
+if vestine:
+    izvor.ingested_at = timezone.now()
+    izvor.save(update_fields=["ingested_at"])
+```
+
+Dakle `ingested_at` se **prepisuje pri svakom uvozu koji ima veštine**. Ono
+što ADR-0095 tvrdi jeste uže: osvežavanje pet polja ne dira `ingested_at` —
+pečat i dalje upisuje isključivo kod iz ADR-0076 §2, po svom pravilu.
+
+Brif za zadatak TSK-01M51X7N4JC62J82TM8VQQYQ1G je to skratio u „NE diraj:
+ingested_at", što čita kao da polje posle ponovnog uvoza ostaje isto. Agent je
+tu rečenicu verno sproveo i napisao test koji zamrzne sat pa tvrdi da
+jednakost `ingested_at` dokazuje da ga naša izmena nije dotakla. Ne dokazuje:
+polje se svakako prepisuje, a sa zamrznutim satom prepiše se istom vrednošću.
+Test bi prošao i da je izmena pokvarila to polje — to je prazna straža, a
+prazna straža je gora od nepostojeće, jer se čovek na nju osloni (ADR-0033).
+
+Greška je čovekova, u brifu, ne agentova.
+
+Zato, kao pravilo za testove oko ovog polja:
+
+1. Test NE SME da tvrdi da `ingested_at` ostaje isti posle ponovnog uvoza sa
+   veštinama. Izmereno je suprotno.
+2. Ponašanje koje se sme proveravati jeste da se pečat upisuje kad ima
+   veština, a da se ne upisuje kad ih nema (ADR-0076 §2) — i da ga upis pet
+   polja iz ADR-0095 ne upisuje sam po sebi: uvoz sa praznim spiskom veština
+   osvežava pet polja i ostavlja `ingested_at` nedirnut.
+3. Zamrzavanje sata se ne koristi da bi se dobila jednakost koja ništa ne
+   tvrdi.
