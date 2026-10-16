@@ -57,7 +57,7 @@ def test_argv_sadrzi_sve_zastavice_i_file_read_po_ulazu():
         citanja=["c.py"],
     )
     assert argv == [
-        "--no-git",
+        "--no-dirty-commits",
         "--model", "claude-x",
         "--model-settings-file", "/tmp/podesavanja.yml",
         "--file", "a.py",
@@ -70,6 +70,19 @@ def test_argv_sadrzi_sve_zastavice_i_file_read_po_ulazu():
         "--no-check-update",
         "--no-show-model-warnings",
     ]
+
+
+def test_argv_nema_no_git_jer_koren_mora_biti_repozitorijum():
+    """ADR-0094 — bez repozitorijuma Aiderov koren je najmanji zajednički
+    direktorijum fajlova u razgovoru (`utils.find_common_root`), pa je nov fajl
+    padao pod poddirektorijum: 15.10.2026. je migracija završila u
+    `apps/memory/apps/memory/migrations/`.
+    """
+    argv = pokretac._sastavi_argv(
+        model="claude-x", podesavanja="/tmp/p.yml", fajlovi=["a.py"], citanja=[])
+    assert "--no-git" not in argv
+    assert "--no-dirty-commits" in argv
+    assert "--no-auto-commits" in argv
 
 
 def test_izvestaj_nosi_tacne_brojeve_iz_laznog_coder_objekta(monkeypatch, tmp_path):

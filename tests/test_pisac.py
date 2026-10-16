@@ -556,7 +556,7 @@ class TestAiderPisac:
     @pytest.fixture
     def lazni_fs(self, monkeypatch):
         """Preskače stvarni git klon i stvarni Aider — oba su lažna."""
-        pozivi: dict = {"add": None, "argv": None}
+        pozivi: dict = {"add": None, "argv": None, "osnova": None}
 
         def lazni_klon(koren, radni):
             # Ograda zadatka mora da postoji u radnom primerku, inače je
@@ -577,13 +577,15 @@ class TestAiderPisac:
         def lazni_add(radni, putanje):
             pozivi["add"] = list(putanje)
 
-        def lazni_diff(radni):
+        def lazni_diff(radni, osnova):
+            pozivi["osnova"] = osnova
             return DIFF
 
         monkeypatch.setattr(pisac, "_klonirani_repo", lazni_klon)
+        monkeypatch.setattr(pisac, "_git_osnova", lambda radni: "osnova0000")
         monkeypatch.setattr(pisac, "_pozovi_pokretac", lazni_pokretac)
         monkeypatch.setattr(pisac, "_git_add", lazni_add)
-        monkeypatch.setattr(pisac, "_git_diff_cached", lazni_diff)
+        monkeypatch.setattr(pisac, "_git_diff_od_osnove", lazni_diff)
         monkeypatch.setattr(pisac.gateway, "credential_ref",
                             lambda provider, persona=None: ("env:X", "persona"))
         monkeypatch.setattr("apps.runtime.transport.resolve_secret",
@@ -664,6 +666,7 @@ class TestAiderPisac:
             return subprocess.CompletedProcess(args=argv, returncode=0, stdout="", stderr="")
 
         monkeypatch.setattr(pisac, "_klonirani_repo", lazni_klon)
+        monkeypatch.setattr(pisac, "_git_osnova", lambda radni: "osnova0000")
         monkeypatch.setattr(pisac, "_pozovi_pokretac", lazni_pokretac)
         monkeypatch.setattr(pisac.gateway, "credential_ref",
                             lambda provider, persona=None: ("env:X", "persona"))
@@ -675,6 +678,18 @@ class TestAiderPisac:
         with pytest.raises(gateway.LLMError):
             poziv(RutaAider())
         assert z.patches.count() == 0
+
+    def test_zakrpa_se_racuna_od_osnove_a_ne_od_HEAD(self, z, lazni_fs):
+        """ADR-0094 — Aider sada ima repozitorijum, pa sme i da commituje.
+
+        `git diff --cached` bez osnove poredi HEAD sa indeksom; commit pomera
+        HEAD i razlika bi bila prazna, pa bi se javila `PRAZNA_ZAKRPA` sa
+        lažnim imenom. Osnova se beleži pre pokretanja.
+        """
+        tekst_prompta, b = pisac._prompt(z)
+        poziv = pisac._aiderom(z, tekst_prompta, b)
+        poziv(RutaAider())
+        assert lazni_fs["osnova"] == "osnova0000"
 
     def test_git_add_dobija_ograde_zadatka_nikad_dash_a(self, z, lazni_fs):
         """ADR-0092 — u indeks idu ograde, da bi i nov fajl ušao u zakrpu."""
@@ -718,6 +733,7 @@ class TestAiderPisac:
                 stderr="Traceback: nešto je puklo u aideru")
 
         monkeypatch.setattr(pisac, "_klonirani_repo", lazni_klon)
+        monkeypatch.setattr(pisac, "_git_osnova", lambda radni: "osnova0000")
         monkeypatch.setattr(pisac, "_pozovi_pokretac", lazni_pokretac)
         monkeypatch.setattr(pisac.gateway, "credential_ref",
                             lambda provider, persona=None: ("env:X", "persona"))
@@ -753,13 +769,14 @@ class TestAiderPisac:
         def lazni_add(radni, putanje):
             pass
 
-        def lazni_diff(radni):
+        def lazni_diff(radni, osnova):
             return ""
 
         monkeypatch.setattr(pisac, "_klonirani_repo", lazni_klon)
+        monkeypatch.setattr(pisac, "_git_osnova", lambda radni: "osnova0000")
         monkeypatch.setattr(pisac, "_pozovi_pokretac", lazni_pokretac)
         monkeypatch.setattr(pisac, "_git_add", lazni_add)
-        monkeypatch.setattr(pisac, "_git_diff_cached", lazni_diff)
+        monkeypatch.setattr(pisac, "_git_diff_od_osnove", lazni_diff)
         monkeypatch.setattr(pisac.gateway, "credential_ref",
                             lambda provider, persona=None: ("env:X", "persona"))
         monkeypatch.setattr("apps.runtime.transport.resolve_secret",
@@ -784,6 +801,7 @@ class TestAiderPisac:
                 args=argv, returncode=1, stdout="obican ispis bez tajni", stderr="")
 
         monkeypatch.setattr(pisac, "_klonirani_repo", lazni_klon)
+        monkeypatch.setattr(pisac, "_git_osnova", lambda radni: "osnova0000")
         monkeypatch.setattr(pisac, "_pozovi_pokretac", lazni_pokretac)
         monkeypatch.setattr(pisac.gateway, "credential_ref",
                             lambda provider, persona=None: ("env:X", "persona"))

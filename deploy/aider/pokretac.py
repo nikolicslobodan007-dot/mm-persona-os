@@ -34,7 +34,12 @@ def _sastavi_argv(
     Brif isporučuje `coder.run`, pa ovde mrtva zastavica ne stoji.
     """
     argv: list[str] = [
-        "--no-git",
+        # ADR-0094 — BEZ `--no-git`. Aiderov koren je, bez repozitorijuma,
+        # najmanji zajednicki direktorijum fajlova u razgovoru
+        # (utils.find_common_root), pa je svaki NOV fajl padao pod taj
+        # poddirektorijum umesto pod koren. Sa repozitorijumom koren je
+        # `repo.root`, dakle radni primerak.
+        "--no-dirty-commits",
         "--model", model,
         "--model-settings-file", podesavanja,
     ]
@@ -43,6 +48,9 @@ def _sastavi_argv(
     for r in citanja:
         argv += ["--read", r]
     argv += [
+        # Aider ne commituje: ni zatecene izmene (`--no-dirty-commits` gore),
+        # ni svoje (`--no-auto-commits`). Zakrpa je ipak otporna i na commit —
+        # racuna se od osnove zabelezene pre pokretanja (ADR-0094).
         "--no-auto-commits",
         "--yes-always",
         "--no-stream",

@@ -413,8 +413,22 @@ def _za_indeks(radni: str, ograde: list[str], fajlovi: list[str]) -> list[str]:
     return postoje or fajlovi
 
 
-def _git_diff_cached(radni: str) -> str:
-    r = subprocess.run(["git", "-C", radni, "diff", "--cached"],
+def _git_osnova(radni: str) -> str:
+    """Commit radnog primerka PRE nego što je Aider pušten (ADR-0094)."""
+    r = subprocess.run(["git", "-C", radni, "rev-parse", "HEAD"],
+                       check=True, capture_output=True, text=True)
+    return r.stdout.strip()
+
+
+def _git_diff_od_osnove(radni: str, osnova: str) -> str:
+    """Razlika od osnove do indeksa — ne od HEAD-a (ADR-0094).
+
+    Od kada Aider radi sa repozitorijumom, sme i da commituje. `git diff
+    --cached` poredi HEAD sa indeksom, pa bi commit pomerio HEAD i razlika bi
+    bila prazna: dobili bismo `PRAZNA_ZAKRPA` sa lažnim imenom. Osnova se
+    beleži pre pokretanja, pa je ishod isti bez obzira da li je commitovano.
+    """
+    r = subprocess.run(["git", "-C", radni, "diff", "--cached", osnova],
                        check=True, capture_output=True, text=True)
     return r.stdout
 
@@ -496,6 +510,7 @@ def _aiderom(zadatak: CodeTask, tekst_prompta: str, b: dict):
 
             try:
                 _klonirani_repo(_KOREN, radni)
+                osnova = _git_osnova(radni)
                 # ADR-0090 — rok pisca, ne rok rute: Aiderova sesija nije
                 # jedan poziv provajderu.
                 rezultat = _pozovi_pokretac(argv, env, ROK_SEKUNDI)
@@ -526,7 +541,7 @@ def _aiderom(zadatak: CodeTask, tekst_prompta: str, b: dict):
 
             try:
                 _git_add(radni, _za_indeks(radni, ograde, fajlovi))
-                diff = _git_diff_cached(radni)
+                diff = _git_diff_od_osnove(radni, osnova)
             except (subprocess.CalledProcessError, OSError) as e:
                 raise gateway.LLMError("AIDER_ERROR", str(e)) from e
 

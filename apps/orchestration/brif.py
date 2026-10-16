@@ -106,15 +106,30 @@ def _koren() -> Path:
 
 
 def _kandidati(zadatak: CodeTask) -> list[Path]:
-    """Fajlovi pod dozvoljenim putanjama, uredno sortirani i bez smeća."""
-    koren, nadjeni = _koren(), []
+    """Fajlovi pod dozvoljenim putanjama. IMENOVAN fajl ide prvi (ADR-0093).
+
+    `allowed_paths` nosi dve različite stvari: direktorijum (`apps/memory`) i
+    tačno imenovan fajl (`tests/test_vestine.py`). Imenovan fajl je čovekov
+    izbor, a ne ulov prefiksa, pa ne sme da ispadne zbog plafona koji su
+    popunili fajlovi pokupljeni iz direktorijuma.
+
+    15.10.2026. je tako `tests/test_vestine.py` ispao iz brifa tri pokušaja
+    zaredom — agent testove nije „zaboravio", nego ih nije ni imao. Azbučni
+    red je `apps/...` stavljao ispred `tests/...` i plafon bi se potrošio pre
+    nego što se do imenovanog fajla uopšte dođe.
+
+    Unutar svake od dve grupe red ostaje azbučni, da brif bude ponovljiv.
+    """
+    koren = _koren()
+    imenovani: list[Path] = []
+    pokupljeni: list[Path] = []
     for prefiks in zadatak.allowed_paths:
         p = (koren / policy.normalize_path(prefiks)).resolve()
         # Prefiks van korena se ne čita ni slučajno.
         if not (p == koren or koren in p.parents):
             continue
         if p.is_file():
-            nadjeni.append(p)
+            imenovani.append(p)
             continue
         if not p.is_dir():
             continue
@@ -123,8 +138,10 @@ def _kandidati(zadatak: CodeTask) -> list[Path]:
                 continue
             if PRESKOCI_DIR & set(f.relative_to(koren).parts):
                 continue
-            nadjeni.append(f)
-    return sorted(set(nadjeni))
+            pokupljeni.append(f)
+    prvi = sorted(set(imenovani))
+    ostali = [f for f in sorted(set(pokupljeni)) if f not in set(prvi)]
+    return prvi + ostali
 
 
 def _procitaj(f: Path) -> tuple[str, str] | None:

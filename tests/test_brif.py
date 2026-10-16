@@ -132,6 +132,27 @@ class TestPlafoni:
         assert all("path" in o and "reason" in o for o in b["truncated"])
 
 
+class TestImenovanFajl:
+    """ADR-0093 — imenovan fajl ne sme da ispadne zbog plafona."""
+
+    def test_imenovan_fajl_ide_prvi(self, db):
+        b = brif.build(_zadatak(["apps/orchestration", "manage.py"]))
+        assert b["files"][0]["path"] == "manage.py"
+
+    def test_imenovan_fajl_prezivljava_plafon_koji_je_direktorijum_popunio(self, db):
+        """Tačno kvar od 15.10.2026: `apps/...` pojede plafon, imenovani ispadne.
+
+        `apps/orchestration` sam po sebi probija plafon (vidi TestObim), pa je
+        ovo stvarni pritisak, ne izmišljen.
+        """
+        b = brif.build(_zadatak(["apps/orchestration", "manage.py"]))
+        assert b["truncated"], "direktorijum mora da probije plafon, inače test ne meri ništa"
+        putanje = [f["path"] for f in b["files"]]
+        odsecene = [o["path"] for o in b["truncated"]]
+        assert "manage.py" in putanje
+        assert "manage.py" not in odsecene
+
+
 class TestOtisak:
     def test_sha256_odgovara_sadrzaju(self, db):
         b = brif.build(_zadatak(["manage.py"]))
