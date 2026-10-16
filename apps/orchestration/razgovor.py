@@ -120,9 +120,8 @@ def razmisli(direktor, telo: str, *, run=None) -> dict:
     Procena je dodatak, ne uslov.
     """
     from apps.llm_gateway import gateway
-    from common import enums as E
-
     from apps.memory.context import _dosije_firme
+    from common import enums as E
 
     spisak = ", ".join(sorted(RECI_SEKTORA) + [PODRAZUMEVANI_SEKTOR])
     # ADR-0107 — direktor pravi nalog znajući gde radi. Bez dosijea bi
