@@ -125,9 +125,42 @@ def resolve_secret(credential_ref: str) -> str:
     return value
 
 
-def _guard() -> None:
-    if not getattr(settings, "GLOBAL_EXTERNAL_ACTIONS_ENABLED", False):
-        raise ExternalActionsDisabled("GLOBAL_EXTERNAL_ACTIONS_ENABLED=false")
+def _cisto_citanje(req: "Request") -> bool:
+    """Da li zahtev po SVOM OBLIKU ne može da promeni stanje na drugoj strani.
+
+    ADR-0099 tačka 3 — ova provera namerno ne gleda nalepnicu `action_type`
+    niti veruje pozivaocu. Nezavisna brava koja veruje polju koje je postavio
+    onaj koga proverava nije nezavisna. Oblik zahteva transport vidi sam:
+
+      - `write=False` — podrazumevano je True, pa ko zaboravi ostaje zatvoren;
+      - metod `GET` — ništa što šalje izmenu;
+      - bez `json`, `form` i `body` — nema tela koje bi nešto upisalo;
+      - bez `auth` — tajna se ne čita i ne ide napolje.
+    """
+    return bool(
+        req.write is False
+        and (req.method or "").upper() == "GET"
+        and req.json is None
+        and req.form is None
+        and req.body is None
+        and not req.auth
+    )
+
+
+def _guard(req: "Request | None" = None) -> None:
+    """Druga, nezavisna provera prekidača (ADR-0008).
+
+    ADR-0099 — kad je veliki prekidač ugašen a uži upaljen, prolazi samo ono
+    što je po obliku čisto čitanje. Sve ostalo i dalje pada ovde, pa pogrešno
+    označen zahtev ne može da izađe napolje.
+    """
+    if getattr(settings, "GLOBAL_EXTERNAL_ACTIONS_ENABLED", False):
+        return
+    if (req is not None
+            and getattr(settings, "GLOBAL_PUBLIC_READS_ENABLED", False)
+            and _cisto_citanje(req)):
+        return
+    raise ExternalActionsDisabled("GLOBAL_EXTERNAL_ACTIONS_ENABLED=false")
 
 
 class LiveTransport:
@@ -138,7 +171,7 @@ class LiveTransport:
         self.sent: list[Request] = []
 
     def send(self, req: Request, *, credential_ref: str = "") -> Response:
-        _guard()
+        _guard(req)
         self.sent.append(req)
         if req.kind == "smtp":
             return self._smtp(req, credential_ref)

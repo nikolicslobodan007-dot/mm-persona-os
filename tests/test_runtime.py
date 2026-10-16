@@ -238,6 +238,42 @@ class TestDryRun:
         assert a.result_json["external_ref"].startswith("sandbox:")
         assert a.attempts.get().payload["requests"] == []
 
+    def test_uzi_prekidac_pusta_samo_cisto_citanje(self, settings):
+        """ADR-0099 — druga brava gleda OBLIK zahteva, ne nalepnicu.
+
+        Veliki prekidač je ugašen, uži upaljen. Prolazi samo `GET` bez tela,
+        bez forme i bez tajne, i to sa `write=False`. Sve ostalo pada i dalje,
+        pa pogrešno označen zahtev ne može da izađe napolje.
+        """
+        settings.GLOBAL_EXTERNAL_ACTIONS_ENABLED = False
+        settings.GLOBAL_PUBLIC_READS_ENABLED = True
+
+        class Spy(LiveTransport):
+            def _http(self, req, credential_ref):
+                return Response(200, b"ok")
+
+        cisto = Request("GET", "https://primer.rs/clanak", write=False)
+        assert Spy().send(cisto).status == 200
+
+        prljavi = [
+            Request("GET", "https://primer.rs/x"),                       # write=True
+            Request("POST", "https://primer.rs/x", write=False),          # nije GET
+            Request("GET", "https://primer.rs/x", write=False, json={"a": 1}),
+            Request("GET", "https://primer.rs/x", write=False, form={"a": "1"}),
+            Request("GET", "https://primer.rs/x", write=False, body="a=1"),
+            Request("GET", "https://primer.rs/x", write=False, auth="bearer"),
+        ]
+        for req in prljavi:
+            with pytest.raises(ExternalActionsDisabled):
+                Spy().send(req)
+
+    def test_uzi_prekidac_ugasen_ne_pusta_ni_citanje(self, settings):
+        """ADR-0099 — bez užeg prekidača ni čisto čitanje ne izlazi."""
+        settings.GLOBAL_EXTERNAL_ACTIONS_ENABLED = False
+        settings.GLOBAL_PUBLIC_READS_ENABLED = False
+        with pytest.raises(ExternalActionsDisabled):
+            LiveTransport().send(Request("GET", "https://primer.rs/x", write=False))
+
     def test_second_lock_in_transport(self, mila, page):
         """I kad bi neko predao ugovor bez dry_run-a, transport odbija dok je prekidač off."""
         with pytest.raises(ExternalActionsDisabled):

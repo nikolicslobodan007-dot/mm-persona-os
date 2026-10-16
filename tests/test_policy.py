@@ -129,6 +129,34 @@ class TestFlow:
         types = set(EventOutbox.objects.values_list("event_type", flat=True))
         assert {"action.proposed", "policy.decision.created", "action.queued"} <= types
 
+    @override_settings(GLOBAL_EXTERNAL_ACTIONS_ENABLED=False,
+                       GLOBAL_PUBLIC_READS_ENABLED=True)
+    def test_uzi_prekidac_pusta_citanje_uzivo(self, mila):
+        """ADR-0099 — čitanje javne stranice ide uživo pod užim prekidačem."""
+        c = gateway.authorize(_propose(mila, "browser.page.read", _read(7)).action)
+        assert c["dry_run"] is False
+
+    @override_settings(GLOBAL_EXTERNAL_ACTIONS_ENABLED=False,
+                       GLOBAL_PUBLIC_READS_ENABLED=True)
+    def test_uzi_prekidac_ne_pusta_objavu(self, mila, page):
+        """ADR-0099 — uži prekidač ne sme da otvori ništa što nije čitanje.
+
+        Ovo je test protiv „ili": da je uslov napisan kao `veliki ili uži`,
+        objava bi ovde izašla uživo dok je veliki prekidač ugašen.
+        """
+        a = _propose(mila, "channel.post.create", {"text": "Ne sme uživo"},
+                     channel=page).action
+        if a.status == E.ActionStatus.BLOCKED:
+            return  # politika je odbila ranije — spoljni efekat ionako ne nastaje
+        assert gateway.authorize(a)["dry_run"] is True
+
+    @override_settings(GLOBAL_EXTERNAL_ACTIONS_ENABLED=False,
+                       GLOBAL_PUBLIC_READS_ENABLED=False)
+    def test_bez_uzeg_prekidaca_citanje_ostaje_suvo(self, mila):
+        """ADR-0099 — podrazumevano stanje se ne menja ovom odlukom."""
+        c = gateway.authorize(_propose(mila, "browser.page.read", _read(8)).action)
+        assert c["dry_run"] is True
+
     def test_read_without_constraints_denied(self, mila):
         pr = _propose(mila, "browser.page.read", {"url": "https://example.com"})
         assert pr.action.status == E.ActionStatus.BLOCKED

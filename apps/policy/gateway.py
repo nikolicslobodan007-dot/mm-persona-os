@@ -54,10 +54,26 @@ def _refuse(action: Action, outcome: E.ExecutionOutcome, reason: str, *,
 
 
 def external_live(action: Action) -> bool:
-    """Sme li spoljni efekat da nastane: globalni prekidač I persona u živom okruženju."""
-    return bool(getattr(settings, "GLOBAL_EXTERNAL_ACTIONS_ENABLED", False)
-                and E.RuntimeEnvironment(action.persona.runtime_environment)
-                in _LIVE_ENVIRONMENTS)
+    """Sme li spoljni efekat da nastane.
+
+    Uslov je nepromenjen za sve što menja stanje na drugoj strani: globalni
+    prekidač I persona u živom okruženju.
+
+    ADR-0099 — čitanje javne stranice nije delovanje, pa ima svoj, uži
+    prekidač. Piše se kao **I**, nikada kao „ili" uz gornji uslov: tip akcije
+    mora biti u `READ_ACTION_TYPES`, uži prekidač mora biti upaljen, i persona
+    mora biti u živom okruženju kao i inače. Tako uži prekidač ne može da
+    otvori ništa što nije čitanje, ni kad bi neko pogrešio u pozivaocu.
+
+    Prekidač za gašenje se ne proverava ovde jer je provereniji ranije, u
+    `_authorize` — ALLOW bez njega ni ne stigne dovde (ADR-0099 tačka 4).
+    """
+    if E.RuntimeEnvironment(action.persona.runtime_environment) not in _LIVE_ENVIRONMENTS:
+        return False
+    if getattr(settings, "GLOBAL_EXTERNAL_ACTIONS_ENABLED", False):
+        return True
+    return bool(action.action_type in E.READ_ACTION_TYPES
+                and getattr(settings, "GLOBAL_PUBLIC_READS_ENABLED", False))
 
 
 def authorize(action: Action, *, now: datetime | None = None) -> dict[str, Any]:

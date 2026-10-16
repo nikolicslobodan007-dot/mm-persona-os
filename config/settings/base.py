@@ -174,6 +174,14 @@ GLOBAL_EXTERNAL_ACTIONS_ENABLED = os.environ.get(
     "GLOBAL_EXTERNAL_ACTIONS_ENABLED", "false"
 ).lower() == "true"
 
+# ADR-0099 — uži prekidač, odvojen od gornjeg i podrazumevano ugašen. Otvara
+# ISKLJUČIVO čitanje javnih stranica (`E.READ_ACTION_TYPES`). Gornji prekidač
+# ostaje jedini koji pušta bilo šta što menja stanje na drugoj strani:
+# objavu, poštu, lajk, komentar. Ova dva se nikad ne spajaju u „ili".
+GLOBAL_PUBLIC_READS_ENABLED = os.environ.get(
+    "GLOBAL_PUBLIC_READS_ENABLED", "false"
+).lower() == "true"
+
 # ---------------------------------------------------------------- F6 (ADR-0008)
 # Canon §12.8 t.1 — hladna pošta NIKADA sa ovih domena ni njihovih poddomena.
 PRIMARY_COMPANY_DOMAINS = [
