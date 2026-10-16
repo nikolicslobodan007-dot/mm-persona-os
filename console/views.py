@@ -843,7 +843,12 @@ def persona_asset_remove(request, public_id: str):
 
 @console_view
 def asset(request, public_id: str):
-    """Prikaz slike iz storage-a — samo prijavljenom operateru."""
+    """Fajl iz skladišta — samo prijavljenom operateru.
+
+    Slika se prikazuje u stranici; dokument se **preuzima**, sa imenom i
+    nastavkom (ADR-0104). Bez toga bi `.odt` stigao kao bezimeni fajl i
+    pregledač bi pokušao da ga prikaže.
+    """
     from django.http import HttpResponse
 
     from apps.visuals import storage
@@ -858,7 +863,37 @@ def asset(request, public_id: str):
         raise Http404 from e
     r = HttpResponse(data, content_type=a.mime_type)
     r["Cache-Control"] = "private, max-age=3600"
+    if a.kind == E.AssetKind.DOCUMENT.value:
+        nastavak = storage.ALLOWED_MIME.get(a.mime_type, "")
+        r["Content-Disposition"] = f'attachment; filename="{a.public_id}{nastavak}"'
     return r
+
+
+@console_view
+@require_POST
+def content_document(request, item_id):
+    """Pravi dokument od nacrta i vraća se na spisak. ADR-0104.
+
+    Nema spoljašnjeg efekta (fajl ostaje kod nas), ali jeste radnja koju
+    neko pokreće — pa ide POST-om i traži istu ulogu kao ostale radnje nad
+    sadržajem.
+    """
+    from apps.content import dokument
+
+    item = ContentItem.objects.filter(pk=item_id).first()
+    if item is None:
+        raise Http404
+    if not (_roles(request.user) & _DRAFTERS):
+        messages.error(request, "Tvoja uloga ne pravi dokumente.")
+        return redirect("/console/content")
+    oblik = request.POST.get("oblik", "odt")
+    try:
+        a = dokument.napravi(item, oblik=oblik, actor=principal_of(request.user))
+    except dokument.DokumentError as e:
+        messages.error(request, str(e)[:300])
+    else:
+        messages.success(request, f"Dokument {a.public_id} je napravljen.")
+    return redirect("/console/content")
 
 
 @console_view
@@ -935,13 +970,22 @@ def persona_draft(request, public_id: str):
 
 @console_view
 def content(request):
+    from apps.content import dokument
+
     status = request.GET.get("status", "")
     qs = ContentItem.objects.select_related("persona").order_by("-created_at")
     if status in E.ContentStatus.values():
         qs = qs.filter(status=status)
+    items = list(qs[:100])
+    # Jednim upitom za ceo spisak — veza nacrt→dokument ide preko ključa
+    # u skladištu, jer je model nema (ADR-0104).
+    dokumenti = dokument.postojeci_za(items)
+    for i in items:
+        i.dokument = dokumenti.get(str(i.id))
     return render(request, "console/content.html",
-                  _nav(request) | {"items": qs[:100], "status": status,
-                                   "statuses": E.ContentStatus.values()})
+                  _nav(request) | {"items": items, "status": status,
+                                   "statuses": E.ContentStatus.values(),
+                                   "sme_dokument": bool(_roles(request.user) & _DRAFTERS)})
 
 
 @console_view

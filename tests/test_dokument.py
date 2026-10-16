@@ -117,3 +117,77 @@ class TestDokument:
         assert detalji["oblik"] == "odt"
         assert detalji["sadrzaj"] == str(nacrt.id)
         assert detalji["bajtova"] > 0
+
+@requires_db
+@pytest.mark.django_db
+class TestKonzola:
+    """ADR-0104 — fajl koji niko ne može da skine nije isporuka.
+
+      - spisak sadržaja nudi dugme „Napravi dokument" kad dokumenta nema;
+      - kad postoji, nudi link za preuzimanje;
+      - preuzimanje šalje fajl kao prilog, sa imenom i nastavkom;
+      - ulogu koja ne sme da pravi dokumente odbija, i ništa ne upisuje.
+    """
+
+    @pytest.fixture
+    def sef(self, db, mila):
+        import io
+
+        from django.contrib.auth.models import Group, User
+        from django.core.management import call_command
+
+        u = User.objects.create_user("sef103", password="Tajna-lozinka-1")
+        u.groups.add(Group.objects.get(name=E.Role.SYSTEM_ADMIN.value))
+        u.user_permissions.add(
+            *Group.objects.get(name=E.Role.OPERATOR.value).permissions.all())
+        call_command("console_totp", user="sef103", stdout=io.StringIO())
+        return u
+
+    def _konzola(self, korisnik):
+        from django.test import Client
+
+        from tests.test_console import _login
+
+        return _login(Client(), korisnik)
+
+    def test_bez_dokumenta_stranica_nudi_dugme(self, sef, nacrt, skladiste):
+        telo = self._konzola(sef).get("/console/content").content.decode()
+        assert "Napravi dokument" in telo
+        assert "Preuzmi" not in telo
+
+    def test_dugme_pravi_dokument_pa_se_pojavi_link(self, sef, nacrt, skladiste):
+        c = self._konzola(sef)
+        r = c.post(f"/console/content/{nacrt.id}/dokument", {"oblik": "odt"})
+        assert r.status_code == 302
+        asset = MediaAsset.objects.get()
+        telo = c.get("/console/content").content.decode()
+        assert f"/console/assets/{asset.public_id}" in telo
+        assert "Preuzmi" in telo
+
+    def test_preuzimanje_salje_prilog_sa_imenom(self, sef, nacrt, skladiste):
+        c = self._konzola(sef)
+        c.post(f"/console/content/{nacrt.id}/dokument", {"oblik": "odt"})
+        asset = MediaAsset.objects.get()
+        r = c.get(f"/console/assets/{asset.public_id}")
+        assert r.status_code == 200
+        assert r["Content-Type"] == "application/vnd.oasis.opendocument.text"
+        assert r["Content-Disposition"] == (
+            f'attachment; filename="{asset.public_id}.odt"')
+        assert r.content[:2] == b"PK"
+
+    def test_slika_se_i_dalje_prikazuje_a_ne_preuzima(self, sef, mila, skladiste):
+        """Dodavanje priloga za dokumente ne sme da promeni ponašanje slika."""
+        from apps.visuals import storage as vstorage
+        from common import ids as I
+
+        podaci = b"\x89PNG\r\n\x1a\n" + b"slika"
+        otisak = vstorage.sha256(podaci)
+        kljuc = vstorage.key_for(mila.public_id, otisak, "image/png")
+        vstorage.put(podaci, key=kljuc, mime="image/png")
+        a = MediaAsset.objects.create(
+            public_id=I.media_asset_public_id(mila.public_id, 1), persona=mila,
+            kind=E.AssetKind.PHOTO.value, storage_key=kljuc, mime_type="image/png",
+            sha256=otisak, origin="generated")
+        r = self._konzola(sef).get(f"/console/assets/{a.public_id}")
+        assert r.status_code == 200
+        assert "Content-Disposition" not in r

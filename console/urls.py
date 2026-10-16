@@ -39,6 +39,8 @@ urlpatterns = [
          name="console-persona-route"),
     path("lessons/<uuid:lesson_id>/toggle", views.lesson_toggle, name="console-lesson-toggle"),
     path("content", views.content, name="console-content"),
+    path("content/<uuid:item_id>/dokument", views.content_document,
+         name="console-content-document"),
     path("actions/<str:action_id>", views.action, name="console-action"),
     path("costs", views.costs, name="console-costs"),
     path("branches", views.branches, name="console-branches"),

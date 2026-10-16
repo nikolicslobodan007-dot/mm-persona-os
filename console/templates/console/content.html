@@ -24,6 +24,17 @@
   {% elif i.pravopis.provereno is False %}
   <div class="small muted">Pravopis: nije provereno — Rečnik nije uvezen.</div>
   {% endif %}
+  <div class="row small">
+    {% if i.dokument %}
+      <a href="/console/assets/{{ i.dokument.public_id }}">⤓ Preuzmi .odt</a>
+      <span class="muted">{{ i.dokument.public_id }}</span>
+    {% elif sme_dokument %}
+      <form method="post" action="/console/content/{{ i.id }}/dokument">{% csrf_token %}
+        <input type="hidden" name="oblik" value="odt">
+        <button>Napravi dokument</button>
+      </form>
+    {% endif %}
+  </div>
   {% for p in i.publications.all %}<div class="small">→ {{ p.channel_account.channel_type }}:
     <span class="pill {{ p.status|status_tone }}">{{ p.status }}</span>
     {% if p.provider_payload.dry_run %}<span class="pill">probni režim</span>{% endif %}

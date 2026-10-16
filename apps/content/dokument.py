@@ -89,6 +89,34 @@ def _projekat(item, lo_dokument, lo_pisac) -> dict:
     return projekat
 
 
+def kljuc_za(item, oblik: str) -> str:
+    """Ključ u skladištu za (nacrt, format). ADR-0103 tačka 6.
+
+    Računa se iz posla, ne iz bajtova, pa je isti pre i posle pravljenja
+    fajla — zato i služi kao veza između nacrta i dokumenta, dok model tu
+    vezu nema (ADR-0104).
+    """
+    mime, _ = FORMATI[oblik]
+    logicki = storage.sha256(f"{item.id}:{oblik}:{item.content_hash}".encode())
+    return storage.key_for(item.persona.public_id, logicki, mime)
+
+
+def postojeci(item, oblik: str = "odt") -> MediaAsset | None:
+    """Dokument koji za ovaj nacrt već postoji, ili `None`."""
+    if oblik not in FORMATI:
+        return None
+    return MediaAsset.objects.filter(storage_key=kljuc_za(item, oblik)).first()
+
+
+def postojeci_za(items, oblik: str = "odt") -> dict[str, MediaAsset]:
+    """Isto, ali za spisak nacrta i jednim upitom — za konzolu."""
+    if oblik not in FORMATI:
+        return {}
+    po_kljucu = {kljuc_za(i, oblik): str(i.id) for i in items}
+    nadjeni = MediaAsset.objects.filter(storage_key__in=list(po_kljucu))
+    return {po_kljucu[a.storage_key]: a for a in nadjeni}
+
+
 def napravi(item, *, oblik: str = "odt", actor: str = "") -> MediaAsset:
     """Pravi dokument od nacrta i vraća `MediaAsset` koji na njega pokazuje.
 
@@ -104,17 +132,11 @@ def napravi(item, *, oblik: str = "odt", actor: str = "") -> MediaAsset:
     mime, treba_lo = FORMATI[oblik]
     persona = item.persona
 
-    # Ključ se računa iz POSLA, ne iz bajtova. ODF je ZIP, a ZIP u sebe
-    # upisuje vreme pravljenja — isti nacrt dva puta daje različite bajtove i
-    # različit otisak, pa bi otisak fajla pravio nov red pri svakom pozivu.
-    # Izmereno testom `test_isti_nacrt_ne_pravi_drugi_red` (16.10.2026).
-    logicki = storage.sha256(
-        f"{item.id}:{oblik}:{item.content_hash}".encode())
-    kljuc = storage.key_for(persona.public_id, logicki, mime)
-
-    postojeci = MediaAsset.objects.filter(storage_key=kljuc).first()
-    if postojeci is not None:
-        return postojeci
+    # Ključ se računa iz POSLA, ne iz bajtova (vidi `kljuc_za`).
+    kljuc = kljuc_za(item, oblik)
+    vec_postoji = MediaAsset.objects.filter(storage_key=kljuc).first()
+    if vec_postoji is not None:
+        return vec_postoji
 
     lo_dokument, lo_pisac, lo_izvoz = _biblioteka()
     projekat = _projekat(item, lo_dokument, lo_pisac)
