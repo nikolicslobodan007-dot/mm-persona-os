@@ -1,0 +1,152 @@
+[
+  {
+    "ime": "Upit se razvrsta pre nego što se odgovori",
+    "koraci": [
+      "Pre pisanja odgovora pročitaj kontekst i raniju prepisku sa tim kupcem.",
+      "Oceni dve stvari odvojeno: koliko je hitno i koliko je složeno.",
+      "Usmeri upit onome ko sme da ga reši, ne onome ko je slobodan.",
+      "Ako ti nedostaje podatak, traži ga jednim jasnim pitanjem umesto da nagađaš."
+    ],
+    "napomene": "Destilovano iz support/support-support-responder.md (korak 1 toka rada). Naš opis postupka, ne prepis.",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Rešeno je kad kupac potvrdi, ne kad ti zatvoriš",
+    "koraci": [
+      "Ponudi rešenje i traži potvrdu da je stvarno pomoglo.",
+      "Dok potvrde nema, slučaj je otvoren — bez obzira na to koliko si siguran.",
+      "Tek posle potvrde upiši ishod i zatvori.",
+      "Ne zatvaraj da bi popravio broj: mera je rešen problem, ne brzina zatvaranja."
+    ],
+    "napomene": "Destilovano iz support/support-support-responder.md (koraci 2 i 3, i pravilo „kupac prvi“).",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Ponovljen problem postaje zapis, ne ponovljen odgovor",
+    "koraci": [
+      "Kad isti problem dođe drugi put, to je znak da fali zapis, ne da fali strpljenje.",
+      "Upiši problem i rešenje u bazu znanja istim rečima kojima ga kupci opisuju.",
+      "Sledeći odgovor kreće od zapisa, ne od nule.",
+      "Ako zapis niko ne koristi, zapis je loše napisan — prepravi ga, ne krivi ljude."
+    ],
+    "napomene": "Destilovano iz support/support-support-responder.md (korak 4 i standardi kvaliteta).",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Eskalira se kad posao prelazi ovlašćenje",
+    "koraci": [
+      "Prepoznaj kad zahtev traži odluku koju nemaš pravo da doneseš.",
+      "Prosledi je uz sve što si već utvrdio, da onaj ko odlučuje ne počinje iznova.",
+      "Ne obećavaj ishod umesto onoga ko odlučuje.",
+      "Kupcu reci šta si prosledio i šta sledi, da ne ostane u tišini."
+    ],
+    "napomene": "Destilovano iz support/support-support-responder.md (pravilo o eskalaciji).",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Bez razloga koji kupca zanima danas — nema obraćanja",
+    "koraci": [
+      "Pre slanja odgovori sebi: zašto baš ova osoba, baš ova firma, baš sada.",
+      "Ako na to ne umeš da odgovoriš, nisi spreman da pošalješ.",
+      "„Radim u firmi X i pomažemo firmama kao što je vaša“ nije razlog nego popuna.",
+      "Razlog mora da bude nešto što se kod njih promenilo, ne nešto što ti prodaješ."
+    ],
+    "napomene": "Destilovano iz sales/sales-outbound-strategist.md (pravila nastupa i prodaja po signalu).",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Odjava se poštuje odmah i potpuno",
+    "koraci": [
+      "Čim stigne odjava, prekini svaki niz prema toj osobi.",
+      "Bez izuzetka, bez „još samo jedne poruke“, bez drugog kanala.",
+      "Odjavu upiši tako da je ni drugi agent ne može prekršiti iz neznanja."
+    ],
+    "napomene": "Destilovano iz sales/sales-outbound-strategist.md. Kod nas već postoji centralna lista odjava u adapteru pošte — ova veština je pravilo iza nje.",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Menja se jedna stvar po probi",
+    "koraci": [
+      "Ako istovremeno promeniš naslov, prvu rečenicu i poziv na radnju, nisi naučio ništa.",
+      "Promeni jedno, izmeri, pa tek onda sledeće.",
+      "Zapiši šta je menjano i koliki je uzorak — rezultat bez uzorka nije rezultat."
+    ],
+    "napomene": "Destilovano iz sales/sales-outbound-strategist.md (pravila nastupa).",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Ono što radi mora da bude zapisano",
+    "koraci": [
+      "Priručnik koji živi u jednoj glavi nije priručnik.",
+      "Kad nešto donese odgovor, zapiši i tekst i okolnost u kojoj je poslat.",
+      "Zapis bez primera niko ne ume da ponovi — primer je obavezan deo."
+    ],
+    "napomene": "Destilovano iz sales/sales-outbound-strategist.md (pravila nastupa).",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Prigovor je podatak, ne napad",
+    "koraci": [
+      "Potvrdi da je briga opravdana — bez slaganja i bez svađe.",
+      "Pokaži da razumeš zašto čovek tako misli.",
+      "Pitanjem izvuci pravi prigovor iza izrečenog.",
+      "Tek kad znaš pravi, ponudi drugi ugao — nikad pre toga."
+    ],
+    "napomene": "Destilovano iz sales/sales-discovery-coach.md (okvir potvrdi–razumi–razjasni–preokreni).",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Prigovor na cenu retko je prigovor na cenu",
+    "koraci": [
+      "Kad čuješ „skupo“, proveri da li je u pitanju vrednost ili to što čovek ne odlučuje o novcu.",
+      "Ako je vrednost, tebi fali merenje jaza koji rešavaš, ne popust.",
+      "Vrati se na pitanja i izmeri šta ih trenutno košta to što problem stoji.",
+      "Tek kad je jaz izmeren, razgovor o ceni postaje računica umesto cenkanja."
+    ],
+    "napomene": "Destilovano iz sales/sales-discovery-coach.md. Izvor navodi da prigovori na budžet čine oko polovine svih prigovora — brojku nismo merili sami.",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Znaci da si požurio sa ponudom",
+    "koraci": [
+      "Ako nudiš rešenje pre nego što si razumeo stanje, požurio si.",
+      "Ako dobijaš odgovore od jedne reči, požurio si.",
+      "Ako ne znaš ko još odlučuje, požurio si.",
+      "Ako ne umeš da objasniš zašto je ovo prioritet sada a ne za pola godine, požurio si.",
+      "U svakom od ta četiri slučaja vrati se na pitanja umesto da pojačavaš ponudu."
+    ],
+    "napomene": "Destilovano iz sales/sales-discovery-coach.md (znaci dobrog i lošeg otkrivanja).",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Sadržaj se planira od čitaoca, ne od kanala",
+    "koraci": [
+      "Prvo odredi kome pišeš i šta tom čoveku treba.",
+      "Pa odredi stubove tema — nekoliko oblasti o kojima firma ima šta da kaže.",
+      "Pa napravi kalendar iz tih stubova.",
+      "Kanal biraš poslednji, prema tome gde je čitalac — nikad prvi."
+    ],
+    "napomene": "Destilovano iz marketing/marketing-content-creator.md (strategija sadržaja, planiranje od publike).",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Jedan materijal, više oblika",
+    "koraci": [
+      "Dugačak tekst u sebi nosi nekoliko kratkih — izvuci ih namerno, ne slučajno.",
+      "Oblik prilagodi kanalu, poruku ne menjaj.",
+      "Ponavljanje iste poruke u raznim oblicima nije mana nego posao."
+    ],
+    "napomene": "Destilovano iz marketing/marketing-content-creator.md (prenamena sadržaja).",
+    "pouzdanost": 0.7
+  },
+  {
+    "ime": "Glas firme je jedan, bez obzira ko piše",
+    "koraci": [
+      "Pre pisanja proveri kako firma inače zvuči — iz onoga što je već objavljeno.",
+      "Ne menjaj ton zato što je kanal drugačiji; menjaj dužinu i oblik.",
+      "Ako se tvoj tekst po glasu razlikuje od prethodnih, pogrešio si ti, ne oni."
+    ],
+    "napomene": "Destilovano iz marketing/marketing-content-creator.md (dosledan glas marke).",
+    "pouzdanost": 0.7
+  }
+]
