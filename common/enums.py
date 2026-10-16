@@ -1150,6 +1150,18 @@ PROFILE_MEMORY_TOKENS: dict[RetrievalProfile, int] = {
     RetrievalProfile.REFLECTION: 4000,
 }
 
+#: ADR-0096 — ciljni broj tokena VEŠTINA po profilu, povrh memorije. Veštine su
+#: kućno znanje koje je čovek doneo i odobrio; memorija je lično iskustvo
+#: persone. Dva odvojena plafona, da jedno ne pojede drugo. Brojke su prve,
+#: postavljene rukom a ne izmerene — menjaju se kroz ADR kad merenje kaže.
+PROFILE_VESTINE_TOKENS: dict[RetrievalProfile, int] = {
+    RetrievalProfile.REPLY_CONTEXT: 600,
+    RetrievalProfile.DAILY_PLANNER: 1000,
+    RetrievalProfile.CONTENT_CREATION: 1000,
+    RetrievalProfile.RESEARCH: 2000,
+    RetrievalProfile.REFLECTION: 600,
+}
+
 #: Memory v0.1 §5.2 — minimalni eligibility M za trajni upis, po tipu.
 #: Working je privremen i ide uvek; ostali moraju da zasluže mesto.
 MEMORY_ELIGIBILITY_MIN: dict[MemoryType, float] = {
@@ -1173,6 +1185,7 @@ __all__ += [
     "PROFILE_PURPOSE",
     "PROFILE_TOP_K",
     "PROFILE_MEMORY_TOKENS",
+    "PROFILE_VESTINE_TOKENS",
     "MEMORY_ELIGIBILITY_MIN",
     "SENSITIVE_FROM",
     "SENSITIVE_ALLOWED_PURPOSES",
