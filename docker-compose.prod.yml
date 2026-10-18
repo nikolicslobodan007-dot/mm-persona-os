@@ -143,6 +143,7 @@ services:
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - static:/srv/static:ro
+      - ./deploy/sajt:/srv/sajt:ro
       - caddydata:/data
       - caddyconfig:/config
     depends_on: [web]

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Naš bot — Web Korporacija</title>
+<meta name="description" content="Ko je WebKorporacijaBot, šta čita, šta nikada ne radi i kako da ga zaustavite na svom sajtu.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0f1a'/%3E%3Cpath d='M54 14 30 56h18l-6 30 28-44H52z' fill='%234da3ff'/%3E%3C/svg%3E">
+<style>
+  :root{--bg:#0b0f1a;--bg2:#111726;--txt:#e8edf7;--dim:#9aa7bd;--line:#1e293f;--acc:#4da3ff;--acc2:#7ef0c8;--ne:#ff8a8a}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font:400 17px/1.65 "Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--acc);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px}
+  header{border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--txt)}
+  .logo svg{width:26px;height:26px}
+  .nav a.lnk{color:var(--dim);font-size:15px}
+  h1{font-size:clamp(30px,5vw,44px);line-height:1.12;letter-spacing:-.02em;margin:56px 0 14px;font-weight:800}
+  .lead{color:#c6d2e6;font-size:19px;margin:0 0 40px;max-width:64ch}
+  h2{font-size:22px;letter-spacing:-.01em;margin:44px 0 14px}
+  p{color:#c6d2e6;margin:0 0 16px}
+  code{background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;font:500 14.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--acc2);word-break:break-all}
+  pre{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:18px 20px;overflow:auto}
+  pre code{background:none;border:0;padding:0;color:#d7e3f5;white-space:pre}
+  ul{margin:0 0 18px;padding-left:0;list-style:none}
+  li{position:relative;padding-left:30px;margin-bottom:11px;color:#c6d2e6}
+  li::before{position:absolute;left:0;top:0;font-weight:700}
+  ul.da li::before{content:"✓";color:var(--acc2)}
+  ul.ne li::before{content:"✕";color:var(--ne)}
+  .box{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:26px 0}
+  .box strong{color:var(--txt)}
+  table{width:100%;border-collapse:collapse;margin:0 0 18px;font-size:16px}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-weight:600;font-size:14px;letter-spacing:.04em;text-transform:uppercase}
+  td{color:#c6d2e6}
+  footer{border-top:1px solid var(--line);margin-top:64px;padding:30px 0 50px;color:var(--dim);font-size:14.5px}
+  .fnav{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:10px}
+  .fnav a{color:var(--dim)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="/">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#111726"/><path d="M54 14 30 56h18l-6 30 28-44H52z" fill="#4da3ff"/></svg>
+      Web Korporacija
+    </a>
+    <nav><a class="lnk" href="/">Početna</a></nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <h1>Naš bot</h1>
+  <p class="lead">Naši AI agenti ponekad čitaju javne stranice na internetu. Kada to rade, predstavljaju se imenom i vode vas na ovu stranu. Ovde piše tačno šta rade, šta nikada ne rade i kako da ih zaustavite.</p>
+
+  <h2>Kako ga prepoznajete</h2>
+  <p>U svakom zahtevu stoji ovaj <code>User-Agent</code>:</p>
+  <pre><code>WebKorporacijaBot/1.0 (+https://webkorporacija.com/bot; bot@webkorporacija.com)</code></pre>
+
+  <h2>Šta radi</h2>
+  <ul class="da">
+    <li>Čita <strong>javno dostupne</strong> stranice — one koje vidi i svaki posetilac bez prijave.</li>
+    <li>Koristi isključivo <strong>GET</strong> zahteve: uzima stranicu kakva jeste i ništa na njoj ne menja.</li>
+    <li>Poštuje <code>robots.txt</code> i <code>Crawl-delay</code>.</li>
+    <li>Čita retko i polako — nije pretraživač i ne indeksira ceo sajt.</li>
+    <li>Pamti odakle je nešto uzeto, pa se izvor uvek može proveriti.</li>
+  </ul>
+
+  <h2>Šta nikada ne radi</h2>
+  <ul class="ne">
+    <li>Ne prijavljuje se ni na čiji nalog i ne čita sadržaj iza prijave.</li>
+    <li>Ne zaobilazi CAPTCHA niti bilo kakvu zaštitu od automatskog pristupa.</li>
+    <li>Ne šalje formulare, ne ostavlja komentare, ne kupuje i ne menja ništa na tuđem sajtu.</li>
+    <li>Ne prikuplja lične podatke i ne pravi profile o ljudima.</li>
+    <li>Ne objavljuje tuđi tekst kao svoj — ono što nauči koristi kao znanje, uz naveden izvor i licencu.</li>
+  </ul>
+
+  <div class="box">
+    <strong>Zašto ovo stoji ovde.</strong> U našem sistemu je objavljivanje, slanje pošte i svako menjanje tuđih stranica isključeno prekidačem na nivou cele firme. Agent koji sme da čita javni veb i dalje ne sme da piše — to su dve odvojene dozvole i nijedna se ne podrazumeva.
+  </div>
+
+  <h2>Kako da ga zaustavite</h2>
+  <p>Dodajte ovo u <code>robots.txt</code> na svom sajtu i bot više neće dolaziti:</p>
+  <pre><code>User-agent: WebKorporacijaBot
+Disallow: /</code></pre>
+  <p>Ako hoćete da zabranite samo deo sajta, navedite putanje umesto <code>/</code>. Poštujemo pravilo od prvog sledećeg dolaska.</p>
+
+  <h2>Imate primedbu?</h2>
+  <table>
+    <tr><th>Pitanje</th><th>Gde</th></tr>
+    <tr><td>Bot vam smeta, previše čita, ili hoćete da ga blokiramo s naše strane</td><td><a href="mailto:bot@webkorporacija.com">bot@webkorporacija.com</a></td></tr>
+    <tr><td>Mislite da smo negde iskoristili vaš sadržaj kako ne treba</td><td><a href="mailto:bot@webkorporacija.com">bot@webkorporacija.com</a></td></tr>
+    <tr><td>Sve ostalo</td><td><a href="mailto:kontakt@webkorporacija.com">kontakt@webkorporacija.com</a></td></tr>
+  </table>
+  <p>Na poruke na <code>bot@webkorporacija.com</code> odgovara čovek.</p>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="fnav">
+      <a href="/">Početna</a>
+      <a href="/bot">Naš bot</a>
+      <a href="mailto:bot@webkorporacija.com">bot@webkorporacija.com</a>
+    </div>
+    © <span id="god">2026</span> Web Korporacija
+  </div>
+</footer>
+
+<script>document.getElementById('god').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -31,3 +31,28 @@
 		format console
 	}
 }
+
+# ── Javni sajt (statika): webkorporacija.com → početna i /bot ──
+# Zaseban blok od {$DOMAIN} (to je konzola, os.webkorporacija.com).
+# Uslov: A zapis za webkorporacija.com pokazuje na IP ovog servera
+# PRE prvog pokretanja, da Caddy pribavi Let's Encrypt sertifikat.
+webkorporacija.com {
+
+	encode zstd gzip
+
+	root * /srv/sajt
+	file_server
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
