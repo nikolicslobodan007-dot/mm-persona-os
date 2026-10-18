@@ -1154,11 +1154,14 @@ PROFILE_MEMORY_TOKENS: dict[RetrievalProfile, int] = {
 #: kućno znanje koje je čovek doneo i odobrio; memorija je lično iskustvo
 #: persone. Dva odvojena plafona, da jedno ne pojede drugo. Brojke su prve,
 #: postavljene rukom a ne izmerene — menjaju se kroz ADR kad merenje kaže.
+#: ADR-0113 (18.10.2026) podigao plafone za profile gde agent radi posao
+#: (content_creation 1000→2500, daily_planner 1000→2000, research 2000→3000)
+#: pošto je ADR-0112 pokazao da je ograničenje postao budžet, ne rasipanje.
 PROFILE_VESTINE_TOKENS: dict[RetrievalProfile, int] = {
     RetrievalProfile.REPLY_CONTEXT: 600,
-    RetrievalProfile.DAILY_PLANNER: 1000,
-    RetrievalProfile.CONTENT_CREATION: 1000,
-    RetrievalProfile.RESEARCH: 2000,
+    RetrievalProfile.DAILY_PLANNER: 2000,
+    RetrievalProfile.CONTENT_CREATION: 2500,
+    RetrievalProfile.RESEARCH: 3000,
     RetrievalProfile.REFLECTION: 600,
 }
 
