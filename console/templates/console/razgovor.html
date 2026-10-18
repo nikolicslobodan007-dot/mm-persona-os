@@ -14,7 +14,22 @@
   <article class="rec ja">
     <div class="rec-glava"><b>Ti</b><span class="spacer"></span>
       <span class="small muted">{{ p.created_at|date:"d.m. H:i" }}</span></div>
-    <div class="rec-telo">{{ p.telo }}</div>
+    {% if p.telo %}<div class="rec-telo">{{ p.telo }}</div>{% endif %}
+    {% with pr_lista=p.prilozi.all %}
+    {% if pr_lista %}
+    <div class="prilozi">
+      {% for pr in pr_lista %}
+        {% if pr.vrsta == "veza" %}
+          <a class="prilog" href="{{ pr.url }}" target="_blank" rel="noopener noreferrer nofollow">veza · {{ pr.naziv }}</a>
+        {% elif pr.asset %}
+          <a class="prilog" href="/console/assets/{{ pr.asset.public_id }}">fajl · {{ pr.naziv }}</a>
+        {% else %}
+          <span class="prilog">fajl · {{ pr.naziv }}</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
   </article>
   {% else %}
   <article class="rec agent">
@@ -84,11 +99,15 @@
 
 {% if sme %}
 <div class="card pisanje">
-  <form method="post" action="/console/razgovor/{{ nit.id }}/poruka">{% csrf_token %}
+  <form method="post" action="/console/razgovor/{{ nit.id }}/poruka" enctype="multipart/form-data">{% csrf_token %}
     <textarea name="telo" rows="3"
       placeholder="Na primer: napiši kratak tekst o tome čime se bavimo, za naslovnu stranu sajta."></textarea>
+    <div class="row prilog-unos">
+      <input type="url" name="veza" class="grow" placeholder="Veza (opciono): https://…">
+      <input type="file" name="datoteka" accept=".txt,.md,.csv">
+    </div>
     <div class="row"><button>Pošalji</button>
-      <span class="small muted">Posao se izvršava odmah — odgovor stiže kad lanac završi.</span></div>
+      <span class="small muted">Možeš priložiti vezu ili tekstualni fajl (.txt, .md, .csv). Posao kreće odmah.</span></div>
   </form>
 </div>
 {% else %}

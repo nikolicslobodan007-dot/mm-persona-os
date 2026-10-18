@@ -80,6 +80,7 @@ class TestAppOwnership:
             "TaskPatch",   # ADR-0038 — predata izmena i ishod provere
             # ADR-0105 — ulazna vrata firme: nit razgovora sa direktorom
             "Razgovor", "Poruka",
+            "Prilog",  # ADR-0115 — prilog uz čovekovu poruku (veza/fajl)
         },
         "policy": {
             "PolicyRule", "PolicyDecision", "ApprovalRequest", "CapabilityGrant",

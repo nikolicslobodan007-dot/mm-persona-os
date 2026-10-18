@@ -40,7 +40,7 @@ import re
 from api import audit
 from apps.memory import embeddings
 from apps.orchestration import plans
-from apps.orchestration.models import AgentPlan, Poruka, Razgovor
+from apps.orchestration.models import AgentPlan, Poruka, Prilog, Razgovor
 from apps.personas.models import Persona
 from apps.personas.org import can_delegate, department_of, subordinates
 
@@ -295,24 +295,32 @@ def _tekst(d: dict) -> str:
     return "\n\n".join(redovi)
 
 
-def posalji(razgovor: Razgovor, telo: str, *, actor: str) -> Poruka:
+def posalji(razgovor: Razgovor, telo: str, *, actor: str,
+            materijal: str | None = None, prilozi: list[dict] | None = None) -> Poruka:
     """Čovekova poruka → posao → odgovor direktora u istoj niti.
 
-    Vraća direktorovu poruku; čovekova je upisana pre nje i obe nose isti plan.
+    `telo` je ono što čovek vidi u niti; `materijal` je ono od čega direktor
+    radi (ADR-0115) — isto kao `telo` kad nema priloga, a uz prilog nosi i
+    njihov sadržaj, da agent zna šta mu je dato. `prilozi` se kače na čovekovu
+    poruku. Vraća direktorovu poruku; čovekova je upisana pre nje.
     """
     telo = (telo or "").strip()
-    if not telo:
+    materijal = (materijal or telo).strip()
+    prilozi = prilozi or []
+    if not materijal and not prilozi:
         raise RazgovorError("Prazna poruka.")
-    if len(telo) > MAX_TELO:
+    if len(materijal) > MAX_TELO:
         raise RazgovorError(f"Poruka je duža od {MAX_TELO} znakova.")
 
     direktor = razgovor.persona
-    Poruka.objects.create(razgovor=razgovor, autor=Poruka.OD_COVEKA,
-                          autor_ref=actor, telo=telo)
+    covek = Poruka.objects.create(razgovor=razgovor, autor=Poruka.OD_COVEKA,
+                                  autor_ref=actor, telo=telo)
+    for pr in prilozi:
+        Prilog.objects.create(poruka=covek, **pr)
 
     # ADR-0106 — direktor prvo procenjuje. Ako model nije dostupan, procena
     # je prazna i sve ide kao pre (ADR-0105): tabela reči i doslovna tema.
-    odluka = razmisli(direktor, telo)
+    odluka = razmisli(direktor, materijal)
     if odluka.get("pitanje") and not odluka.get("nalog"):
         audit.record("razgovor.pitanje", persona=direktor,
                      details={"razgovor": str(razgovor.id), "actor": actor})
@@ -323,8 +331,8 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str) -> Poruka:
         razgovor.save(update_fields=["updated_at"])
         return pitanje
 
-    tema = odluka.get("nalog") or telo
-    kod = odluka.get("sektor") or odredi_sektor(telo)
+    tema = odluka.get("nalog") or materijal
+    kod = odluka.get("sektor") or odredi_sektor(materijal)
     sef = _sef_sektora(direktor, kod)
     rezerva = ""
     if sef is None and kod != PODRAZUMEVANI_SEKTOR:
@@ -371,7 +379,7 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str) -> Poruka:
         return pitanje
 
     delovi = _ishod(plan, sef, izvrsilac)
-    if odluka.get("nalog") and odluka["nalog"] != telo:
+    if odluka.get("nalog") and odluka["nalog"] != materijal:
         delovi["nalog"] = odluka["nalog"]
     if rezerva:
         delovi["rezerva"] = (f"Sektor {rezerva} nema šefa, pa sam posao zadala "

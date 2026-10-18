@@ -200,6 +200,60 @@ class TestPorukaPostajePosao:
         assert pre == posle
 
 
+@pytest.mark.django_db
+class TestPrilozi:
+    """ADR-0115 — prilog uz čovekovu poruku: veza i tekstualni fajl.
+
+    Na nivou servisa: `materijal` nosi sadržaj priloga (od toga direktor radi),
+    a `telo` ostaje čisto (ono što čovek vidi). Prilozi se kače na čovekovu
+    poruku.
+    """
+
+    def test_materijal_ulazi_u_procenu_a_telo_ostaje_cisto(self, nit, firma, monkeypatch):
+        from apps.llm_gateway import gateway
+
+        vidjeni = {}
+
+        class Lazna:
+            text = '{"sektor": "MARKETING", "nalog": "Napiši sažetak.", "pitanje": ""}'
+
+        def umesto(purpose, system, prompt, **kw):
+            vidjeni["prompt"] = prompt
+            return Lazna()
+
+        monkeypatch.setattr(gateway, "generate", umesto)
+        nit_servis.posalji(
+            nit, "Evo materijala.", actor="user:slobodan",
+            materijal="Evo materijala.\n\n[Prilog — fajl „podaci.txt“]\nTAJNI BROJ 42")
+        # Direktor je u procenu dobio sadržaj priloga…
+        assert "TAJNI BROJ 42" in vidjeni["prompt"]
+        # …a čovekova poruka u niti nosi samo ono što je otkucao.
+        covek = nit.poruke.get(autor=Poruka.OD_COVEKA)
+        assert covek.telo == "Evo materijala."
+        assert "TAJNI BROJ 42" not in covek.telo
+
+    def test_prilozi_se_kace_na_coveka(self, nit, firma):
+        nit_servis.posalji(
+            nit, "Pogledaj ovo.", actor="user:slobodan",
+            prilozi=[{"vrsta": "veza", "naziv": "primer", "url": "https://primer.rs"}])
+        covek = nit.poruke.get(autor=Poruka.OD_COVEKA)
+        assert covek.prilozi.count() == 1
+        assert covek.prilozi.get().url == "https://primer.rs"
+
+    def test_sam_prilog_bez_teksta_nije_prazna_poruka(self, nit, firma):
+        odgovor = nit_servis.posalji(
+            nit, "", actor="user:slobodan", materijal="Istraži ovu vezu.",
+            prilozi=[{"vrsta": "veza", "naziv": "x", "url": "https://x.rs"}])
+        assert odgovor.plan is not None
+        covek = nit.poruke.get(autor=Poruka.OD_COVEKA)
+        assert covek.telo == ""
+        assert covek.prilozi.count() == 1
+
+    def test_prazno_i_bez_priloga_se_odbija(self, nit):
+        with pytest.raises(nit_servis.RazgovorError, match="Prazna"):
+            nit_servis.posalji(nit, "   ", actor="user:slobodan")
+
+
 @requires_db
 @pytest.mark.django_db
 class TestKonzola:

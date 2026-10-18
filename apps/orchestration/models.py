@@ -653,3 +653,38 @@ class Poruka(UUIDModel):
 
     def __str__(self) -> str:
         return f"{self.autor_ref}: {self.telo[:40]}"
+
+
+class Prilog(UUIDModel):
+    """Ulaz koji čovek prilaže uz poruku: veza ili fajl. ADR-0115.
+
+    Prilog stoji uz **čovekovu** poruku; sadržaj tekstualnog fajla se pri
+    slanju utka u materijal od kog direktor radi (da agent zna šta mu je
+    dato), a sam fajl ostaje u skladištu i može da se preuzme iz niti.
+
+    Veza se samo zapisuje — nema odlaznih zahteva (prekidač spoljnih radnji je
+    isključen); agent je vidi kao referencu, ne ide po nju.
+    """
+
+    VEZA = "veza"
+    FAJL = "fajl"
+    VRSTE = ((VEZA, "veza"), (FAJL, "fajl"))
+
+    poruka = models.ForeignKey(
+        Poruka, on_delete=models.CASCADE, related_name="prilozi")
+    vrsta = models.CharField(max_length=8, choices=VRSTE)
+    naziv = models.CharField(max_length=300)
+    #: za `veza` — adresa; za `fajl` prazno.
+    url = models.CharField(max_length=1000, blank=True)
+    #: za `fajl` — fajl u skladištu; za `veza` prazno.
+    asset = models.ForeignKey(
+        "visuals.MediaAsset", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="prilozi")
+
+    class Meta:
+        db_table = "orchestration_prilog"
+        indexes = [models.Index(fields=["poruka", "created_at"],
+                                name="orch_prilog_poruka_idx")]
+
+    def __str__(self) -> str:
+        return f"[{self.vrsta}] {self.naziv[:40]}"

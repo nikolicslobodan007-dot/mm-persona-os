@@ -897,7 +897,8 @@ def razgovor(request, razgovor_id=None):
                 persona=direktor, human_owner=vlasnik,
                 naslov="Razgovor sa direktorom")
     return render(request, "console/razgovor.html", _nav(request) | {
-        "nit": nit, "poruke": nit.poruke.select_related("plan").order_by("created_at"),
+        "nit": nit, "poruke": nit.poruke.select_related("plan").prefetch_related(
+            "prilozi__asset").order_by("created_at"),
         "sme": bool(_roles(request.user) & _DRAFTERS)})
 
 
@@ -924,15 +925,96 @@ def razgovor_poruka(request, razgovor_id):
     if not (_roles(request.user) & _DRAFTERS):
         messages.error(request, "Tvoja uloga ne zadaje posao.")
         return redirect(f"/console/razgovor/{nit.id}")
-    # Akter je već vezan u `console_view` (`bind`), pa audit nosi čoveka.
+    telo = request.POST.get("telo", "")
+    actor = principal_of(request.user)
+    # ADR-0115 — prilozi (veza i/ili tekstualni fajl). Sadržaj fajla ulazi u
+    # materijal od kog direktor radi; sam fajl se čuva i može da se preuzme.
     try:
-        nit_servis.posalji(nit, request.POST.get("telo", ""),
-                           actor=principal_of(request.user))
+        prilozi, dodatak = _obradi_priloge(request, nit.persona, actor)
+    except _PrilogError as e:
+        messages.error(request, str(e)[:300])
+        return redirect(f"/console/razgovor/{nit.id}")
+    materijal = (telo.strip() + dodatak).strip() if dodatak else telo
+    try:
+        nit_servis.posalji(nit, telo, actor=actor,
+                           materijal=materijal, prilozi=prilozi)
     except nit_servis.RazgovorError as e:
         messages.error(request, str(e)[:300])
     except plans_module().PlanError as e:
         messages.error(request, f"Plan nije pokrenut: {e}"[:300])
     return redirect(f"/console/razgovor/{nit.id}")
+
+
+class _PrilogError(Exception):
+    """Prilog nije mogao da se primi — razlog je u prilogu."""
+
+
+#: Tekstualni tipovi koje agent ume da pročita (ADR-0115, increment 1).
+_PRILOG_TEXT_MIME = {"text/plain", "text/markdown", "text/csv", "application/csv"}
+_PRILOG_TEXT_EKST = (".txt", ".md", ".csv")
+_PRILOG_MAX_BAJTOVA = 1_000_000          # 1 MB — tekst, ne baza
+_PRILOG_MAX_UTKANO = 2500                # koliko sadržaja ulazi u materijal
+
+
+def _obradi_priloge(request, direktor, actor):
+    """Vraća (`prilozi_specs`, `dodatak_materijala`). Prazno kad priloga nema.
+
+    Veza se samo zapisuje (nema odlaznih zahteva). Tekstualni fajl se čuva u
+    skladištu i njegov sadržaj se utka u materijal. Slike/PDF se zasad ne
+    primaju — agent ih još ne čita (increment 1).
+    """
+    import pathlib as _pl
+
+    from apps.content.dokument import next_sequence
+    from apps.visuals import storage
+    from apps.visuals.models import MediaAsset
+    from common import ids as I
+
+    specs: list[dict] = []
+    delovi_materijala: list[str] = []
+
+    veza = (request.POST.get("veza") or "").strip()
+    if veza:
+        if not (veza.startswith("http://") or veza.startswith("https://")):
+            raise _PrilogError("Veza mora počinjati sa http:// ili https://.")
+        if len(veza) > 1000:
+            raise _PrilogError("Veza je predugačka.")
+        specs.append({"vrsta": "veza", "naziv": veza[:300], "url": veza})
+        delovi_materijala.append(f"[Prilog — veza: {veza}]")
+
+    datoteka = request.FILES.get("datoteka")
+    if datoteka is not None:
+        naziv = (datoteka.name or "prilog")[:300]
+        ekst = _pl.Path(naziv).suffix.lower()
+        mime = (datoteka.content_type or "").split(";")[0].strip().lower()
+        if mime not in _PRILOG_TEXT_MIME and ekst not in _PRILOG_TEXT_EKST:
+            raise _PrilogError(
+                "Za sada se prima samo tekstualni fajl (.txt, .md, .csv) ili "
+                "veza. Slike i PDF agent još ne čita.")
+        if datoteka.size and datoteka.size > _PRILOG_MAX_BAJTOVA:
+            raise _PrilogError("Fajl je veći od 1 MB.")
+        podaci = datoteka.read()
+        tekst = podaci.decode("utf-8", errors="replace").strip()
+        kljuc = storage.key_for(direktor.public_id, storage.sha256(podaci),
+                                "text/plain")
+        try:
+            storage.put(podaci, key=kljuc, mime="text/plain")
+        except storage.StorageError as e:
+            raise _PrilogError(f"Fajl nije sačuvan: {e}") from e
+        asset = MediaAsset.objects.create(
+            public_id=I.media_asset_public_id(direktor.public_id,
+                                              next_sequence(direktor)),
+            persona=direktor, kind=E.AssetKind.DOCUMENT.value, storage_key=kljuc,
+            mime_type="text/plain", sha256=storage.sha256(podaci),
+            origin="user_owned",
+            rights_note=f"Prilog uz nit; primila {direktor.public_id}; akter {actor}.")
+        specs.append({"vrsta": "fajl", "naziv": naziv, "asset": asset})
+        if tekst:
+            delovi_materijala.append(
+                f"[Prilog — fajl „{naziv}“]\n{tekst[:_PRILOG_MAX_UTKANO]}")
+
+    dodatak = ("\n\n" + "\n\n".join(delovi_materijala)) if delovi_materijala else ""
+    return specs, dodatak
 
 
 def plans_module():

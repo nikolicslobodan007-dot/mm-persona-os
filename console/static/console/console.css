@@ -246,3 +246,12 @@ button.mini{padding:5px 11px;font-size:13px;box-shadow:none}
 .podnozje{margin-top:12px;padding-top:10px;border-top:1px solid var(--line-2)}
 .pisanje{max-width:84ch}
 .pisanje textarea{min-height:92px}
+
+/* ---------------------------------------------------------------- prilozi (ADR-0115) */
+.prilozi{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.prilog{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;
+  padding:5px 11px;border-radius:999px;background:var(--panel-2);
+  border:1px solid var(--line);color:var(--ink-2);text-decoration:none}
+a.prilog:hover{border-color:var(--accent);color:var(--accent);text-decoration:none}
+.prilog-unos{margin-top:10px;gap:10px}
+.prilog-unos input[type=file]{width:auto;flex:none;padding:7px 10px}
