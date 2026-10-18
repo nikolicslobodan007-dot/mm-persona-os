@@ -155,7 +155,7 @@ BROWSER_MAX_READ_PER_PERSONA = 3
 # Canon §6.4, §12.6 — obavezni parametri za web.read_public.
 WEB_READ_USER_AGENT = os.environ.get(
     "WEB_READ_USER_AGENT",
-    "MercatoMasterBot/1.0 (+https://mercatomaster.com/bot; bot@mercatomaster.com)",
+    "WebKorporacijaBot/1.0 (+https://webkorporacija.com/bot; bot@webkorporacija.com)",
 )
 WEB_READ_RATE_PER_HOST_QPS = 1.0
 WEB_READ_RESPECT_ROBOTS = True

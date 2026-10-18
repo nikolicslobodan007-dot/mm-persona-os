@@ -522,7 +522,7 @@ class TestLiveFlow:
         assert a.status == S.BLOCKED and a.error_code == "ROBOTS_DISALLOWED"
         assert len(t.sent) == 1  # samo robots.txt, stranica nije ni tražena
         ua = t.sent[0].headers["User-Agent"]
-        assert ua.startswith("MercatoMasterBot/1.0") and "Chrome" not in ua
+        assert ua.startswith("WebKorporacijaBot/1.0") and "Chrome" not in ua
 
     def test_conditional_get_and_title(self, mila):
         _live(mila)

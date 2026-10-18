@@ -49,7 +49,7 @@ capabilities:
     # Canon §6.4, §12.6 — sva četiri parametra su obavezna u izvršnom ugovoru
     required_constraints:
       robots_respected: true
-      user_agent_declared: "MercatoMasterBot/1.0 (+https://mercatomaster.com/bot; bot@mercatomaster.com)"
+      user_agent_declared: "WebKorporacijaBot/1.0 (+https://webkorporacija.com/bot; bot@webkorporacija.com)"
       rate_per_host_qps: 1.0
       conditional_get: true
 

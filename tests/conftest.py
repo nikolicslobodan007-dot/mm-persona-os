@@ -60,7 +60,7 @@ from apps.personas.models import Persona  # noqa: E402
 from apps.policy import service  # noqa: E402
 from common import enums as E  # noqa: E402
 
-UA = "MercatoMasterBot/1.0 (+https://mercatomaster.com/bot; bot@mercatomaster.com)"
+UA = "WebKorporacijaBot/1.0 (+https://webkorporacija.com/bot; bot@webkorporacija.com)"
 READ_OK = {"robots_respected": True, "user_agent_declared": UA, "rate_per_host_qps": 1.0,
            "conditional_get": True}
 
