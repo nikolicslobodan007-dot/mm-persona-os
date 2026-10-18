@@ -407,12 +407,44 @@ class TestVestineInContext:
         assert pack.record.vestina_ids == [str(prva.id), str(druga.id)]
 
     def test_prekoracenje_plafona_vestina_postavlja_truncated(self, mila):
-        for i in range(5):
-            _vestina(subject=f"veština velika {i:02d}", napomene="x" * 1200)
+        """ADR-0112 — i indeksne linije imaju plafon; dovoljno veština ga probije."""
+        for i in range(40):
+            _vestina(subject=f"veština velika {i:02d}")
         pack = context.build(mila, _run(mila), E.RetrievalProfile.REFLECTION,
                              query="bilo šta", now=NOW)
         assert pack.record.truncated is True
-        assert 0 < len(pack.record.vestina_ids) < 5
+        assert 0 < len(pack.record.vestina_ids) < 40
+
+    def test_vrh_u_celini_ostalo_indeks(self, mila):
+        """ADR-0112 — vrh rangiranja nosi korake, ostatak samo ime + opis."""
+        for i in range(8):
+            _vestina(subject=f"veština {i:02d}", koraci=[f"korak-za-{i:02d}"])
+        pack = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                             query="", now=NOW)
+        assert "U celini (sa koracima):" in pack.text
+        assert "Još veština koje imaš" in pack.text
+        assert "korak-za-00" in pack.text          # puna veština nosi korake
+        assert "veština 04" in pack.text            # indeksna nosi ime
+        assert "korak-za-04" not in pack.text        # ali ne i korake
+
+    def test_indeks_nosi_izvor(self, mila):
+        """ADR-0084 — i indeksna veština mora da nosi poreklo."""
+        for i in range(8):
+            _vestina(subject=f"veština {i:02d}", koraci=[f"korak-za-{i:02d}"])
+        pack = context.build(mila, _run(mila), E.RetrievalProfile.RESEARCH,
+                             query="", now=NOW)
+        # Red za indeksnu veštinu „04" i dalje ima oznaku izvora.
+        red = next(r for r in pack.text.splitlines() if "veština 04" in r)
+        assert "izvor" in red
+
+    def test_mnogo_vise_vestina_stane_nego_pre(self, mila):
+        """ADR-0112 — poenta promene: pre je stajalo ~4, sada deset puta više."""
+        for i in range(30):
+            _vestina(subject=f"veština {i:02d}",
+                     koraci=[f"korak-{i:02d}-a", f"korak-{i:02d}-b"])
+        pack = context.build(mila, _run(mila), E.RetrievalProfile.CONTENT_CREATION,
+                             query="", now=NOW)
+        assert len(pack.record.vestina_ids) >= 15
 
 
 # ---------------------------------------------------------------- lifecycle

@@ -50,6 +50,11 @@ from common import enums as E
 
 #: Memory v0.1 §12 — fiksni deo konteksta pored memorije.
 CORE_OVERHEAD_TOKENS = 1500
+
+#: ADR-0112 — koliko veština ulazi U CELINI (sa koracima). Ostale iz budžeta
+#: idu kao indeks (ime + čemu služe), da agent zna ceo svoj alat a ne samo
+#: prve tri. Broj je postavljen rukom i menja se ADR-om kad merenje kaže.
+VESTINE_PUNIH = 4
 POLICY_LINES = (
     "Spoljne akcije nisu dozvoljene bez odluke Policy engine-a (Canon §6.2).",
     "AI priroda persone se nikad ne skriva (Canon §9.4).",
@@ -109,16 +114,58 @@ def _line(sc: retrieval.Scored) -> str:
     return f"- {head} {body}"
 
 
+#: Repovi napomene koji su provenijencija, ne opis — dupliraju „izvor" i samo
+#: troše tokene u paketu (ADR-0112). Seku se pre nego što napomena uđe u red;
+#: hvata i kad napomena POČINJE provenijencijom (npr. „Destilovano iz …").
+_PROVENIJENCIJA = ("|", "Uvezeno iz", "Destilovano iz", "(ko ", "(fajl")
+
+
+def _gloss(napomene: str, limit: int) -> str:
+    """Opis veštine bez repa provenijencije, skraćen na reč do `limit` znakova."""
+    g = str(napomene or "")
+    for mark in _PROVENIJENCIJA:
+        i = g.find(mark)
+        if i != -1:
+            g = g[:i]
+    g = g.strip(" .—-")
+    if len(g) <= limit:
+        return g
+    return g[:limit].rsplit(" ", 1)[0].rstrip(" ,.;:—-") + "…"
+
+
 def _vestina_line(fact: KnowledgeFact) -> str:
-    """Red za jednu veštinu. Sadržaj je naš opis postupka (ADR-0074 tačka 3) —
-    baza znanja ne čuva sirov tekst izvora, pa ovde nema šta da se prepiše
-    doslovno. Izvor stoji uz nju: znanje bez porekla se ne šalje (ADR-0084)."""
+    """Puna veština: koraci + kratak opis. Izvor stoji uz nju — znanje bez
+    porekla se ne šalje (ADR-0084). Provenijencija iz napomene se seče, jer
+    duplira izvor i jede budžet (ADR-0112); opis se skraćuje na 200 znakova."""
     koraci = fact.object_json.get("koraci") or []
-    napomene = fact.object_json.get("napomene") or ""
     telo = "; ".join(str(k) for k in koraci)
-    if napomene:
-        telo = f"{telo} — {napomene}" if telo else str(napomene)
+    gloss = _gloss(fact.object_json.get("napomene") or "", 200)
+    if gloss:
+        telo = f"{telo} — {gloss}" if telo else gloss
     return f"- [veština · izvor {fact.source.title}] {fact.subject}: {telo}"
+
+
+def _vestina_index_line(fact: KnowledgeFact) -> str:
+    """Indeksna veština: ime + čemu služi, bez koraka (ADR-0112). I ona nosi
+    izvor (ADR-0084). Korake agent traži kad baš ta veština zatreba."""
+    gloss = _gloss(fact.object_json.get("napomene") or "", 80)
+    rep = f"{fact.subject} — {gloss}" if gloss else fact.subject
+    return f"- [veština · izvor {fact.source.title}] {rep}"
+
+
+def _slozi_vestine(puni: list[str], indeks: list[str]) -> str:
+    """Dva sloja u jednom odeljku: šta agent ima u celini, šta zna po imenu."""
+    delovi: list[str] = []
+    if puni:
+        delovi.append("U celini (sa koracima):")
+        delovi.extend(puni)
+    if indeks:
+        if puni:
+            delovi.append("")
+        delovi.append("Još veština koje imaš (ime i čemu služe; "
+                      "detaljne korake traži kad zatrebaju):")
+        delovi.extend(indeks)
+    return "\n".join(delovi)
 
 
 @functools.lru_cache(maxsize=1)
@@ -237,20 +284,32 @@ def build(persona, run, profile: E.RetrievalProfile, *, query: str = "",
         .select_related("source"),
         key=lambda f: _vestina_kljuc(f, upit_koreni, sektor),
     )
-    vestina_lines: list[str] = []
+    # ADR-0112 — vrh rangiranja ulazi U CELINI (koraci); ostalo kao indeks
+    # (ime + čemu služi), dok traje budžet. Tako agent zna ceo svoj alat
+    # (~30-40 veština), a detaljne korake ima za ono najverovatnije potrebno.
+    # Izmereno 18.10.2026: pune linije su ~246 tokena, pa je u 1000 stajalo
+    # samo 4 od 451 veštine; indeksna linija je ~23 tokena.
+    puni_lines: list[str] = []
+    indeks_lines: list[str] = []
     vestina_ids: list[str] = []
     used_v = 0
     for fact in vestina_candidates:
-        line = _vestina_line(fact)
+        pun = len(puni_lines) < VESTINE_PUNIH
+        line = _vestina_line(fact) if pun else _vestina_index_line(fact)
         t = tokens(line + "\n")
+        if used_v + t > vestina_budget and pun:
+            # Puna ne staje — probaj makar ime u indeks, da veština ne ispadne.
+            line = _vestina_index_line(fact)
+            t = tokens(line + "\n")
+            pun = False
         if used_v + t > vestina_budget:
             truncated = True
             continue
-        vestina_lines.append(line)
+        (puni_lines if pun else indeks_lines).append(line)
         vestina_ids.append(str(fact.id))
         used_v += t
 
-    sections["vestine"] = "\n".join(vestina_lines)
+    sections["vestine"] = _slozi_vestine(puni_lines, indeks_lines)
     sections["retrieved_memory"] = "\n".join(lines)
     text = render(sections)
     total = tokens(text)
