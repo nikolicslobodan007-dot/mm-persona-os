@@ -112,6 +112,13 @@ def _pregled(step: plans.PlanStep, state: dict) -> plans.Outcome:
         return plans.Done({"prihvacen": True, "primedba": ishod.primedba,
                            "presudio": ishod.presudio, "item": str(item.id),
                            "pregledao": step.plan.persona.public_id})
+    # ADR-0111 — kad šef kaže da posao zastaje na vlasniku, pitanje se nosi
+    # naviše kroz razlog pada, obeleženo prefiksom. `razgovor` ga prepoznaje i
+    # umesto „nije urađeno" postavlja vlasniku pitanje. Za zanatsku grešku
+    # ostaje obično vraćanje.
+    if ishod.trazi_vlasnika:
+        from apps.orchestration.razgovor import PITANJE_VLASNIKU
+        return plans.Failed(PITANJE_VLASNIKU + plans.shorten(ishod.pitanje, 300))
     return plans.Failed(plans.shorten(
         f"{step.plan.persona.display_name} vraća nacrt: {ishod.primedba}", 700))
 

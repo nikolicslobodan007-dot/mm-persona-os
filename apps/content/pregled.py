@@ -29,17 +29,25 @@ from common import enums as E
 MAX_NACRT = 4000
 MAX_PRIMEDBA = 600
 MAX_NALOG = 600
+MAX_PITANJE = 300
 
 PREGLED_SYSTEM = (
     "Ti si šef sektora u firmi u kojoj poslove rade AI agenti. Tvoj izvršilac "
     "je napisao nacrt po nalogu koji ti je dao direktor. Tvoj posao NIJE da "
     "nacrt prepišeš nego da ga pregledaš pre nego što ga vratiš.\n"
     "Odgovaraš ISKLJUČIVO jednim JSON objektom, bez teksta oko njega:\n"
-    '{"prihvatam": true, "primedba": "<kratko, ili prazno>"}\n'
+    '{"prihvatam": true, "primedba": "<kratko, ili prazno>", '
+    '"trazi_vlasnika": false, "pitanje": "<prazno>"}\n'
     "Vrati nacrt (prihvatam: false) samo ako ima konkretnu grešku: ne "
     "odgovara nalogu, prazan je ili nedovršen, ili o firmi tvrdi nešto što "
     "ne piše u dosijeu (kupce, cene, usluge kojih nema). Drugačiji stil nije "
-    "greška. Ako vraćaš nacrt, primedba je obavezna i kaže šta da se ispravi. "
+    "greška. Ako vraćaš nacrt, primedba je obavezna i kaže šta da se ispravi.\n"
+    "Kad vraćaš nacrt, odluči još jedno: da li posao može da se ispravi bez "
+    "vlasnika, ili zastaje dok vlasnik nešto ne odluči ili ne pojasni. Ako "
+    "zastaje na vlasniku, stavi `trazi_vlasnika: true` i u `pitanje` napiši "
+    "jedno kratko pitanje njemu (za koju stranu, koja odluka, koji podatak). "
+    "Zanatsku grešku koju izvršilac može sam da ispravi (predugačko, loš "
+    "naslov) NE guraj vlasniku — `trazi_vlasnika` ostaje false. "
     "Piši na srpskom."
 )
 
@@ -53,6 +61,9 @@ class Ishod:
     prihvacen: bool
     primedba: str = ""
     presudio: bool = False
+    #: ADR-0111 — nacrt zastaje na vlasniku; `pitanje` je šta mu se pita.
+    trazi_vlasnika: bool = False
+    pitanje: str = ""
 
 
 def _procitaj(tekst: str) -> dict | None:
@@ -71,7 +82,9 @@ def _procitaj(tekst: str) -> dict | None:
     if not isinstance(sirovo, dict) or "prihvatam" not in sirovo:
         return None
     return {"prihvatam": bool(sirovo.get("prihvatam")),
-            "primedba": str(sirovo.get("primedba", "")).strip()[:MAX_PRIMEDBA]}
+            "primedba": str(sirovo.get("primedba", "")).strip()[:MAX_PRIMEDBA],
+            "trazi_vlasnika": bool(sirovo.get("trazi_vlasnika")),
+            "pitanje": str(sirovo.get("pitanje", "")).strip()[:MAX_PITANJE]}
 
 
 def oceni(sef, nalog: str, nacrt: str, *, run=None) -> Ishod:
@@ -108,4 +121,9 @@ def oceni(sef, nalog: str, nacrt: str, *, run=None) -> Ishod:
         # Vraćanje bez razloga nije pregled nego prepreka.
         audit.record("content.pregled.bez_razloga", persona=sef, details={})
         return Ishod(True, "", False)
-    return Ishod(sud["prihvatam"], sud["primedba"], True)
+    # Traži vlasnika samo ako je nacrt stvarno vraćen i ima šta da se pita;
+    # „treba vlasnik" bez pitanja je isto kao vraćanje bez razloga.
+    trazi = (not sud["prihvatam"] and sud["trazi_vlasnika"]
+             and bool(sud["pitanje"]))
+    return Ishod(sud["prihvatam"], sud["primedba"], True,
+                 trazi_vlasnika=trazi, pitanje=sud["pitanje"] if trazi else "")

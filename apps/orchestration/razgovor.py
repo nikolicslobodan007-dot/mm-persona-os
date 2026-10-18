@@ -64,6 +64,13 @@ PODRAZUMEVANI_SEKTOR = "UPRAVA"
 
 MAX_TELO = 4000
 
+#: ADR-0111 — prefiks kojim korak `content.review` obeleži razlog pada kad šef
+#: kaže da posao zastaje na vlasniku. Nije poruka za čoveka nego signal: ovde
+#: `posalji` umesto „nije urađeno" postavlja vlasniku pitanje. Mala verovatnoća
+#: sudara: razlog u drugoj grani počinje imenom šefa, ne ovim. Bez null-bajta,
+#: jer razlog ide u `output_json` (JSONB), a PostgreSQL ne prima \u0000.
+PITANJE_VLASNIKU = "[[PITANJE-VLASNIKU]] "
+
 
 class RazgovorError(Exception):
     """Poruka nije mogla da postane posao — razlog je u poruci."""
@@ -345,6 +352,23 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str) -> Poruka:
                           "actor": actor})
     plans.advance(plan)
     plan.refresh_from_db()
+
+    # ADR-0111 — ako je šef na pregledu rekao da posao zastaje na vlasniku,
+    # direktor to ne javlja kao neuspeh nego prosleđuje vlasniku kao pitanje.
+    # Zanatska greška ide običnim putem (poruka „nije urađeno").
+    from common import enums as E
+    razlog = plans.failure_reason(plan)
+    if plan.status != E.PlanStatus.COMPLETED.value and razlog.startswith(PITANJE_VLASNIKU):
+        pit = razlog[len(PITANJE_VLASNIKU):].strip()
+        audit.record("razgovor.pitanje.pregled", persona=direktor,
+                     details={"razgovor": str(razgovor.id), "plan": plan.public_id,
+                              "actor": actor})
+        pitanje = Poruka.objects.create(
+            razgovor=razgovor, autor=Poruka.OD_AGENTA,
+            autor_ref=direktor.public_id, telo=pit,
+            delovi={"stanje": "pitanje", "glava": pit})
+        razgovor.save(update_fields=["updated_at"])
+        return pitanje
 
     delovi = _ishod(plan, sef, izvrsilac)
     if odluka.get("nalog") and odluka["nalog"] != telo:

@@ -413,6 +413,63 @@ class TestSefPregleda:
         assert ishod.presudio is True
 
 
+@pytest.mark.django_db
+class TestPitanjeIzPregleda:
+    """ADR-0111 — kad šef na pregledu zastane na vlasniku, direktor PITA.
+
+    Zanatska greška i dalje javlja „nije urađeno"; samo ono što traži vlasnikov
+    ulaz postaje pitanje u niti.
+    """
+
+    @staticmethod
+    def _ocena(monkeypatch, tekst):
+        from apps.llm_gateway import gateway
+
+        pravi = gateway.generate
+
+        class Lazna:
+            def __init__(self, t):
+                self.text = t
+
+        def umesto(purpose, system, prompt, **kw):
+            if purpose == E.LLMPurpose.EVALUATE:
+                return Lazna(tekst)
+            return pravi(purpose, system, prompt, **kw)
+
+        monkeypatch.setattr(gateway, "generate", umesto)
+
+    def test_sef_trazi_vlasnika_postaje_pitanje(self, nit, firma, monkeypatch):
+        self._ocena(monkeypatch, '{"prihvatam": false, "primedba": "Fali odluka.", '
+                                 '"trazi_vlasnika": true, "pitanje": '
+                                 '"Za koju stranu sajta je tekst?"}')
+        odgovor = nit_servis.posalji(nit, "Napiši tekst za sajt.",
+                                     actor="user:slobodan")
+        assert odgovor.delovi["stanje"] == "pitanje"
+        assert odgovor.telo == "Za koju stranu sajta je tekst?"
+        assert "nije urađeno" not in odgovor.telo.lower()
+        assert nit_servis.PITANJE_VLASNIKU not in odgovor.telo
+
+    def test_zanatska_greska_i_dalje_javlja_neuspeh(self, nit, firma, monkeypatch):
+        self._ocena(monkeypatch, '{"prihvatam": false, "primedba": "Tekst je '
+                                 'predugačak.", "trazi_vlasnika": false, "pitanje": ""}')
+        odgovor = nit_servis.posalji(nit, "Napiši tekst za sajt.",
+                                     actor="user:slobodan")
+        assert odgovor.delovi["stanje"] == "stalo"
+        assert "Tekst je predugačak." in odgovor.telo
+        assert "pitanje" != odgovor.delovi["stanje"]
+
+    def test_trazi_vlasnika_bez_pitanja_nije_pitanje(self, db, mila, monkeypatch):
+        """`trazi_vlasnika: true` bez pitanja = kao vraćanje bez razloga."""
+        from apps.content import pregled
+
+        self._ocena(monkeypatch, '{"prihvatam": false, "primedba": "Nešto fali.", '
+                                 '"trazi_vlasnika": true, "pitanje": ""}')
+        with bind(actor_id="user:qa"):
+            ishod = pregled.oceni(mila, "Napiši tekst", "Neki nacrt.")
+        assert ishod.trazi_vlasnika is False
+        assert ishod.prihvacen is False  # i dalje vraćen, samo ne vlasniku
+
+
 class TestPotpis:
     """ADR-0108 — oznaka izvršioca ostaje na nacrtu, ne na direktorovoj poruci."""
 
