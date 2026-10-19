@@ -62,7 +62,7 @@ class TestAppOwnership:
         "memory": {
             "MemoryItem", "MemoryEmbedding", "MemoryLink", "MemorySource",
             "MemoryContradiction", "MemoryContextPack", "KnowledgeSource",
-            "KnowledgeFact",
+            "KnowledgeFact", "KnowledgeEmbedding",
         },
         "social_graph": {"Actor", "Relationship", "RelationshipEvent"},
         # ADR-0014 dodaje EditorialLesson.
