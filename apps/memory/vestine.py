@@ -131,7 +131,12 @@ def uvezi(
             izvor.file_path = file_path
             izvor.sector = sector
             izvor.save(update_fields=list(_POLJA_ZA_OSVEZAVANJE))
-        obrisano = KnowledgeFact.objects.filter(source=izvor, predicate=PREDIKAT).delete()[0]
+        # „obrisano" znači broj obrisanih VEŠTINA. Ne čitamo `.delete()[0]`
+        # (ukupan broj redova uključuje kaskadu — od ADR-0120 i obrisane
+        # KnowledgeEmbedding veština), nego prebrojimo veštine pre brisanja.
+        stare = KnowledgeFact.objects.filter(source=izvor, predicate=PREDIKAT)
+        obrisano = stare.count()
+        stare.delete()
         napravljene = KnowledgeFact.objects.bulk_create([
             KnowledgeFact(
                 source=izvor, persona=None, subject=v.ime[:220],
