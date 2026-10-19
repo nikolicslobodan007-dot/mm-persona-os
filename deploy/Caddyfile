@@ -40,8 +40,36 @@ webkorporacija.com {
 
 	encode zstd gzip
 
-	root * /srv/sajt
-	file_server
+	# /bot i /robots.txt statično sa diska (javne strane)
+	@sajt path /bot /bot/* /robots.txt
+	handle @sajt {
+		root * /srv/sajt
+		file_server
+	}
+
+	# statika aplikacije (css, logo) iz istog volumena kao konzola
+	handle_path /static/* {
+		root * /srv/static
+		file_server
+	}
+
+	# početna = prijava; renderuje je aplikacija (CSRF/2FA), URL ostaje /
+	@root path /
+	handle @root {
+		rewrite * /console/login
+		reverse_proxy web:8000 {
+			header_up X-Forwarded-Proto {scheme}
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	# ostalo (/console, /console/login, /console/login/2fa, odjava) na aplikaciju
+	handle {
+		reverse_proxy web:8000 {
+			header_up X-Forwarded-Proto {scheme}
+			header_up X-Real-IP {remote_host}
+		}
+	}
 
 	header {
 		Strict-Transport-Security "max-age=31536000"

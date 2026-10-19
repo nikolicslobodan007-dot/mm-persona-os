@@ -255,3 +255,8 @@ button.mini{padding:5px 11px;font-size:13px;box-shadow:none}
 a.prilog:hover{border-color:var(--accent);color:var(--accent);text-decoration:none}
 .prilog-unos{margin-top:10px;gap:10px}
 .prilog-unos input[type=file]{width:auto;flex:none;padding:7px 10px}
+
+/* ------------------------------------------------ prijava: brend (ADR-0117) */
+.brand-logo{display:block;width:112px;height:112px;margin:0 auto 10px}
+.brand-name{margin:0;font-size:22px;letter-spacing:.06em;text-align:center}
+.brand-slogan{margin:4px 0 20px;color:var(--muted);font-size:15px;text-align:center}
