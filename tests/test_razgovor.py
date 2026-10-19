@@ -218,15 +218,17 @@ class TestPrilozi:
             text = '{"sektor": "MARKETING", "nalog": "Napiši sažetak.", "pitanje": ""}'
 
         def umesto(purpose, system, prompt, **kw):
-            vidjeni["prompt"] = prompt
+            # Upis po SVRSI: kroz nit prolazi i procena (PLANNING) i pisac
+            # (CONTENT_DRAFT); test proverava baš prompt procene, ne zadnji poziv.
+            vidjeni[purpose] = prompt
             return Lazna()
 
         monkeypatch.setattr(gateway, "generate", umesto)
         nit_servis.posalji(
             nit, "Evo materijala.", actor="user:slobodan",
             materijal="Evo materijala.\n\n[Prilog — fajl „podaci.txt“]\nTAJNI BROJ 42")
-        # Direktor je u procenu dobio sadržaj priloga…
-        assert "TAJNI BROJ 42" in vidjeni["prompt"]
+        # Direktor je u PROCENU (PLANNING) dobio sadržaj priloga…
+        assert "TAJNI BROJ 42" in vidjeni[E.LLMPurpose.PLANNING]
         # …a čovekova poruka u niti nosi samo ono što je otkucao.
         covek = nit.poruke.get(autor=Poruka.OD_COVEKA)
         assert covek.telo == "Evo materijala."
