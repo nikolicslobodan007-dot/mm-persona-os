@@ -551,3 +551,23 @@ class TestSkracivanje:
 
     def test_granica_ne_dodaje_tri_tacke(self):
         assert plans.shorten("tačno tu", 8) == "tačno tu"
+
+
+def test_koraci_nosi_media_u_content_draft():
+    """ADR-0118 — media (public_id) ulazi u ulaz koraka content.draft."""
+    import types
+
+    sef = types.SimpleNamespace(display_name="Šef", public_id="P-SEF")
+    izvrsilac = types.SimpleNamespace(display_name="Pisac", public_id="P-PIS")
+    media = [{"asset": types.SimpleNamespace(public_id="MED-1"), "naziv": "s.png"}]
+
+    koraci = nit_servis._koraci("tema", sef, izvrsilac, media)
+    delegat = koraci[0]["input"]["steps"][0]           # org.delegate -> content.draft
+    draft = delegat["input"]["steps"][0]
+    assert draft["handler"] == "content.draft"
+    assert draft["input"]["media"] == [{"id": "MED-1", "naziv": "s.png"}]
+
+    # bez izvršioca — direktan content.draft korak takođe nosi media
+    direktno = nit_servis._koraci("tema", sef, None, media)[0]["input"]["steps"][0]
+    assert direktno["handler"] == "content.draft"
+    assert direktno["input"]["media"][0]["id"] == "MED-1"

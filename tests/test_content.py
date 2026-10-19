@@ -496,3 +496,122 @@ class TestApi:
         got = client.get(f"/api/v1/content/items/{cid}").json()["data"]
         assert got["publications"][0]["action_id"] == d["action_id"]
         assert client.get("/api/v1/content/items?persona_id=P-00001").json()["data"]
+
+
+class TestVizuelniPrilozi:
+    """ADR-0118 — slike i PDF stižu modelu kao vizuelni blokovi."""
+
+    def test_vizuelni_blokovi_anthropic_slika_i_pdf(self, monkeypatch):
+        import base64
+        import types
+
+        monkeypatch.setattr("apps.visuals.storage.get", lambda k: b"DATA")
+        media = [
+            {"asset": types.SimpleNamespace(mime_type="image/png", storage_key="k1",
+                                            public_id="A"), "naziv": "slika.png"},
+            {"asset": types.SimpleNamespace(mime_type="application/pdf", storage_key="k2",
+                                            public_id="B"), "naziv": "d.pdf"},
+        ]
+        blokovi, nevidjeni = gateway._vizuelni_blokovi(media, "anthropic")
+        assert nevidjeni == []
+        assert blokovi[0]["type"] == "image"
+        assert blokovi[0]["source"]["media_type"] == "image/png"
+        assert blokovi[0]["source"]["data"] == base64.b64encode(b"DATA").decode()
+        assert blokovi[1]["type"] == "document"
+        assert blokovi[1]["source"]["media_type"] == "application/pdf"
+
+    def test_openai_ne_vidi_pdf_pa_ide_u_napomenu(self, monkeypatch):
+        import types
+
+        monkeypatch.setattr("apps.visuals.storage.get", lambda k: b"DATA")
+        media = [
+            {"asset": types.SimpleNamespace(mime_type="image/png", storage_key="k",
+                                            public_id="A"), "naziv": "s.png"},
+            {"asset": types.SimpleNamespace(mime_type="application/pdf", storage_key="k",
+                                            public_id="B"), "naziv": "d.pdf"},
+        ]
+        blokovi, nevidjeni = gateway._vizuelni_blokovi(media, "openai")
+        assert len(blokovi) == 1 and blokovi[0]["type"] == "image_url"
+        assert [m["naziv"] for m in nevidjeni] == ["d.pdf"]
+
+    def test_media_note(self):
+        note = gateway._media_note([{"naziv": "klupa.png", "mime": "image/png"},
+                                    {"naziv": "ugovor.pdf", "mime": "application/pdf"}])
+        assert "klupa.png" in note and "slika" in note
+        assert "ugovor.pdf" in note and "PDF" in note
+        assert gateway._media_note([]) == ""
+
+    def test_pad_skladista_ide_u_napomenu_a_ne_u_pad(self, monkeypatch):
+        import types
+
+        def pukni(_k):
+            raise RuntimeError("MinIO")
+
+        monkeypatch.setattr("apps.visuals.storage.get", pukni)
+        media = [{"asset": types.SimpleNamespace(mime_type="image/png", storage_key="k",
+                                                 public_id="A"), "naziv": "s.png"}]
+        blokovi, nevidjeni = gateway._vizuelni_blokovi(media, "anthropic")
+        assert blokovi == [] and [m["naziv"] for m in nevidjeni] == ["s.png"]
+
+    def _ruta(self):
+        return LLMRoute.objects.create(
+            purpose=E.LLMPurpose.CONTENT_DRAFT, name="Claude", provider="anthropic",
+            model_key="claude-test", priority=1, data_training_allowed=True)
+
+    def test_generate_salje_sliku_kao_blok(self, mila, settings, monkeypatch):
+        import base64
+        import types
+
+        settings.LLM_EXTERNAL_ENABLED = True
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+        monkeypatch.setattr("apps.visuals.storage.get", lambda k: b"PNG")
+        self._ruta()
+        seen = {}
+
+        def fake(url, headers, body, timeout):
+            seen["content"] = body["messages"][0]["content"]
+            return {"content": [{"type": "text", "text": "ok"}],
+                    "usage": {"input_tokens": 1, "output_tokens": 1},
+                    "stop_reason": "end_turn"}
+
+        monkeypatch.setattr(gateway, "_post_json", fake)
+        media = [{"asset": types.SimpleNamespace(mime_type="image/png", storage_key="k",
+                                                 public_id="A"), "naziv": "s.png"}]
+        with bind(actor_id="user:op"):
+            gateway.generate(E.LLMPurpose.CONTENT_DRAFT, "s", "p", persona=mila, media=media)
+        content = seen["content"]
+        assert isinstance(content, list)
+        assert content[0]["type"] == "image"
+        assert content[0]["source"]["data"] == base64.b64encode(b"PNG").decode()
+        assert content[-1] == {"type": "text", "text": "p"}
+
+    def test_generate_bez_media_salje_string(self, mila, settings, monkeypatch):
+        settings.LLM_EXTERNAL_ENABLED = True
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+        self._ruta()
+        seen = {}
+
+        def fake(url, headers, body, timeout):
+            seen["content"] = body["messages"][0]["content"]
+            return {"content": [{"type": "text", "text": "ok"}],
+                    "usage": {"input_tokens": 1, "output_tokens": 1},
+                    "stop_reason": "end_turn"}
+
+        monkeypatch.setattr(gateway, "_post_json", fake)
+        with bind(actor_id="user:op"):
+            gateway.generate(E.LLMPurpose.CONTENT_DRAFT, "s", "p", persona=mila)
+        assert seen["content"] == "p"
+
+    def test_ucitaj_media_po_public_id(self, mila):
+        from apps.content import steps
+        from apps.visuals.models import MediaAsset
+
+        a = MediaAsset.objects.create(
+            public_id="IMG-TEST-0001", persona=mila, kind=E.AssetKind.PHOTO.value,
+            storage_key="k/test-0118", mime_type="image/png", sha256="0" * 64,
+            origin="user_owned")
+        out = steps._ucitaj_media([{"id": "IMG-TEST-0001", "naziv": "s.png"},
+                                   {"id": "NEMA", "naziv": "y"}])
+        assert len(out) == 1
+        assert out[0]["asset"].pk == a.pk and out[0]["naziv"] == "s.png"
+        assert steps._ucitaj_media(None) == []

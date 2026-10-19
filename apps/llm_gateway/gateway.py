@@ -175,8 +175,74 @@ def credential_ref(provider: str, persona=None) -> tuple[str | None, str]:
     return (base, "shared") if base else (None, "none")
 
 
+# ---------------------------------------------------------------- prilozi (ADR-0118)
+
+#: Tipovi slike koje vizuelne rute umeju da prime.
+_SLIKA_MIME = {"image/png", "image/jpeg", "image/webp", "image/gif"}
+_PDF_MIME = "application/pdf"
+
+
+def _asset_b64(asset) -> str:
+    import base64
+
+    from apps.visuals import storage
+
+    return base64.b64encode(storage.get(asset.storage_key)).decode()
+
+
+def _media_naziv(m: dict) -> str:
+    asset = m.get("asset")
+    return (m.get("naziv") or getattr(asset, "public_id", "") or "prilog")[:120]
+
+
+def _media_mime(m: dict) -> str:
+    asset = m.get("asset")
+    return (getattr(asset, "mime_type", "") or m.get("mime") or "").split(";")[0].strip().lower()
+
+
+def _media_note(media) -> str:
+    """Napomena za rute koje dati prilog ne vide (lokalni \u0161ablon, PDF na OpenAI)."""
+    if not media:
+        return ""
+    stavke = []
+    for m in media:
+        mime = _media_mime(m)
+        tip = "PDF" if mime == _PDF_MIME else "slika" if mime in _SLIKA_MIME else "prilog"
+        stavke.append(f"\u201e{_media_naziv(m)}\u201c ({tip})")
+    return ("\n\n[Uz poruku su stigli prilozi koje ovim putem ne vidim: "
+            + ", ".join(stavke) + ".]")
+
+
+def _vizuelni_blokovi(media, cap: str):
+    """(blokovi, nevidjeni). `cap` je \u201eanthropic\u201c ili \u201eopenai\u201c.
+
+    Prilog koji ruta ne vidi (tip ili pad skladi\u0161ta) ide u `nevidjeni`, pa u
+    napomenu \u2014 nikada se ne izmi\u0161lja i poziv se ne ru\u0161i (ADR-0033).
+    """
+    blokovi, nevidjeni = [], []
+    for m in media or []:
+        mime = _media_mime(m)
+        asset = m.get("asset")
+        try:
+            if cap == "anthropic" and mime in _SLIKA_MIME:
+                blokovi.append({"type": "image", "source": {
+                    "type": "base64", "media_type": mime, "data": _asset_b64(asset)}})
+            elif cap == "anthropic" and mime == _PDF_MIME:
+                blokovi.append({"type": "document", "source": {
+                    "type": "base64", "media_type": mime, "data": _asset_b64(asset)}})
+            elif cap == "openai" and mime in _SLIKA_MIME:
+                blokovi.append({"type": "image_url", "image_url": {
+                    "url": f"data:{mime};base64,{_asset_b64(asset)}"}})
+            else:
+                nevidjeni.append(m)
+        except Exception:  # noqa: BLE001 \u2014 skladi\u0161te/kodiranje: u napomenu, ne u pad
+            log.warning("prilog nije prosle\u0111en modelu: %s", _media_naziv(m))
+            nevidjeni.append(m)
+    return blokovi, nevidjeni
+
+
 def _call_external(route: LLMRoute, system: str, prompt: str,
-                   persona=None) -> tuple[str, int, int, str]:
+                   persona=None, media=None) -> tuple[str, int, int, str]:
     from apps.runtime.transport import CredentialMissing, resolve_secret
 
     ref, source = credential_ref(route.provider, persona)
@@ -197,8 +263,11 @@ def _call_external(route: LLMRoute, system: str, prompt: str,
         # Claude 5 generacija: `temperature`/`top_p` → 400, a razmišljanje je
         # uključeno ako se ne isključi. Za kratke objave ga isključujemo (brže,
         # jeftinije); ruta može da ga uključi sa quota_json {"thinking": "adaptive"}.
+        blokovi, nevidjeni = _vizuelni_blokovi(media, "anthropic")
+        tekst = prompt + _media_note(nevidjeni)
+        content = [*blokovi, {"type": "text", "text": tekst}] if blokovi else tekst
         body = {"model": route.model_key, "max_tokens": max_out, "system": system,
-                "messages": [{"role": "user", "content": prompt}]}
+                "messages": [{"role": "user", "content": content}]}
         thinking = (route.quota_json or {}).get("thinking", "disabled")
         if thinking in ("disabled", "adaptive"):
             body["thinking"] = {"type": thinking}
@@ -215,12 +284,15 @@ def _call_external(route: LLMRoute, system: str, prompt: str,
             route.provider)
         if not base:
             raise LLMError("NO_BASE_URL", route.provider)
+        blokovi, nevidjeni = _vizuelni_blokovi(media, "openai")
+        tekst = prompt + _media_note(nevidjeni)
+        korisnik = [{"type": "text", "text": tekst}, *blokovi] if blokovi else tekst
         data = _post_json(f"{base.rstrip('/')}/chat/completions",
                           {"Authorization": f"Bearer {key}"},
                           {"model": route.model_key, "max_tokens": max_out,
                            "temperature": float(route.temperature),
                            "messages": [{"role": "system", "content": system},
-                                        {"role": "user", "content": prompt}]},
+                                        {"role": "user", "content": korisnik}]},
                           route.timeout_seconds)
         choice = (data.get("choices") or [{}])[0]
         u = data.get("usage") or {}
@@ -241,7 +313,7 @@ def _cost_cents(route: LLMRoute, tin: int, tout: int) -> int:
 
 
 def generate(purpose: E.LLMPurpose, system: str, prompt: str, *, persona=None, run=None,
-             context_pack=None, brief: dict | None = None,
+             context_pack=None, brief: dict | None = None, media=None,
              now: datetime | None = None, only: LLMRoute | None = None,
              pozivalac: Callable[[LLMRoute], tuple[str, int, int, str]] | None = None,
              ) -> Generation:
@@ -273,10 +345,13 @@ def generate(purpose: E.LLMPurpose, system: str, prompt: str, *, persona=None, r
                 # ključ persone i `data_training_allowed`. Ispod nje je zapis.
                 text, tin, tout, finish = pozivalac(route)
             elif external:
-                text, tin, tout, finish = _call_external(route, system, prompt, persona)
+                text, tin, tout, finish = _call_external(route, system, prompt, persona,
+                                                         media=media)
             else:
-                text = local.compose(purpose, brief or {}, prompt)
-                tin, tout, finish = _tokens(system + prompt), _tokens(text), "template"
+                lokalni_prompt = prompt + _media_note(media)
+                text = local.compose(purpose, brief or {}, lokalni_prompt)
+                tin, tout, finish = (_tokens(system + lokalni_prompt), _tokens(text),
+                                     "template")
             if not text.strip():
                 raise LLMError("EMPTY_RESPONSE")
         except LLMError as e:

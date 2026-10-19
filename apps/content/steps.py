@@ -28,14 +28,30 @@ from apps.orchestration import plans
 from common import enums as E
 
 
+def _ucitaj_media(specs) -> list[dict]:
+    """`public_id` iz plana -> [{asset, naziv}] za vizuelni poziv (ADR-0118)."""
+    if not specs:
+        return []
+    from apps.visuals.models import MediaAsset
+    out: list[dict] = []
+    for sp in specs:
+        a = MediaAsset.objects.filter(public_id=(sp or {}).get("id", "")).first()
+        if a is not None:
+            out.append({"asset": a, "naziv": (sp.get("naziv") or a.public_id)})
+    return out
+
+
 @plans.handler("content.draft")
 def _draft(step: plans.PlanStep, state: dict) -> plans.Outcome:
     """Nacrt na temu iz koraka — ili na temu koju je nalogodavac zadao kao cilj."""
-    tema = (step.input_json or {}).get("tema", "") or state.get("goal", "")
+    spec = step.input_json or {}
+    tema = spec.get("tema", "") or state.get("goal", "")
     if not tema.strip():
         return plans.Failed("Korak nema temu.")
+    media = _ucitaj_media(spec.get("media"))
     try:
-        item = content.draft(step.plan.persona, topic=tema, run=step.plan.run)
+        item = content.draft(step.plan.persona, topic=tema, run=step.plan.run,
+                             media=media)
     except content.ContentError as e:
         return plans.Failed(str(e)[:300])
     if item.status != E.ContentStatus.DRAFT.value:

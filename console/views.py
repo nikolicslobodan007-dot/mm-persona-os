@@ -930,14 +930,14 @@ def razgovor_poruka(request, razgovor_id):
     # ADR-0115 — prilozi (veza i/ili tekstualni fajl). Sadržaj fajla ulazi u
     # materijal od kog direktor radi; sam fajl se čuva i može da se preuzme.
     try:
-        prilozi, dodatak = _obradi_priloge(request, nit.persona, actor)
+        prilozi, dodatak, media = _obradi_priloge(request, nit.persona, actor)
     except _PrilogError as e:
         messages.error(request, str(e)[:300])
         return redirect(f"/console/razgovor/{nit.id}")
     materijal = (telo.strip() + dodatak).strip() if dodatak else telo
     try:
         nit_servis.posalji(nit, telo, actor=actor,
-                           materijal=materijal, prilozi=prilozi)
+                           materijal=materijal, prilozi=prilozi, media=media)
     except nit_servis.RazgovorError as e:
         messages.error(request, str(e)[:300])
     except plans_module().PlanError as e:
@@ -954,14 +954,20 @@ _PRILOG_TEXT_MIME = {"text/plain", "text/markdown", "text/csv", "application/csv
 _PRILOG_TEXT_EKST = (".txt", ".md", ".csv")
 _PRILOG_MAX_BAJTOVA = 1_000_000          # 1 MB — tekst, ne baza
 _PRILOG_MAX_UTKANO = 2500                # koliko sadržaja ulazi u materijal
+_PRILOG_SLIKA_MIME = {"image/png", "image/jpeg", "image/webp", "image/gif"}
+_PRILOG_SLIKA_EKST = (".png", ".jpg", ".jpeg", ".webp", ".gif")
+_PRILOG_PDF_MIME = {"application/pdf"}
+_PRILOG_PDF_EKST = (".pdf",)
+_PRILOG_MAX_SLIKA = 5_000_000            # 5 MB — slika (ADR-0118)
+_PRILOG_MAX_PDF = 10_000_000             # 10 MB — PDF
 
 
 def _obradi_priloge(request, direktor, actor):
-    """Vraća (`prilozi_specs`, `dodatak_materijala`). Prazno kad priloga nema.
+    """Vraća (`prilozi_specs`, `dodatak_materijala`, `media`). Prazno kad nema priloga.
 
-    Veza se samo zapisuje (nema odlaznih zahteva). Tekstualni fajl se čuva u
-    skladištu i njegov sadržaj se utka u materijal. Slike/PDF se zasad ne
-    primaju — agent ih još ne čita (increment 1).
+    Veza se samo zapisuje. Tekstualni fajl se čuva i njegov sadržaj se utka u
+    materijal. Slika i PDF se čuvaju i prosleđuju modelu kao vizuelni blok
+    (ADR-0118) — za njih se NE pravi prepis; vraćaju se u `media`.
     """
     import pathlib as _pl
 
@@ -972,6 +978,7 @@ def _obradi_priloge(request, direktor, actor):
 
     specs: list[dict] = []
     delovi_materijala: list[str] = []
+    media: list[dict] = []
 
     veza = (request.POST.get("veza") or "").strip()
     if veza:
@@ -987,34 +994,49 @@ def _obradi_priloge(request, direktor, actor):
         naziv = (datoteka.name or "prilog")[:300]
         ekst = _pl.Path(naziv).suffix.lower()
         mime = (datoteka.content_type or "").split(";")[0].strip().lower()
-        if mime not in _PRILOG_TEXT_MIME and ekst not in _PRILOG_TEXT_EKST:
+        je_tekst = mime in _PRILOG_TEXT_MIME or ekst in _PRILOG_TEXT_EKST
+        je_slika = mime in _PRILOG_SLIKA_MIME or ekst in _PRILOG_SLIKA_EKST
+        je_pdf = mime in _PRILOG_PDF_MIME or ekst in _PRILOG_PDF_EKST
+        if not (je_tekst or je_slika or je_pdf):
             raise _PrilogError(
-                "Za sada se prima samo tekstualni fajl (.txt, .md, .csv) ili "
-                "veza. Slike i PDF agent još ne čita.")
-        if datoteka.size and datoteka.size > _PRILOG_MAX_BAJTOVA:
-            raise _PrilogError("Fajl je veći od 1 MB.")
+                "Prima se tekst (.txt, .md, .csv), slika (.png, .jpg, .webp, .gif) "
+                "ili PDF — ili veza.")
+        maks = (_PRILOG_MAX_BAJTOVA if je_tekst
+                else _PRILOG_MAX_PDF if je_pdf else _PRILOG_MAX_SLIKA)
+        if datoteka.size and datoteka.size > maks:
+            raise _PrilogError(f"Fajl je veći od {maks // 1_000_000} MB.")
         podaci = datoteka.read()
-        tekst = podaci.decode("utf-8", errors="replace").strip()
-        kljuc = storage.key_for(direktor.public_id, storage.sha256(podaci),
-                                "text/plain")
+        if je_tekst:
+            cuvani_mime, kind = "text/plain", E.AssetKind.DOCUMENT.value
+        elif je_pdf:
+            cuvani_mime, kind = "application/pdf", E.AssetKind.DOCUMENT.value
+        else:
+            cuvani_mime = mime if mime in _PRILOG_SLIKA_MIME else "image/png"
+            kind = E.AssetKind.PHOTO.value
+        digest = storage.sha256(podaci)
+        kljuc = storage.key_for(direktor.public_id, digest, cuvani_mime)
         try:
-            storage.put(podaci, key=kljuc, mime="text/plain")
+            storage.put(podaci, key=kljuc, mime=cuvani_mime)
         except storage.StorageError as e:
             raise _PrilogError(f"Fajl nije sačuvan: {e}") from e
         asset = MediaAsset.objects.create(
             public_id=I.media_asset_public_id(direktor.public_id,
                                               next_sequence(direktor)),
-            persona=direktor, kind=E.AssetKind.DOCUMENT.value, storage_key=kljuc,
-            mime_type="text/plain", sha256=storage.sha256(podaci),
-            origin="user_owned",
+            persona=direktor, kind=kind, storage_key=kljuc,
+            mime_type=cuvani_mime, sha256=digest, origin="user_owned",
             rights_note=f"Prilog uz nit; primila {direktor.public_id}; akter {actor}.")
         specs.append({"vrsta": "fajl", "naziv": naziv, "asset": asset})
-        if tekst:
-            delovi_materijala.append(
-                f"[Prilog — fajl „{naziv}“]\n{tekst[:_PRILOG_MAX_UTKANO]}")
+        if je_tekst:
+            tekst = podaci.decode("utf-8", errors="replace").strip()
+            if tekst:
+                delovi_materijala.append(
+                    f"[Prilog — fajl „{naziv}“]\n{tekst[:_PRILOG_MAX_UTKANO]}")
+        else:
+            # slika/PDF: bez prepisa — ide modelu kao vizuelni blok (ADR-0118)
+            media.append({"asset": asset, "naziv": naziv, "mime": cuvani_mime})
 
     dodatak = ("\n\n" + "\n\n".join(delovi_materijala)) if delovi_materijala else ""
-    return specs, dodatak
+    return specs, dodatak, media
 
 
 def plans_module():

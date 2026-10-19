@@ -155,6 +155,7 @@ QUOTABLE_MEMORY = frozenset({E.MemoryType.SEMANTIC.value, E.MemoryType.CONTENT.v
 def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
           angle: str = "", body: str | None = None,
           fmt: E.ContentFormat = E.ContentFormat.POST, run: AgentRun | None = None,
+          media: list[dict] | None = None,
           now: datetime | None = None) -> ContentItem:
     """Pravi nacrt. Tekst iz modela prolazi iste tvrde zabrane kao i objava."""
     now = now or timezone.now()
@@ -184,6 +185,7 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
                 + f"## zadatak\nNapiši kratku objavu na temu: {topic}."
                 + (f" Ugao: {angle}." if angle else ""),
                 persona=persona, run=run, context_pack=pack.record, now=now,
+                media=media,
                 brief={"topic": topic, "angle": angle, "facts": facts,
                        "language": persona.primary_locale})
             body, provenance = gen.text, E.Provenance.GENERATED

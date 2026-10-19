@@ -122,7 +122,7 @@ def _procitaj_odluku(tekst: str, dozvoljeni: set[str]) -> dict:
     }
 
 
-def razmisli(direktor, telo: str, *, run=None) -> dict:
+def razmisli(direktor, telo: str, *, run=None, media=None) -> dict:
     """Direktorova procena poruke: koji sektor, koji nalog, ili koje pitanje.
 
     Nikad ne podiže grešku: ako model nije dostupan ili vrati nešto što nije
@@ -141,7 +141,7 @@ def razmisli(direktor, telo: str, *, run=None) -> dict:
               + f"Sektori: {spisak}.\n\nPoruka vlasnika:\n{telo[:MAX_TELO]}")
     try:
         gen = gateway.generate(E.LLMPurpose.PLANNING, ODLUKA_SYSTEM, prompt,
-                               persona=direktor, run=run,
+                               persona=direktor, run=run, media=media,
                                brief={"tema": telo[:200], "jezik": "sr-Latn"})
     except Exception as e:  # noqa: BLE001 — procena ne sme da obori nalog
         audit.record("razgovor.procena.pala", persona=direktor,
@@ -174,11 +174,18 @@ def _izvrsilac(sef: Persona) -> Persona | None:
     return ljudi[0] if ljudi else None
 
 
-def _koraci(tema: str, sef: Persona, izvrsilac: Persona | None) -> list[dict]:
-    """Koraci direktorovog plana: zadaj šefu, pa preuzmi gotov posao."""
+def _koraci(tema: str, sef: Persona, izvrsilac: Persona | None,
+            media: list[dict] | None = None) -> list[dict]:
+    """Koraci direktorovog plana: zadaj šefu, pa preuzmi gotov posao.
+
+    `media` (slike/PDF) putuje kao `public_id` asseta u ulazu `content.draft`
+    koraka (ADR-0118); učitava se tek kad pisac zove model.
+    """
+    media_spec = [{"id": m["asset"].public_id, "naziv": m.get("naziv", "")}
+                  for m in (media or []) if m.get("asset") is not None]
     if izvrsilac is None:
         unutra = [{"handler": "content.draft", "description": "Napiši nacrt",
-                   "input": {"tema": tema}}]
+                   "input": {"tema": tema, "media": media_spec}}]
     else:
         unutra = [
             {"handler": "org.delegate",
@@ -186,7 +193,7 @@ def _koraci(tema: str, sef: Persona, izvrsilac: Persona | None) -> list[dict]:
              "input": {"to": izvrsilac.public_id, "goal": tema,
                        "steps": [{"handler": "content.draft",
                                   "description": "Napiši nacrt",
-                                  "input": {"tema": tema}}]}},
+                                  "input": {"tema": tema, "media": media_spec}}]}},
             # ADR-0108 — šef ne preuzima nepročitano. Korak je njegov posao,
             # pa ga izvršava on, svojim poverenjem, u svom planu.
             {"handler": "content.review",
@@ -296,7 +303,8 @@ def _tekst(d: dict) -> str:
 
 
 def posalji(razgovor: Razgovor, telo: str, *, actor: str,
-            materijal: str | None = None, prilozi: list[dict] | None = None) -> Poruka:
+            materijal: str | None = None, prilozi: list[dict] | None = None,
+            media: list[dict] | None = None) -> Poruka:
     """Čovekova poruka → posao → odgovor direktora u istoj niti.
 
     `telo` je ono što čovek vidi u niti; `materijal` je ono od čega direktor
@@ -320,7 +328,7 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str,
 
     # ADR-0106 — direktor prvo procenjuje. Ako model nije dostupan, procena
     # je prazna i sve ide kao pre (ADR-0105): tabela reči i doslovna tema.
-    odluka = razmisli(direktor, materijal)
+    odluka = razmisli(direktor, materijal, media=media)
     if odluka.get("pitanje") and not odluka.get("nalog"):
         audit.record("razgovor.pitanje", persona=direktor,
                      details={"razgovor": str(razgovor.id), "actor": actor})
@@ -350,7 +358,7 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str,
         raise RazgovorError(zasto)
     izvrsilac = _izvrsilac(sef)
 
-    plan = plans.start(direktor, tema[:2000], _koraci(tema, sef, izvrsilac),
+    plan = plans.start(direktor, tema[:2000], _koraci(tema, sef, izvrsilac, media),
                        actor=actor)
     audit.record("razgovor.zadato", persona=direktor,
                  details={"razgovor": str(razgovor.id), "plan": plan.public_id,
