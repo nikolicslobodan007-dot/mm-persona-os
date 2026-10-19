@@ -2,7 +2,8 @@ FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    FASTEMBED_CACHE=/opt/fastembed-cache
 
 WORKDIR /app
 
@@ -21,6 +22,13 @@ COPY pyproject.toml constraints.txt ./
 # povuce sta god je novo; tako je produkcija presla sa Django 5.2 na 6.1.2,
 # a da to niko nije odlucio.
 RUN pip install -e ".[dev]" -c constraints.txt
+
+# ADR-0120 — pečemo višejezični model veština u sliku, u isti keš koji
+# `FASTEMBED_CACHE` pokazuje, da pogon radi BEZ mreže (ADR-0009) i da
+# prvi uvoz ne čeka preuzimanje. Build se radi na serveru (otvoren
+# internet); ako preuzimanje padne, build mora da padne glasno, ne da
+# tiho napravi sliku bez modela.
+RUN python -c "from fastembed import TextEmbedding; TextEmbedding('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2', cache_dir='/opt/fastembed-cache')"
 
 # ADR-0082 — Aider u svom kavezu. NE u okruzenje aplikacije: on nosi 107
 # zavisnosti, a sa nasima mu se poklapaju dve (`pyyaml`, `jsonschema`). U

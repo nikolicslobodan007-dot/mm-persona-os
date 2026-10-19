@@ -520,3 +520,33 @@ class KnowledgeFact(UUIDModel):
                 name="knowledge_fact_confidence_unit",
             )
         ]
+
+
+class KnowledgeEmbedding(UUIDModel):
+    """Vektor veštine (KnowledgeFact) za semantičko rangiranje (ADR-0120).
+
+    Odvojen zapis kao MemoryEmbedding — re-embedding bez diranja činjenice, više
+    modela uz istu veštinu (Canon §10.5). Bez HNSW indeksa: veština je nekoliko
+    stotina, pa je sekvencijalno pretraživanje trenutno (ista logika kao §10.5
+    nota uz MemoryEmbedding)."""
+
+    fact = models.ForeignKey(
+        KnowledgeFact, on_delete=models.CASCADE, related_name="embeddings"
+    )
+    model_key = models.CharField(max_length=120)
+    dimensions = models.PositiveSmallIntegerField(
+        help_text="Zapisano uz vektor: Canon §10.5 traži novu kolonu, ne izmenu."
+    )
+    embedding = VectorField(dimensions=settings.VESTINA_EMBEDDING_DIM)
+    text_hash = models.CharField(
+        max_length=64, blank=True,
+        help_text="Memory v0.1 §6 — isti tekst i isti model → vektor se ne računa ponovo.",
+    )
+
+    class Meta:
+        db_table = "memory_knowledge_embedding"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["fact", "model_key"], name="knowledge_embedding_unique_model"
+            )
+        ]

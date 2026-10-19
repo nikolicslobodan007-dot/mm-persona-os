@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import functools
 import hashlib
+import logging
 import math
 import pathlib
 from dataclasses import dataclass, field
@@ -47,6 +48,8 @@ from apps.memory.vestine import PREDIKAT as VESTINA_PREDIKAT
 from apps.observability import bus
 from apps.personas.models import Assignment, Biography, TraitProfile
 from common import enums as E
+
+log = logging.getLogger(__name__)
 
 #: Memory v0.1 §12 — fiksni deo konteksta pored memorije.
 CORE_OVERHEAD_TOKENS = 1500
@@ -220,6 +223,54 @@ def _vestina_kljuc(fact: KnowledgeFact, upit: set[str], sektor: str) -> tuple:
     return (-svoj, -za_sve, -pogodak, fact.subject)
 
 
+def _semanticki_rang(query: str, base: list):
+    """Veštine po kosinusnoj sličnosti sa zadatkom (ADR-0120).
+
+    Vraća None ako model nije dostupan (fastembed/offline) ili ako nijedna
+    veština još nema embedding — tada se pada na leksičko (ADR-0101), pa sistem
+    radi i bez modela (ADR-0009). Veštine bez vektora se dodaju na kraj, da
+    nova (još neembedovana) veština ne ispadne iz paketa.
+    """
+    from pgvector.django import CosineDistance
+
+    from apps.memory.models import KnowledgeEmbedding
+    try:
+        qv = embeddings.embed_vestina(query)
+    except Exception as e:  # noqa: BLE001 — model nedostupan: leksički fallback
+        log.warning("semantički rang veština pao, leksički fallback: %s", e)
+        return None
+    by_id = {f.id: f for f in base}
+    mk = embeddings.vestina_model_key()
+    poredak = list(
+        KnowledgeEmbedding.objects
+        .filter(model_key=mk, fact_id__in=list(by_id))
+        .annotate(dist=CosineDistance("embedding", qv))
+        .order_by("dist").values_list("fact_id", flat=True))
+    facts = [by_id[fid] for fid in poredak if fid in by_id]
+    if not facts:
+        return None
+    vidjeni = set(poredak)
+    facts += [f for fid, f in by_id.items() if fid not in vidjeni]
+    return facts
+
+
+def _rangiraj_vestine(persona, query: str, sektor: str) -> list:
+    """Redosled veština za paket: semantički (ADR-0120) kad ima upita i modela,
+    inače leksički po sektoru (ADR-0101)."""
+    base = list(
+        KnowledgeFact.objects
+        .filter(predicate=VESTINA_PREDIKAT, source__is_active=True,
+                source__license_box=E.LicenseBox.SLOBODNA.value)
+        .select_related("source"))
+    if query.strip():
+        sem = _semanticki_rang(query, base)
+        if sem is not None:
+            return sem
+    upit = embeddings.stems(query) if query.strip() else set()
+    return sorted(base, key=lambda f: _vestina_kljuc(f, upit, sektor))
+
+
+
 def build(persona, run, profile: E.RetrievalProfile, *, query: str = "",
           max_tokens: int | None = None, now: datetime | None = None,
           memory_types: list[E.MemoryType] | None = None) -> Pack:
@@ -276,14 +327,7 @@ def build(persona, run, profile: E.RetrievalProfile, *, query: str = "",
     # kad korpus naraste, ovo je prvo mesto koje treba ponovo izmeriti.
     vestina_budget = E.PROFILE_VESTINE_TOKENS[profile]
     sektor = _sektor_persone(persona)
-    upit_koreni = embeddings.stems(query) if query.strip() else set()
-    vestina_candidates = sorted(
-        KnowledgeFact.objects
-        .filter(predicate=VESTINA_PREDIKAT, source__is_active=True,
-                source__license_box=E.LicenseBox.SLOBODNA.value)
-        .select_related("source"),
-        key=lambda f: _vestina_kljuc(f, upit_koreni, sektor),
-    )
+    vestina_candidates = _rangiraj_vestine(persona, query, sektor)
     # ADR-0112 — vrh rangiranja ulazi U CELINI (koraci); ostalo kao indeks
     # (ime + čemu služi), dok traje budžet. Tako agent zna ceo svoj alat
     # (~30-40 veština), a detaljne korake ima za ono najverovatnije potrebno.

@@ -20,6 +20,10 @@ dependencies = [
     # uzet ceo i zakucan na commit — isti URL u drugom trenutku daje drugi
     # sadržaj (isti razlog kao `commit_sha` u ADR-0077 §3).
     "cli-anything-libreoffice @ git+https://github.com/HKUDS/CLI-Anything.git@34f519533bc175d2fe287ab8316b0dd99bb9cc43#subdirectory=libreoffice/agent-harness",
+    # ADR-0120: višejezični semantički model za rangiranje veština,
+    # lokalno preko fastembed (ONNX, CPU). Model se peče u sliku (vidi
+    # Dockerfile) pa radi bez mreže; memorijski sloj ostaje na hash-modelu.
+    "fastembed>=0.4,<1.0",
 ]
 
 [project.optional-dependencies]

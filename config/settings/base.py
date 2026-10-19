@@ -133,6 +133,16 @@ LANGUAGE_CODE = "sr-latn"
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "")
 EMBEDDING_DIM = int(os.environ.get("EMBEDDING_DIM", "1024"))
 
+# ADR-0120 — veštine se rangiraju semantički, modelom zasebnim od memorije.
+# Memorija ostaje na EMBEDDING_MODEL (local-hash); veštine imaju svoj, lakši
+# višejezični model (MiniLM-L12, 384). Dimenzija je zasebna (Canon §10.5).
+VESTINA_EMBEDDING_MODEL = os.environ.get("VESTINA_EMBEDDING_MODEL", "minilm-l12-v2")
+VESTINA_EMBEDDING_DIM = int(os.environ.get("VESTINA_EMBEDDING_DIM", "384"))
+# ADR-0120 — gde je ispečen fastembed model u slici (Dockerfile ga puni).
+# Prazno: fastembed bira svoj podrazumevani keš (i, ako treba, skine model
+# s mreže pri prvom pozivu — radi na serveru, ne u peskovniku).
+FASTEMBED_CACHE = os.environ.get("FASTEMBED_CACHE", "")
+
 # Canon §11.1 — beat na 30 s, lookahead 90 s. Pet minuta ne može da ispuni
 # SLO „due lag p95 < 60 s" iz Faze 14.
 SCHEDULER_BEAT_SECONDS = 30

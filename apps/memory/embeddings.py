@@ -92,3 +92,39 @@ def embed(text: str, *, model: str | None = None) -> list[float]:
 
 def cosine(a: list[float], b: list[float]) -> float:
     return sum(x * y for x, y in zip(a, b, strict=True))
+
+
+# ADR-0120 — semantički višejezični model za veštine, lokalno preko fastembed
+# (ONNX). Model je pečen u imidž pa radi offline; uvozi se lenjo i drži kao
+# singleton jer je učitavanje skupo a poziv čest. Memorijski `embed` (gore)
+# ostaje netaknut: veštine imaju svoj model i svoju dimenziju.
+_FASTEMBED_NAME = {
+    "minilm-l12-v2": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+}
+_fastembed_cache: dict[str, object] = {}
+
+
+def _fastembed(key: str):
+    if key not in _fastembed_cache:
+        from fastembed import TextEmbedding
+
+        kesh = getattr(settings, "FASTEMBED_CACHE", "") or None
+        _fastembed_cache[key] = TextEmbedding(
+            _FASTEMBED_NAME[key], cache_dir=kesh)
+    return _fastembed_cache[key]
+
+
+def vestina_model_key() -> str:
+    return getattr(settings, "VESTINA_EMBEDDING_MODEL", "minilm-l12-v2")
+
+
+def embed_vestina(text: str, *, model: str | None = None) -> list[float]:
+    """Vektor veštine semantičkim modelom (ADR-0120).
+
+    Model je simetričan (paraphrase-multilingual): upit i veština se kodiraju
+    isto, bez prefiksa. Tekst ide sirov (model sam vodi računa o velikim
+    slovima i dijakritici) — NE kroz `normalize`, koji je za hash-model.
+    """
+    key = model or vestina_model_key()
+    vec = next(iter(_fastembed(key).embed([text])))
+    return [float(x) for x in vec]
