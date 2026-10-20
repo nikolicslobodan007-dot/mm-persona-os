@@ -241,11 +241,17 @@ class TestRetrieval:
         assert sens.pk in {s.memory.pk for s in summary}
 
     def test_breakdown_is_explained(self, mila):
-        write(mila, _m("Kupci u građevini pitaju za rok isporuke"))
-        top = retrieval.retrieve(mila, "rok isporuke građevina", E.RetrievalProfile.RESEARCH,
-                                 now=NOW)[0]
-        assert set(retrieval.WEIGHTS) <= set(top.breakdown)
-        assert top.breakdown["task_relevance"] > 0 and top.breakdown["semantic"] > 0
+        # Flaky ispravka: seed memorije su PINNED sa visokim salience-om, pa mogu
+        # da izjednače ukupan skor sa upisanom — [0] (vrh) je tada nekad seed sa
+        # semantic=0, a tiebreak po slučajnom UUID-u prevrće rezultat. Proveravamo
+        # breakdown TAČNO upisane memorije (to i jeste namera testa), uz now=NOW
+        # kao i svi ostali upisi u ovom fajlu.
+        m = write(mila, _m("Kupci u građevini pitaju za rok isporuke"), now=NOW).memory
+        scored = retrieval.retrieve(mila, "rok isporuke građevina",
+                                    E.RetrievalProfile.RESEARCH, now=NOW)
+        nasa = next(s for s in scored if s.memory.pk == m.pk)
+        assert set(retrieval.WEIGHTS) <= set(nasa.breakdown)
+        assert nasa.breakdown["task_relevance"] > 0 and nasa.breakdown["semantic"] > 0
 
     def test_decay_follows_half_life(self, mila):
         m = write(mila, _m("epizoda", memory_type=E.MemoryType.EPISODIC, salience=0.8),
