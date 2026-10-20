@@ -1,17 +1,18 @@
-# Izmereno zeleno stanje, 12.10.2026. ADR-0083.
+# Izmereno zeleno stanje, 20.10.2026. ADR-0083.
 #
 # Ovo NIJE spisak onoga sto nam treba — to je `pyproject.toml`. Ovo je spisak
-# onoga nad cim je 1232 testa proslo i sve cetiri kapije bile zelene. Dve
-# razlicite stvari koje su do danas stajale pomesane, pa je produkcija tiho
-# odlutala sa Django 5.2 na 6.1.2, a niko to nije primetio.
+# onoga nad cim su sve cetiri kapije bile zelene (1377 proslo, 1 preskoceno).
 #
 # Dobijen sa `pip freeze` u `web` kontejneru, bez reda `-e /app` (nas
 # sopstveni paket; `pip` bi na njemu pukao sam od sebe).
 #
 # Verzija se ovde menja NAMERNO i uz merenje: izmeni red, ispeci sliku,
 # pusti kapije rukom. Nikad zato sto je neko ponovo pecenje povuklo novije.
+#
+# ADR-0120: dodat fastembed lanac (visejezicni model za rangiranje vestina).
 
 amqp==5.4.1
+anyio==4.15.1
 asgiref==3.12.1
 ast_serialize==0.12.1
 attrs==26.1.0
@@ -19,42 +20,66 @@ billiard==4.3.1
 boto3==1.43.108
 botocore==1.43.108
 celery==5.6.3
+certifi==2026.10.18
+charset-normalizer==3.5.2
+cli-anything-libreoffice @ git+https://github.com/HKUDS/CLI-Anything.git@34f519533bc175d2fe287ab8316b0dd99bb9cc43#subdirectory=libreoffice/agent-harness
+click==8.5.0
 click-didyoumean==0.3.1
 click-plugins==1.1.1.2
 click-repl==0.4.1
-click==8.5.0
+defusedxml==0.7.1
 Django==6.1.2
 djangorestframework==3.18.3
 drf-spectacular==0.30.0
+fastembed==0.9.0
+filelock==4.2.4
+flatbuffers==25.12.19
+fsspec==2026.9.0
 gunicorn==26.2.0
+h11==0.16.0
+hf-xet==1.7.0
+httpcore==1.0.9
+httpx==0.28.1
+huggingface_hub==1.33.0
+idna==3.20
 inflection==0.5.1
 iniconfig==2.3.1
 jmespath==1.1.0
-jsonschema-specifications==2025.9.1
 jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
 kombu==5.6.2
 librt==0.16.0
+loguru==0.7.3
+mmh3==5.3.1
 mypy==2.4.0
 mypy_extensions==1.1.0
+numpy==2.5.4
+onnxruntime==1.31.0
 packaging==26.3
 pathspec==1.1.1
 pgvector==0.5.0
+pillow==12.3.0
 pluggy==1.6.0
 prompt_toolkit==3.0.53
-psycopg-binary==3.3.6
+protobuf==7.36.2
 psycopg==3.3.6
+psycopg-binary==3.3.6
+py_rust_stemmers==0.1.8
 Pygments==2.21.0
-pytest-django==4.14.0
 pytest==9.1.1
+pytest-django==4.14.0
 python-dateutil==2.9.0.post0
 PyYAML==6.0.3
 redis==8.1.0
 referencing==0.37.0
+requests==2.34.2
 rpds-py==2026.9.1
 ruff==0.16.10
 s3transfer==0.19.2
 six==1.17.0
 sqlparse==0.6.0
+tokenizers==0.23.3
+tqdm==4.70.1
 typing_extensions==4.16.0
 tzdata==2026.5
 tzlocal==5.4.4
