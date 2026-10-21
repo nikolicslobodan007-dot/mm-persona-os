@@ -1,7 +1,9 @@
-# Caddy sam pribavlja i obnavlja Let's Encrypt sertifikat za {$DOMAIN}.
-# Uslov: A zapis za {$DOMAIN} pokazuje na IP servera PRE prvog pokretanja.
+# Caddy sam pribavlja i obnavlja Let's Encrypt sertifikat za os.webkorporacija.com.
+# Uslov: A zapis za os.webkorporacija.com pokazuje na IP servera PRE prvog pokretanja.
+# Domen je zakucan namerno: prazan $DOMAIN je `{$DOMAIN} {` svodio na goli `{`,
+# što Caddy čita kao GLOBALNI blok, pa je `encode` (red 6) obarao start (21.10.).
 
-{$DOMAIN} {
+os.webkorporacija.com {
 
 	encode zstd gzip
 
