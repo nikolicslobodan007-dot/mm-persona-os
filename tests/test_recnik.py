@@ -16,6 +16,7 @@ from django.core.management.base import CommandError
 
 from apps.content import recnik
 from apps.memory.models import KnowledgeFact, KnowledgeSource
+from tests.conftest import requires_db
 
 ODREDNICE = [
     {"odrednica": "avlija", "odrednica_cir": "авлија",
@@ -241,3 +242,23 @@ class TestKomanda:
     def test_trazi_tacno_jedan_zadatak(self, db):
         with pytest.raises(CommandError, match="tačno jedno"):
             call_command("recnik", "--stanje", "--nadji", "avlija", stdout=io.StringIO())
+
+
+@requires_db
+@pytest.mark.django_db
+def test_uvoz_pravila_nad_isporucenom_datotekom(db):
+    """ADR-0055 lekcija: bar jedan test dodiruje datoteku koja se zaista
+    ISPORUČUJE (apps/content/data/pravopis-pravila.jsonl), ne izmišljene redove —
+    provera nad lažnim podacima proverava kôd, ne podatke."""
+    br = recnik.uvezi_pravila(actor="user:qa")
+    assert br["upisano"] >= 220
+    assert br["sa brojem tačke"] >= 220
+    izvor = KnowledgeSource.objects.get(title=recnik.IZVOR_PRAVILA)
+    assert (KnowledgeFact.objects
+            .filter(source=izvor, predicate="pravopis.pravilo").count()) == br["upisano"]
+    # glavna vrednost: čitanje pravila po broju tačke
+    p = recnik.nadji_pravilo(233)
+    assert p is not None and p["tacka"] == 233 and len(p["tekst"]) > 100
+    # idempotentno: ponovni uvoz briše i upiše isto
+    br2 = recnik.uvezi_pravila(actor="user:qa")
+    assert br2["upisano"] == br["upisano"] and br2["obrisano"] == br["upisano"]

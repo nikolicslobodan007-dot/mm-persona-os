@@ -24,13 +24,19 @@ class Command(BaseCommand):
         parser.add_argument("--proveri", default="", help="Tekst koji se proverava.")
         parser.add_argument("--stanje", action="store_true")
         parser.add_argument("--utisaj", default="", help="Oblik koji se isključuje.")
+        parser.add_argument("--uvezi-pravila", action="store_true",
+                            help="Uvezi PRAVILA Pravopisa (opšti deo, #6).")
+        parser.add_argument("--pravilo", type=int, default=0,
+                            help="Pročitaj pravilo po broju tačke.")
         parser.add_argument("--zasto", default="")
         parser.add_argument("--actor", default="user:slobodan")
 
-    def handle(self, *args, uvezi, nadji, proveri, stanje, utisaj, zasto, actor, **opts):
-        if sum(map(bool, (uvezi, nadji, proveri, stanje, utisaj))) != 1:
+    def handle(self, *args, uvezi, nadji, proveri, stanje, utisaj, uvezi_pravila,
+               pravilo, zasto, actor, **opts):
+        if sum(map(bool, (uvezi, nadji, proveri, stanje, utisaj, uvezi_pravila, pravilo))) != 1:
             raise CommandError(
-                "Treba tačno jedno: --uvezi, --nadji, --proveri, --stanje, --utisaj.")
+                "Treba tačno jedno: --uvezi, --nadji, --proveri, --stanje, --utisaj, "
+                "--uvezi-pravila, --pravilo.")
         if uvezi:
             if not actor.startswith("user:"):
                 raise CommandError("Rečnik uvozi čovek; `--actor` počinje sa `user:`.")
@@ -39,6 +45,12 @@ class Command(BaseCommand):
             if not actor.startswith("user:"):
                 raise CommandError("Oblik utišava čovek; `--actor` počinje sa `user:`.")
             return self._utisaj(utisaj, zasto, actor)
+        if uvezi_pravila:
+            if not actor.startswith("user:"):
+                raise CommandError("Pravila uvozi čovek; `--actor` počinje sa `user:`.")
+            return self._uvezi_pravila(actor)
+        if pravilo:
+            return self._pravilo(pravilo)
         if stanje:
             return self._stanje()
         if nadji:
@@ -54,6 +66,24 @@ class Command(BaseCommand):
             f"upisano {br['upisano']} odrednica "
             f"(obrisano ranijih {br['obrisano']}), sa brojem tačke {br['sa tačkom']}, "
             f"zabranjenih oblika {br['odbijenih oblika']}"))
+
+    def _uvezi_pravila(self, actor: str) -> None:
+        if not recnik.DATOTEKA_PRAVILA.exists():
+            raise CommandError(f"Nema datoteke {recnik.DATOTEKA_PRAVILA}.")
+        with bind(actor_id=actor):
+            br = recnik.uvezi_pravila(actor=actor)
+        self.stdout.write(self.style.SUCCESS(
+            f"upisano {br['upisano']} pravila "
+            f"(obrisano ranijih {br['obrisano']}), sa brojem tačke {br['sa brojem tačke']}"))
+
+    def _pravilo(self, tacka: int) -> None:
+        p = recnik.nadji_pravilo(tacka)
+        if p is None:
+            self.stdout.write(self.style.WARNING(f"т.{tacka}: nema pravila (ili nije uvezeno)."))
+            return
+        self.stdout.write(self.style.SUCCESS(
+            f"т.{p['tacka']} — {p['sekcija']} (str. {p['strana_od']}–{p['strana_do']})"))
+        self.stdout.write(p["tekst"])
 
     def _stanje(self) -> None:
         izvor = KnowledgeSource.objects.filter(persona__isnull=True,

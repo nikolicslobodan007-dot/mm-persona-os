@@ -42,6 +42,15 @@ PREDIKAT = "pravopis.odrednica"
 #: u repozitorijumu stoji da se uvoz može ponoviti bez skeniranja knjige.
 DATOTEKA = Path(__file__).resolve().parent / "data" / "recnik-uz-pravopis.jsonl"
 
+#: ADR-0120/#6 — PRAVILA Pravopisa (opšti deo, tačke 1–236 + „Имена и њихове
+#: норме"). Isti obrazac kao Rečnik: deljeni izvor, po pravilu jedna činjenica,
+#: `predicate="pravopis.pravilo"`. Vrednost: kad Rečnik uputi na „т. N", pravilo
+#: se može pročitati (`nadji_pravilo`). Izvučeno OCR-om iz iste knjige
+#: (`tools/pravopis/`); broj tačke nosi zaglavlje strane, tekst je telo.
+IZVOR_PRAVILA = "Pravopis srpskoga jezika — PRAVILA (Matica srpska)"
+PREDIKAT_PRAVILA = "pravopis.pravilo"
+DATOTEKA_PRAVILA = Path(__file__).resolve().parent / "data" / "pravopis-pravila.jsonl"
+
 
 @dataclass(frozen=True)
 class Nalaz:
@@ -96,6 +105,62 @@ def uvezi(*, actor: str = "user:slobodan", putanja: Path | None = None) -> dict[
     audit.record("content.recnik.loaded", details={"izvor": IZVOR, "actor": actor, **broj})
     _zabranjeni.cache_clear()
     return broj
+
+
+# ----------------------------------------------------- PRAVILA (opšti deo)
+
+def uvezi_pravila(*, actor: str = "user:slobodan", putanja: Path | None = None) -> dict[str, int]:
+    """Upisuje PRAVILA Pravopisa u `KnowledgeSource`/`KnowledgeFact`. Vraća prebrojano.
+
+    Isti obrazac kao `uvezi` (Rečnik): ponovni uvoz **briše i upisuje ponovo** u
+    jednoj transakciji — knjiga se ne menja, pa spajanje red po red ne bi ništa
+    dobilo. Pravilo bez broja tačke („Имена и њихове норме" — zaglavlje nema broj)
+    nosi `tacka=None`; nalazi se po sekciji, ne po broju (ADR-0033: broj se ne
+    izmišlja).
+    """
+    putanja = putanja or DATOTEKA_PRAVILA
+    redovi = [json.loads(r) for r in putanja.read_text(encoding="utf-8").splitlines() if r]
+    with transaction.atomic():
+        izvor, _ = KnowledgeSource.objects.get_or_create(
+            persona=None, title=IZVOR_PRAVILA,
+            defaults={"source_kind": E.SourceKind.FIRST_PARTY_USER_INPUT.value,
+                      "trust_score": 1.0, "uri": "", "is_active": True})
+        obrisano = KnowledgeFact.objects.filter(
+            source=izvor, predicate=PREDIKAT_PRAVILA).delete()[0]
+        KnowledgeFact.objects.bulk_create([
+            KnowledgeFact(
+                source=izvor, persona=None,
+                subject=((f"Pravopis т.{r['tacka']} — {r['sekcija']}" if r["tacka"]
+                          else f"Pravopis — {r['sekcija']}")[:220]),
+                predicate=PREDIKAT_PRAVILA, provenance=E.Provenance.USER_PROVIDED.value,
+                confidence=1.0,
+                object_json={"tacka": r["tacka"], "sekcija": r["sekcija"],
+                             "strana_od": r["strana_od"], "strana_do": r["strana_do"],
+                             "tekst": r["tekst"]})
+            for r in redovi
+        ], batch_size=1000)
+        if redovi:
+            izvor.ingested_at = timezone.now()
+            izvor.save(update_fields=["ingested_at"])
+    broj = {"upisano": len(redovi), "obrisano": obrisano,
+            "sa brojem tačke": sum(1 for r in redovi if r["tacka"])}
+    audit.record("content.pravila.loaded", details={"izvor": IZVOR_PRAVILA, "actor": actor, **broj})
+    return broj
+
+
+def nadji_pravilo(tacka: int) -> dict | None:
+    """Tekst pravila za dati broj tačke, ili None ako nije uvezeno/nema ga.
+
+    Ovo je glavna vrednost: Rečnik uz odrednicu daje „т. N", a ovde se N čita.
+    """
+    izvor = KnowledgeSource.objects.filter(
+        persona__isnull=True, title=IZVOR_PRAVILA).first()
+    if izvor is None:
+        return None
+    f = (KnowledgeFact.objects
+         .filter(source=izvor, predicate=PREDIKAT_PRAVILA, object_json__tacka=tacka)
+         .first())
+    return f.object_json if f else None
 
 
 # --------------------------------------------------------------- traženje
