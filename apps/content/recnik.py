@@ -125,9 +125,13 @@ def uvezi_pravila(*, actor: str = "user:slobodan", putanja: Path | None = None) 
             persona=None, title=IZVOR_PRAVILA,
             defaults={"source_kind": E.SourceKind.FIRST_PARTY_USER_INPUT.value,
                       "trust_score": 1.0, "uri": "", "is_active": True})
-        obrisano = KnowledgeFact.objects.filter(
-            source=izvor, predicate=PREDIKAT_PRAVILA).delete()[0]
-        KnowledgeFact.objects.bulk_create([
+        # „obrisano" je broj obrisanih PRAVILA. Ne čitamo `.delete()[0]` jer taj
+        # broj uključuje kaskadno obrisane KnowledgeEmbedding (ADR-0120) — isti
+        # obrazac kao u `vestine.uvezi`. Prebrojimo pravila pre brisanja.
+        stare = KnowledgeFact.objects.filter(source=izvor, predicate=PREDIKAT_PRAVILA)
+        obrisano = stare.count()
+        stare.delete()
+        napravljene = KnowledgeFact.objects.bulk_create([
             KnowledgeFact(
                 source=izvor, persona=None,
                 subject=((f"Pravopis т.{r['tacka']} — {r['sekcija']}" if r["tacka"]
@@ -142,9 +146,15 @@ def uvezi_pravila(*, actor: str = "user:slobodan", putanja: Path | None = None) 
         if redovi:
             izvor.ingested_at = timezone.now()
             izvor.save(update_fields=["ingested_at"])
+    # ADR-0120 — van transakcije (kao `vestine.uvezi`): pravila su upisana, a
+    # poziv modela je spor i best-effort. Ako model nije dostupan, uvoz svejedno
+    # uspeva; vektori se dopune komandom `embed_pravila`.
+    embedovano = embeduj_pravila(napravljene)
     broj = {"upisano": len(redovi), "obrisano": obrisano,
             "sa brojem tačke": sum(1 for r in redovi if r["tacka"])}
-    audit.record("content.pravila.loaded", details={"izvor": IZVOR_PRAVILA, "actor": actor, **broj})
+    audit.record("content.pravila.loaded",
+                 details={"izvor": IZVOR_PRAVILA, "actor": actor, **broj,
+                          "embedovano": embedovano["upisano"]})
     return broj
 
 
@@ -161,6 +171,90 @@ def nadji_pravilo(tacka: int) -> dict | None:
          .filter(source=izvor, predicate=PREDIKAT_PRAVILA, object_json__tacka=tacka)
          .first())
     return f.object_json if f else None
+
+
+# ------------------------------------- PRAVILA: semantička pretraga (ADR-0120)
+
+def _tekst_pravila_za_embedding(subject: str, object_json: dict) -> str:
+    """Tekst pravila za semantički vektor: odeljak + telo pravila.
+
+    Isti oblik koristi i uvoz i pretraga — da vektor uvek predstavlja isti
+    sadržaj, pa je broj iz `pravila_eval` jednak ponašanju u pogonu (kao
+    `vestine.tekst_za_embedding`). `subject` se ne dodaje: izveden je
+    („Pravopis т.N — odeljak"), a odeljak je već unutra. Dugačka pravila model
+    seče na ~512 tokena; da li to smeta — meri `pravila_eval` (ADR-0033).
+    """
+    oj = object_json or {}
+    sekcija = str(oj.get("sekcija") or "")
+    tekst = str(oj.get("tekst") or "")
+    delovi = [sekcija, tekst]
+    return "\n".join(d for d in delovi if d).strip()
+
+
+def embeduj_pravila(facts, *, model_key: str | None = None) -> dict[str, int]:
+    """Napravi/osveži `KnowledgeEmbedding` za data pravila (ADR-0120).
+
+    Tanak omotač nad `znanje_vektori.embeduj` — isti model i tabela kao veštine.
+    Best-effort: ako model nije dostupan (offline), ne ruši uvoz (ADR-0009).
+    """
+    from apps.memory import znanje_vektori
+
+    return znanje_vektori.embeduj(
+        facts, text_fn=_tekst_pravila_za_embedding, model_key=model_key)
+
+
+def _rangiraj_pravila(upit: str) -> list[KnowledgeFact]:
+    """Sva pravila poređana po smislu za dati upit (ADR-0120).
+
+    Semantički (kosinusna sličnost) kad ima upita i modela; inače leksički, po
+    preklapanju korena reči u odeljku i telu — da pretraga radi i bez modela
+    (ADR-0009). Pravila bez vektora (još neembedovana) idu na kraj, da ne
+    ispadnu iz rezultata. Isti obrazac kao `context._rangiraj_vestine`.
+    """
+    from apps.memory import embeddings, znanje_vektori
+
+    base = list(
+        KnowledgeFact.objects
+        .filter(persona__isnull=True, predicate=PREDIKAT_PRAVILA,
+                source__is_active=True)
+        .select_related("source"))
+    if upit.strip():
+        sem = znanje_vektori.rang_fact_ids(upit, [f.id for f in base])
+        if sem is not None:
+            by_id = {f.id: f for f in base}
+            poredak = [by_id[fid] for fid, _ in sem if fid in by_id]
+            vidjeni = {fid for fid, _ in sem}
+            poredak += [f for fid, f in by_id.items() if fid not in vidjeni]
+            return poredak
+    kw = embeddings.stems(upit) if upit.strip() else set()
+
+    def kljuc(f: KnowledgeFact):
+        oj = f.object_json or {}
+        tekst = f"{oj.get('sekcija', '')} {oj.get('tekst', '')}"
+        pogodak = len(kw & embeddings.stems(tekst)) if kw else 0
+        return (-pogodak, f.subject)
+
+    return sorted(base, key=kljuc)
+
+
+def trazi_pravila(upit: str, *, granica: int = 5) -> list[dict]:
+    """Pravila najbliža upitu po smislu (ADR-0120). Prvih `granica`.
+
+    Glavna nova vrednost: pravilo se nalazi na običnom srpskom, bez znanja
+    broja tačke. Vraća po jedan red sa odeljkom, brojem tačke, stranama i telom
+    — isto što vraća `nadji_pravilo`, uz `subject` radi prikaza. Prazan upit
+    vraća prazno (ne ceo Pravopis).
+    """
+    if not upit.strip():
+        return []
+    poredak = _rangiraj_pravila(upit)[:max(0, granica)]
+    return [{"subject": f.subject, **(f.object_json or {})} for f in poredak]
+
+
+def pravila_dostupna() -> bool:
+    """Jesu li pravila uopšte uvezena (ADR-0033: prazno i neuvezeno nisu isto)."""
+    return KnowledgeFact.objects.filter(
+        persona__isnull=True, predicate=PREDIKAT_PRAVILA).exists()
 
 
 # --------------------------------------------------------------- traženje

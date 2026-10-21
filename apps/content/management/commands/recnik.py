@@ -4,6 +4,7 @@
     manage.py recnik --nadji avlija
     manage.py recnik --proveri "Stigao je u havliju."
     manage.py recnik --stanje
+    manage.py recnik --trazi "veliko slovo u imenima institucija"
 """
 
 from __future__ import annotations
@@ -28,15 +29,20 @@ class Command(BaseCommand):
                             help="Uvezi PRAVILA Pravopisa (opšti deo, #6).")
         parser.add_argument("--pravilo", type=int, default=0,
                             help="Pročitaj pravilo po broju tačke.")
+        parser.add_argument("--trazi", default="",
+                            help="Nađi pravila po smislu (semantički, ADR-0120).")
+        parser.add_argument("--granica", type=int, default=5,
+                            help="Koliko pravila vratiti uz --trazi (podrazumevano 5).")
         parser.add_argument("--zasto", default="")
         parser.add_argument("--actor", default="user:slobodan")
 
     def handle(self, *args, uvezi, nadji, proveri, stanje, utisaj, uvezi_pravila,
-               pravilo, zasto, actor, **opts):
-        if sum(map(bool, (uvezi, nadji, proveri, stanje, utisaj, uvezi_pravila, pravilo))) != 1:
+               pravilo, trazi, granica, zasto, actor, **opts):
+        if sum(map(bool, (uvezi, nadji, proveri, stanje, utisaj, uvezi_pravila,
+                          pravilo, trazi))) != 1:
             raise CommandError(
                 "Treba tačno jedno: --uvezi, --nadji, --proveri, --stanje, --utisaj, "
-                "--uvezi-pravila, --pravilo.")
+                "--uvezi-pravila, --pravilo, --trazi.")
         if uvezi:
             if not actor.startswith("user:"):
                 raise CommandError("Rečnik uvozi čovek; `--actor` počinje sa `user:`.")
@@ -51,6 +57,8 @@ class Command(BaseCommand):
             return self._uvezi_pravila(actor)
         if pravilo:
             return self._pravilo(pravilo)
+        if trazi:
+            return self._trazi(trazi, granica)
         if stanje:
             return self._stanje()
         if nadji:
@@ -84,6 +92,20 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"т.{p['tacka']} — {p['sekcija']} (str. {p['strana_od']}–{p['strana_do']})"))
         self.stdout.write(p["tekst"])
+
+    def _trazi(self, upit: str, granica: int) -> None:
+        if not recnik.pravila_dostupna():
+            raise CommandError("Pravila nisu uvezena (`--uvezi-pravila`).")
+        pogotci = recnik.trazi_pravila(upit, granica=granica)
+        if not pogotci:
+            self.stdout.write(self.style.WARNING(f"{upit!r}: nema pravila."))
+            return
+        for r in pogotci:
+            broj = f"т.{r['tacka']}" if r.get("tacka") else "—"
+            self.stdout.write(self.style.SUCCESS(
+                f"{broj} — {r['sekcija']} (str. {r['strana_od']}–{r['strana_do']})"))
+            telo = r["tekst"]
+            self.stdout.write(f"    {telo[:300]}{'…' if len(telo) > 300 else ''}")
 
     def _stanje(self) -> None:
         izvor = KnowledgeSource.objects.filter(persona__isnull=True,

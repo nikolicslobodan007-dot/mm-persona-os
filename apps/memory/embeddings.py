@@ -118,12 +118,13 @@ def vestina_model_key() -> str:
     return getattr(settings, "VESTINA_EMBEDDING_MODEL", "minilm-l12-v2")
 
 
-def embed_vestina(text: str, *, model: str | None = None) -> list[float]:
-    """Vektor veštine semantičkim modelom (ADR-0120).
+def embed_semanticki(text: str, *, model: str | None = None) -> list[float]:
+    """Vektor teksta semantičkim modelom (ADR-0120).
 
-    Model je simetričan (paraphrase-multilingual): upit i veština se kodiraju
-    isto, bez prefiksa. Tekst ide sirov (model sam vodi računa o velikim
-    slovima i dijakritici) — NE kroz `normalize`, koji je za hash-model.
+    Model je simetričan (paraphrase-multilingual): upit i sadržaj (veština,
+    pravilo) se kodiraju isto, bez prefiksa. Tekst ide sirov (model sam vodi
+    računa o velikim slovima i dijakritici) — NE kroz `normalize`, koji je za
+    hash-model. Isti poziv koriste i veštine i pravila Pravopisa.
     """
     key = model or vestina_model_key()
     vec = next(iter(_fastembed(key).embed([text])))

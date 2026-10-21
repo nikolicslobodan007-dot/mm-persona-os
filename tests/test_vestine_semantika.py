@@ -1,7 +1,7 @@
 """Testovi semantičkog rangiranja veština (ADR-0120).
 
 Prave model NE pozivamo — fastembed/ONNX nije u gejt-slici i HuggingFace je
-zatvoren u pesku. Zato se `embeddings.embed_vestina` lažira determinističkim
+zatvoren u pesku. Zato se `embeddings.embed_semanticki` lažira determinističkim
 vektorom: tako se meri UGOVOR (embedovanje pri uvozu, text_hash preskok,
 kosinusni poredak, leksički fallback, zadržavanje neembedovane veštine), a ne
 sam model. Dimenzija vektora je `settings.VESTINA_EMBEDDING_DIM`.
@@ -51,7 +51,7 @@ def _uvezi(vestine_, naslov="Semantika izvor"):
 @requires_db
 @pytest.mark.django_db
 def test_uvoz_embeduje_vestine(db, monkeypatch):
-    monkeypatch.setattr(embeddings, "embed_vestina", _laz_vektor)
+    monkeypatch.setattr(embeddings, "embed_semanticki", _laz_vektor)
     _uvezi([_v("vestina-alfa", "alfa"), _v("vestina-beta", "beta")])
     assert KnowledgeEmbedding.objects.count() == 2
     mk = embeddings.vestina_model_key()
@@ -65,7 +65,7 @@ def test_uvoz_bez_modela_ne_pada(db, monkeypatch):
     def pukni(text, *, model=None):
         raise RuntimeError("model nedostupan (offline)")
 
-    monkeypatch.setattr(embeddings, "embed_vestina", pukni)
+    monkeypatch.setattr(embeddings, "embed_semanticki", pukni)
     broj = _uvezi([_v("vestina-alfa", "alfa")])
     assert broj["upisano"] == 1
     assert KnowledgeFact.objects.filter(predicate=PREDIKAT).count() == 1
@@ -81,7 +81,7 @@ def test_text_hash_preskace_ponovno_racunanje(db, monkeypatch):
         brojac["n"] += 1
         return _laz_vektor(text)
 
-    monkeypatch.setattr(embeddings, "embed_vestina", broji)
+    monkeypatch.setattr(embeddings, "embed_semanticki", broji)
     _uvezi([_v("vestina-alfa", "alfa")])
     assert brojac["n"] == 1
     facts = list(KnowledgeFact.objects.filter(predicate=PREDIKAT))
@@ -93,7 +93,7 @@ def test_text_hash_preskace_ponovno_racunanje(db, monkeypatch):
 @requires_db
 @pytest.mark.django_db
 def test_semanticki_poredak_dize_pravu_vestinu(db, monkeypatch):
-    monkeypatch.setattr(embeddings, "embed_vestina", _laz_vektor)
+    monkeypatch.setattr(embeddings, "embed_semanticki", _laz_vektor)
     _uvezi([_v("vestina-alfa", "alfa"), _v("vestina-beta", "beta"),
             _v("vestina-gama", "gama")])
     poredak = context._rangiraj_vestine(None, "treba mi zadatak beta", "")
@@ -107,12 +107,12 @@ def test_bez_vektora_pada_na_leksicko(db, monkeypatch):
     def pukni(text, *, model=None):
         raise RuntimeError("offline")
 
-    monkeypatch.setattr(embeddings, "embed_vestina", pukni)
+    monkeypatch.setattr(embeddings, "embed_semanticki", pukni)
     _uvezi([_v("vestina-alfa", "alfa"), _v("vestina-beta", "beta")])
     assert KnowledgeEmbedding.objects.count() == 0
     # model sad „radi" za upit, ali baza nema vektore → _semanticki_rang vrati
     # None, pa rangiranje padne na leksičko i svejedno vrati sve veštine.
-    monkeypatch.setattr(embeddings, "embed_vestina", _laz_vektor)
+    monkeypatch.setattr(embeddings, "embed_semanticki", _laz_vektor)
     poredak = context._rangiraj_vestine(None, "zadatak alfa", "")
     assert context._semanticki_rang("zadatak alfa", poredak) is None
     assert {f.subject for f in poredak} == {"vestina-alfa", "vestina-beta"}
@@ -121,7 +121,7 @@ def test_bez_vektora_pada_na_leksicko(db, monkeypatch):
 @requires_db
 @pytest.mark.django_db
 def test_neembedovana_vestina_ostaje_u_poretku(db, monkeypatch):
-    monkeypatch.setattr(embeddings, "embed_vestina", _laz_vektor)
+    monkeypatch.setattr(embeddings, "embed_semanticki", _laz_vektor)
     _uvezi([_v("vestina-alfa", "alfa"), _v("vestina-beta", "beta")])
     # treća veština bez vektora (kao sveže uvezena pre dopune)
     izvor = KnowledgeFact.objects.filter(predicate=PREDIKAT).first().source

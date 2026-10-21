@@ -235,7 +235,7 @@ def _semanticki_rang(query: str, base: list):
 
     from apps.memory.models import KnowledgeEmbedding
     try:
-        qv = embeddings.embed_vestina(query)
+        qv = embeddings.embed_semanticki(query)
     except Exception as e:  # noqa: BLE001 — model nedostupan: leksički fallback
         log.warning("semantički rang veština pao, leksički fallback: %s", e)
         return None

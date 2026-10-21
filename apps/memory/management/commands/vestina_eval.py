@@ -64,7 +64,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, k, **opts):
         try:
-            embeddings.embed_vestina("provera dostupnosti modela")
+            embeddings.embed_semanticki("provera dostupnosti modela")
             put = f"semantički ({embeddings.vestina_model_key()})"
         except Exception:  # noqa: BLE001 — merenje radi i bez modela
             put = "LEKSIČKI fallback (model nedostupan — vektori nisu tu)"

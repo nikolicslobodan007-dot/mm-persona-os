@@ -41,8 +41,6 @@ uveze po drugi put.
 
 from __future__ import annotations
 
-import hashlib
-import logging
 from dataclasses import dataclass
 
 from django.db import transaction
@@ -52,7 +50,6 @@ from api import audit
 from apps.memory.models import KnowledgeFact, KnowledgeSource
 from common import enums as E
 
-log = logging.getLogger(__name__)
 
 PREDIKAT = "vestina.postupak"
 
@@ -178,48 +175,15 @@ def tekst_za_embedding(subject: str, object_json: dict) -> str:
 def embeduj(facts, *, model_key: str | None = None) -> dict[str, int]:
     """Napravi/osveži `KnowledgeEmbedding` za date veštine (ADR-0120).
 
-    Best-effort: ako semantički model nije dostupan (fastembed nije instaliran
-    ili model nije preuzet — offline), NE diže grešku, nego staje i vraća
-    koliko je stiglo. Uvoz veština ne sme da padne zbog modela (ADR-0009);
-    rangiranje pada na leksičko dok vektora nema, a `embed_vestine` ih dopuni
-    kasnije.
-
-    `text_hash` (Memory v0.1 §6): red sa istim modelom i istim tekstom se ne
-    računa ponovo — ponovni `embed_vestine` nad nepromenjenim korpusom je jeftin.
+    Tanak omotač nad `znanje_vektori.embeduj` (zajednički sloj za veštine i
+    pravila): prosleđuje `tekst_za_embedding` kao izbor sadržaja veštine (ime
+    + čemu služi + koraci). Best-effort i dedup po `text_hash` su u zajedničkom
+    modulu — ovde ostaje samo ŠTA se od veštine embeduje.
     """
-    from apps.memory import embeddings
-    from apps.memory.models import KnowledgeEmbedding
+    from apps.memory import znanje_vektori
 
-    facts = list(facts)
-    if not facts:
-        return {"upisano": 0, "preskoceno": 0}
-    mk = model_key or embeddings.vestina_model_key()
-    postojeci = {
-        e.fact_id: e.text_hash
-        for e in KnowledgeEmbedding.objects.filter(
-            model_key=mk, fact_id__in=[f.id for f in facts]
-        ).only("fact_id", "text_hash")
-    }
-    upisano = 0
-    preskoceno = 0
-    for i, f in enumerate(facts):
-        tekst = tekst_za_embedding(f.subject, f.object_json or {})
-        h = hashlib.sha256(f"{mk}\x00{tekst}".encode()).hexdigest()
-        if postojeci.get(f.id) == h:
-            preskoceno += 1
-            continue
-        try:
-            vec = embeddings.embed_vestina(tekst, model=mk)
-        except Exception as e:  # noqa: BLE001 — model nedostupan: ne rušimo uvoz
-            log.warning("embedovanje veština stalo kod '%s' (model nedostupan): %s",
-                        f.subject, e)
-            return {"upisano": upisano,
-                    "preskoceno": preskoceno + (len(facts) - i)}
-        KnowledgeEmbedding.objects.update_or_create(
-            fact=f, model_key=mk,
-            defaults={"embedding": vec, "dimensions": len(vec), "text_hash": h})
-        upisano += 1
-    return {"upisano": upisano, "preskoceno": preskoceno}
+    return znanje_vektori.embeduj(
+        facts, text_fn=tekst_za_embedding, model_key=model_key)
 
 
 def spisak(*, izvor: str = "") -> list[dict]:

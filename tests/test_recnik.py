@@ -262,3 +262,36 @@ def test_uvoz_pravila_nad_isporucenom_datotekom(db):
     # idempotentno: ponovni uvoz briše i upiše isto
     br2 = recnik.uvezi_pravila(actor="user:qa")
     assert br2["upisano"] == br["upisano"] and br2["obrisano"] == br["upisano"]
+
+
+@requires_db
+@pytest.mark.django_db
+def test_semanticka_pretraga_pravila_nad_isporucenom(db):
+    """ADR-0120: semantička pretraga nad PRAVIM pravilima (isporučena .jsonl).
+
+    Uvoz embeduje pravila; `trazi_pravila` na običan srpski upit (bez broja
+    tačke) vraća pravilo iz prave teme. Kad je model dostupan (gate ima pečen
+    MiniLM), proverava se i da su vektori stvarno upisani — da se pokvareno
+    embedovanje uhvati, a ne da test tiho padne na leksičko (ADR-0009)."""
+    from apps.memory import embeddings
+    from apps.memory.models import KnowledgeEmbedding
+
+    recnik.uvezi_pravila(actor="user:qa")
+
+    pog = recnik.trazi_pravila("kako se pišu skraćenice", granica=5)
+    assert pog, "pretraga nije vratila nijedno pravilo"
+    tacke = {r.get("tacka") for r in pog}
+    assert tacke & set(range(224, 230)), f"skraćenice nisu u vrhu 5: {tacke}"
+
+    # prazan upit ne vraća ceo Pravopis
+    assert recnik.trazi_pravila("   ") == []
+
+    # kad model radi, vektori moraju biti upisani (ne samo leksički fallback)
+    try:
+        embeddings.embed_semanticki("provera modela")
+        model_ok = True
+    except Exception:  # noqa: BLE001 — offline: sistem radi i bez modela
+        model_ok = False
+    if model_ok:
+        n = KnowledgeEmbedding.objects.filter(fact__predicate="pravopis.pravilo").count()
+        assert n >= 220, f"model radi ali vektori nisu upisani: {n}"
