@@ -50,7 +50,6 @@ from api import audit
 from apps.memory.models import KnowledgeFact, KnowledgeSource
 from common import enums as E
 
-
 PREDIKAT = "vestina.postupak"
 
 #: ADR-0095 — polja koja čovek donosi pri SVAKOM uvozu i koja se zato
