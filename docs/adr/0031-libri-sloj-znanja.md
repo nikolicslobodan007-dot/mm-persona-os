@@ -1,6 +1,6 @@
 # ADR-0031 — Libri: sloj znanja (Veritas i biblioteka) u Persona OS-u
 
-- **Status:** predložen (čeka odluku o jezgru — vidi „Uslov" na kraju)
+- **Status:** prihvaćen (22.10.2026.) — uslov o jezgru ispunjen (ADR-0122)
 - **Datum:** 24.09.2026.
 - **Prethodi:** ADR-0006 (memorija), ADR-0021 (plan sa checkpointima), ADR-0020 (opsezi memorije)
 - **Izvori:** `Veritas — Definicija i sistemski prompt v1.0` (27.07.2026), Libero Libri —
@@ -98,9 +98,11 @@ kvar koji se plaća kasnije.
 - Zlatni skup i `memory_eval` dobijaju pitanja nad dokumentima, ne samo nad memorijom
   persone — inače se ne zna da li je pretraga po strani i sekciji bolja ili gora.
 
-## Uslov
+## Uslov — ispunjen (ADR-0122, 22.10.2026.)
 
-Ovaj ADR važi samo ako je **Persona OS jezgro**, a Libero Libri domen iznad njega.
-Modul 21 Libero Librija bira TypeScript/NestJS/BullMQ, a PickStar Volume 20 bira
-NestJS/FastAPI/Temporal — tri steka za jednog čoveka. Dok ta odluka nije doneta i
-zapisana, ovaj ADR ostaje predlog i po njemu se ne piše kod.
+Ovaj ADR je važio samo ako je **Persona OS jezgro**, a Libero Libri domen iznad
+njega (Modul 21 Libero Librija bira TypeScript/NestJS/BullMQ, PickStar Volume 20
+NestJS/FastAPI/Temporal — tri steka za jednog čoveka). Odluka je doneta i
+zapisana: **ADR-0122 — Persona OS je jezgro, domeni su iznad njega.** Uslov je
+ispunjen, pa ADR-0031 prelazi u „prihvaćen" i po njemu se može pisati kod
+(`apps/libri`).
