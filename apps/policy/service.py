@@ -616,8 +616,12 @@ def granting_ceiling(actor: str, capability: str, scope: str = "") -> E.TrustLev
     ne pravi podređenog sa `L2`, niti sebi diže nivo preko sebe.
 
     Čovek (`user:…`) je koren: samo tu poverenje ulazi u sistem, pa je bez granice
-    do najvišeg dodeljivog nivoa. Ostali oblici pozivaoca ostaju kako su bili —
-    granica je namerno uža od „proveri svakog" (obrazloženje u ADR-0037 §4).
+    do najvišeg dodeljivog nivoa.
+
+    ADR-0121 — agentu je (za sada) oduzeta i ta uža moć: dok mu se rad ne izmeri,
+    `agent:` pozivalac uopšte ne dodeljuje poverenje (podiže se
+    `AGENT_GRANTING_DISABLED`). Nepostojeći davalac i dalje prvo daje
+    `UNKNOWN_GRANTOR`.
     """
     if not actor.startswith("agent:"):
         return None
@@ -625,7 +629,12 @@ def granting_ceiling(actor: str, capability: str, scope: str = "") -> E.TrustLev
     if davalac is None:
         raise PolicyError("UNKNOWN_GRANTOR",
                           f"Pozivalac {actor!r} nije agent koji postoji.")
-    return trust_for(davalac, capability, scope)
+    raise PolicyError(
+        "AGENT_GRANTING_DISABLED",
+        f"{actor} ne dodeljuje poverenje — ta moć je oduzeta agentima dok im se "
+        "rad ne izmeri (ADR-0121). Poverenje u sistem unosi čovek.",
+        {"grantor": actor, "capability": capability, "scope": scope or None},
+    )
 
 
 def change_trust(persona: Persona, capability: str, level: E.TrustLevel, *, actor: str,

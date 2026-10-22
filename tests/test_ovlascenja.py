@@ -108,35 +108,39 @@ class TestGranicaDavaoca:
         assert policy.trust_map(mila)["code.write"] == E.TrustLevel.L2
 
     def test_agent_ne_daje_iznad_sebe(self, mila, sef):
+        """ADR-0121: agentu je oduzeta moć da dodeljuje — ni preko svog nivoa."""
         _daj(sef, "code.write", E.TrustLevel.L1)
         with pytest.raises(policy.PolicyError) as e:
             _daj(mila, "code.write", E.TrustLevel.L2, actor=f"agent:{sef.public_id}")
-        assert e.value.code == "GRANTOR_TOO_LOW"
+        assert e.value.code == "AGENT_GRANTING_DISABLED"
         assert policy.trust_map(mila) == {}
 
-    def test_agent_daje_do_svog_nivoa(self, mila, sef):
+    def test_agent_ne_daje_ni_do_svog_nivoa(self, mila, sef):
+        """Ranije je agent smeo do svog nivoa; po ADR-0121 ne sme ni to."""
         _daj(sef, "code.write", E.TrustLevel.L1)
-        _daj(mila, "code.write", E.TrustLevel.L1, actor=f"agent:{sef.public_id}")
-        assert policy.trust_map(mila)["code.write"] == E.TrustLevel.L1
+        with pytest.raises(policy.PolicyError) as e:
+            _daj(mila, "code.write", E.TrustLevel.L1, actor=f"agent:{sef.public_id}")
+        assert e.value.code == "AGENT_GRANTING_DISABLED"
+        assert policy.trust_map(mila) == {}
 
     def test_agent_bez_poverenja_ne_daje_nista(self, mila, sef):
         with pytest.raises(policy.PolicyError) as e:
             _daj(mila, "code.write", E.TrustLevel.L1, actor=f"agent:{sef.public_id}")
-        assert e.value.code == "GRANTOR_TOO_LOW"
+        assert e.value.code == "AGENT_GRANTING_DISABLED"
 
     def test_agent_ne_podize_sebe(self, sef):
         _daj(sef, "code.write", E.TrustLevel.L1)
-        with pytest.raises(policy.PolicyError):
+        with pytest.raises(policy.PolicyError) as e:
             _daj(sef, "code.write", E.TrustLevel.L2, actor=f"agent:{sef.public_id}")
+        assert e.value.code == "AGENT_GRANTING_DISABLED"
 
-    def test_granica_se_meri_po_opsegu(self, mila, sef):
-        """Šef sa L2 u `apps/content` i L0 drugde ne pravi nikoga izvan svog dela."""
+    def test_zabrana_vazi_bez_obzira_na_opseg(self, mila, sef):
+        """Čak i kad šef ima L2 u svom delu, ne može da opremi drugog — ADR-0121."""
         _daj(sef, "code.write", E.TrustLevel.L2, opseg="apps/content")
-        _daj(mila, "code.write", E.TrustLevel.L1, opseg="apps/content",
-             actor=f"agent:{sef.public_id}")
-        with pytest.raises(policy.PolicyError):
-            _daj(mila, "code.write", E.TrustLevel.L1, opseg="apps/channels",
+        with pytest.raises(policy.PolicyError) as e:
+            _daj(mila, "code.write", E.TrustLevel.L1, opseg="apps/content",
                  actor=f"agent:{sef.public_id}")
+        assert e.value.code == "AGENT_GRANTING_DISABLED"
 
     def test_nepostojeci_davalac(self, mila):
         with pytest.raises(policy.PolicyError) as e:
