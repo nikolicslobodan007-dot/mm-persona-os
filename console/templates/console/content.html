@@ -19,7 +19,7 @@
     {% for n in i.pravopis.nalazi %}
     <div>„{{ n.oblik }}" — {{ n.tekst }}{% if n.tacke %} (Pravopis, t. {{ n.tacke|join:", " }}){% endif %}</div>
     {% if n.pravilo %}
-    <div class="small muted" style="margin:2px 0 6px 14px">
+    <div class="small muted">
       Pravilo т.{{ n.pravilo.tacka }} — {{ n.pravilo.sekcija }}{% if n.pravilo.nacin == "po smislu" %} <span class="pill">po smislu</span>{% endif %}<br>
       {{ n.pravilo.izvod }}
     </div>
