@@ -64,6 +64,8 @@ class TestAppOwnership:
             "MemoryContradiction", "MemoryContextPack", "KnowledgeSource",
             "KnowledgeFact", "KnowledgeEmbedding",
         },
+        # ADR-0031 — sloj znanja nad dokumentima (trinaesti app, Canon §1 +libri).
+        "libri": {"LibriDocument", "Block"},
         "social_graph": {"Actor", "Relationship", "RelationshipEvent"},
         # ADR-0014 dodaje EditorialLesson.
         "content": {"ContentIdea", "ContentItem", "ContentAsset", "Publication",
@@ -103,8 +105,9 @@ class TestAppOwnership:
         found = {m.__name__ for m in apps.get_app_config(app_label).get_models()}
         assert found == self.OWNERSHIP[app_label]
 
-    def test_svih_dvanaest_app_ova_postoji(self):
-        assert len(self.OWNERSHIP) == 12
+    def test_svih_trinaest_app_ova_postoji(self):
+        # ADR-0031 — 12 iz Canon §1 + libri.
+        assert len(self.OWNERSHIP) == 13
 
     def test_world_event_je_u_behaviour_a_ne_u_orchestration(self):
         """Canon §1 — događaj menja stanje; plan je posledica stanja."""

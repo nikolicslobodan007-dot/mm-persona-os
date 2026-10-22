@@ -94,6 +94,9 @@ kvar koji se plaća kasnije.
 
 - Nov app `apps/libri` (blokovi, entiteti, odnosi, dosije) uz postojeći `apps/memory`,
   ne umesto njega.
+- **Canon §1 amandman:** ovim se broj app-ova proširuje sa 12 na 13 (`+libri`);
+  `CANON_APPS` (`tools/canon_lint.py`) i `PERSONA_OS_APPS` (settings) dobijaju
+  `libri`. Tekst Canona (§1) anotira se pri sledećem Canon bump-u.
 - `manage.py libri uvezi --iz <putanja|mejl|url>` i `libri dosije --izvor <id>`.
 - Zlatni skup i `memory_eval` dobijaju pitanja nad dokumentima, ne samo nad memorijom
   persone — inače se ne zna da li je pretraga po strani i sekciji bolja ili gora.
