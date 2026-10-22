@@ -295,3 +295,32 @@ def test_semanticka_pretraga_pravila_nad_isporucenom(db):
     if model_ok:
         n = KnowledgeEmbedding.objects.filter(fact__predicate="pravopis.pravilo").count()
         assert n >= 220, f"model radi ali vektori nisu upisani: {n}"
+
+
+@requires_db
+@pytest.mark.django_db
+def test_nalaz_nosi_pravilo_tacno_i_po_smislu(db):
+    """ADR-0120/#7: uz Rečnikov nalaz ide i pravilo — „tačno" (po broju tačke)
+    kad odrednica ima tačku u opsegu, inače „po smislu" (semantički). Nad
+    ISPORUČENIM Rečnikom i pravilima (ADR-0055)."""
+    from apps.content.recnik import Nalaz
+
+    recnik.uvezi(actor="user:qa")          # isporučeni Rečnik (8797 odrednica)
+    recnik.uvezi_pravila(actor="user:qa")  # isporučena pravila (+ embedding)
+
+    # deterministički „tačno": odrednica „Ajzenhauer" nosi т.113 (u opsegu)
+    z = recnik.nalaz_za_zapis("Potpisao je Ajznxayep.")
+    nal = next((n for n in z["nalazi"] if n.get("pravilo")), None)
+    assert nal is not None, "nijedan nalaz nije dobio pravilo"
+    assert nal["pravilo"]["nacin"] == "tačno"
+    assert nal["pravilo"]["tacka"] == 113
+    assert nal["pravilo"]["izvod"] and nal["pravilo"]["sekcija"]
+    assert recnik.nadji_pravilo(113) is not None
+
+    # semantički „po smislu": nalaz bez tačke → najbliže pravilo po smislu
+    pok = recnik._pravilo_za_nalaz(
+        Nalaz(oblik="x", odrednica="y",
+              tekst="kako se skraćuju reči i izrazi", tacke=()))
+    assert pok is not None and pok["nacin"] == "po smislu"
+    assert isinstance(pok["tacka"], int)
+    assert recnik.nadji_pravilo(pok["tacka"]) is not None

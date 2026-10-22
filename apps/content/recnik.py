@@ -375,19 +375,71 @@ def dostupan() -> bool:
 REC = re.compile(r"[^\W\d_]+", re.UNICODE)
 
 
+#: Koliko znakova tela pravila staje u pokazivač uz nalaz. Ceo tekst (ume i do
+#: 8 strana) se NE čuva na svakom nacrtu — dovlači se po broju tačke
+#: (`nadji_pravilo`) kad zatreba. Izvod je samo da urednik odmah vidi o čemu je.
+IZVOD_PRAVILA = 240
+
+
+def _pokazivac_pravila(tacka: int, nacin: str) -> dict | None:
+    """Mali pokazivač na pravilo: broj tačke, način, odeljak i kratak izvod.
+
+    Vraća None ako pravila nisu uvezena ili tačke nema (ADR-0033: ne izmišlja
+    se pokazivač na nepostojeće pravilo).
+    """
+    p = nadji_pravilo(tacka)
+    if p is None:
+        return None
+    tekst = str(p.get("tekst") or "")
+    izvod = tekst[:IZVOD_PRAVILA].rstrip()
+    if len(tekst) > IZVOD_PRAVILA:
+        izvod += "…"
+    return {"tacka": tacka, "nacin": nacin,
+            "sekcija": p.get("sekcija") or "", "izvod": izvod}
+
+
+def _pravilo_za_nalaz(n: Nalaz) -> dict | None:
+    """Pravilo uz jedan nalaz (ADR-0120/#7): spoj Rečnika i pravila.
+
+    Prvo **deterministički**: prva tačka iz odrednice koja je u opsegu pravila
+    i stvarno postoji → način „tačno". Rečnikove tačke su oblika „105c" (broj +
+    pod-slovo) — uzima se vodeći broj. Ako nijedna ne vodi na pravilo (nema je,
+    van opsega 1–236, OCR šum) → **semantički** najbliže pravilo po smislu
+    teksta odrednice → način „po smislu" (pogodak, obeležen; ne tačno).
+    """
+    for t in n.tacke:
+        m = re.match(r"\d+", t)
+        if m:
+            pok = _pokazivac_pravila(int(m.group()), "tačno")
+            if pok is not None:
+                return pok
+    pog = trazi_pravila(n.tekst or n.odrednica, granica=1)
+    if pog and pog[0].get("tacka"):
+        return _pokazivac_pravila(pog[0]["tacka"], "po smislu")
+    return None
+
+
 def nalaz_za_zapis(tekst: str) -> dict:
     """Nalazi u obliku koji ide na `ContentItem.pravopis`.
 
     `provereno` je tu namerno: prazan spisak i neuvezen rečnik izgledaju isto,
     a nisu isto. Urednik koji vidi „nema primedbi" mora da zna da li je iko
     gledao.
+
+    ADR-0120/#7: uz svaki nalaz ide i `pravilo` (kad se nađe) — Rečnik kaže
+    „ne tako", pravilo kaže „evo šta Pravopis traži i gde". Ne obara nacrt.
     """
     if not dostupan():
         return {"provereno": False, "nalazi": []}
-    return {"provereno": True,
-            "nalazi": [{"oblik": n.oblik, "odrednica": n.odrednica,
-                        "tekst": n.tekst, "tacke": list(n.tacke)}
-                       for n in proveri(tekst)]}
+    nalazi = []
+    for n in proveri(tekst):
+        zapis = {"oblik": n.oblik, "odrednica": n.odrednica,
+                 "tekst": n.tekst, "tacke": list(n.tacke)}
+        pravilo = _pravilo_za_nalaz(n)
+        if pravilo is not None:
+            zapis["pravilo"] = pravilo
+        nalazi.append(zapis)
+    return {"provereno": True, "nalazi": nalazi}
 
 
 def proveri(tekst: str) -> list[Nalaz]:
