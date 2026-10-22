@@ -1,56 +1,50 @@
 {% load static %}<!doctype html>
-<html lang="sr">
+<html lang="sr-Latn">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>Virtual Office · Web Korporacija</title>
-  <link rel="stylesheet" href="{% static 'console/office.css' %}">
-  <script defer src="{% static 'console/office.js' %}"></script>
+  <title>Mission Control · Virtual Office · Web Korporacija</title>
+  <link rel="stylesheet" href="{% static 'console/office-v14a.css' %}">
+  <script defer src="{% static 'console/office-v14a.js' %}"></script>
 </head>
 <body>
-<div class="shell">
-  <aside class="sidebar">
-    <div class="brandmark"><span class="orb">◈</span><span><b>WEB KORPORACIJA</b><small>PERSONA OS</small></span></div>
-    <nav aria-label="Navigacija">
-      <a class="active" href="/console/office">◈ <span>Virtual Office</span></a>
-      <a href="/console/">▤ <span>Mission Control</span></a>
-      <a href="/console/razgovor">◉ <span>Razgovor</span></a>
-      <a href="/console/personas">♧ <span>Agenti</span></a>
-      <a href="/console/org">⌘ <span>Organizacija</span></a>
-      <a href="/console/approvals">✓ <span>Odobrenja</span></a>
-      <a href="/console/incidents">△ <span>Incidenti</span></a>
+<div class="wk-app">
+  <header class="wk-header">
+    <a class="wk-brand" href="/console/" aria-label="Web Korporacija, Mission Control"><span class="wk-building" aria-hidden="true">▥</span><span><strong>webkorporacija.com</strong><small>Mission Control</small></span></a>
+    <nav class="wk-topnav" aria-label="Glavna navigacija">
+      <a class="wk-navitem current" href="/console/office" aria-current="page"><span class="wk-navicon" aria-hidden="true">⌂</span><span>Office</span></a>
+      <a class="wk-navitem" href="/console/personas"><span class="wk-navicon" aria-hidden="true">♙</span><span>Agenti</span></a>
+      <span class="wk-navitem unavailable" title="Pregled svih planova još nije implementiran" aria-disabled="true"><span class="wk-navicon" aria-hidden="true">▤</span><span>Planovi</span></span>
+      <span class="wk-navitem unavailable" title="Zasebna stranica zadataka još nije implementirana" aria-disabled="true"><span class="wk-navicon" aria-hidden="true">☑</span><span>Zadaci</span></span>
+      <a class="wk-navitem" href="/console/content"><span class="wk-navicon" aria-hidden="true">◫</span><span>Sadržaj</span></a>
+      <span class="wk-navitem unavailable" title="Modul Nabavka biće povezan kada bude implementiran" aria-disabled="true"><span class="wk-navicon" aria-hidden="true">▣</span><span>Nabavka</span></span>
+      <a class="wk-navitem" href="/console/"><span class="wk-navicon" aria-hidden="true">♜</span><span>Uprava</span></a>
     </nav>
-    <div class="sidebar-note">READ-ONLY V1.2 · Podaci iz postojećeg Django sistema</div>
-  </aside>
-  <main class="main">
-    <header class="masthead">
-      <div><p class="eyebrow">MISSION CONTROL / DIGITAL HQ</p><h1>Virtual Office</h1>
-      <p class="subhead">Uvid u organizaciju i stvarne aktivnosti AI agenata.</p></div>
-      <div class="headside"><span class="live-dot"></span><span>ZAŠTIĆENI PREGLED</span>
-      <button type="button" id="refresh">Osveži</button></div>
-    </header>
-    <section class="metrics" aria-label="Pregled kompanije">
-      <div class="metric"><small>AGENATA</small><strong id="total">—</strong><span>U Django registru</span></div>
-      <div class="metric"><small>AKTIVNI PLANOVI</small><strong id="plans">—</strong><span>Planovi, ne animacija rada</span></div>
-      <div class="metric"><small>ČEKAJU ODOBRENJE</small><strong id="approvals">—</strong><a href="/console/approvals">Otvori odobrenja ↗</a></div>
-      <div class="metric"><small>OKRUŽENJE</small><strong>V1.2</strong><span>SIMULATION ≠ LIVE</span></div>
+    <div class="wk-utilities"><label for="filter" class="sr-only">Pretraži agente</label><input id="filter" type="search" placeholder="Pretraži agenta…" autocomplete="off"><span class="wk-protected" title="Zaštićeno sesijom i drugim faktorom">● ZAŠTIĆENO</span><button id="toggleAgents" class="wk-mobile-agents" type="button" aria-controls="agentPanel" aria-expanded="false">Agenti</button></div>
+  </header>
+  <div class="wk-statusbar"><div class="wk-breadcrumb"><span class="wk-accent">DIGITAL HQ</span><span class="wk-separator">/</span><strong>Virtual Office</strong><span class="wk-version">V1.4A</span><span class="wk-mode">READ-ONLY</span></div><div class="wk-status-actions"><span class="wk-counter"><b id="total">—</b> agenata</span><span class="wk-counter"><b id="plans">—</b> aktivnih planova</span><span class="wk-counter"><b id="approvals">—</b> odobrenja</span><button id="refresh" type="button" class="wk-button">↻ Osveži</button></div></div>
+  <main class="wk-workspace">
+    <aside id="agentPanel" class="wk-agents" aria-label="Registar agenata">
+      <div class="wk-panel-head"><div><small>REGISTAR ZAPOSLENIH</small><h2>Svi agenti <span id="listCount" class="wk-count">—</span></h2></div><button type="button" id="closeAgents" class="wk-mobile-close" aria-label="Zatvori listu agenata">×</button></div>
+      <div class="wk-agent-filters"><label for="stateFilter" class="sr-only">Filter statusa</label><select id="stateFilter"><option value="">Svi statusi</option><option>READY</option><option>ACTIVE</option><option>PAUSED</option><option>DEGRADED</option><option>SUSPENDED</option><option>DRAFT</option><option>ARCHIVED</option></select><label for="departmentFilter" class="sr-only">Filter odeljenja</label><select id="departmentFilter"><option value="">Sva odeljenja</option></select></div>
+      <div id="agentList" class="wk-agent-list" aria-label="Agenti iz Django registra"></div>
+      <div class="wk-sidebar-foot"><span class="wk-dot"></span> Stvarni identiteti iz Django registra</div>
+    </aside>
+    <section class="wk-center" aria-label="Virtuelna kancelarija">
+      <div class="wk-section-head"><div><p class="wk-overline">VIRTUAL CAMPUS</p><h1>Mapa kancelarija</h1><p id="sectionSub" class="wk-muted">Odeljenja i radna mesta iz postojeće organizacije.</p></div><div class="wk-canvas-tools"><button type="button" id="showAll" class="wk-button secondary">Cela zgrada</button><div class="wk-zoom"><button type="button" id="zoomOut" aria-label="Smanji figurice">−</button><span id="zoomLabel">100%</span><button type="button" id="zoomIn" aria-label="Uvećaj figurice">+</button></div></div></div>
+      <p id="notice" class="wk-notice" role="status">Učitavanje stvarnih podataka…</p>
+      <div id="departments" class="office-campus zoom-1"></div>
+      <div class="wk-scene-footer"><span><span class="wk-dot"></span> READY = spremnost</span><span>SIMULATION / LIVE = okruženje</span><span>Animacija rada samo uz potvrđen RUNNING korak</span></div>
     </section>
-    <section class="content-grid">
-      <div class="canvas-column">
-        <div class="section-bar"><div><p class="eyebrow">VIRTUAL CAMPUS</p><h2>Kancelarije</h2></div>
-        <div class="toolbar"><label class="sr-only" for="filter">Pretraga agenta</label><input id="filter" type="search" placeholder="Pretraži agenta…" autocomplete="off">
-        <button id="all" type="button" class="chip selected">Svi agenti</button></div></div>
-        <div id="notice" class="notice" role="status">Učitavanje podataka iz Django sistema…</div>
-        <div id="departments" class="departments" aria-label="Odeljenja"></div>
-        <div class="footer-note">Figurice su za sada oznake mesta. Pravi soft-3D spriteovi dolaze kao zaseban, proverljiv vizuelni sloj. Status READY sam po sebi ne znači da agent radi.</div>
-      </div>
-      <aside class="details-column" aria-label="Inspektor agenta">
-        <div class="section-bar"><div><p class="eyebrow">AGENT INSPECTOR</p><h2>Dosije rada</h2></div></div>
-        <div id="inspector" class="inspector"><div class="placeholder">Izaberi agenta u kancelariji da vidiš dozvoljene operativne podatke.</div></div>
-        <div class="feed"><div class="feed-title"><h3>Tok aktivnosti</h3><button id="reloadEvents" type="button">↻</button></div><div id="events" class="events"></div></div>
-      </aside>
-    </section>
+    <aside class="wk-inspector" aria-label="Radni dosije agenta">
+      <div class="wk-panel-head"><div><small>AGENT INSPECTOR</small><h2>Operativni dosije</h2></div><button id="collapseInspector" type="button" title="Sakrij / prikaži inspektor" class="wk-iconbutton" aria-expanded="true" aria-controls="inspector">◧</button></div>
+      <div id="inspector" class="wk-inspector-content"><div class="wk-inspector-empty"><div class="wk-empty-ring">◎</div><strong>Izaberi agenta</strong><p>Klikni na figuricu ili ime u levoj listi. Podaci dolaze iz zaključanog V1.2 API ugovora.</p></div></div>
+    </aside>
+    <div class="wk-bottom">
+      <section class="wk-activity" aria-label="Aktivnost kompanije"><div class="wk-panel-head"><div><small>ACTIVITY STREAM</small><h2>Aktivnost kompanije</h2></div><button type="button" id="reloadEvents" class="wk-iconbutton" aria-label="Osveži tok aktivnosti">↻</button></div><div id="events" class="wk-event-list"></div></section>
+      <section class="wk-quick" aria-label="Kratke metrike"><div class="wk-panel-head"><div><small>OPERATIVNI PREGLED</small><h2>Kratke metrike</h2></div><span class="wk-today">Trenutni podaci</span></div><div class="wk-mini-grid"><div><small>Agenti</small><strong id="miniAgents">—</strong></div><div><small>Aktivni planovi</small><strong id="miniPlans">—</strong></div><div><small>Čekaju odobrenje</small><strong id="miniApprovals">—</strong></div><div><small>Režim UI</small><strong class="wk-mini-mode">READ ONLY</strong></div></div></section>
+    </div>
   </main>
 </div>
 </body>
