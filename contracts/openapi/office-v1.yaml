@@ -1,0 +1,421 @@
+openapi: 3.1.0
+info:
+  title: Web Korporacija — Virtual Office read-only bridge
+  version: 1.2.0
+  description: |
+    Formalizacija Claudeove Integracione beleške Virtual Office v1.2, §8.
+    **LOCKED/APPROVED ugovor (22.10.2026), potvrđen sa Claudeom. Nije implementiran niti spojen u main.**
+    Služi prijavljenoj Django konzoli, posle TOTP provere i provere operatora.
+    Polja koja nisu iz allowlist-e nikada se ne serijalizuju.
+servers:
+  - url: /
+    description: Isti origin kao postojeća Django konzola
+security:
+  - DjangoSessionTOTP: []
+tags:
+  - name: Office
+    description: Interni read-only upiti
+  - name: Office portraits
+    description: Portret preko autorizovanog image-proxy-ja
+paths:
+  /console/office/api/v1/summary:
+    get:
+      tags: [Office]
+      operationId: officeSummary
+      summary: Agregatni pregled kompanije
+      description: |
+        Broj agenata prema odvojenim dimenzijama status, runtime i primarno odeljenje.
+        Brojanje prema odeljenju koristi samo aktivni primarni Assignment;
+        zbir po odeljenjima ne mora biti jednak ukupnom broju agenata.
+        Vrednosti u primerima su ilustrativne.
+      responses:
+        '200':
+          description: Pregled iz trenutne baze
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Summary'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /console/office/api/v1/agents:
+    get:
+      tags: [Office]
+      operationId: officeAgents
+      summary: Registar agenata i osnovni raspored
+      parameters:
+        - $ref: '#/components/parameters/DepartmentFilter'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      description: |
+        Sortiranje: public_id ASC (jedinstveni javni ID, stabilan za keyset).
+        Cursor je neproziran nasumičan token vezan za korisnikovu autentifikovanu
+        sesiju, resurs, filter, veličinu stranice i poslednji javni ID.
+        Token odgovara prolaznom stanju u Redis cache-u (TTL 30 minuta),
+        a ne serijalizovanom internom ID-u. Kursor je nevažeći ako se filteri
+        ili limit promene. Novo nastale ili izmenjene persone nisu snapshot-
+        zamrznute; UI može osvežiti listu od prve strane.
+        portrait_url pokazuje na Office-only proxy; nikada direktno na MinIO.
+      responses:
+        '200':
+          description: Jedna stranica
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentsPage'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /console/office/api/v1/agents/{public_id}:
+    get:
+      tags: [Office]
+      operationId: officeAgentDetail
+      summary: Sanitizovan operativni profil agenta
+      parameters:
+        - $ref: '#/components/parameters/PersonaPublicId'
+      responses:
+        '200':
+          description: Profil i trenutno aktivni plan/korak ako postoje
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AgentDetail'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /console/office/api/v1/events:
+    get:
+      tags: [Office]
+      operationId: officeEvents
+      summary: Bezbedno odabrani audit događaji
+      description: |
+        Samo događaji odobreni za prikaz u Office-u (pozitivna allowlist-a
+        event_key, bez nefiltriranog audita). Poredak po AuditEvent.id DESC.
+        Interni id služi ISKLJUČIVO na serveru kao stabilan tie-breaker;
+        nikada nije u JSON odgovoru ili cursor tokenu.
+        Početna stranica beleži najveći vidljivi audit id kao gornju granicu
+        trenutnog listanja, radi konzistentnog prikaza pri novim događajima.
+        Cursor je neproziran random token sa stanjem isključivo u Redis-u.
+        Datum occurred_at je ISO-8601 UTC, ali redosled određuje upisni id.
+      parameters:
+        - $ref: '#/components/parameters/PersonaFilter'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Jedna stranica prikazivih događaja
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/EventsPage'}
+        '400': {$ref: '#/components/responses/InvalidRequest'}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /console/office/portraits/{public_id}:
+    get:
+      tags: [Office portraits]
+      operationId: officeAgentPortrait
+      summary: Trenutni kanonski portret tog agenta
+      description: |
+        Server pronalazi VisualProfile.reference_asset za naznačenu personu
+        i proverava da asset pripada istoj personi i da je kind FACE_REFERENCE.
+        Ne omogućava izbor proizvoljnog IMG-* identifikatora. Ako portret ne
+        postoji, agentov portrait_url u JSON-u je null. JPEG/PNG/WebP isporuka
+        je sa istog origin-a, Cache-Control private, no-store i nosniff.
+        Ne menja postojeću rutu /console/assets/{public_id}.
+      parameters:
+        - $ref: '#/components/parameters/PersonaPublicId'
+      responses:
+        '200':
+          description: Binarni sadržaj dozvoljenog portreta
+          content:
+            image/jpeg:
+              schema: {type: string, format: binary}
+            image/png:
+              schema: {type: string, format: binary}
+            image/webp:
+              schema: {type: string, format: binary}
+        '401': {$ref: '#/components/responses/Unauthenticated'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+components:
+  securitySchemes:
+    DjangoSessionTOTP:
+      type: apiKey
+      in: cookie
+      name: sessionid
+      description: |
+        Konfigurabilni Django session cookie (podrazumevano sessionid).
+        Pored validne sesije, server proverava console_otp_ok i is_operator,
+        ili superuser-a; sam cookie nije dovoljan. Ne uvodi se novi auth.
+  parameters:
+    PersonaPublicId:
+      in: path
+      name: public_id
+      required: true
+      schema: {type: string, pattern: '^P-[0-9]{5,}$'}
+    PersonaFilter:
+      in: query
+      name: persona
+      required: false
+      description: Javni ID agente čije događaje prikazujemo
+      schema: {type: string, pattern: '^P-[0-9]{5,}$'}
+    DepartmentFilter:
+      in: query
+      name: department
+      required: false
+      description: Department.code, iz primarnog aktivnog Assignment-a
+      schema: {type: string, minLength: 1, maxLength: 32}
+    Cursor:
+      in: query
+      name: cursor
+      required: false
+      description: |
+        Opaque token dobijen kao next_cursor prethodne stranice.
+        Nevažeći, istekao, token druge sesije ili promenjeni filter/limit → 400.
+      schema: {type: string, minLength: 20, maxLength: 200}
+    Limit:
+      in: query
+      name: limit
+      required: false
+      description: Stranica je po podrazumevanom podešavanju 50, maksimalno 100; 1–100
+      schema: {type: integer, minimum: 1, maximum: 100, default: 50}
+  responses:
+    InvalidRequest:
+      description: Neispravan filter, limit ili cursor; ili cursor druge sesije
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorBody'}}}
+    Unauthenticated:
+      description: Nema validne sesije ili nije završen TOTP (bez 302 redirekcije)
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorBody'}}}
+    Forbidden:
+      description: Autentifikovan korisnik nema propisanu ulogu
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorBody'}}}
+    NotFound:
+      description: Nepostojeći javni ID ili portret
+      content: {application/json: {schema: {$ref: '#/components/schemas/ErrorBody'}}}
+  schemas:
+    PersonaStatus:
+      type: string
+      enum: [DRAFT, READY, ACTIVE, PAUSED, DEGRADED, SUSPENDED, ARCHIVED]
+    RuntimeEnvironment:
+      type: string
+      enum: [SIMULATION, SHADOW, CONTROLLED_LIVE, LIVE]
+    PersonaType:
+      type: string
+      enum: [AI_CREATOR, AI_EXPERT, BRAND_AGENT, ASSISTANT, SIMULATION_ONLY]
+    TrustLevel:
+      type: string
+      description: L3 i L4 su rezervisani, ali pripadaju izvornom enum-u.
+      enum: [L0, L1, L2, L3, L4]
+    DisclosureMode:
+      type: string
+      enum: [ALWAYS_VISIBLE, PROFILE_ONLY, ON_REQUEST]
+    PlanStatus:
+      type: string
+      enum: [DRAFT, ACTIVE, COMPLETED, SUPERSEDED, ABANDONED, EXPIRED]
+    StepStatus:
+      type: string
+      enum: [PENDING, READY, RUNNING, DONE, SKIPPED, FAILED]
+    StepType:
+      type: string
+      enum: [think, retrieve, create, action, wait, review]
+    AuditSeverity:
+      type: string
+      enum: [INFO, NOTICE, WARNING, ERROR, CRITICAL]
+    OrgLevel:
+      type: string
+      enum: [head, lead, senior, medior, junior]
+    PublicId:
+      type: string
+      pattern: '^P-[0-9]{5,}$'
+      examples: [P-00001]
+    DateTimeUTC:
+      type: string
+      format: date-time
+      description: ISO-8601 UTC, sa sufiksom Z
+      examples: ['2026-10-22T09:00:00Z']
+    SimpleCounter:
+      type: object
+      additionalProperties: {type: integer, minimum: 0}
+    Summary:
+      type: object
+      additionalProperties: false
+      required: [agents, plans, approvals]
+      properties:
+        agents:
+          type: object
+          additionalProperties: false
+          required: [total, by_status, by_runtime, by_department]
+          properties:
+            total: {type: integer, minimum: 0}
+            by_status: {$ref: '#/components/schemas/SimpleCounter'}
+            by_runtime: {$ref: '#/components/schemas/SimpleCounter'}
+            by_department: {$ref: '#/components/schemas/SimpleCounter'}
+        plans:
+          type: object
+          additionalProperties: false
+          required: [active]
+          properties:
+            active: {type: integer, minimum: 0}
+        approvals:
+          type: object
+          additionalProperties: false
+          required: [pending]
+          properties:
+            pending: {type: integer, minimum: 0}
+    DepartmentBrief:
+      type: object
+      additionalProperties: false
+      required: [code, name]
+      properties:
+        code: {type: string}
+        name: {type: string}
+    PositionBrief:
+      type: object
+      additionalProperties: false
+      required: [code, title]
+      properties:
+        code: {type: string}
+        title: {type: string}
+    AgentListItem:
+      type: object
+      additionalProperties: false
+      required: [public_id, display_name, persona_type, status, runtime_environment, trust_level, disclosure_mode, primary_locale, department, position, portrait_url]
+      properties:
+        public_id: {$ref: '#/components/schemas/PublicId'}
+        display_name: {type: string}
+        persona_type: {$ref: '#/components/schemas/PersonaType'}
+        status: {$ref: '#/components/schemas/PersonaStatus'}
+        runtime_environment: {$ref: '#/components/schemas/RuntimeEnvironment'}
+        trust_level: {$ref: '#/components/schemas/TrustLevel'}
+        disclosure_mode: {$ref: '#/components/schemas/DisclosureMode'}
+        primary_locale: {type: string}
+        department:
+          anyOf: [{$ref: '#/components/schemas/DepartmentBrief'}, {type: 'null'}]
+        position:
+          anyOf: [{$ref: '#/components/schemas/PositionBrief'}, {type: 'null'}]
+        portrait_url:
+          anyOf:
+            - type: string
+              pattern: '^/console/office/portraits/P-[0-9]{5,}$'
+            - type: 'null'
+    AgentsPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: {$ref: '#/components/schemas/AgentListItem'}
+        next_cursor: {anyOf: [{type: string}, {type: 'null'}]}
+    DepartmentDetail:
+      type: object
+      additionalProperties: false
+      required: [code, name, head_public_id]
+      properties:
+        code: {type: string}
+        name: {type: string}
+        head_public_id:
+          anyOf: [{$ref: '#/components/schemas/PublicId'}, {type: 'null'}]
+    PositionDetail:
+      type: object
+      additionalProperties: false
+      required: [code, title, specialty, level]
+      properties:
+        code: {type: string}
+        title: {type: string}
+        specialty: {type: string}
+        level: {$ref: '#/components/schemas/OrgLevel'}
+    Occupation:
+      type: object
+      additionalProperties: false
+      required: [title, industry]
+      properties:
+        title: {type: string}
+        industry: {type: string}
+    ActivePlan:
+      type: object
+      additionalProperties: false
+      required: [public_id, status, priority, goal_excerpt]
+      properties:
+        public_id: {type: string, pattern: '^PLN-[A-Za-z0-9]+$'}
+        status: {$ref: '#/components/schemas/PlanStatus'}
+        priority: {type: integer}
+        goal_excerpt:
+          type: 'null'
+          description: |
+            ZAKLJUČANO V1.2: u V1 ovo polje je obavezno prisutno i UVEK null.
+            Tekst cilja plana se ne iznosi (skraćivanje nije sanitizacija).
+            Proširenje na string|null zahteva poseban ugovor o redakciji.
+    ActiveStep:
+      type: object
+      additionalProperties: false
+      required: [sequence, step_type, status]
+      properties:
+        sequence: {type: integer}
+        step_type: {$ref: '#/components/schemas/StepType'}
+        status: {$ref: '#/components/schemas/StepStatus'}
+    AgentDetail:
+      type: object
+      additionalProperties: false
+      required: [public_id, display_name, persona_type, status, runtime_environment, trust_level, disclosure_mode, disclosure_required, primary_locale, timezone, activated_at, department, position, portrait_url, occupation, active_plan, active_step]
+      properties:
+        public_id: {$ref: '#/components/schemas/PublicId'}
+        display_name: {type: string}
+        persona_type: {$ref: '#/components/schemas/PersonaType'}
+        status: {$ref: '#/components/schemas/PersonaStatus'}
+        runtime_environment: {$ref: '#/components/schemas/RuntimeEnvironment'}
+        trust_level: {$ref: '#/components/schemas/TrustLevel'}
+        disclosure_mode: {$ref: '#/components/schemas/DisclosureMode'}
+        disclosure_required: {type: boolean}
+        primary_locale: {type: string}
+        timezone: {type: string}
+        activated_at: {anyOf: [{$ref: '#/components/schemas/DateTimeUTC'}, {type: 'null'}]}
+        department: {anyOf: [{$ref: '#/components/schemas/DepartmentDetail'}, {type: 'null'}]}
+        position: {anyOf: [{$ref: '#/components/schemas/PositionDetail'}, {type: 'null'}]}
+        portrait_url:
+          anyOf:
+            - type: string
+              pattern: '^/console/office/portraits/P-[0-9]{5,}$'
+            - type: 'null'
+        occupation: {anyOf: [{$ref: '#/components/schemas/Occupation'}, {type: 'null'}]}
+        active_plan: {anyOf: [{$ref: '#/components/schemas/ActivePlan'}, {type: 'null'}]}
+        active_step: {anyOf: [{$ref: '#/components/schemas/ActiveStep'}, {type: 'null'}]}
+    EventBrief:
+      type: object
+      additionalProperties: false
+      required: [occurred_at, severity, event_key, persona_public_id, actor_role]
+      properties:
+        occurred_at: {$ref: '#/components/schemas/DateTimeUTC'}
+        severity: {$ref: '#/components/schemas/AuditSeverity'}
+        event_key: {type: string}
+        persona_public_id:
+          anyOf: [{$ref: '#/components/schemas/PublicId'}, {type: 'null'}]
+        actor_role: {anyOf: [{type: string}, {type: 'null'}]}
+    EventsPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items: {$ref: '#/components/schemas/EventBrief'}
+        next_cursor: {anyOf: [{type: string}, {type: 'null'}]}
+    ErrorBody:
+      type: object
+      additionalProperties: false
+      required: [error, meta]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, details, retryable]
+          properties:
+            code: {type: string, enum: [UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, VALIDATION_ERROR]}
+            message: {type: string}
+            details: {type: object}
+            retryable: {type: boolean}
+        meta:
+          type: object
+          additionalProperties: false
+          required: [request_id, trace_id]
+          properties:
+            request_id: {type: string}
+            trace_id: {type: string}
