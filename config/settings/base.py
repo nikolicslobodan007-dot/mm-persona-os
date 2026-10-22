@@ -11,12 +11,14 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-not-a-secret")
 DEBUG = False
 ALLOWED_HOSTS: list[str] = []
 
-# Canon §1 — dvanaest app-ova. Redosled prati tabelu iz Canon-a.
+# Canon §1 — dvanaest app-ova + `libri` (trinaesti, ADR-0031). Redosled prati
+# tabelu iz Canon-a; `libri` stoji uz `memory` (sloj znanja nad dokumentima).
 PERSONA_OS_APPS = [
     "apps.personas",
     "apps.visuals",
     "apps.behaviour",
     "apps.memory",
+    "apps.libri",  # ADR-0031 — sloj znanja (Libri) uz memoriju
     "apps.social_graph",
     "apps.content",
     "apps.channels",

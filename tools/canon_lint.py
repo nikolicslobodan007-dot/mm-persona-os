@@ -11,7 +11,7 @@ Provere:
   3. Svaki event tip u kodu postoji u katalogu i ima JSON Schema.
   4. Svaki queue naziv u kodu je jedan od deset kanonskih.
   5. `identity_vehicles.yaml` i `capabilities.yaml` se parsiraju i slažu sa enum-ima.
-  6. Django app-ovi na disku su tačno onih 12 iz Canon §1.
+  6. Django app-ovi na disku su tačno onih 13 iz Canon §1 (12 + libri, ADR-0031).
 
 Izlaz: 0 ako je sve u redu, 1 sa spiskom prekršaja.
 """
@@ -29,11 +29,11 @@ sys.path.insert(0, str(ROOT))
 from common import enums as E  # noqa: E402
 from common.events import EVENT_TYPES, RETIRED_EVENT_TYPES  # noqa: E402
 
-# Canon §1 — dvanaest app-ova.
+# Canon §1 — dvanaest app-ova + `libri` (trinaesti, ADR-0031).
 CANON_APPS = {
-    "personas", "visuals", "behaviour", "memory", "social_graph", "content",
-    "channels", "orchestration", "policy", "runtime", "observability",
-    "llm_gateway",
+    "personas", "visuals", "behaviour", "memory", "libri", "social_graph",
+    "content", "channels", "orchestration", "policy", "runtime",
+    "observability", "llm_gateway",
 }
 
 # Imena ukinuta u Canon-u. Regex -> šta se koristi umesto.
@@ -185,7 +185,7 @@ def check_event_types() -> list[Violation]:
 
 
 def check_apps() -> list[Violation]:
-    """Canon §1: tačno dvanaest app-ova, tim imenima."""
+    """Canon §1: tačno trinaest app-ova (12 + libri, ADR-0031), tim imenima."""
     apps_dir = ROOT / "apps"
     if not apps_dir.exists():
         return [Violation("apps/", 0, "nedostaje direktorijum apps/ (Canon §1)")]
