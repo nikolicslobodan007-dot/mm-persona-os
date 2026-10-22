@@ -2,6 +2,7 @@
  * Progressive enhancement: pure frontend; no new Django API or model writes.
  * Bundled *locally* using esbuild with pinned pixi.js. No CDN/inline scripts.
  */
+import 'pixi.js/unsafe-eval';  // CSP: non-eval sync (script-src 'self', bez unsafe-eval)
 import {Application, Container, Graphics, Text, TextStyle} from 'pixi.js';
 import {layoutCampus} from './layout.mjs';
 
