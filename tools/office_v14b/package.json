@@ -1,0 +1,17 @@
+{
+  "name": "wk-virtual-office-campus-renderer",
+  "private": true,
+  "version": "1.4.1",
+  "description": "Local-only PixiJS campus renderer; does not access Django internals",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/campus.mjs --bundle --format=iife --platform=browser --target=es2022 --minify --legal-comments=linked --outfile=../../console/static/console/office-v14b.bundle.js",
+    "check": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "pixi.js": "8.22.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}

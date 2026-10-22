@@ -137,6 +137,17 @@
     });
     ui.campus.className = "office-campus zoom-" + zoom + (focusDepartment ? " focused" : "");
     ui.zoomLabel.textContent = ["85%","100%","115%"][zoom];
+    // Read-only bridge for a progressively enhanced Pixi scene. The scene is
+    // derived from the exact same filtered data as the accessible DOM view.
+    // Never infer RUNNING from status=READY/ACTIVE.
+    window.dispatchEvent(new CustomEvent("wk:campus-state", {detail: {
+      agents: filtered.map(a => ({
+        public_id: a.public_id, display_name: a.display_name,
+        status: a.status, runtime_environment: a.runtime_environment,
+        department: a.department ? {code: a.department.code, name: a.department.name} : null
+      })),
+      selected, focusDepartment, zoom, confirmedRunning: [...confirmedRunning]
+    }}));
   }
   function renderSelection() { renderList(); renderCampus(); }
   function detailRow(labelText,value) {
@@ -261,5 +272,18 @@
   });
   // Existing V1.2 read-only API is polled; no new websocket/command endpoint.
   window.setInterval(()=>{if(document.visibilityState==="visible")refresh();},60*1000);
+  // Scene->DOM interaction remains in the existing navigation controller.
+  window.addEventListener("wk:scene-request", () => renderCampus());
+  window.addEventListener("wk:scene-agent-select", e => {
+    const id = e.detail?.public_id;
+    if (validId(id) && agents.some(a => a.public_id === id)) selectAgent(id);
+  });
+  window.addEventListener("wk:scene-department-focus", e => {
+    const code = e.detail?.code;
+    if (typeof code === "string" && agents.some(a => (a.department?.code || "UNASSIGNED") === code)) {
+      focusDepartment = focusDepartment === code ? "" : code;
+      renderCampus();
+    }
+  });
   refresh();
 })();

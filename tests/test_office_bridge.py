@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from django.contrib.auth.models import Group, User
 from django.core.cache import cache
@@ -109,7 +111,7 @@ def test_cursor_is_session_bound(mila, office_client):
     first = office_client.get("/console/office/api/v1/agents?limit=1")
     assert first.status_code == 200
     cursor = first.json()["next_cursor"]
-    assert cursor and "P-" not in cursor
+    assert cursor and not re.search(r"P-\d{5}", cursor)  # opaque token; ne curi public_id (P-#####)
     second = office_client.get("/console/office/api/v1/agents?limit=1&cursor=" + cursor)
     assert second.status_code == 200
     other = _signed_client(User.objects.get(username="office_viewer"))
