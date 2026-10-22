@@ -7,6 +7,7 @@
   <title>Mission Control · Virtual Office · Web Korporacija</title>
   <link rel="stylesheet" href="{% static 'console/office-v14a.css' %}">
   <script defer src="{% static 'console/office-v14a.js' %}"></script>
+  <script defer src="{% static 'console/office-v14b.bundle.js' %}"></script>
 </head>
 <body>
 <div class="wk-app">
@@ -23,7 +24,7 @@
     </nav>
     <div class="wk-utilities"><label for="filter" class="sr-only">Pretraži agente</label><input id="filter" type="search" placeholder="Pretraži agenta…" autocomplete="off"><span class="wk-protected" title="Zaštićeno sesijom i drugim faktorom">● ZAŠTIĆENO</span><button id="toggleAgents" class="wk-mobile-agents" type="button" aria-controls="agentPanel" aria-expanded="false">Agenti</button></div>
   </header>
-  <div class="wk-statusbar"><div class="wk-breadcrumb"><span class="wk-accent">DIGITAL HQ</span><span class="wk-separator">/</span><strong>Virtual Office</strong><span class="wk-version">V1.4A</span><span class="wk-mode">READ-ONLY</span></div><div class="wk-status-actions"><span class="wk-counter"><b id="total">—</b> agenata</span><span class="wk-counter"><b id="plans">—</b> aktivnih planova</span><span class="wk-counter"><b id="approvals">—</b> odobrenja</span><button id="refresh" type="button" class="wk-button">↻ Osveži</button></div></div>
+  <div class="wk-statusbar"><div class="wk-breadcrumb"><span class="wk-accent">DIGITAL HQ</span><span class="wk-separator">/</span><strong>Virtual Office</strong><span class="wk-version">V1.4B · PR-B1</span><span class="wk-mode">READ-ONLY</span></div><div class="wk-status-actions"><span class="wk-counter"><b id="total">—</b> agenata</span><span class="wk-counter"><b id="plans">—</b> aktivnih planova</span><span class="wk-counter"><b id="approvals">—</b> odobrenja</span><button id="refresh" type="button" class="wk-button">↻ Osveži</button></div></div>
   <main class="wk-workspace">
     <aside id="agentPanel" class="wk-agents" aria-label="Registar agenata">
       <div class="wk-panel-head"><div><small>REGISTAR ZAPOSLENIH</small><h2>Svi agenti <span id="listCount" class="wk-count">—</span></h2></div><button type="button" id="closeAgents" class="wk-mobile-close" aria-label="Zatvori listu agenata">×</button></div>
@@ -34,6 +35,10 @@
     <section class="wk-center" aria-label="Virtuelna kancelarija">
       <div class="wk-section-head"><div><p class="wk-overline">VIRTUAL CAMPUS</p><h1>Mapa kancelarija</h1><p id="sectionSub" class="wk-muted">Odeljenja i radna mesta iz postojeće organizacije.</p></div><div class="wk-canvas-tools"><button type="button" id="showAll" class="wk-button secondary">Cela zgrada</button><div class="wk-zoom"><button type="button" id="zoomOut" aria-label="Smanji figurice">−</button><span id="zoomLabel">100%</span><button type="button" id="zoomIn" aria-label="Uvećaj figurice">+</button></div></div></div>
       <p id="notice" class="wk-notice" role="status">Učitavanje stvarnih podataka…</p>
+      <div id="officeScene" class="wk-office-scene" hidden>
+        <div id="officeSceneHost" class="wk-scene-canvas" role="region" aria-label="Grafički kampus"></div>
+        <p class="wk-scene-hint">Zumiranje i izbor agenata · prikaz ne predstavlja simulaciju rada</p>
+      </div>
       <div id="departments" class="office-campus zoom-1"></div>
       <div class="wk-scene-footer"><span><span class="wk-dot"></span> READY = spremnost</span><span>SIMULATION / LIVE = okruženje</span><span>Animacija rada samo uz potvrđen RUNNING korak</span></div>
     </section>
