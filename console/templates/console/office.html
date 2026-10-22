@@ -1,0 +1,57 @@
+{% load static %}<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Virtual Office · Web Korporacija</title>
+  <link rel="stylesheet" href="{% static 'console/office.css' %}">
+  <script defer src="{% static 'console/office.js' %}"></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brandmark"><span class="orb">◈</span><span><b>WEB KORPORACIJA</b><small>PERSONA OS</small></span></div>
+    <nav aria-label="Navigacija">
+      <a class="active" href="/console/office">◈ <span>Virtual Office</span></a>
+      <a href="/console/">▤ <span>Mission Control</span></a>
+      <a href="/console/razgovor">◉ <span>Razgovor</span></a>
+      <a href="/console/personas">♧ <span>Agenti</span></a>
+      <a href="/console/org">⌘ <span>Organizacija</span></a>
+      <a href="/console/approvals">✓ <span>Odobrenja</span></a>
+      <a href="/console/incidents">△ <span>Incidenti</span></a>
+    </nav>
+    <div class="sidebar-note">READ-ONLY V1.2 · Podaci iz postojećeg Django sistema</div>
+  </aside>
+  <main class="main">
+    <header class="masthead">
+      <div><p class="eyebrow">MISSION CONTROL / DIGITAL HQ</p><h1>Virtual Office</h1>
+      <p class="subhead">Uvid u organizaciju i stvarne aktivnosti AI agenata.</p></div>
+      <div class="headside"><span class="live-dot"></span><span>ZAŠTIĆENI PREGLED</span>
+      <button type="button" id="refresh">Osveži</button></div>
+    </header>
+    <section class="metrics" aria-label="Pregled kompanije">
+      <div class="metric"><small>AGENATA</small><strong id="total">—</strong><span>U Django registru</span></div>
+      <div class="metric"><small>AKTIVNI PLANOVI</small><strong id="plans">—</strong><span>Planovi, ne animacija rada</span></div>
+      <div class="metric"><small>ČEKAJU ODOBRENJE</small><strong id="approvals">—</strong><a href="/console/approvals">Otvori odobrenja ↗</a></div>
+      <div class="metric"><small>OKRUŽENJE</small><strong>V1.2</strong><span>SIMULATION ≠ LIVE</span></div>
+    </section>
+    <section class="content-grid">
+      <div class="canvas-column">
+        <div class="section-bar"><div><p class="eyebrow">VIRTUAL CAMPUS</p><h2>Kancelarije</h2></div>
+        <div class="toolbar"><label class="sr-only" for="filter">Pretraga agenta</label><input id="filter" type="search" placeholder="Pretraži agenta…" autocomplete="off">
+        <button id="all" type="button" class="chip selected">Svi agenti</button></div></div>
+        <div id="notice" class="notice" role="status">Učitavanje podataka iz Django sistema…</div>
+        <div id="departments" class="departments" aria-label="Odeljenja"></div>
+        <div class="footer-note">Figurice su za sada oznake mesta. Pravi soft-3D spriteovi dolaze kao zaseban, proverljiv vizuelni sloj. Status READY sam po sebi ne znači da agent radi.</div>
+      </div>
+      <aside class="details-column" aria-label="Inspektor agenta">
+        <div class="section-bar"><div><p class="eyebrow">AGENT INSPECTOR</p><h2>Dosije rada</h2></div></div>
+        <div id="inspector" class="inspector"><div class="placeholder">Izaberi agenta u kancelariji da vidiš dozvoljene operativne podatke.</div></div>
+        <div class="feed"><div class="feed-title"><h3>Tok aktivnosti</h3><button id="reloadEvents" type="button">↻</button></div><div id="events" class="events"></div></div>
+      </aside>
+    </section>
+  </main>
+</div>
+</body>
+</html>

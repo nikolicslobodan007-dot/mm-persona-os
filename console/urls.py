@@ -1,9 +1,17 @@
 from django.urls import path
 
-from console import views
+from console import office_bridge, views
 
 urlpatterns = [
     path("", views.overview, name="console-overview"),
+    path("office", office_bridge.office_home, name="console-office"),
+    path("office/api/v1/summary", office_bridge.office_summary, name="office-summary"),
+    path("office/api/v1/agents", office_bridge.office_agents, name="office-agents"),
+    path("office/api/v1/agents/<str:public_id>", office_bridge.office_agent,
+         name="office-agent"),
+    path("office/api/v1/events", office_bridge.office_events, name="office-events"),
+    path("office/portraits/<str:public_id>", office_bridge.office_portrait,
+         name="office-portrait"),
     path("login", views.login_view, name="console-login"),
     path("login/2fa", views.totp_view, name="console-totp"),
     path("logout", views.logout_view, name="console-logout"),
