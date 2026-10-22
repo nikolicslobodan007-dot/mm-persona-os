@@ -241,13 +241,15 @@ class TestRetrieval:
         assert sens.pk in {s.memory.pk for s in summary}
 
     def test_breakdown_is_explained(self, mila):
-        # Flaky ispravka: seed memorije su PINNED sa visokim salience-om, pa mogu
-        # da izjednače ukupan skor sa upisanom — [0] (vrh) je tada nekad seed sa
-        # semantic=0, a tiebreak po slučajnom UUID-u prevrće rezultat. Proveravamo
-        # breakdown TAČNO upisane memorije (to i jeste namera testa), uz now=NOW
-        # kao i svi ostali upisi u ovom fajlu.
+        # Deterministički: upit = TEKST memorije, pa je kosinusna udaljenost ~0 i
+        # semantic ~1.0. Raniji upit je bio parafraza; slab hash-model
+        # (local-hash-v1, placeholder iz ADR-0006) parafrazu jedva poklapa —
+        # kosinus ≈ 0, tačno na granici semantic=0, pa je float-šum pgvector-a
+        # prevrtao semantic između 0.0001 (prođe) i 0.0 (padne) — otud flaky.
+        # Kvalitet parafraze meri memory_eval; OVAJ test proverava samo da je
+        # breakdown objašnjen (sve komponente prisutne i pozitivne).
         m = write(mila, _m("Kupci u građevini pitaju za rok isporuke"), now=NOW).memory
-        scored = retrieval.retrieve(mila, "rok isporuke građevina",
+        scored = retrieval.retrieve(mila, "Kupci u građevini pitaju za rok isporuke",
                                     E.RetrievalProfile.RESEARCH, now=NOW)
         nasa = next(s for s in scored if s.memory.pk == m.pk)
         assert set(retrieval.WEIGHTS) <= set(nasa.breakdown)
