@@ -398,14 +398,23 @@ def _pokazivac_pravila(tacka: int, nacin: str) -> dict | None:
             "sekcija": p.get("sekcija") or "", "izvod": izvod}
 
 
+#: Prag kosinusne udaljenosti za „po smislu" (ADR-0120/#7). IZMERENO 22.10.2026
+#: na produkciji: relevantno pravilo ≤ ~0.28, šum ≥ ~0.37 — prag 0.35 pada u
+#: jaz. Iznad praga pogodak nije dovoljno blizu da bi se prikazao: bolje ništa
+#: nego pogrešno pravilo (ADR-0033). Nalaz o jednoj reči po pravilu nema blisko
+#: opšte pravilo, pa „po smislu" na sadašnjem sadržaju retko i okida.
+PRAG_PO_SMISLU = 0.35
+
+
 def _pravilo_za_nalaz(n: Nalaz) -> dict | None:
     """Pravilo uz jedan nalaz (ADR-0120/#7): spoj Rečnika i pravila.
 
     Prvo **deterministički**: prva tačka iz odrednice koja je u opsegu pravila
     i stvarno postoji → način „tačno". Rečnikove tačke su oblika „105c" (broj +
     pod-slovo) — uzima se vodeći broj. Ako nijedna ne vodi na pravilo (nema je,
-    van opsega 1–236, OCR šum) → **semantički** najbliže pravilo po smislu
-    teksta odrednice → način „po smislu" (pogodak, obeležen; ne tačno).
+    van opsega 1–236, OCR šum) → **semantički**, ali SAMO ako je najbliže pravilo
+    ispod praga (`PRAG_PO_SMISLU`) → način „po smislu" (pogodak, obeležen; ne
+    tačno). Iznad praga se ne kači ništa.
     """
     for t in n.tacke:
         m = re.match(r"\d+", t)
@@ -413,9 +422,21 @@ def _pravilo_za_nalaz(n: Nalaz) -> dict | None:
             pok = _pokazivac_pravila(int(m.group()), "tačno")
             if pok is not None:
                 return pok
-    pog = trazi_pravila(n.tekst or n.odrednica, granica=1)
-    if pog and pog[0].get("tacka"):
-        return _pokazivac_pravila(pog[0]["tacka"], "po smislu")
+    from apps.memory import znanje_vektori
+
+    ids = list(
+        KnowledgeFact.objects
+        .filter(persona__isnull=True, predicate=PREDIKAT_PRAVILA,
+                source__is_active=True)
+        .values_list("id", flat=True))
+    r = znanje_vektori.rang_fact_ids(n.tekst or n.odrednica, ids)
+    if r:
+        fid, udaljenost = r[0]
+        if udaljenost <= PRAG_PO_SMISLU:
+            f = KnowledgeFact.objects.filter(pk=fid).first()
+            tacka = (f.object_json or {}).get("tacka") if f else None
+            if tacka:
+                return _pokazivac_pravila(tacka, "po smislu")
     return None
 
 

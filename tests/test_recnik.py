@@ -317,10 +317,16 @@ def test_nalaz_nosi_pravilo_tacno_i_po_smislu(db):
     assert nal["pravilo"]["izvod"] and nal["pravilo"]["sekcija"]
     assert recnik.nadji_pravilo(113) is not None
 
-    # semantički „po smislu": nalaz bez tačke → najbliže pravilo po smislu
+    # „po smislu" SA PRAGOM (ADR-0120/#7): blizak upit se kači (izmereno ~0.21)
     pok = recnik._pravilo_za_nalaz(
         Nalaz(oblik="x", odrednica="y",
-              tekst="kako se skraćuju reči i izrazi", tacke=()))
+              tekst="kako se pišu skraćenice", tacke=()))
     assert pok is not None and pok["nacin"] == "po smislu"
     assert isinstance(pok["tacka"], int)
     assert recnik.nadji_pravilo(pok["tacka"]) is not None
+
+    # daleko (prag 0.35 seče; „asfalt" izmeren ~0.72): nalaz o jednoj reči bez
+    # bliskog pravila ne dobija ništa — bolje ništa nego pogrešno pravilo
+    daleko = recnik._pravilo_za_nalaz(
+        Nalaz(oblik="asfalt", odrednica="asfalt", tekst="asfalt", tacke=()))
+    assert daleko is None
