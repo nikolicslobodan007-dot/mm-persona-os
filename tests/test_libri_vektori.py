@@ -37,10 +37,10 @@ def _laz_vektor(text, *, model=None):
     return v
 
 
-def _dok(blokovi):
+def _dok(blokovi, *, document_id="doc_test3"):
     """blokovi: list[(block_id, text, confidence, perm_ai_read)] → (dok, [Block])."""
     dok = LibriDocument.objects.create(
-        document_id="doc_test3", version_id="v1", title="Test sloj 3",
+        document_id=document_id, version_id="v1", title="Test sloj 3",
         language="sr-Latn", script="latin", pages=1, schema_version="lkp-0.1",
         ingested_at=timezone.now(),
     )
@@ -139,3 +139,17 @@ def test_pretrazi_bez_modela_vraca_none(db, monkeypatch):
 
     monkeypatch.setattr(embeddings, "embed_semanticki", pukni)
     assert vektori.pretrazi("tema alfa") is None
+
+
+@requires_db
+@pytest.mark.django_db
+def test_pretrazi_ogranicava_na_dokument(db, monkeypatch):
+    # Isti block_id u dva dokumenta (block_id nije jedinstven globalno) — bez
+    # ograničenja bi se blokovi mešali; sa document_id vraća samo traženi dokument.
+    monkeypatch.setattr(embeddings, "embed_semanticki", _laz_vektor)
+    _, a = _dok([("blk_000001", "tema alfa", 0.9, True)], document_id="doc_a")
+    _, b = _dok([("blk_000001", "tema alfa", 0.9, True)], document_id="doc_b")
+    vektori.embeduj(a + b)
+    rez = vektori.pretrazi("tema alfa", top_k=10, document_id="doc_a")
+    assert rez is not None
+    assert [bl.document.document_id for bl, _ in rez] == ["doc_a"]

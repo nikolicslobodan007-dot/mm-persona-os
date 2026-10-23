@@ -88,7 +88,8 @@ class Command(BaseCommand):
         upit = options["upit"]
         if not upit:
             raise CommandError("pretrazi traži --upit <tekst>.")
-        rez = vektori.pretrazi(upit, top_k=options["top"])
+        rez = vektori.pretrazi(upit, top_k=options["top"],
+                               document_id=options["dokument"] or None)
         if rez is None:
             self.stdout.write(self.style.WARNING(
                 "Semantički model nije dostupan (offline) — pretraga nije izvršena."))
