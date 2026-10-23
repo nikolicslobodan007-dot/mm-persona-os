@@ -5,6 +5,7 @@
 import 'pixi.js/unsafe-eval';  // CSP: non-eval sync (script-src 'self', bez unsafe-eval)
 import {Application, Container, Graphics, Text, TextStyle} from 'pixi.js';
 import {layoutCampus} from './layout.mjs';
+import {avatarStyleFor, shouldShowNameAtScale} from './avatar-style.mjs';
 import {cameraForCampus} from './camera.mjs';
 
 const ROOT_ID = 'officeScene';
@@ -20,6 +21,11 @@ const PALETTE = {
   general:{floor:0x303a4a,walls:0x60748a,accent:0x75b7dd,desk:0x776355},
 };
 const FONT = 'Arial, sans-serif';
+// Rebuilt with each scene, never based on status READY or runtime LIVE.
+let textLayers = [];
+let roomTitleLayers = [];
+let currentMapScale = 1;
+let isFocusedMap = false;
 const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
 const gRect=(x,y,w,h,color,r=0,alpha=1)=>{
   const g=new Graphics();
@@ -36,6 +42,9 @@ function furnishing(parent,room,theme){
   const {x,y,width:w,height:h}=room;
   // Lower-left sofa, department-specific furniture and plants. These do not imply work.
   const group = new Container();parent.addChild(group);
+  // Department signature: stable decorative details, never a work-status animation.
+  group.addChild(gRect(x+143,y+132,w-286,Math.max(30,h-240),theme.accent,18,.075));
+  group.addChild(gRect(x+23,y+58,7,Math.max(24,h-155),theme.accent,3,.45));
   group.addChild(gRect(x+18,y+h-83,120,25,theme.desk,9));
   group.addChild(gRect(x+24,y+h-100,110,22,0x4d6079,9));
   group.addChild(gRect(x+29,y+h-57,90,13,0x172437,4));
@@ -59,6 +68,21 @@ function furnishing(parent,room,theme){
     group.addChild(gRect(x+w-143,y+68,94,52,0xa78a5c,5));
   }else if(room.theme==='procurement'){
     for(let k=0;k<3;k++){group.addChild(gRect(x+w-141+k*29,y+69,25,37,0x907857,3));group.addChild(gRect(x+w-137+k*29,y+73,17,3,0xcdb68b,1));}
+  }else if(room.theme==='research'){
+    group.addChild(gRect(x+w-150,y+59,124,76,0x25394b,5));
+    for(let k=0;k<4;k++)group.addChild(gCircle(x+w-124+k*27,y+91+(k%2)*13,7,theme.accent,.66));
+    group.addChild(gLine(x+w-128,y+114,x+w-42,y+73,theme.accent,2,.7));
+  }else if(room.theme==='support'){
+    for(let k=0;k<3;k++){
+      group.addChild(gRect(x+w-147+k*40,y+64,33,56,0x183142,5));
+      group.addChild(gRect(x+w-141+k*40,y+70,21,20,0x5c9d99,4));
+    }
+  }else if(room.theme==='quality'){
+    group.addChild(gRect(x+w-152,y+57,127,80,0x1b3446,6));
+    for(let k=0;k<3;k++){
+      group.addChild(gRect(x+w-137,y+72+k*21,11,11,theme.accent,2,.68));
+      group.addChild(gLine(x+w-119,y+78+k*21,x+w-46,y+78+k*21,0xb9c8d5,2,.7));
+    }
   }else{
     group.addChild(gRect(x+w-133,y+55,96,61,0x213c53,4));
     group.addChild(gRect(x+w-122,y+68,74,38,0x50748a,2));
@@ -85,7 +109,8 @@ function drawRoom(parent,room,running,selected,onAgent,onDepartment){
   // Decorative corridor entrance at front center.
   item.addChild(gRect(x+w/2-42,y+h-13,84,14,0x648799,2));
   const title=room.name.length>34?room.name.slice(0,31)+'…':room.name;
-  addText(item,title,x+22,y+22,17,0xf3fbff,'bold');
+  const roomLabel = addText(item,title,x+22,y+22,17,0xf3fbff,'bold');
+  roomTitleLayers.push({label:roomLabel, width:room.width, rawWidth:roomLabel.width});
   addText(item,`${room.people.length} AI`,x+w-117,y+22,12,theme.accent,'bold');
   furnishing(item,room,theme);
   for(const agent of room.people) drawAgent(item,agent,theme,selected===agent.public_id,running.has(agent.public_id),onAgent);
@@ -96,31 +121,68 @@ function drawRoom(parent,room,running,selected,onAgent,onDepartment){
 function initials(name){const s=String(name||'?').split(' ').filter(Boolean);return s.length>1?(s[0][0]+s[1][0]).toUpperCase():s[0][0].toUpperCase();}
 function drawAgent(parent,a,theme,selected,isRunning,onAgent){
   const {x,y}=a;
+  const style=avatarStyleFor(a.public_id);
+  if(!style)return;
   const c=new Container();parent.addChild(c);
   if(selected){c.addChild(gCircle(x,y+6,52,0x73dded,.14));c.addChild(new Graphics().circle(x,y+6,53).stroke({color:0x87f0e1,width:2.5,alpha:.94}));}
   c.addChild(gCircle(x,y+26,36,0x091827,.46));
-  // Desk + monitor, before body. Neither shows activity without RUNNING.
+  // Furniture and monitor are static even when an agent is READY.
   c.addChild(gRect(x-40,y-38,80,21,theme.desk,5));
   c.addChild(gRect(x-17,y-66,34,29,0x101f2e,3));
   c.addChild(gRect(x-13,y-62,26,20,isRunning?0x55d7c4:0x537e96,2));
   c.addChild(gRect(x-3,y-38,6,10,0x23303a,1));
-  // Shaded figurine body, legs and head; no use of private dossier or photo bytes.
-  c.addChild(gRect(x-18,y+14,13,26,0x17283c,5));c.addChild(gRect(x+5,y+14,13,26,0x17283c,5));
-  c.addChild(gRect(x-29,y-2,58,36,0x304b75,15));
-  c.addChild(gRect(x-20,y-10,40,47,0x5079a5,15));
-  c.addChild(gRect(x-23,y-10,46,10,theme.accent,6,.47));
-  c.addChild(gCircle(x,y-28,23,0x1f293b));
-  c.addChild(gCircle(x,y-30,20,0xe9b995));
-  c.addChild(new Graphics().arc(x,y-36,19,3.2,6.15).stroke({color:0x3f2c29,width:7}));
-  // Initials establish identity without copying private reference portraits to static files.
-  addText(c,initials(a.display_name),x,y-30,12,0x1c293b,'bold',.5);
-  const badge=gRect(x-66,y+51,132,25,0x0a192e,8,.9);c.addChild(badge);
+  // Stable provisional character silhouettes: no protected portrait is requested.
+  c.addChild(gRect(x-18,y+14,13,26,0x14253b,5));
+  c.addChild(gRect(x+5,y+14,13,26,0x14253b,5));
+  c.addChild(gRect(x-31,y-3,13,29,style.jacket,7));
+  c.addChild(gRect(x+18,y-3,13,29,style.jacket,7));
+  c.addChild(gRect(x-22,y-10,44,49,style.jacket,14));
+  c.addChild(gRect(x-8,y-10,16,38,style.outfit===0?0xdfe5e8:style.accent,5,.75));
+  if(style.outfit===1)c.addChild(gRect(x-2,y+2,4,19,0xf0dfcb,1));
+  if(style.pin)c.addChild(gCircle(x+12,y+2,4,style.accent));
+  // Hair varies among five silhouette families while keeping the same hitbox.
+  if(style.hairShape===1 || style.hairShape===4){
+    c.addChild(gCircle(x-20,y-18,10,style.hair));c.addChild(gCircle(x+20,y-18,10,style.hair));
+  }
+  c.addChild(gCircle(x,y-30,24,style.hair));
+  c.addChild(gCircle(x,y-29,20,style.skin));
+  if(style.hairShape===0){
+    c.addChild(gRect(x-21,y-50,42,10,style.hair,5));
+  }else if(style.hairShape===2){
+    c.addChild(gCircle(x-13,y-45,14,style.hair));c.addChild(gCircle(x+8,y-48,15,style.hair));
+  }else if(style.hairShape===3){
+    c.addChild(gRect(x-23,y-45,46,13,style.hair,6));
+    c.addChild(gRect(x+15,y-38,9,21,style.hair,4));
+  }else{
+    c.addChild(gRect(x-17,y-48,34,9,style.hair,4));
+  }
+  // Face details are generic illustrations, not identity inference.
+  c.addChild(gCircle(x-7,y-30,1.7,0x25272c));c.addChild(gCircle(x+7,y-30,1.7,0x25272c));
+  c.addChild(gRect(x-4,y-21,8,2,0x9d695d,1));
+  if(style.glasses){
+    for(const off of [-8,8])c.addChild(new Graphics().roundRect(x+off-6,y-35,12,10,3).stroke({color:0x263549,width:1.5}));
+    c.addChild(gLine(x-2,y-31,x+2,y-31,0x263549,1.5));
+  }
+  const names = new Container();c.addChild(names);
+  names.addChild(gRect(x-66,y+51,132,25,0x0a192e,8,.92));
   const name=a.display_name.length>17?a.display_name.slice(0,15)+'…':a.display_name;
-  addText(c,name,x,y+63,12,0xf1f6ff,'bold',.5);
+  addText(names,name,x,y+63,12,0xf1f6ff,'bold',.5);
+  textLayers.push({layer:names, selected});
   if(isRunning){c.addChild(gCircle(x+31,y-60,8,0x5fe9ac));addText(c,'RUNNING',x+41,y-60,10,0x6df5b3,'bold');}
   const hit=gRect(x-65,y-77,130,157,0xffffff,8,.001);hit.eventMode='static';hit.cursor='pointer';
+  hit.on('pointerover',()=>{names.visible=true;});
+  hit.on('pointerout',()=>{names.visible=shouldShowNameAtScale(currentMapScale,isFocusedMap,selected);});
   hit.on('pointertap',(event)=>{event.stopPropagation();onAgent(a.public_id);});c.addChild(hit);
 }
+function applyMapLabels(scale, focused=false){
+  for(const x of textLayers)x.layer.visible=shouldShowNameAtScale(scale,focused,x.selected);
+  for(const x of roomTitleLayers){
+    const wanted=Math.max(1,Math.min(1.8,11/Math.max(1,17*scale)));
+    const fit=Math.max(.6,(x.width-135)/Math.max(1,x.rawWidth));
+    x.label.scale.set(Math.min(wanted,fit));
+  }
+}
+
 function backdrop(world,layout){
   world.addChild(gRect(0,0,layout.width,layout.height,0x0b1a29));
   for(let i=0;i<layout.width;i+=46)world.addChild(gLine(i,0,i,layout.height,0x8ca5b9,1,.045));
@@ -179,6 +241,7 @@ function fitCamera(camera, app, layout, zoom, roomFocus) {
     const beforeY=(py-camera.y)/camera.scale.y;
     const next=clamp(camera.scale.x*(e.deltaY<0?1.12:.89),.18,2.6);
     camera.scale.set(next);camera.x=px-beforeX*next;camera.y=py-beforeY*next;
+    currentMapScale=next;applyMapLabels(next,Boolean(data?.focusDepartment));
     app.render();
   },{passive:false});
   app.canvas.addEventListener('pointerdown',e=>{
@@ -200,10 +263,13 @@ function fitCamera(camera, app, layout, zoom, roomFocus) {
     if(!data)return;
     const layout=layoutCampus(data.agents,data.focusDepartment,{width:app.screen.width,height:app.screen.height});
     currentLayout=layout;camera.removeChildren().forEach(x=>x.destroy({children:true}));
+    textLayers=[];roomTitleLayers=[];
     const world=new Container();camera.addChild(world);backdrop(world,layout);
     const running=new Set(data.confirmedRunning||[]);
     for(const room of layout.rooms)drawRoom(world,room,running,data.selected,onAgent,onDepartment);
-    fitCamera(camera,app,layout,[.85,1,1.15][data.zoom]??1,data.focusDepartment);app.render();
+    fitCamera(camera,app,layout,[.85,1,1.15][data.zoom]??1,data.focusDepartment);
+    currentMapScale=camera.scale.x;isFocusedMap=Boolean(data.focusDepartment);
+    applyMapLabels(currentMapScale,isFocusedMap);app.render();
   }
   window.addEventListener('wk:campus-state',e=>{data=e.detail;render();});
   if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{if(currentLayout){app.resize();render();}}).observe(host);
