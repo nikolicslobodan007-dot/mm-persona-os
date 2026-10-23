@@ -24,6 +24,10 @@ dependencies = [
     # lokalno preko fastembed (ONNX, CPU). Model se peče u sliku (vidi
     # Dockerfile) pa radi bez mreže; memorijski sloj ostaje na hash-modelu.
     "fastembed>=0.4,<1.0",
+    # ADR-0031 Libri sloj 2: ekstrakcija teksta iz PDF-a (geometrijska
+    # rekonstrukcija reči iz charbox koordinata, presedan Grinder). PDFium je
+    # BSD-3, vezivanja Apache-2.0 — nije ZARAZNA (ADR-0079).
+    "pypdfium2>=5,<6",
 ]
 
 [project.optional-dependencies]
