@@ -44,7 +44,8 @@ def run_eval(k: int = 5) -> dict | None:
         ranks, times, misses = [], [], []
         for q, expected in golden.PITANJA:
             t0 = time.perf_counter()
-            got = vektori.pretrazi(q, top_k=20, min_confidence=0.6)
+            got = vektori.pretrazi(q, top_k=20, min_confidence=0.6,
+                                   document_id="doc_eval_sloj3")
             times.append((time.perf_counter() - t0) * 1000)
             ids = [b.block_id for b, _ in (got or [])]
             rank = ids.index(expected) + 1 if expected in ids else None

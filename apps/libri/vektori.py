@@ -67,6 +67,7 @@ def pretrazi(
     *,
     top_k: int = 5,
     min_confidence: float = 0.6,
+    document_id: str | None = None,
     model_key: str | None = None,
 ) -> list[tuple[Any, float]] | None:
     """Semantička pretraga blokova (ADR-0031 sloj 3).
@@ -78,6 +79,9 @@ def pretrazi(
 
     Filter: samo blokovi sa `perm_ai_read=True` i `extraction_confidence >=
     min_confidence` (odseca artefakte sa naslovne/ sadržaja iz sloja 2).
+    `document_id` ograničava pretragu na jedan dokument (`block_id` nije
+    jedinstven između dokumenata — zato eval i pretraga po dokumentu moraju da
+    se ograniče, inače blokovi iz drugih dokumenata kontaminiraju rezultat).
     """
     from pgvector.django import CosineDistance
 
@@ -90,14 +94,15 @@ def pretrazi(
         log.warning("semantička pretraga blokova pala (model nedostupan): %s", e)
         return None
     mk = model_key or embeddings.vestina_model_key()
+    qs = BlockEmbedding.objects.filter(
+        model_key=mk,
+        block__perm_ai_read=True,
+        block__extraction_confidence__gte=min_confidence,
+    )
+    if document_id:
+        qs = qs.filter(block__document__document_id=document_id)
     redovi = list(
-        BlockEmbedding.objects
-        .filter(
-            model_key=mk,
-            block__perm_ai_read=True,
-            block__extraction_confidence__gte=min_confidence,
-        )
-        .annotate(dist=CosineDistance("embedding", qv))
+        qs.annotate(dist=CosineDistance("embedding", qv))
         .order_by("dist")
         .select_related("block")[:top_k]
     )
