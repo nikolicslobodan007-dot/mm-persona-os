@@ -5,6 +5,7 @@
 import 'pixi.js/unsafe-eval';  // CSP: non-eval sync (script-src 'self', bez unsafe-eval)
 import {Application, Container, Graphics, Text, TextStyle} from 'pixi.js';
 import {layoutCampus} from './layout.mjs';
+import {cameraForCampus} from './camera.mjs';
 
 const ROOT_ID = 'officeScene';
 const HOST_ID = 'officeSceneHost';
@@ -124,22 +125,27 @@ function backdrop(world,layout){
   world.addChild(gRect(0,0,layout.width,layout.height,0x0b1a29));
   for(let i=0;i<layout.width;i+=46)world.addChild(gLine(i,0,i,layout.height,0x8ca5b9,1,.045));
   for(let i=0;i<layout.height;i+=46)world.addChild(gLine(0,i,layout.width,i,0x8ca5b9,1,.045));
-  // Shared hallways: all rooms sit on one building plate (not separate independent cards).
-  for(let row=0;row<layout.rooms.length;row+=2){
-    const room=layout.rooms[row], y=room.y+room.height+11;
-    world.addChild(gRect(28,y,layout.width-56,50,0x3d5265,9,.8));
-    for(let xx=44;xx<layout.width-45;xx+=82)world.addChild(gLine(xx,y+42,xx+28,y+42,0x9fb8ca,2,.24));
+  // Shared hallways follow actual row geometry, not hard-coded 2-column pairs.
+  // They join all room entrances into one connected building plate.
+  for (const row of layout.rows.slice(0, -1)) {
+    const y = row.y + row.height + 12;
+    world.addChild(gRect(26, y, layout.width - 52, Math.max(22, layout.rowGap - 24),
+      0x3d5265, 9, .82));
+    for (let xx = 45; xx < layout.width - 45; xx += 82) {
+      world.addChild(gLine(xx, y + 32, xx + 28, y + 32, 0x9fb8ca, 2, .24));
+    }
+  }
+  // A left-hand vertical connector also joins corridors across floor rows.
+  if (layout.rows.length > 1) {
+    world.addChild(gRect(20, layout.rows[0].y + 24, 27,
+      layout.height - 2 * layout.rows[0].y - 48, 0x425a70, 6, .8));
   }
 }
-function fitCamera(camera,app,layout,zoom,roomFocus){
-  const viewportW=app.screen.width, viewportH=app.screen.height;
-  const scale=clamp(Math.min(viewportW/layout.width,viewportH/layout.height)*zoom,.22,2.1);
-  camera.scale.set(scale);
-  const focus=roomFocus ? layout.rooms.find(r=>r.code===roomFocus) : null;
-  const cx=focus?focus.x+focus.width/2:layout.width/2;
-  const cy=focus?focus.y+focus.height/2:layout.height/2;
-  camera.x=viewportW/2-cx*scale;
-  camera.y=viewportH/2-cy*scale;
+function fitCamera(camera, app, layout, zoom, roomFocus) {
+  const state = cameraForCampus(layout, app.screen.width, app.screen.height, zoom, roomFocus);
+  camera.scale.set(state.scale);
+  camera.x = state.x;
+  camera.y = state.y;
 }
 
 (async()=>{
@@ -192,7 +198,7 @@ function fitCamera(camera,app,layout,zoom,roomFocus){
   function onDepartment(code){window.dispatchEvent(new CustomEvent('wk:scene-department-focus',{detail:{code}}));}
   function render(){
     if(!data)return;
-    const layout=layoutCampus(data.agents,data.focusDepartment);
+    const layout=layoutCampus(data.agents,data.focusDepartment,{width:app.screen.width,height:app.screen.height});
     currentLayout=layout;camera.removeChildren().forEach(x=>x.destroy({children:true}));
     const world=new Container();camera.addChild(world);backdrop(world,layout);
     const running=new Set(data.confirmedRunning||[]);
