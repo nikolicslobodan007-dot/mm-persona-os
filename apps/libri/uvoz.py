@@ -96,4 +96,10 @@ def uvezi(path, *, naslov="", licenca="", naziv_licence=""):
             )
             for b in blokovi
         ])
+
+    # Sloj 3: semantički vektori blokova — van transakcije i best-effort (vektor
+    # je indeks, ne izvor istine; ako model nije dostupan, uvoz svejedno uspeva,
+    # a `libri reindeksiraj` dopuni vektore kasnije — ADR-0031 sloj 3).
+    from apps.libri import vektori
+    vektori.embeduj(dok.blocks.all())
     return dok
