@@ -34,6 +34,13 @@ class LibriDocument(UUIDModel):
     schema_version = models.CharField(max_length=16, default=LKP_SCHEMA_VERSION)
     running_headers_removed = JSON_LIST()
     ingested_at = models.DateTimeField(null=True, blank=True)
+    # ADR-0031 sloj 2: izvor sa licencom (KnowledgeSource) + checksum za dedup.
+    # `source` je null jer je sloj 1 napravio dokument bez njega; uvoz ga popuni.
+    source = models.ForeignKey(
+        "memory.KnowledgeSource", on_delete=models.CASCADE,
+        null=True, blank=True, related_name="libri_documents",
+    )
+    checksum = models.CharField(max_length=64, blank=True)
 
     class Meta:
         db_table = "libri_document"
