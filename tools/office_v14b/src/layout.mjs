@@ -32,6 +32,9 @@ export function roomTheme(code, name) {
   if (/podrš|support|service/.test(value)) return 'support';
   if (/istraž|research|tržišt/.test(value)) return 'research';
   if (/kvalitet|compliance|quality|bezbedn/.test(value)) return 'quality';
+  if (/logistik|magacin|skladišt|warehouse/.test(value)) return 'logistics';
+  if (/prodaj|izvoz|sales|export/.test(value)) return 'sales';
+  if (/razvoj|održavanje|informacion|tehnolog|it sistemi|software|technology/.test(value)) return 'technology';
   return 'general';
 }
 

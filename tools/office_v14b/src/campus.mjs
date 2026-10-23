@@ -7,6 +7,7 @@ import {Application, Container, Graphics, Text, TextStyle} from 'pixi.js';
 import {layoutCampus} from './layout.mjs';
 import {avatarStyleFor, shouldShowNameAtScale} from './avatar-style.mjs';
 import {cameraForCampus} from './camera.mjs';
+import {drawRoomEnvironment} from './room-art.mjs';
 
 const ROOT_ID = 'officeScene';
 const HOST_ID = 'officeSceneHost';
@@ -38,81 +39,15 @@ function addText(parent,value,x,y,size=14,color=0xeaf2ff,weight='normal',anchorX
   const t=new Text({text:String(value),style:new TextStyle({fontFamily:FONT,fontSize:size,fill:color,fontWeight:weight})});
   t.x=x;t.y=y;t.anchor.set(anchorX,0.5);parent.addChild(t);return t;
 }
-function furnishing(parent,room,theme){
-  const {x,y,width:w,height:h}=room;
-  // Lower-left sofa, department-specific furniture and plants. These do not imply work.
-  const group = new Container();parent.addChild(group);
-  // Department signature: stable decorative details, never a work-status animation.
-  group.addChild(gRect(x+143,y+132,w-286,Math.max(30,h-240),theme.accent,18,.075));
-  group.addChild(gRect(x+23,y+58,7,Math.max(24,h-155),theme.accent,3,.45));
-  group.addChild(gRect(x+18,y+h-83,120,25,theme.desk,9));
-  group.addChild(gRect(x+24,y+h-100,110,22,0x4d6079,9));
-  group.addChild(gRect(x+29,y+h-57,90,13,0x172437,4));
-  group.addChild(gRect(x+w-116,y+h-93,96,13,0x202b36,3));
-  for(const dx of [36,w-39]){
-    const px=x+dx,py=y+h-29;
-    group.addChild(gCircle(px,py+3,17,0x101c28,.45));
-    group.addChild(gRect(px-9,py-7,18,15,0x97785c,3));
-    for(const shift of [-9,0,9]) group.addChild(gCircle(px+shift,py-17-(shift===0?6:0),12,0x34796b));
-  }
-  if(room.theme==='creative'){
-    group.addChild(gRect(x+w-145,y+58,106,77,0x1c2b39,3));
-    group.addChild(gRect(x+w-137,y+67,90,60,0x395b78,2));
-    group.addChild(gRect(x+w-121,y+84,48,3,0xf6c37f,1));
-    group.addChild(gRect(x+w-121,y+96,58,3,0x62d0cd,1));
-  }else if(room.theme==='finance'){
-    group.addChild(gRect(x+w-150,y+53,118,91,0x203141,3));
-    for(let k=0;k<4;k++)group.addChild(gLine(x+w-140,y+71+k*16,x+w-54,y+71+k*16,0x60859d,2));
-  }else if(room.theme==='executive'){
-    group.addChild(gRect(x+w-154,y+60,116,69,0x8b6a45,9));
-    group.addChild(gRect(x+w-143,y+68,94,52,0xa78a5c,5));
-  }else if(room.theme==='procurement'){
-    for(let k=0;k<3;k++){group.addChild(gRect(x+w-141+k*29,y+69,25,37,0x907857,3));group.addChild(gRect(x+w-137+k*29,y+73,17,3,0xcdb68b,1));}
-  }else if(room.theme==='research'){
-    group.addChild(gRect(x+w-150,y+59,124,76,0x25394b,5));
-    for(let k=0;k<4;k++)group.addChild(gCircle(x+w-124+k*27,y+91+(k%2)*13,7,theme.accent,.66));
-    group.addChild(gLine(x+w-128,y+114,x+w-42,y+73,theme.accent,2,.7));
-  }else if(room.theme==='support'){
-    for(let k=0;k<3;k++){
-      group.addChild(gRect(x+w-147+k*40,y+64,33,56,0x183142,5));
-      group.addChild(gRect(x+w-141+k*40,y+70,21,20,0x5c9d99,4));
-    }
-  }else if(room.theme==='quality'){
-    group.addChild(gRect(x+w-152,y+57,127,80,0x1b3446,6));
-    for(let k=0;k<3;k++){
-      group.addChild(gRect(x+w-137,y+72+k*21,11,11,theme.accent,2,.68));
-      group.addChild(gLine(x+w-119,y+78+k*21,x+w-46,y+78+k*21,0xb9c8d5,2,.7));
-    }
-  }else{
-    group.addChild(gRect(x+w-133,y+55,96,61,0x213c53,4));
-    group.addChild(gRect(x+w-122,y+68,74,38,0x50748a,2));
-  }
-}
 function drawRoom(parent,room,running,selected,onAgent,onDepartment){
   const theme=PALETTE[room.theme]||PALETTE.general;
   const {x,y,width:w,height:h}=room;
   const item=new Container();parent.addChild(item);
-  item.addChild(gRect(x+13,y+13,w,h,0x000813,22,.42));
-  item.addChild(gRect(x,y,w,h,theme.floor,13));
-  // Quiet top-down flooring, wall parapet, windows; no fake motion.
-  for(let px=x+28;px<x+w;px+=38)item.addChild(gLine(px,y+53,px,y+h-12,0xa6bac1,1,.055));
-  for(let py=y+56;py<y+h;py+=38)item.addChild(gLine(x+14,py,x+w-14,py,0xa6bac1,1,.055));
-  item.addChild(gRect(x,y,w,39,0x0f2134,7));
-  item.addChild(gRect(x,y+39,w,9,theme.walls,1));
-  item.addChild(gRect(x,y+38,15,h-38,0x23394a,2));
-  item.addChild(gRect(x+w-15,y+38,15,h-38,0x23394a,2));
-  item.addChild(gRect(x,y+h-12,w,12,0x172837,2));
-  item.addChild(gRect(x+180,y+40,140,7,0xddce9d,2,.65));
-  item.addChild(gRect(x+w-89,y+22,51,43,0x27425a,3));
-  item.addChild(gRect(x+w-83,y+28,39,30,0x9dc4d8,2,.75));
-  item.addChild(gRect(x+w-73,y+31,3,24,0x26475d,0));
-  // Decorative corridor entrance at front center.
-  item.addChild(gRect(x+w/2-42,y+h-13,84,14,0x648799,2));
+  drawRoomEnvironment(item,room);
   const title=room.name.length>34?room.name.slice(0,31)+'…':room.name;
   const roomLabel = addText(item,title,x+22,y+22,17,0xf3fbff,'bold');
   roomTitleLayers.push({label:roomLabel, width:room.width, rawWidth:roomLabel.width});
   addText(item,`${room.people.length} AI`,x+w-117,y+22,12,theme.accent,'bold');
-  furnishing(item,room,theme);
   for(const agent of room.people) drawAgent(item,agent,theme,selected===agent.public_id,running.has(agent.public_id),onAgent);
   // Clickable room label / tile header, separate from agents.
   const hotspot=gRect(x+2,y+2,w-4,37,0xffffff,4,.001);hotspot.eventMode='static';hotspot.cursor='pointer';
