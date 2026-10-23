@@ -6,6 +6,8 @@ Radnje:
   reindeksiraj — napravi/osveži semantičke vektore blokova (sloj 3). Bez novog
                  materijala, pa ne traži `--actor`.
   pretrazi     — semantička pretraga blokova po prirodnom jeziku (sloj 3).
+  tvrdnje      — izvuci (subjekat, relacija, vrednost) iz blokova dokumenta u
+                 KnowledgeFact (sloj 4a). Čovek pokreće izvođenje: `--actor user:`.
 """
 
 from __future__ import annotations
@@ -13,17 +15,18 @@ from __future__ import annotations
 from django.core.management.base import BaseCommand, CommandError
 
 from api.context import bind
-from apps.libri import vektori
-from apps.libri.models import Block
+from apps.libri import tvrdnje, vektori
+from apps.libri.models import Block, LibriDocument
 from apps.libri.uvoz import UvozError, uvezi
 
 
 class Command(BaseCommand):
-    help = "Sloj znanja: libri uvezi | reindeksiraj | pretrazi ..."
+    help = "Sloj znanja: libri uvezi | reindeksiraj | pretrazi | tvrdnje ..."
 
     def add_arguments(self, parser):
-        parser.add_argument("radnja", choices=["uvezi", "reindeksiraj", "pretrazi"],
-                            help="uvezi | reindeksiraj | pretrazi")
+        parser.add_argument(
+            "radnja", choices=["uvezi", "reindeksiraj", "pretrazi", "tvrdnje"],
+            help="uvezi | reindeksiraj | pretrazi | tvrdnje")
         parser.add_argument("--iz", default="", help="Putanja do PDF-a (uvezi).")
         parser.add_argument("--naslov", default="",
                             help="Naslov dokumenta (podrazumevano: ime fajla).")
@@ -45,6 +48,8 @@ class Command(BaseCommand):
             self._uvezi(options)
         elif radnja == "reindeksiraj":
             self._reindeksiraj(options)
+        elif radnja == "tvrdnje":
+            self._tvrdnje(options)
         else:
             self._pretrazi(options)
 
@@ -82,6 +87,28 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"Reindeksirano: {rez['upisano']} upisano, "
             f"{rez['preskoceno']} preskočeno."
+        ))
+
+    def _tvrdnje(self, options):
+        actor = options["actor"]
+        doc_id = options["dokument"]
+        if not actor.startswith("user:"):
+            raise CommandError(
+                "--actor mora da počne sa 'user:' (čovek pokreće izvođenje tvrdnji)."
+            )
+        if not doc_id:
+            raise CommandError("tvrdnje traži --dokument <document_id>.")
+        dok = LibriDocument.objects.filter(document_id=doc_id).first()
+        if dok is None:
+            raise CommandError(f"Dokument ne postoji: {doc_id}.")
+        try:
+            with bind(actor_id=actor):
+                rez = tvrdnje.upisi(dok)
+        except ValueError as e:
+            raise CommandError(str(e)) from e
+        self.stdout.write(self.style.SUCCESS(
+            f"Tvrdnje za {doc_id}: {rez['upisano']} upisano, "
+            f"{rez['obrisano']} staro obrisano."
         ))
 
     def _pretrazi(self, options):
