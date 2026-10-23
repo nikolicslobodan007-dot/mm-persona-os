@@ -3,11 +3,12 @@
  * Bundled *locally* using esbuild with pinned pixi.js. No CDN/inline scripts.
  */
 import 'pixi.js/unsafe-eval';  // CSP: non-eval sync (script-src 'self', bez unsafe-eval)
-import {Application, Container, Graphics, Text, TextStyle} from 'pixi.js';
+import {Application, Assets, Container, Graphics, Sprite, Text, TextStyle} from 'pixi.js';
 import {layoutCampus} from './layout.mjs';
 import {avatarStyleFor, shouldShowNameAtScale} from './avatar-style.mjs';
 import {cameraForCampus} from './camera.mjs';
 import {drawRoomEnvironment} from './room-art.mjs';
+import {loadPremiumRoomAssets} from './premium-assets.mjs';
 
 const ROOT_ID = 'officeScene';
 const HOST_ID = 'officeSceneHost';
@@ -22,6 +23,8 @@ const PALETTE = {
   general:{floor:0x303a4a,walls:0x60748a,accent:0x75b7dd,desk:0x776355},
 };
 const FONT = 'Arial, sans-serif';
+// Filled only from explicitly allowlisted, same-origin room-background assets.
+let premiumRoomTextures = new Map();
 // Rebuilt with each scene, never based on status READY or runtime LIVE.
 let textLayers = [];
 let roomTitleLayers = [];
@@ -43,7 +46,16 @@ function drawRoom(parent,room,running,selected,onAgent,onDepartment){
   const theme=PALETTE[room.theme]||PALETTE.general;
   const {x,y,width:w,height:h}=room;
   const item=new Container();parent.addChild(item);
-  drawRoomEnvironment(item,room);
+  // Rich image backdrop when locally available; existing vector artwork is the fallback.
+  const texture = premiumRoomTextures.get(room.theme) || premiumRoomTextures.get('general');
+  if (texture) {
+    const background = new Sprite({texture});
+    background.x = x; background.y = y;
+    background.width = w; background.height = h;
+    item.addChild(background);
+  } else {
+    drawRoomEnvironment(item, room);
+  }
   const title=room.name.length>34?room.name.slice(0,31)+'…':room.name;
   const roomLabel = addText(item,title,x+22,y+22,17,0xf3fbff,'bold');
   roomTitleLayers.push({label:roomLabel, width:room.width, rawWidth:roomLabel.width});
@@ -208,6 +220,15 @@ function fitCamera(camera, app, layout, zoom, roomFocus) {
   }
   window.addEventListener('wk:campus-state',e=>{data=e.detail;render();});
   if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{if(currentLayout){app.resize();render();}}).observe(host);
+  // Async progressive enhancement: first render uses existing room art; assets replace it
+  // after load, without modifying the allowlisted agent data or pausing navigation.
+  const assetEntries = [...document.querySelectorAll('meta[name="wk-premium-asset"]')]
+    .map(m => ({theme:m.dataset.theme, url:m.content}));
+  loadPremiumRoomAssets(url => Assets.load(url), assetEntries, window.location.origin)
+    .then(textures => {
+      if (textures.size) { premiumRoomTextures = textures; if (data) render(); }
+    })
+    .catch(() => { /* existing procedural artwork remains visible */ });
   updateMode();window.dispatchEvent(new Event('wk:scene-request'));
   window.addEventListener('pagehide',()=>{try{app?.destroy(true,{children:true});}catch(_e){/* already gone */}}, {once:true});
 })();
