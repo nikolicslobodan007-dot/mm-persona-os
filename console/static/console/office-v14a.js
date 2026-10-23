@@ -128,7 +128,7 @@
       const room = el("article", "office-room");
       const id = add(el("div"),label(group.name,"room-name"),label("  "+code+" · "+group.people.length,"room-caption"));
       const toggle = el("button", "room-focus", focusDepartment ? "← Sve kancelarije" : "Uđi u odeljenje ↗");
-      toggle.type="button";toggle.addEventListener("click", ()=> {focusDepartment = focusDepartment ? "" : code;renderCampus();});
+      toggle.type="button";toggle.addEventListener("click", () => focusRoom(code));
       const header=add(el("div", "room-header"),id,toggle);
       const people = el("div", "room-people" + (group.people.length>=6 ? " large-room":""));
       group.people.forEach(a=>people.appendChild(spot(a)));
@@ -150,6 +150,19 @@
     }}));
   }
   function renderSelection() { renderList(); renderCampus(); }
+  function focusRoom(code) {
+    const nextFocus=focusDepartment === code ? "" : code;
+    focusDepartment=nextFocus;
+    if(nextFocus && selected && (agents.find(a=>a.public_id===selected)?.department?.code || "UNASSIGNED") !== nextFocus){
+      // Clear stale agent details in BOTH Pixi and accessible DOM modes.
+      selected="";currentSelectionRequest++;confirmedRunning.clear();
+      ui.inspector.replaceChildren(el("p","wk-muted","Izaberi agenta iz prikazanog odeljenja."));
+      const nextUrl=new URL(window.location.href);
+      nextUrl.searchParams.delete("agent");
+      if(window.history?.replaceState)window.history.replaceState(null,"",nextUrl.pathname+nextUrl.search);
+    }
+    renderSelection();
+  }
   function detailRow(labelText,value) {
     return add(el("div","wk-dl-row"),el("dt","",labelText),el("dd","",value ?? "—"));
   }
@@ -221,6 +234,11 @@
   }
   async function selectAgent(id) {
     if(!validId(id))return;
+    const target=agents.find(a=>a.public_id===id);
+    // An agent chosen in the left register must never remain hidden in a different room.
+    if(target && focusDepartment && focusDepartment !== (target.department?.code || "UNASSIGNED")){
+      focusDepartment=target.department?.code || "UNASSIGNED";
+    }
     selected=id;const token=++currentSelectionRequest;
     confirmedRunning.delete(id);renderSelection();
     ui.inspector.replaceChildren(el("p","wk-muted","Učitavanje profila…"));
@@ -281,8 +299,7 @@
   window.addEventListener("wk:scene-department-focus", e => {
     const code = e.detail?.code;
     if (typeof code === "string" && agents.some(a => (a.department?.code || "UNASSIGNED") === code)) {
-      focusDepartment = focusDepartment === code ? "" : code;
-      renderCampus();
+      focusRoom(code);
     }
   });
   refresh();

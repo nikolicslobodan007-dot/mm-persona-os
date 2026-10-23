@@ -102,8 +102,11 @@ export function layoutCampus(records, focusDepartment = '', viewport = {}) {
     const row = groups.slice(start, start + geometry.cols);
     const maxHeight = Math.max(...row.map(group => roomHeight(group.agents.length)));
     rows.push({index: rows.length, y, height: maxHeight});
+    // Center incomplete rows; there are no fake rooms to fill empty slots.
+    // Avoid shifting the rest of the building or modifying department order.
+    const offset = (geometry.cols - row.length) * (ROOM_W + ROOM_GAP) / 2;
     row.forEach((room, col) => {
-      const x = ROOM_X + col * (ROOM_W + ROOM_GAP);
+      const x = ROOM_X + offset + col * (ROOM_W + ROOM_GAP);
       room.x = x; room.y = y; room.width = ROOM_W; room.height = maxHeight;
       room.people = room.agents.map((agent, i) => ({
         ...agent,
