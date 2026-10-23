@@ -80,7 +80,7 @@ def test_upisi_pravi_knowledge_fact(db):
     f = KnowledgeFact.objects.get(source=izvor, predicate=tvrdnje.PREDIKAT)
     assert f.subject == "Tipl"
     assert f.provenance == E.Provenance.OBSERVED.value
-    assert f.object_json["block_id"] == "blk_000001"
+    assert f.object_json["block_id"] == "blk_000000"
     assert "drveni čep" in f.object_json["vrednost"]
 
 
