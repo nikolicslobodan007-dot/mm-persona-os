@@ -64,3 +64,19 @@ PITANJA: list[tuple[str, str]] = [
     ("čemu služi zaštita za oči i masku u radionici?", "blk_000011"),
     ("šta je tanki list drveta zalepljen preko jeftinije podloge?", "blk_000012"),
 ]
+
+
+#: Zlatni skup za merenje izvlačenja tvrdnji (ADR-0031 sloj 4a).
+#: (tekst bloka, očekivani subjekat tvrdnje ili None ako rečenica NIJE definiciona).
+#: Meri preciznost (koliko izvučenih je tačno) i odziv (koliko očekivanih je uhvaćeno)
+#: determinističke osnove — pre nego što LLM uđe kao zamenljiv sloj.
+TVRDNJE_ZLATNE: list[tuple[str, str | None]] = [
+    ("Furnir je vrlo tanak list drveta koji se lepi preko jeftinije osnove.", "Furnir"),
+    ("Rende je ručni alat koji skida tanak sloj drveta.", "Rende"),
+    ("Tipl je drveni čep koji spaja dve daske bez eksera.", "Tipl"),
+    ("Lak je zaštitni premaz za drvene površine.", "Lak"),
+    ("Tvrdo drvo predstavlja trajniji materijal od mekog drveta.", "Tvrdo drvo"),
+    ("Brušenje se radi u nekoliko prolaza do glatke površine.", None),
+    ("Majstor bira drvo prema nameni komada.", None),
+    ("Pre rezanja daska se meri dvaput.", None),
+]
