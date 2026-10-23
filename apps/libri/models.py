@@ -13,7 +13,9 @@ samo ta dva tipa bloka.
 
 from __future__ import annotations
 
+from django.conf import settings
 from django.db import models
+from pgvector.django import VectorField
 
 from common.models import JSON_LIST, UUIDModel, unit_interval
 
@@ -103,3 +105,39 @@ class Block(UUIDModel):
 
     def __str__(self) -> str:
         return f"{self.document.document_id}#{self.order}"
+
+
+class BlockEmbedding(UUIDModel):
+    """Vektor Libri bloka za semantičku pretragu (ADR-0031, sloj 3).
+
+    Odvojen zapis kao `KnowledgeEmbedding` — re-embedding bez diranja bloka, više
+    modela uz isti blok (Canon §10.5). Koristi isti semantički model kao veštine
+    (`VESTINA_EMBEDDING_MODEL`, MiniLM-L12). Vektor je indeks za pronalaženje
+    kandidata, nikad izvor istine (Canon §4.1). Bez HNSW indeksa za sada: korpus
+    je mali, sekvencijalna kosinusna pretraga je trenutna (ista nota kao
+    `KnowledgeEmbedding`)."""
+
+    block = models.ForeignKey(
+        Block, on_delete=models.CASCADE, related_name="embeddings",
+    )
+    model_key = models.CharField(max_length=120)
+    dimensions = models.PositiveSmallIntegerField(
+        help_text="Zapisano uz vektor: Canon §10.5 traži novu kolonu, ne izmenu.",
+    )
+    embedding = VectorField(dimensions=settings.VESTINA_EMBEDDING_DIM)
+    text_hash = models.CharField(
+        max_length=64, blank=True,
+        help_text="Memory v0.1 §6 — isti tekst i isti model → vektor se ne računa ponovo.",
+    )
+
+    class Meta:
+        db_table = "libri_block_embedding"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["block", "model_key"],
+                name="libri_block_embedding_unique_model",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.block.block_id}@{self.model_key}"
