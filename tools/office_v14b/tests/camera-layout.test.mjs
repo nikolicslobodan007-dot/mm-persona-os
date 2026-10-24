@@ -28,8 +28,9 @@ test('fit-to-bounds occupies screen on desktop without clipping', () => {
   const layout = layoutCampus(agents, '', {width: 1050, height: 520});
   const camera = cameraForCampus(layout, 1050, 520);
   assert.ok(camera.fittedWidth / 1050 >= .72, 'building should occupy most available width');
-  assert.ok(camera.fittedWidth <= 1050 * .921);
-  assert.ok(camera.fittedHeight <= 520 * .901);
+  // B7: teže margine (fit 0.965/0.955) — popunjava više ekrana, i dalje bez odsecanja.
+  assert.ok(camera.fittedWidth <= 1050 * .966);
+  assert.ok(camera.fittedHeight <= 520 * .956);
   assert.ok(camera.x >= -0.0001 && camera.y >= -0.0001);
 });
 
