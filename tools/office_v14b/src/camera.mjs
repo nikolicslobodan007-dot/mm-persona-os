@@ -12,9 +12,14 @@ export function cameraForCampus(layout, viewportWidth, viewportHeight, zoom = 1,
   const worldW = positive(layout?.width, 1);
   const worldH = positive(layout?.height, 1);
   const desiredZoom = clamp(positive(zoom, 1), 0.5, 3);
-  const fit = Math.min(0.92 * w / worldW, 0.90 * h / worldH);
-  const scale = clamp(fit * desiredZoom, 0.025, 2.5);
   const focusRoom = department && layout?.rooms?.find(r => r.code === department);
+  // B7: every focused department uses the room bounds, not the one-room
+  // campus plate with artificial padding. This is presentation-only geometry.
+  const fit = focusRoom
+    ? Math.min(0.965 * w / (positive(focusRoom.width, worldW) + 54),
+      0.955 * h / (positive(focusRoom.height, worldH) + 42))
+    : Math.min(0.965 * w / worldW, 0.955 * h / worldH);
+  const scale = clamp(fit * desiredZoom, 0.025, 2.5);
   const cx = focusRoom ? focusRoom.x + focusRoom.width / 2 : worldW / 2;
   const cy = focusRoom ? focusRoom.y + focusRoom.height / 2 : worldH / 2;
   return {

@@ -11,6 +11,8 @@ import {drawRoomEnvironment} from './room-art.mjs';
 import {loadPremiumRoomAssets} from './premium-assets.mjs';
 import {loadB5Textures, isExecutivePilotRoom, premiumAvatarKey,
   b5RoomReady, executiveViewAsset} from './executive-pilot.mjs';
+import {loadB6Textures,b6RoomReady,b6RoomAsset,b6AvatarKey} from './executive-v6.mjs';
+import {departmentLabelScale,roomHitArea} from './visual-legibility.mjs';
 
 const ROOT_ID = 'officeScene';
 const HOST_ID = 'officeSceneHost';
@@ -29,6 +31,8 @@ const FONT = 'Arial, sans-serif';
 let premiumRoomTextures = new Map();
 // Isolated PR-B5 Executive Office pilot; optional, independent of B4.
 let b5Textures = new Map();
+// PR-B6 has priority only for the real Uprava; any failed texture preserves B5/B4.
+let b6Textures = new Map();
 // Rebuilt with each scene, never based on status READY or runtime LIVE.
 let textLayers = [];
 let roomTitleLayers = [];
@@ -56,12 +60,23 @@ function b5AddLayer(item, key, room) {
   item.addChild(layer);
   return true;
 }
-function drawRoom(parent,room,running,selected,onAgent,onDepartment,focusDepartment=''){
+function b6AddLayer(item,key,room) {
+  const texture=b6Textures.get(key);
+  if(!texture)return false;
+  const sprite=new Sprite({texture});
+  sprite.x=room.x;sprite.y=room.y;sprite.width=room.width;sprite.height=room.height;
+  sprite.eventMode='none';item.addChild(sprite);
+  return true;
+}
+function drawRoom(parent,room,running,selected,onAgent,onDepartment,focusDepartment='',redraw=()=>{}){
   const theme=PALETTE[room.theme]||PALETTE.general;
   const {x,y,width:w,height:h}=room;
   const item=new Container();parent.addChild(item);
-  const pilot=b5RoomReady(room,b5Textures,focusDepartment);
-  if (pilot) {
+  const v6=b6RoomReady(room,b6Textures,focusDepartment);
+  const pilot=!v6 && b5RoomReady(room,b5Textures,focusDepartment);
+  if(v6){
+    b6AddLayer(item,b6RoomAsset(room,focusDepartment),room);
+  }else if (pilot) {
     b5AddLayer(item,executiveViewAsset(room,focusDepartment),room);
     b5AddLayer(item,'executive-room-furniture',room);
   } else {
@@ -73,12 +88,30 @@ function drawRoom(parent,room,running,selected,onAgent,onDepartment,focusDepartm
       item.addChild(background);
     }else{drawRoomEnvironment(item,room);}
   }
+  // B7: transparent room-area target BELOW agent sprites.
+  // A click on empty floor opens the department; agent taps still win.
+  const area=roomHitArea(room);
+  if(area){
+    const floorHit=gRect(area.x,area.y,area.width,area.height,0xffffff,5,.001);
+    floorHit.eventMode='static';floorHit.cursor='zoom-in';
+    const border=new Graphics().roundRect(x+3,y+40,w-6,h-43,7)
+      .stroke({color:0x83d9e9,width:4,alpha:.8});
+    border.visible=false;border.eventMode='none';item.addChild(border);
+    floorHit.on('pointerover',()=>{border.visible=true;redraw();});
+    floorHit.on('pointerout',()=>{border.visible=false;redraw();});
+    floorHit.on('pointertap',e=>{e.stopPropagation();onDepartment(room.code);});
+    item.addChild(floorHit);
+  }
   for(const agent of room.people){
-    const key=pilot?premiumAvatarKey(agent,room):null;
-    const texture=key?b5Textures.get(key):null;
+    const b5Key=(v6||pilot)?premiumAvatarKey(agent,room):null;
+    const b6Key=v6?b6AvatarKey(agent,room):null;
+    // A missing V6 figure falls back to an existing B5 figure, never a ghost agent.
+    const texture=(b6Key&&b6Textures.get(b6Key))||(b5Key&&b5Textures.get(b5Key))||null;
     drawAgent(item,agent,theme,selected===agent.public_id,running.has(agent.public_id),onAgent,texture);
   }
-  if(pilot){
+  if(v6){
+    b6AddLayer(item,'executive-foreground-v6',room);
+  }else if(pilot){
     b5AddLayer(item,'executive-room-foreground',room);
     b5AddLayer(item,'executive-room-light',room);
   }
@@ -157,9 +190,7 @@ function drawAgent(parent,a,theme,selected,isRunning,onAgent,premiumTexture=null
 function applyMapLabels(scale, focused=false){
   for(const x of textLayers)x.layer.visible=shouldShowNameAtScale(scale,focused,x.selected);
   for(const x of roomTitleLayers){
-    const wanted=Math.max(1,Math.min(1.8,11/Math.max(1,17*scale)));
-    const fit=Math.max(.6,(x.width-135)/Math.max(1,x.rawWidth));
-    x.label.scale.set(Math.min(wanted,fit));
+    x.label.scale.set(departmentLabelScale(x.rawWidth,x.width,scale,focused));
   }
 }
 
@@ -246,7 +277,7 @@ function fitCamera(camera, app, layout, zoom, roomFocus) {
     textLayers=[];roomTitleLayers=[];
     const world=new Container();camera.addChild(world);backdrop(world,layout);
     const running=new Set(data.confirmedRunning||[]);
-    for(const room of layout.rooms)drawRoom(world,room,running,data.selected,onAgent,onDepartment,data.focusDepartment);
+    for(const room of layout.rooms)drawRoom(world,room,running,data.selected,onAgent,onDepartment,data.focusDepartment,()=>app.render());
     fitCamera(camera,app,layout,[.85,1,1.15][data.zoom]??1,data.focusDepartment);
     currentMapScale=camera.scale.x;isFocusedMap=Boolean(data.focusDepartment);
     applyMapLabels(currentMapScale,isFocusedMap);app.render();
@@ -271,6 +302,12 @@ function fitCamera(camera, app, layout, zoom, roomFocus) {
   loadB5Textures(url=>Assets.load(url),b5AssetEntries,window.location.origin)
     .then(textures=>{if(textures.size){b5Textures=textures;if(data)render();}})
     .catch(()=>{/* PR-B4 rendering remains intact */});
+  // B6 is optional and cannot change the Django data model or leak protected images.
+  const b6AssetEntries=[...document.querySelectorAll('meta[name="wk-b6-asset"]')]
+    .map(meta=>({key:meta.dataset.asset,url:meta.content}));
+  loadB6Textures(url=>Assets.load(url),b6AssetEntries,window.location.origin)
+    .then(textures=>{if(textures.size){b6Textures=textures;if(data)render();}})
+    .catch(()=>{/* B5 continues to work without any B6 image */});
   updateMode();window.dispatchEvent(new Event('wk:scene-request'));
   window.addEventListener('pagehide',()=>{try{app?.destroy(true,{children:true});}catch(_e){/* already gone */}}, {once:true});
 })();

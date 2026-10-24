@@ -1,11 +1,11 @@
 /** Responsive, deterministic office layout. No backend data, secrets, DOM or renderer. */
 export const ROOM_W = 530;
-export const ROOM_GAP = 58;
-export const ROOM_X = 58;
-export const ROOM_Y = 70;
+export const ROOM_GAP = 46;
+export const ROOM_X = 48;
+export const ROOM_Y = 42;
 export const ROOM_MIN_H = 344;
 export const AGENTS_PER_ROW = 3;
-export const ROOM_VERTICAL_GAP = 62;
+export const ROOM_VERTICAL_GAP = 42;
 
 const clean = value => String(value ?? '').trim();
 export function safeAgent(agent) {
@@ -68,7 +68,7 @@ export function chooseCampusGrid(groups, viewport = {}) {
   let best = null;
   for (let cols = 1; cols <= Math.min(5, groups.length); cols++) {
     const candidate = geometryFor(groups, cols);
-    const scale = Math.min(width * 0.90 / candidate.width, height * 0.90 / candidate.height);
+    const scale = Math.min(width * 0.965 / candidate.width, height * 0.955 / candidate.height);
     const aspectPenalty = Math.abs(Math.log((candidate.width / candidate.height) / screenAspect));
     const lastRowEmpty = (cols - (groups.length % cols)) % cols;
     const score = scale * (1 - Math.min(aspectPenalty, 3) * 0.075)
