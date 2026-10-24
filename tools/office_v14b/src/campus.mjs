@@ -222,6 +222,9 @@ function fitCamera(camera, app, layout, zoom, roomFocus) {
   if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{if(currentLayout){app.resize();render();}}).observe(host);
   // Async progressive enhancement: first render uses existing room art; assets replace it
   // after load, without modifying the allowlisted agent data or pausing navigation.
+  // CSP (script-src 'self') forbids blob: Web Workers, which Pixi's Assets loader
+  // would otherwise spawn — load textures on the main thread instead (no CSP weakening).
+  Assets.setPreferences({preferWorkers: false});
   const assetEntries = [...document.querySelectorAll('meta[name="wk-premium-asset"]')]
     .map(m => ({theme:m.dataset.theme, url:m.content}));
   loadPremiumRoomAssets(url => Assets.load(url), assetEntries, window.location.origin)
