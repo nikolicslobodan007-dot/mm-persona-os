@@ -9,6 +9,8 @@ import {avatarStyleFor, shouldShowNameAtScale} from './avatar-style.mjs';
 import {cameraForCampus} from './camera.mjs';
 import {drawRoomEnvironment} from './room-art.mjs';
 import {loadPremiumRoomAssets} from './premium-assets.mjs';
+import {loadB5Textures, isExecutivePilotRoom, premiumAvatarKey,
+  b5RoomReady, executiveViewAsset} from './executive-pilot.mjs';
 
 const ROOT_ID = 'officeScene';
 const HOST_ID = 'officeSceneHost';
@@ -25,6 +27,8 @@ const PALETTE = {
 const FONT = 'Arial, sans-serif';
 // Filled only from explicitly allowlisted, same-origin room-background assets.
 let premiumRoomTextures = new Map();
+// Isolated PR-B5 Executive Office pilot; optional, independent of B4.
+let b5Textures = new Map();
 // Rebuilt with each scene, never based on status READY or runtime LIVE.
 let textLayers = [];
 let roomTitleLayers = [];
@@ -42,36 +46,64 @@ function addText(parent,value,x,y,size=14,color=0xeaf2ff,weight='normal',anchorX
   const t=new Text({text:String(value),style:new TextStyle({fontFamily:FONT,fontSize:size,fill:color,fontWeight:weight})});
   t.x=x;t.y=y;t.anchor.set(anchorX,0.5);parent.addChild(t);return t;
 }
-function drawRoom(parent,room,running,selected,onAgent,onDepartment){
+function b5AddLayer(item, key, room) {
+  const texture=b5Textures.get(key);
+  if (!texture) return false;
+  const layer=new Sprite({texture});
+  layer.x=room.x;layer.y=room.y;
+  layer.width=room.width;layer.height=room.height;
+  layer.eventMode='none';
+  item.addChild(layer);
+  return true;
+}
+function drawRoom(parent,room,running,selected,onAgent,onDepartment,focusDepartment=''){
   const theme=PALETTE[room.theme]||PALETTE.general;
   const {x,y,width:w,height:h}=room;
   const item=new Container();parent.addChild(item);
-  // Rich image backdrop when locally available; existing vector artwork is the fallback.
-  const texture = premiumRoomTextures.get(room.theme) || premiumRoomTextures.get('general');
-  if (texture) {
-    const background = new Sprite({texture});
-    background.x = x; background.y = y;
-    background.width = w; background.height = h;
-    item.addChild(background);
+  const pilot=b5RoomReady(room,b5Textures,focusDepartment);
+  if (pilot) {
+    b5AddLayer(item,executiveViewAsset(room,focusDepartment),room);
+    b5AddLayer(item,'executive-room-furniture',room);
   } else {
-    drawRoomEnvironment(item, room);
+    // Existing B4 room art remains a full fallback, unchanged for other rooms.
+    const texture=premiumRoomTextures.get(room.theme)||premiumRoomTextures.get('general');
+    if(texture){
+      const background=new Sprite({texture});
+      background.x=x;background.y=y;background.width=w;background.height=h;
+      item.addChild(background);
+    }else{drawRoomEnvironment(item,room);}
+  }
+  for(const agent of room.people){
+    const key=pilot?premiumAvatarKey(agent,room):null;
+    const texture=key?b5Textures.get(key):null;
+    drawAgent(item,agent,theme,selected===agent.public_id,running.has(agent.public_id),onAgent,texture);
+  }
+  if(pilot){
+    b5AddLayer(item,'executive-room-foreground',room);
+    b5AddLayer(item,'executive-room-light',room);
   }
   const title=room.name.length>34?room.name.slice(0,31)+'…':room.name;
-  const roomLabel = addText(item,title,x+22,y+22,17,0xf3fbff,'bold');
-  roomTitleLayers.push({label:roomLabel, width:room.width, rawWidth:roomLabel.width});
+  const roomLabel=addText(item,title,x+22,y+22,17,0xf3fbff,'bold');
+  roomTitleLayers.push({label:roomLabel,width:room.width,rawWidth:roomLabel.width});
   addText(item,`${room.people.length} AI`,x+w-117,y+22,12,theme.accent,'bold');
-  for(const agent of room.people) drawAgent(item,agent,theme,selected===agent.public_id,running.has(agent.public_id),onAgent);
-  // Clickable room label / tile header, separate from agents.
-  const hotspot=gRect(x+2,y+2,w-4,37,0xffffff,4,.001);hotspot.eventMode='static';hotspot.cursor='pointer';
+  const hotspot=gRect(x+2,y+2,w-4,37,0xffffff,4,.001);
+  hotspot.eventMode='static';hotspot.cursor='pointer';
   hotspot.on('pointertap',()=>onDepartment(room.code));item.addChild(hotspot);
 }
 function initials(name){const s=String(name||'?').split(' ').filter(Boolean);return s.length>1?(s[0][0]+s[1][0]).toUpperCase():s[0][0].toUpperCase();}
-function drawAgent(parent,a,theme,selected,isRunning,onAgent){
+function drawAgent(parent,a,theme,selected,isRunning,onAgent,premiumTexture=null){
   const {x,y}=a;
   const style=avatarStyleFor(a.public_id);
   if(!style)return;
   const c=new Container();parent.addChild(c);
   if(selected){c.addChild(gCircle(x,y+6,52,0x73dded,.14));c.addChild(new Graphics().circle(x,y+6,53).stroke({color:0x87f0e1,width:2.5,alpha:.94}));}
+  if (premiumTexture) {
+    // Pilot sprite stays separate from protected portrait assets; same live hitbox.
+    const sprite=new Sprite({texture:premiumTexture});
+    sprite.x=x-46;sprite.y=y-79;
+    sprite.width=92;sprite.height=122;
+    sprite.eventMode='none';c.addChild(sprite);
+  } else {
   c.addChild(gCircle(x,y+26,36,0x091827,.46));
   // Furniture and monitor are static even when an agent is READY.
   c.addChild(gRect(x-40,y-38,80,21,theme.desk,5));
@@ -109,6 +141,7 @@ function drawAgent(parent,a,theme,selected,isRunning,onAgent){
   if(style.glasses){
     for(const off of [-8,8])c.addChild(new Graphics().roundRect(x+off-6,y-35,12,10,3).stroke({color:0x263549,width:1.5}));
     c.addChild(gLine(x-2,y-31,x+2,y-31,0x263549,1.5));
+  }
   }
   const names = new Container();c.addChild(names);
   names.addChild(gRect(x-66,y+51,132,25,0x0a192e,8,.92));
@@ -213,7 +246,7 @@ function fitCamera(camera, app, layout, zoom, roomFocus) {
     textLayers=[];roomTitleLayers=[];
     const world=new Container();camera.addChild(world);backdrop(world,layout);
     const running=new Set(data.confirmedRunning||[]);
-    for(const room of layout.rooms)drawRoom(world,room,running,data.selected,onAgent,onDepartment);
+    for(const room of layout.rooms)drawRoom(world,room,running,data.selected,onAgent,onDepartment,data.focusDepartment);
     fitCamera(camera,app,layout,[.85,1,1.15][data.zoom]??1,data.focusDepartment);
     currentMapScale=camera.scale.x;isFocusedMap=Boolean(data.focusDepartment);
     applyMapLabels(currentMapScale,isFocusedMap);app.render();
@@ -232,6 +265,12 @@ function fitCamera(camera, app, layout, zoom, roomFocus) {
       if (textures.size) { premiumRoomTextures = textures; if (data) render(); }
     })
     .catch(() => { /* existing procedural artwork remains visible */ });
+  // B5 pilot loads ONLY local allowlisted files; B4 and procedural fallback survive failures.
+  const b5AssetEntries=[...document.querySelectorAll('meta[name="wk-b5-asset"]')]
+    .map(meta=>({key:meta.dataset.asset,url:meta.content}));
+  loadB5Textures(url=>Assets.load(url),b5AssetEntries,window.location.origin)
+    .then(textures=>{if(textures.size){b5Textures=textures;if(data)render();}})
+    .catch(()=>{/* PR-B4 rendering remains intact */});
   updateMode();window.dispatchEvent(new Event('wk:scene-request'));
   window.addEventListener('pagehide',()=>{try{app?.destroy(true,{children:true});}catch(_e){/* already gone */}}, {once:true});
 })();
