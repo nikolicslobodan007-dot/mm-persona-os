@@ -15,7 +15,7 @@ from __future__ import annotations
 from django.core.management.base import BaseCommand, CommandError
 
 from api.context import bind
-from apps.libri import tvrdnje, vektori
+from apps.libri import entiteti, tvrdnje, vektori
 from apps.libri.models import Block, LibriDocument
 from apps.libri.uvoz import UvozError, uvezi
 
@@ -25,7 +25,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "radnja", choices=["uvezi", "reindeksiraj", "pretrazi", "tvrdnje"],
+            "radnja", choices=["uvezi", "reindeksiraj", "pretrazi", "tvrdnje", "entiteti"],
             help="uvezi | reindeksiraj | pretrazi | tvrdnje")
         parser.add_argument("--iz", default="", help="Putanja do PDF-a (uvezi).")
         parser.add_argument("--naslov", default="",
@@ -50,6 +50,8 @@ class Command(BaseCommand):
             self._reindeksiraj(options)
         elif radnja == "tvrdnje":
             self._tvrdnje(options)
+        elif radnja == "entiteti":
+            self._entiteti(options)
         else:
             self._pretrazi(options)
 
@@ -109,6 +111,28 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"Tvrdnje za {doc_id}: {rez['upisano']} upisano, "
             f"{rez['obrisano']} staro obrisano."
+        ))
+
+    def _entiteti(self, options):
+        actor = options["actor"]
+        doc_id = options["dokument"]
+        if not actor.startswith("user:"):
+            raise CommandError(
+                "--actor mora da počne sa 'user:' (čovek pokreće izvođenje entiteta)."
+            )
+        if not doc_id:
+            raise CommandError("entiteti traži --dokument <document_id>.")
+        dok = LibriDocument.objects.filter(document_id=doc_id).first()
+        if dok is None:
+            raise CommandError(f"Dokument ne postoji: {doc_id}.")
+        try:
+            with bind(actor_id=actor):
+                rez = entiteti.upisi(dok)
+        except ValueError as e:
+            raise CommandError(str(e)) from e
+        self.stdout.write(self.style.SUCCESS(
+            f"Entiteti za {doc_id}: {rez['entiteta']} entiteta, "
+            f"{rez['odnosa']} odnosa, {rez['obrisano']} staro obrisano."
         ))
 
     def _pretrazi(self, options):

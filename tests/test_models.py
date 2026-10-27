@@ -65,7 +65,7 @@ class TestAppOwnership:
             "KnowledgeFact", "KnowledgeEmbedding",
         },
         # ADR-0031 — sloj znanja nad dokumentima (trinaesti app, Canon §1 +libri).
-        "libri": {"LibriDocument", "Block", "BlockEmbedding"},
+        "libri": {"LibriDocument", "Block", "BlockEmbedding", "Entitet", "Odnos"},
         "social_graph": {"Actor", "Relationship", "RelationshipEvent"},
         # ADR-0014 dodaje EditorialLesson.
         "content": {"ContentIdea", "ContentItem", "ContentAsset", "Publication",
