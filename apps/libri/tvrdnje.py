@@ -70,7 +70,7 @@ def izvuci(blocks: Iterable[Any]) -> list[dict]:
     return out
 
 
-def upisi(document) -> dict[str, int]:
+def upisi(document, *, kandidati: list[dict] | None = None) -> dict[str, int]:
     """Izvuci tvrdnje iz blokova dokumenta i upiši kao `KnowledgeFact`.
 
     Tvrdnje se vezuju za dokumentov `KnowledgeSource` (predicate=`libri.tvrdnja`).
@@ -89,7 +89,8 @@ def upisi(document) -> dict[str, int]:
             f"Dokument {document.document_id} nema izvor (KnowledgeSource) — "
             "tvrdnja ne sme da postoji bez izvora (Canon §4.1)."
         )
-    kandidati = izvuci(document.blocks.all())
+    if kandidati is None:
+        kandidati = izvuci(document.blocks.all())
     with transaction.atomic():
         stare = KnowledgeFact.objects.filter(source=izvor, predicate=PREDIKAT)
         obrisano = stare.count()

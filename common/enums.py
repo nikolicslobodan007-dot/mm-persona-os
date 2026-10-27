@@ -902,6 +902,12 @@ class LLMPurpose(CanonEnum):
     #: Lanac za ovu svrhu NEMA lokalni šablon kao poslednji član: šablon ne
     #: može da čuje, pa bi vratio izmišljen prepis (izuzetak od ADR-0009).
     TRANSCRIBE = "transcribe"
+    #: Izvlačenje tvrdnji/entiteta iz Libri izvora (ADR-0031 opcija B). Svoja
+    #: svrha, a ne `summarise`: traži svoju rutu, svoj plafon izlaza i svoj
+    #: budžet (Canon §13.2). Lanac nema lokalni šablon (kao `transcribe`):
+    #: šablon ne ume da izvlači, pa bi izmislio tvrdnju — fallback je
+    #: deterministička osnova u `apps/libri`, ne šablon.
+    EXTRACT = "extract"
 
 
 class OutboxStatus(CanonEnum):
