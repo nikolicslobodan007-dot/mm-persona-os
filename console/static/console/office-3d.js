@@ -131,6 +131,18 @@
       cube([x,1.44,z+0.90],[0.33,0.32,0.32],'#d3b8a0');
     });
   }
+  // F3B deliberately separates the illustrated agent body from its factual status.
+  // These low-profile floor markers remain a truthful READY / ACTIVE / PAUSED legend.
+  function drawStatusFeet(cube) {
+    const xs=[-4.2,-2.1,0,2.1,4.2];
+    state.shown.forEach((agent,i)=>{
+      const x=xs[i],z=(i%2===0?0:0.30)+0.88;
+      const status=String(agent.status||'').toUpperCase();
+      const color=status==='ACTIVE'?'#53dfc4':status==='READY'?'#7ab9ed':status==='PAUSED'?'#e6ac61':'#97a9bd';
+      if(state.selected===agent.public_id)cube([x,0.052,z],[0.77,0.11,0.77],'#ef9a52');
+      cube([x,0.116,z+0.27],[0.36,0.055,0.13],color);
+    });
+  }
   function createRenderer(canvas) {
     const gl=canvas.getContext('webgl',{antialias:true,alpha:false,depth:true});
     if (!gl) throw new Error('WebGL nije dostupan u ovom pregledaču. Lista agenata ostaje dostupna.');
@@ -151,6 +163,12 @@
     let f3a=null;
     try { f3a=window.WKOfficeF3A?.create(gl)||null; }
     catch(e){ console.warn('F3A unavailable; legacy WebGL remains active',e); }
+    let f3b=null;
+    try {f3b=window.WKOfficeF3B?.create(gl)||null;}
+    catch(e){console.warn('F3B unavailable; F3A agent markers remain visible',e);}
+    let f3b2=null;
+    try {f3b2=window.WKOfficeF3B2?.create(gl,()=>redraw())||null;}
+    catch(e){console.warn('F3B2 identity portraits unavailable; F3B figures remain',e);}
     const rgb = hex => { const n=parseInt(hex.replace('#',''),16);return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]; };
     function cube(pos,size,color) {
       gl.uniform3fv(uniforms.at,pos);gl.uniform3fv(uniforms.scale,size);
@@ -162,14 +180,23 @@
       if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}
       gl.viewport(0,0,width,height);gl.clearColor(0.055,0.101,0.16,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
       if(f3a?.ready && f3a.render(vp,state.shown)) {
-        // F3A uses a separate shader/VBO; restore the legacy marker shader.
+        // Only draw F3B figures after successful loading; existing F3A fallback remains.
+        let figuresDrawn=false;
+        try {figuresDrawn=Boolean(f3b?.ready && f3b.render(vp,state.shown));}
+        catch(error){console.warn('F3B renderer error; using F3A markers',error);}
+        if(figuresDrawn && f3b2){
+          try {f3b2.render(vp,state.shown,state.yaw,state.selected);}
+          catch(error){console.warn('F3B2 portrait layer unavailable',error);}
+        }
+        // F3A/F3B/F3B2 use separate shader/VBO; restore legacy program + attributes.
         gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,vert);
         gl.enableVertexAttribArray(aPosition);
         gl.vertexAttribPointer(aPosition,3,gl.FLOAT,false,stride,0);
         gl.enableVertexAttribArray(aNormal);
         gl.vertexAttribPointer(aNormal,3,gl.FLOAT,false,stride,3*4);
         gl.uniformMatrix4fv(uniforms.vp,false,new Float32Array(vp));
-        drawSeatMarkers(cube);
+        if(figuresDrawn)drawStatusFeet(cube);
+        else drawSeatMarkers(cube);
       } else {
         gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,vert);
         gl.enableVertexAttribArray(aPosition);
@@ -180,7 +207,7 @@
         drawOffice(cube);
       }
     }
-    return {render,f3a};
+    return {render,f3a,f3b,f3b2};
   }
   // Accessible 2D projection fallback when WebGL is disabled by browser or policy.
   function createFallback(canvas) {
@@ -239,6 +266,14 @@
       .catch(err=>{console.warn('F3A local assets unavailable; legacy scene kept',err);
         const badge=byId('renderMode');if(badge)badge.textContent='Osnovni 3D prikaz';});
   }
+  // F3B asset loader is independent: missing files leave the fully working F3A room.
+  const f3bAssets=[...document.querySelectorAll('meta[name="wk-f3b-model"]')]
+    .map(meta=>({key:meta.dataset.key,url:meta.content}));
+  if(renderer?.f3b){
+    renderer.f3b.load(f3bAssets,window.location.origin)
+      .then(()=>{redraw();const badge=byId('renderMode');if(badge)badge.textContent='3D kancelarija + agenti · F3B';})
+      .catch(error=>console.warn('F3B models unavailable; F3A markers preserved',error));
+  }
   let frame=0;
   function redraw() {
     if(frame)cancelAnimationFrame(frame);
@@ -252,7 +287,7 @@
       const xs=[-4.2,-2.1,0,2.1,4.2];
       [...ui.labels.children].forEach((btn,i)=>{
         const z=i%2===0?0.0:0.30;
-        const xy=project([xs[i],1.9,z+0.85],vp);
+        const xy=project([xs[i],(renderer?.f3a?.ready && renderer?.f3b?.ready) ? 2.35 : 1.9,z+0.85],vp);
         btn.hidden=!xy||Math.abs(xy[0])>0.92||Math.abs(xy[1])>0.96;
         if(xy){btn.style.left=`${(xy[0]+1)*50}%`;btn.style.top=`${(1-xy[1])*50}%`;}
       });
@@ -286,7 +321,7 @@
     ui.prev.disabled=state.page<=0;ui.next.disabled=state.page>=maxPage;
   }
   function updateSeats() {
-    seats();clear(ui.list);clear(ui.labels);
+    seats();renderer?.f3b2?.sync(state.shown,window.location.origin);clear(ui.list);clear(ui.labels);
     if(!state.shown.length)ui.list.appendChild(label('p','empty','Nema agenata u izabranom odeljenju.'));
     state.shown.forEach(a=>{
       const item=label('button','agent-row');item.type='button';
@@ -367,5 +402,9 @@
   ['pointerup','pointercancel','lostpointercapture'].forEach(event=>ui.canvas.addEventListener(event,()=>{state.dragging=null;}));
   ui.scene.addEventListener('wheel',e=>{if(!renderer)return;e.preventDefault();state.radius=Math.max(10,Math.min(28,state.radius+Math.sign(e.deltaY)*1.1));redraw();},{passive:false});
   window.addEventListener('resize',redraw);
+  window.addEventListener('pagehide',()=>{
+    try {renderer?.f3b2?.dispose();}catch(_) { /* WebGL context may already be gone */ }
+    try {renderer?.f3b?.dispose();}catch(_) { /* WebGL context may already be gone */ }
+  },{once:true});
   reload();
 })();
