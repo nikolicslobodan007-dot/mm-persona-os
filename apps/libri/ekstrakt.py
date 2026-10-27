@@ -8,23 +8,24 @@ zamena (Canon §21 — prvo osnova + merenje, pa pravi alat).
 
 1. Spoljni model se zove SAMO kroz gateway i samo kad F7 dozvoli (ADR-0009):
    `LLM_EXTERNAL_ENABLED=true`, ruta `data_training_allowed=True` (provajder NE
-   uči na našim podacima — prompt nosi naš tekst) i postoji ključ. Lanac za ovu
-   svrhu NEMA lokalni šablon (kao `transcribe`, ADR-0078 §4): šablon ne ume da
-   izvlači, pa bi izmislio tvrdnju. Kad spoljne rute nema ili padne, vraća se
-   DETERMINISTIČKA osnova (`tvrdnje.izvuci`) — ništa se ne izmišlja, sistem radi
-   bez ijednog ključa.
+   uči na našim podacima) i postoji ključ. Lanac za ovu svrhu NEMA lokalni
+   šablon (kao `transcribe`, ADR-0078 §4): šablon ne ume da izvlači, pa bi
+   izmislio tvrdnju. Kad spoljne rute nema ili padne → DETERMINISTIČKA osnova.
 
-2. Filter uzemljenja (`_uzemlji`): svaka tvrdnja koju model vrati mora da citira
-   postojeći `block_id` iz dokumenta I da joj subjekat i vrednost budu DOSLOVNO u
-   tekstu tog bloka. Šta god ne prođe — baca se. Tako halucinacija (izmišljen
-   block_id ili tekst kog nema u bloku) nikad ne uđe kao činjenica (Canon §10.4:
-   tvrdnja je OBSERVED iz izvora, ne INFERRED).
+2. Filter uzemljenja (`_uzemlji`): tvrdnja mora da citira postojeći `block_id`
+   I da joj subjekat i vrednost budu UZEMLJENI u tom bloku — preklapanje reči
+   fraze sa rečima bloka ≥ `_PRAG`. Reč koje nema u bloku obara preklapanje, pa
+   halucinacija (izmišljen block_id ili reči kojih nema) nikad ne uđe kao
+   činjenica (Canon §10.4: OBSERVED, ne INFERRED). Prag je podesiv: strože =
+   veća preciznost, niži odziv. Prompt traži DOSLOVNE isečke, pa preklapanje
+   toleriše samo preraspored / izostavljene pomoćne reči, ne parafrazu.
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import re
 from collections.abc import Iterable
 from typing import Any
 
@@ -36,24 +37,43 @@ log = logging.getLogger(__name__)
 PREDIKAT = tvrdnje.PREDIKAT
 
 _MAX_BLOKOVA = 40  # koliko paragrafa stane u jedan prompt (kratko, merljivo)
+_PRAG = 0.8        # minimalno preklapanje reči fraze sa blokom (0..1)
 
 _SISTEM = (
-    "Ti si ekstraktor činjenica iz srpskog teksta. Iz datih blokova izvuci samo "
-    "tvrdnje koje su DOSLOVNO navedene u tekstu. Ne zaključuj, ne uopštavaj, ne "
-    "dodaj ništa čega nema u bloku. Svaku tvrdnju vrati kao trojku subjekat / "
-    "relacija / vrednost i obavezno navedi block_id iz kog je uzeta; subjekat i "
-    "vrednost moraju biti reči iz tog bloka. Vrati isključivo JSON listu objekata "
-    "sa ključevima subject, relacija, vrednost, block_id. Bez objašnjenja."
+    "Ti si ekstraktor činjenica iz srpskog teksta. Iz datih blokova izvuci SVE "
+    "tvrdnje navedene u tekstu (i definicije i opise radnji). Ne zaključuj, ne "
+    "uopštavaj, ne dodaj ništa čega nema u bloku. Subjekat i vrednost MORAJU biti "
+    "DOSLOVNI isečci reči iz tog istog bloka — prepiši reči kako stoje, bez "
+    "prepričavanja i bez menjanja oblika reči. Uz svaku tvrdnju navedi block_id iz "
+    "kog je uzeta. Vrati isključivo JSON listu objekata sa ključevima subject, "
+    "relacija, vrednost, block_id. Bez objašnjenja."
 )
+
+_TOK = re.compile(r"[0-9a-zčćžšđ]+")
+#: Česte pomoćne reči (≥3 znaka) — ne računaju se u preklapanje (kraće već ispadaju).
+_STOP_TOK = frozenset((
+    "koji", "koja", "koje", "kao", "ili", "što", "jer", "ali", "pa", "te", "sa",
+))
+
+
+def _norm(s: str) -> str:
+    return " ".join((s or "").lower().split())
+
+
+def _tokeni(s: str) -> list[str]:
+    return [t for t in _TOK.findall(_norm(s)) if len(t) >= 3 and t not in _STOP_TOK]
+
+
+def _preklapanje(fraza: str, blok_tokeni: set[str]) -> float:
+    toks = _tokeni(fraza)
+    if not toks:
+        return 0.0
+    return sum(1 for t in toks if t in blok_tokeni) / len(toks)
 
 
 def _prompt(blocks: list[Any]) -> str:
     redovi = [f"[{b.block_id}] {' '.join((b.text or '').split())}" for b in blocks]
     return "Blokovi:\n" + "\n".join(redovi)
-
-
-def _norm(s: str) -> str:
-    return " ".join((s or "").lower().split())
 
 
 def _parse(text: str) -> list[dict]:
@@ -82,21 +102,22 @@ def _parse(text: str) -> list[dict]:
 
 
 def _uzemlji(kandidati: list[dict], blocks: Iterable[Any]) -> list[dict]:
-    """Zadrži samo tvrdnje DOSLOVNO uzemljene u citiranom bloku (Canon §10.4)."""
-    po_bloku = {b.block_id: (_norm(b.text), b) for b in blocks}
+    """Zadrži samo tvrdnje UZEMLJENE u citiranom bloku (preklapanje ≥ _PRAG)."""
+    po_bloku = {b.block_id: (set(_tokeni(b.text)), b) for b in blocks}
     out: list[dict] = []
     vidjeno: set = set()
     for k in kandidati:
         par = po_bloku.get(k["block_id"])
         if par is None:
             continue  # izmišljen/nepostojeći block_id → baca se
-        tekst_norm, b = par
+        blok_tokeni, b = par
         subj, vred = k["subject"], k["vrednost"]
         if not subj or not vred or len(subj) > 220 or not (3 <= len(vred) <= 300):
             continue
-        if _norm(subj) not in tekst_norm or _norm(vred) not in tekst_norm:
-            continue  # nije doslovno u bloku → baca se
-        kljuc = (subj, vred, k["block_id"])
+        if (_preklapanje(subj, blok_tokeni) < _PRAG
+                or _preklapanje(vred, blok_tokeni) < _PRAG):
+            continue  # reči kojih nema u bloku → baca se (anti-halucinacija)
+        kljuc = (_norm(subj), _norm(vred), k["block_id"])
         if kljuc in vidjeno:
             continue
         vidjeno.add(kljuc)
@@ -141,6 +162,33 @@ def _pozovi(gateway, rute: list, prompt: str, persona=None) -> str | None:
     return None
 
 
+def _llm_izvuci(blocks: list[Any], persona=None) -> tuple[list[dict] | None, list[dict]]:
+    """(sirovi_kandidati, uzemljeni) po svim delovima; (None, []) ako model nije zvan.
+
+    `sirovi` = sve što model vrati (pre uzemljenja), radi dijagnostike.
+    (None, []) kad spoljne rute nema ili model padne — poziv za fallback na osnovu.
+    """
+    from apps.llm_gateway import gateway
+
+    rute = _spoljne_rute(persona)
+    if not rute:
+        return None, []
+    paragrafi = [b for b in blocks if getattr(b, "block_type", "") == "paragraph"]
+    if not paragrafi:
+        return None, []
+    sirovi: list[dict] = []
+    uzemljeni: list[dict] = []
+    for poc in range(0, len(paragrafi), _MAX_BLOKOVA):
+        deo = paragrafi[poc:poc + _MAX_BLOKOVA]
+        tekst = _pozovi(gateway, rute, _prompt(deo), persona)
+        if tekst is None:
+            return None, []  # model nedostupan → cela osnova (ne mešamo slojeve)
+        kand = _parse(tekst)
+        sirovi.extend(kand)
+        uzemljeni.extend(_uzemlji(kand, deo))
+    return sirovi, uzemljeni
+
+
 def izvuci(blocks: Iterable[Any], *, persona=None) -> list[dict]:
     """LLM kandidat-tvrdnje (uzemljene); fallback na determinističku osnovu.
 
@@ -150,25 +198,26 @@ def izvuci(blocks: Iterable[Any], *, persona=None) -> list[dict]:
     blocks = list(blocks)
     osnova = tvrdnje.izvuci(blocks)
     try:
-        from apps.llm_gateway import gateway
-
-        rute = _spoljne_rute(persona)
-        if not rute:
-            return osnova
-        paragrafi = [b for b in blocks if getattr(b, "block_type", "") == "paragraph"]
-        if not paragrafi:
-            return osnova
-        sve: list[dict] = []
-        for poc in range(0, len(paragrafi), _MAX_BLOKOVA):
-            deo = paragrafi[poc:poc + _MAX_BLOKOVA]
-            tekst = _pozovi(gateway, rute, _prompt(deo), persona)
-            if tekst is None:
-                return osnova  # model nedostupan → cela osnova (ne mešamo slojeve)
-            sve.extend(_iz_teksta(tekst, deo))
-        return sve if sve else osnova
+        sirovi, uzemljeni = _llm_izvuci(blocks, persona)
     except Exception:  # bilo kakav propust LLM puta → deterministička osnova
         log.warning("LLM ekstrakt pao, fallback na osnovu", exc_info=True)
         return osnova
+    if sirovi is None:
+        return osnova
+    return uzemljeni if uzemljeni else osnova
+
+
+def meri(blocks: Iterable[Any], *, persona=None) -> dict:
+    """Dijagnostika: koliko model vrati (sirovo) vs koliko prođe uzemljenje."""
+    blocks = list(blocks)
+    try:
+        sirovi, uzemljeni = _llm_izvuci(blocks, persona)
+    except Exception:
+        log.warning("LLM ekstrakt (meri) pao", exc_info=True)
+        return {"model_zvan": False, "sirovo": 0, "uzemljeno": 0}
+    if sirovi is None:
+        return {"model_zvan": False, "sirovo": 0, "uzemljeno": 0}
+    return {"model_zvan": True, "sirovo": len(sirovi), "uzemljeno": len(uzemljeni)}
 
 
 def upisi(document, *, persona=None) -> dict[str, int]:
