@@ -55,6 +55,13 @@ _DOGADJAJ_GLAGOL = frozenset((
     "održan", "održana", "održano", "osnovan", "osnovana", "potpisan",
     "potpisana", "otvoren", "otvorena",
 ))
+# Golo „ime prezime" postaje osoba SAMO uz relacioni kontekst (glagol iza imena),
+# da nabrajanja u literaturi/citatima („Literatura Hidrotermička", „Kolin
+# Beograd") ne prođu kao osobe — izmereno na stvarnom dokumentu (ADR-0033).
+_OSOBA_GLAGOL = frozenset((
+    "radi", "zaposlen", "zaposlena", "je", "su", "vodi", "osnovao", "osnovala",
+    "rukovodi", "predsedava",
+))
 
 # Relacioni obrasci nad rečenicom: grupe 1 i 2 su nazivi entiteta.
 _ODNOSI = (
@@ -114,9 +121,9 @@ def _vrsta(span_tokens: list[str], prev: str, nxt: str) -> str | None:
         return "dogadjaj"
     if prev in _OSOBA_CUE:
         return "osoba"
-    if len(span_tokens) == 2 and all(
+    if (len(span_tokens) == 2 and nxt in _OSOBA_GLAGOL and all(
         re.fullmatch(r"[A-ZČĆŽŠĐ][a-zčćžšđ]+", _gol(t)) for t in span_tokens
-    ):
+    )):
         return "osoba"
     return None
 
