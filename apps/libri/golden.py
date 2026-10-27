@@ -105,4 +105,6 @@ GRAF_ZLATNI: list[tuple[str, list[tuple[str, str]], list[tuple[str, str, str]]]]
      [("Preduzeće Tipl", "deo_od", "Majstori Srbije")]),
     ("Brušenje se radi u nekoliko prolaza do glatke površine.", [], []),
     ("Furnir je vrlo tanak list drveta koji se lepi preko osnove.", [], []),
+    ("Literatura Hidrotermička obrada drveta, Kolin Beograd, 1998.", [], []),
+    ("U popisu stoje Sušenje Drveta i Tehnologija Rezanja.", [], []),
 ]
