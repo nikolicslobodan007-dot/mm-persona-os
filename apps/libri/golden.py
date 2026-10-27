@@ -108,3 +108,36 @@ GRAF_ZLATNI: list[tuple[str, list[tuple[str, str]], list[tuple[str, str, str]]]]
     ("Literatura Hidrotermička obrada drveta, Kolin Beograd, 1998.", [], []),
     ("U popisu stoje Sušenje Drveta i Tehnologija Rezanja.", [], []),
 ]
+
+
+#: Scenariji za merenje pouzdanosti po pet osa (ADR-0031 sloj 4b §3.3).
+#: Deterministička računica, pa se tačne vrednosti zakucavaju kao kapija protiv
+#: regresije; semantiku (potkrepa/nezavisnost rastu sa saglasnim izvorima,
+#: stabilnost pada sa protivrečnim) čuvaju i poređenja u testu.
+POUZDANOST_SCENARIJI: list[dict] = [
+    {"opis": "jedan izvor, bez potkrepe",
+     "tvrdnje": [
+         {"subject": "Furnir", "predicate": "libri.tvrdnja", "vrednost": "tanak list drveta",
+          "trust": 0.8, "source_kind": "first_party_user_input", "source_id": "s1"}],
+     "cilj": 0,
+     "ocekivano": {"pouzdanost": 0.8, "nezavisnost": 0.5, "blizina": 0.9,
+                   "potkrepljenost": 0.2, "stabilnost": 1.0, "ukupno": 0.68}},
+    {"opis": "dva saglasna izvora (potkrepa + nezavisnost rastu)",
+     "tvrdnje": [
+         {"subject": "Furnir", "predicate": "libri.tvrdnja", "vrednost": "tanak list drveta",
+          "trust": 0.8, "source_kind": "first_party_user_input", "source_id": "s1"},
+         {"subject": "Furnir", "predicate": "libri.tvrdnja", "vrednost": "tanak list drveta",
+          "trust": 0.7, "source_kind": "public_web_source", "source_id": "s2"}],
+     "cilj": 0,
+     "ocekivano": {"pouzdanost": 0.8, "nezavisnost": 0.75, "blizina": 0.9,
+                   "potkrepljenost": 0.6, "stabilnost": 1.0, "ukupno": 0.81}},
+    {"opis": "protivrečan izvor (stabilnost pada, bez pobednika)",
+     "tvrdnje": [
+         {"subject": "Furnir", "predicate": "libri.tvrdnja", "vrednost": "tanak list drveta",
+          "trust": 0.8, "source_kind": "first_party_user_input", "source_id": "s1"},
+         {"subject": "Furnir", "predicate": "libri.tvrdnja", "vrednost": "debela ploča",
+          "trust": 0.6, "source_kind": "public_web_source", "source_id": "s2"}],
+     "cilj": 0,
+     "ocekivano": {"pouzdanost": 0.8, "nezavisnost": 0.5, "blizina": 0.9,
+                   "potkrepljenost": 0.2, "stabilnost": 0.75, "ukupno": 0.63}},
+]
