@@ -10,9 +10,17 @@
   <meta name="wk-f3a-model" data-key="chair" content="{% static 'console/office-3d-models/f3a-chair.glb' %}">
   <meta name="wk-f3a-model" data-key="plant" content="{% static 'console/office-3d-models/f3a-plant.glb' %}">
   <meta name="wk-f3a-model" data-key="shelf" content="{% static 'console/office-3d-models/f3a-shelf.glb' %}">
+  <!-- F3B authored fictional characters: filenames resolved by Django ManifestStaticFilesStorage. -->
+  <meta name="wk-f3b-model" data-key="agent-1" content="{% static 'console/office-3d-avatars/f3b-agent-1.glb' %}">
+  <meta name="wk-f3b-model" data-key="agent-2" content="{% static 'console/office-3d-avatars/f3b-agent-2.glb' %}">
+  <meta name="wk-f3b-model" data-key="agent-3" content="{% static 'console/office-3d-avatars/f3b-agent-3.glb' %}">
+  <meta name="wk-f3b-model" data-key="agent-4" content="{% static 'console/office-3d-avatars/f3b-agent-4.glb' %}">
+  <meta name="wk-f3b-model" data-key="agent-5" content="{% static 'console/office-3d-avatars/f3b-agent-5.glb' %}">
   <title>Web Korporacija · 3D Virtual Office Pilot</title>
   <link rel="stylesheet" href="{% static 'console/office-3d.css' %}">
   <script defer src="{% static 'console/office-3d-f3a.js' %}"></script>
+  <script defer src="{% static 'console/office-3d-f3b.js' %}"></script>
+  <script defer src="{% static 'console/office-3d-f3b2.js' %}"></script>
   <script defer src="{% static 'console/office-3d.js' %}"></script>
 </head>
 <body>
@@ -25,7 +33,7 @@
   </header>
   <main>
     <div class="heading"><div><p class="eyebrow">DIGITAL HEADQUARTERS / 3D PREVIEW</p><h1>Virtuelna radna mesta AI agenata</h1>
-      <p>Stvarni statusi iz Persona OS-a; prostorni raspored je demonstracioni i ne znači da agent trenutno radi.</p></div>
+      <p>Stvarni statusi iz Persona OS-a; prikaz radnih mesta je demonstracioni. Portreti, kada postoje, dolaze iz zaštićenog registra.</p></div>
       <button id="reload" type="button" class="primary">Osveži podatke</button>
     </div>
     <section class="stats" aria-label="Poslovni status">
