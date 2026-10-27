@@ -1,10 +1,11 @@
 from django.urls import path
 
-from console import office_bridge, views
+from console import office_3d, office_bridge, views
 
 urlpatterns = [
     path("", views.overview, name="console-overview"),
     path("office", office_bridge.office_home, name="console-office"),
+    path("office/3d", office_3d.office_3d, name="console-office-3d"),
     path("office/api/v1/summary", office_bridge.office_summary, name="office-summary"),
     path("office/api/v1/agents", office_bridge.office_agents, name="office-agents"),
     path("office/api/v1/agents/<str:public_id>", office_bridge.office_agent,
