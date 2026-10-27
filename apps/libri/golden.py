@@ -80,3 +80,29 @@ TVRDNJE_ZLATNE: list[tuple[str, str | None]] = [
     ("Majstor bira drvo prema nameni komada.", None),
     ("Pre rezanja daska se meri dvaput.", None),
 ]
+
+
+#: Zlatni skup za merenje izvlačenja entiteta i odnosa (ADR-0031 sloj 4b).
+#: (tekst bloka, očekivani entiteti [(name, kind)], očekivani odnosi [(subj, rel, obj)]).
+#: Meri preciznost/odziv determinističke osnove — pre nego što LLM uđe kao
+#: zamenljiv sloj kroz isti `entiteti.izvuci_*`. Negativne rečenice (bez pokazne
+#: reči / bez dva entiteta) čuvaju preciznost: ne smeju da proizvedu ništa.
+GRAF_ZLATNI: list[tuple[str, list[tuple[str, str]], list[tuple[str, str, str]]]] = [
+    ("Milan Jovanović radi u kompaniji Vinogradi.",
+     [("Milan Jovanović", "osoba"), ("Vinogradi", "organizacija")],
+     [("Milan Jovanović", "radi_u", "Vinogradi")]),
+    ("Ana Petrović je direktorka preduzeća Drvo Promet.",
+     [("Ana Petrović", "osoba"), ("Drvo Promet", "organizacija")],
+     [("Ana Petrović", "vodi", "Drvo Promet")]),
+    ("Sajam Drvo održan je 12.03.2026.",
+     [("Sajam Drvo", "dogadjaj")],
+     []),
+    ("Marko Ilić je osnovao kompaniju Tipl Sistem.",
+     [("Marko Ilić", "osoba"), ("Tipl Sistem", "organizacija")],
+     [("Marko Ilić", "osnovao", "Tipl Sistem")]),
+    ("Preduzeće Tipl deo je udruženja Majstori Srbije.",
+     [("Preduzeće Tipl", "organizacija"), ("Majstori Srbije", "organizacija")],
+     [("Preduzeće Tipl", "deo_od", "Majstori Srbije")]),
+    ("Brušenje se radi u nekoliko prolaza do glatke površine.", [], []),
+    ("Furnir je vrlo tanak list drveta koji se lepi preko osnove.", [], []),
+]

@@ -17,7 +17,7 @@ from django.conf import settings
 from django.db import models
 from pgvector.django import VectorField
 
-from common.models import JSON_LIST, UUIDModel, unit_interval
+from common.models import JSON_DICT, JSON_LIST, UUIDModel, unit_interval
 
 LKP_SCHEMA_VERSION = "lkp-0.1"
 BLOCK_TYPES = ("paragraph", "heading")
@@ -141,3 +141,97 @@ class BlockEmbedding(UUIDModel):
 
     def __str__(self) -> str:
         return f"{self.block.block_id}@{self.model_key}"
+
+
+# ADR-0031 sloj 4b: registar entiteta + graf odnosa.
+ENTITY_KINDS = ("osoba", "organizacija", "dogadjaj")
+RELATION_TYPES = ("radi_u", "vodi", "deo_od", "nalazi_se_u", "osnovao")
+
+
+class Entitet(UUIDModel):
+    """Entitet iz dokumenta (ADR-0031 sloj 4b): osoba, organizacija ili događaj.
+
+    Danas odnos postoji samo posredno kroz tvrdnju; ovde dobija karton. Vrsta je
+    `CharField` + CHECK, ne enum (Canon §20). Dvostruko vreme (ADR-0031 §3.2):
+    `desilo_se` (kada se događaj desio) i `objavljeno` (kada ga je izvor objavio)
+    — dva polja, ne jedno. Poreklo do bloka je u `object_json` (Canon §4.1).
+    """
+
+    source = models.ForeignKey(
+        "memory.KnowledgeSource", on_delete=models.CASCADE,
+        related_name="libri_entities",
+    )
+    kind = models.CharField(max_length=16)  # osoba | organizacija | dogadjaj (CHECK)
+    name = models.CharField(max_length=220)
+    normalized = models.CharField(max_length=220)
+    aliases = JSON_LIST()
+    desilo_se = models.DateTimeField(null=True, blank=True)
+    objavljeno = models.DateTimeField(null=True, blank=True)
+    confidence = unit_interval()
+    object_json = JSON_DICT()
+
+    class Meta:
+        db_table = "libri_entitet"
+        indexes = [
+            models.Index(fields=["source", "kind"],
+                         name="libri_entitet_src_kind_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source", "kind", "normalized"],
+                name="libri_entitet_unique_in_source",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(kind__in=ENTITY_KINDS),
+                name="libri_entitet_kind_vocab",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(confidence__gte=0) & models.Q(confidence__lte=1),
+                name="libri_entitet_confidence_unit",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.kind})"
+
+
+class Odnos(UUIDModel):
+    """Usmerena veza između dva entiteta (ADR-0031 sloj 4b graf).
+
+    Tip veze je `CharField` + CHECK (ne enum, Canon §20); `confidence` je
+    pouzdanost VEZE. Poreklo do bloka u `object_json`. Odnos ne sme da postoji
+    bez oba entiteta i bez izvora (Canon §4.1).
+    """
+
+    source = models.ForeignKey(
+        "memory.KnowledgeSource", on_delete=models.CASCADE,
+        related_name="libri_relations",
+    )
+    subject = models.ForeignKey(
+        Entitet, on_delete=models.CASCADE, related_name="odnosi_od",
+    )
+    object = models.ForeignKey(
+        Entitet, on_delete=models.CASCADE, related_name="odnosi_do",
+    )
+    relation_type = models.CharField(max_length=24)  # radi_u | vodi | ... (CHECK)
+    confidence = unit_interval()
+    object_json = JSON_DICT()
+
+    class Meta:
+        db_table = "libri_odnos"
+        indexes = [
+            models.Index(fields=["source"], name="libri_odnos_source_idx"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(relation_type__in=RELATION_TYPES),
+                name="libri_odnos_type_vocab",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(confidence__gte=0) & models.Q(confidence__lte=1),
+                name="libri_odnos_confidence_unit",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.subject_id}-{self.relation_type}->{self.object_id}"
