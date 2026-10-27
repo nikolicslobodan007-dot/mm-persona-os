@@ -1,0 +1,52 @@
+{% load static %}<!doctype html>
+<html lang="sr-Latn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Web Korporacija · 3D Virtual Office Pilot</title>
+  <link rel="stylesheet" href="{% static 'console/office-3d.css' %}">
+  <script defer src="{% static 'console/office-3d.js' %}"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="mark" aria-hidden="true">WK</div>
+      <div><b>WEB KORPORACIJA</b><small>3D VIRTUAL OFFICE · PILOT</small></div>
+    </div>
+    <nav aria-label="Navigacija"><a href="/console/office">Postojeća kancelarija</a><a href="/console/">Mission Control</a></nav>
+    <span class="safety">READ-ONLY · ZAŠTIĆENO</span>
+  </header>
+  <main>
+    <div class="heading"><div><p class="eyebrow">DIGITAL HEADQUARTERS / 3D PREVIEW</p><h1>Virtuelna radna mesta AI agenata</h1>
+      <p>Stvarni statusi iz Persona OS-a; prostorni raspored je demonstracioni i ne znači da agent trenutno radi.</p></div>
+      <button id="reload" type="button" class="primary">Osveži podatke</button>
+    </div>
+    <section class="stats" aria-label="Poslovni status">
+      <div><small>REGISTROVANI AGENTI</small><strong id="countAgents">—</strong></div>
+      <div><small>AKTIVNI PLANOVI</small><strong id="countPlans">—</strong></div>
+      <div><small>ČEKA ODOBRENJE</small><strong id="countApprovals">—</strong></div>
+      <div><small>PRIKAZ</small><strong>SIMULACIJA PROSTORA</strong></div>
+    </section>
+    <div class="workspace">
+      <section class="viewport-panel" aria-label="Interaktivni 3D prostor">
+        <div class="view-toolbar"><label for="department">Odeljenje</label><select id="department" aria-label="Izaberi odeljenje"><option value="">Učitavanje…</option></select>
+          <span id="pageInfo" class="meta"></span><button id="prev" type="button" aria-label="Prethodnih pet radnih mesta">‹</button><button id="next" type="button" aria-label="Sledećih pet radnih mesta">›</button>
+        </div>
+        <div id="scene" class="scene" aria-label="3D model kancelarije"><canvas id="view3d" aria-hidden="true"></canvas><div id="labels" class="labels" aria-label="Radna mesta"></div>
+          <div class="scene-watermark" aria-hidden="true">WK / VIRTUAL OFFICE</div>
+          <div class="scene-help">Prevuci za rotaciju · Točkić ili ± za zumiranje</div>
+        </div>
+        <div class="camera-controls"><button id="rotateLeft" type="button">↶ Rotiraj</button><button id="rotateRight" type="button">Rotiraj ↷</button><button id="zoomIn" type="button">+ Zum</button><button id="zoomOut" type="button">− Zum</button><button id="reset" type="button">Reset kamere</button></div>
+        <p class="disclaimer">Boja označava <b>status agenta</b>, ne potvrđuje da je agent trenutno izvršava zadatak. Režim (SIMULATION / CONTROLLED_LIVE) prikazuje se odvojeno.</p>
+      </section>
+      <aside class="sidebar" aria-label="Agenti i detalji">
+        <div class="panel-title"><h2>Radna mesta</h2><span>Najviše 5 u sceni</span></div>
+        <div id="agentList" class="agent-list" role="list"><p class="empty">Učitavanje podataka…</p></div>
+        <div class="panel-title detail-title"><h2>Izabrani agent</h2></div>
+        <div id="inspector" class="inspector"><p class="empty">Izaberite radno mesto u 3D sceni ili sa spiska.</p></div>
+      </aside>
+    </div>
+    <p id="notice" class="notice" role="status" aria-live="polite"></p>
+  </main>
+</body>
+</html>
