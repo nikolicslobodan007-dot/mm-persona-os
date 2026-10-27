@@ -15,7 +15,7 @@ from __future__ import annotations
 from django.core.management.base import BaseCommand, CommandError
 
 from api.context import bind
-from apps.libri import entiteti, pouzdanost, tvrdnje, vektori
+from apps.libri import dosije, entiteti, pouzdanost, tvrdnje, vektori
 from apps.libri.models import Block, LibriDocument
 from apps.libri.uvoz import UvozError, uvezi
 
@@ -27,8 +27,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "radnja",
             choices=["uvezi", "reindeksiraj", "pretrazi", "tvrdnje",
-                     "entiteti", "pouzdanost"],
-            help="uvezi | reindeksiraj | pretrazi | tvrdnje | entiteti | pouzdanost")
+                     "entiteti", "pouzdanost", "dosije"],
+            help="uvezi | reindeksiraj | pretrazi | tvrdnje | entiteti | pouzdanost | dosije")
         parser.add_argument("--iz", default="", help="Putanja do PDF-a (uvezi).")
         parser.add_argument("--naslov", default="",
                             help="Naslov dokumenta (podrazumevano: ime fajla).")
@@ -56,6 +56,8 @@ class Command(BaseCommand):
             self._entiteti(options)
         elif radnja == "pouzdanost":
             self._pouzdanost(options)
+        elif radnja == "dosije":
+            self._dosije(options)
         else:
             self._pretrazi(options)
 
@@ -160,6 +162,15 @@ class Command(BaseCommand):
             f"Pouzdanost za {doc_id}: {rez['ocenjeno']} ocenjeno, "
             f"{rez['obrisano']} staro obrisano."
         ))
+
+    def _dosije(self, options):
+        doc_id = options["dokument"]
+        if not doc_id:
+            raise CommandError("dosije traži --dokument <document_id>.")
+        dok = LibriDocument.objects.filter(document_id=doc_id).first()
+        if dok is None:
+            raise CommandError(f"Dokument ne postoji: {doc_id}.")
+        self.stdout.write(dosije.sastavi(dok))
 
     def _pretrazi(self, options):
         upit = options["upit"]
