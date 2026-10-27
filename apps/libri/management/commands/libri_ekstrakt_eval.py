@@ -5,8 +5,8 @@
 LLM je POJAČAVAČ nad osnovom. Kad je spoljni model isključen (LLM_EXTERNAL_ENABLED
 false ili nema rute/ključa), ekstrakt pada na osnovu, pa su brojevi JEDNAKI.
 Dijagnostika pokazuje gde se gubi: `sirovo` = koliko model vrati, `uzemljeno` =
-koliko prođe filter uzemljenja. Ako je sirovo veliko a uzemljeno malo → filter
-seče (prag/parafraza); ako je sirovo malo → model vraća malo (prompt).
+koliko prođe filter. Po delu se vidi razlog završetka (end_turn / max_tokens /
+EMPTY_RESPONSE / timeout…) — tako znamo da li filter seče ili model vraća malo.
 """
 
 from __future__ import annotations
@@ -27,10 +27,11 @@ def _stub(i: int, text: str):
 
 def _mer(blokovi: list) -> dict:
     osnova = len(tvrdnje.izvuci(blokovi))
-    d = ekstrakt.meri(blokovi)  # jedan poziv modela
+    d = ekstrakt.meri(blokovi)  # jedan prolaz modela
     llm = d["uzemljeno"] if (d["model_zvan"] and d["uzemljeno"] > 0) else osnova
     return {"osnova": osnova, "llm": llm, "sirovo": d["sirovo"],
-            "uzemljeno": d["uzemljeno"], "model_zvan": d["model_zvan"]}
+            "uzemljeno": d["uzemljeno"], "model_zvan": d["model_zvan"],
+            "delovi": d.get("delovi", [])}
 
 
 def run_eval(document_id: str | None = None) -> dict:
@@ -55,18 +56,23 @@ class Command(BaseCommand):
         parser.add_argument("--dokument", default="",
                             help="document_id stvarnog dokumenta (opciono).")
 
-    def _red(self, naziv: str, m: dict) -> str:
-        return (f"{naziv} — osnova: {m['osnova']}, LLM: {m['llm']} "
-                f"(model vratio {m['sirovo']}, prošlo uzemljenje {m['uzemljeno']})")
+    def _ispis(self, naziv: str, m: dict):
+        self.stdout.write(
+            f"{naziv} — osnova: {m['osnova']}, LLM: {m['llm']} "
+            f"(model vratio {m['sirovo']}, prošlo uzemljenje {m['uzemljeno']})")
+        for i, x in enumerate(m["delovi"]):
+            self.stdout.write(
+                f"    deo {i}: vratio {x['sirovo']}, uzemljeno {x['uzemljeno']}, "
+                f"razlog {x['razlog']}")
 
     def handle(self, *args, **options):
         rez = run_eval(options["dokument"] or None)
         stanje = ("UKLJUČEN" if rez["spolja_ukljuceno"]
                   else "isključen (fallback na osnovu)")
         self.stdout.write(f"Spoljni model: {stanje}")
-        self.stdout.write(self._red("Zlatni skup", rez["zlatni"]))
+        self._ispis("Zlatni skup", rez["zlatni"])
         if "dokument" in rez:
-            self.stdout.write(self._red("Dokument", rez["dokument"]))
+            self._ispis("Dokument", rez["dokument"])
         if not rez["zlatni"]["model_zvan"]:
             self.stdout.write(
                 "Napomena: model nije zvan (isključeno ili nema ključa/rute) — "

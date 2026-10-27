@@ -10,15 +10,16 @@ zamena (Canon §21 — prvo osnova + merenje, pa pravi alat).
    `LLM_EXTERNAL_ENABLED=true`, ruta `data_training_allowed=True` (provajder NE
    uči na našim podacima) i postoji ključ. Lanac za ovu svrhu NEMA lokalni
    šablon (kao `transcribe`, ADR-0078 §4): šablon ne ume da izvlači, pa bi
-   izmislio tvrdnju. Kad spoljne rute nema ili padne → DETERMINISTIČKA osnova.
+   izmislio tvrdnju. Kad spoljne rute nema → DETERMINISTIČKA osnova.
 
 2. Filter uzemljenja (`_uzemlji`): tvrdnja mora da citira postojeći `block_id`
    I da joj subjekat i vrednost budu UZEMLJENI u tom bloku — preklapanje reči
    fraze sa rečima bloka ≥ `_PRAG`. Reč koje nema u bloku obara preklapanje, pa
-   halucinacija (izmišljen block_id ili reči kojih nema) nikad ne uđe kao
-   činjenica (Canon §10.4: OBSERVED, ne INFERRED). Prag je podesiv: strože =
-   veća preciznost, niži odziv. Prompt traži DOSLOVNE isečke, pa preklapanje
-   toleriše samo preraspored / izostavljene pomoćne reči, ne parafrazu.
+   halucinacija nikad ne uđe kao činjenica (Canon §10.4: OBSERVED, ne INFERRED).
+
+Dokument se deli na delove (`_MAX_BLOKOVA`) zbog veličine prompta/izlaza. **Pali
+deo se PRESKAČE, ne ruši ceo dokument** — uspeli delovi se zadrže. Dijagnostika
+(`meri`) vraća po delu: koliko vraćeno, koliko uzemljeno, razlog završetka.
 """
 
 from __future__ import annotations
@@ -36,7 +37,7 @@ log = logging.getLogger(__name__)
 
 PREDIKAT = tvrdnje.PREDIKAT
 
-_MAX_BLOKOVA = 40  # koliko paragrafa stane u jedan prompt (kratko, merljivo)
+_MAX_BLOKOVA = 15  # paragrafa po pozivu (manje = manji ulaz/izlaz, manje praznih/timeouta)
 _PRAG = 0.8        # minimalno preklapanje reči fraze sa blokom (0..1)
 
 _SISTEM = (
@@ -150,43 +151,50 @@ def _spoljne_rute(persona=None) -> list:
     return moje + firmine
 
 
-def _pozovi(gateway, rute: list, prompt: str, persona=None) -> str | None:
-    """Tekst prvog uspelog modela iz lanca; None ako nijedna ruta ne prođe."""
+def _pozovi(gateway, rute: list, prompt: str, persona=None) -> tuple[str | None, str]:
+    """(tekst, razlog). tekst=None ako nijedna ruta ne prođe; razlog za dijagnostiku."""
+    razlog = "no_route"
     for ruta in rute:
         try:
             g = gateway.generate(E.LLMPurpose.EXTRACT, _SISTEM, prompt,
                                   persona=persona, only=ruta)
-            return g.text
-        except gateway.LLMError:
+            return g.text, (g.record.finish_reason or "ok")
+        except gateway.LLMError as e:
+            razlog = (e.detail or e.code or "greška")[:60]
             continue
-    return None
+    return None, razlog
 
 
-def _llm_izvuci(blocks: list[Any], persona=None) -> tuple[list[dict] | None, list[dict]]:
-    """(sirovi_kandidati, uzemljeni) po svim delovima; (None, []) ako model nije zvan.
+def _llm_izvuci(blocks: list[Any], persona=None) -> tuple[bool, list[dict], list[dict], list[dict]]:
+    """(primenjiv, sirovi, uzemljeni, delovi).
 
-    `sirovi` = sve što model vrati (pre uzemljenja), radi dijagnostike.
-    (None, []) kad spoljne rute nema ili model padne — poziv za fallback na osnovu.
+    primenjiv=False → nema rute ili nema paragrafa → fallback na osnovu.
+    Pali deo se PRESKAČE (ne ruši ceo dokument); uspeli delovi se zadrže.
+    `delovi`: po jedan {sirovo, uzemljeno, razlog} radi dijagnostike.
     """
     from apps.llm_gateway import gateway
 
     rute = _spoljne_rute(persona)
     if not rute:
-        return None, []
+        return False, [], [], []
     paragrafi = [b for b in blocks if getattr(b, "block_type", "") == "paragraph"]
     if not paragrafi:
-        return None, []
+        return False, [], [], []
     sirovi: list[dict] = []
     uzemljeni: list[dict] = []
+    delovi: list[dict] = []
     for poc in range(0, len(paragrafi), _MAX_BLOKOVA):
         deo = paragrafi[poc:poc + _MAX_BLOKOVA]
-        tekst = _pozovi(gateway, rute, _prompt(deo), persona)
+        tekst, razlog = _pozovi(gateway, rute, _prompt(deo), persona)
         if tekst is None:
-            return None, []  # model nedostupan → cela osnova (ne mešamo slojeve)
+            delovi.append({"sirovo": 0, "uzemljeno": 0, "razlog": razlog})
+            continue  # pali deo se preskače, ne ruši ostale
         kand = _parse(tekst)
+        uz = _uzemlji(kand, deo)
         sirovi.extend(kand)
-        uzemljeni.extend(_uzemlji(kand, deo))
-    return sirovi, uzemljeni
+        uzemljeni.extend(uz)
+        delovi.append({"sirovo": len(kand), "uzemljeno": len(uz), "razlog": razlog})
+    return True, sirovi, uzemljeni, delovi
 
 
 def izvuci(blocks: Iterable[Any], *, persona=None) -> list[dict]:
@@ -198,26 +206,25 @@ def izvuci(blocks: Iterable[Any], *, persona=None) -> list[dict]:
     blocks = list(blocks)
     osnova = tvrdnje.izvuci(blocks)
     try:
-        sirovi, uzemljeni = _llm_izvuci(blocks, persona)
+        primenjiv, _sirovi, uzemljeni, _delovi = _llm_izvuci(blocks, persona)
     except Exception:  # bilo kakav propust LLM puta → deterministička osnova
         log.warning("LLM ekstrakt pao, fallback na osnovu", exc_info=True)
         return osnova
-    if sirovi is None:
+    if not primenjiv:
         return osnova
     return uzemljeni if uzemljeni else osnova
 
 
 def meri(blocks: Iterable[Any], *, persona=None) -> dict:
-    """Dijagnostika: koliko model vrati (sirovo) vs koliko prođe uzemljenje."""
+    """Dijagnostika: sirovo vs uzemljeno, ukupno i po delu (razlog završetka)."""
     blocks = list(blocks)
     try:
-        sirovi, uzemljeni = _llm_izvuci(blocks, persona)
+        primenjiv, sirovi, uzemljeni, delovi = _llm_izvuci(blocks, persona)
     except Exception:
         log.warning("LLM ekstrakt (meri) pao", exc_info=True)
-        return {"model_zvan": False, "sirovo": 0, "uzemljeno": 0}
-    if sirovi is None:
-        return {"model_zvan": False, "sirovo": 0, "uzemljeno": 0}
-    return {"model_zvan": True, "sirovo": len(sirovi), "uzemljeno": len(uzemljeni)}
+        return {"model_zvan": False, "sirovo": 0, "uzemljeno": 0, "delovi": []}
+    return {"model_zvan": primenjiv, "sirovo": len(sirovi),
+            "uzemljeno": len(uzemljeni), "delovi": delovi}
 
 
 def upisi(document, *, persona=None) -> dict[str, int]:
