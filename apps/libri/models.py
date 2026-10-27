@@ -235,3 +235,45 @@ class Odnos(UUIDModel):
 
     def __str__(self) -> str:
         return f"{self.subject_id}-{self.relation_type}->{self.object_id}"
+
+
+# ADR-0031 sloj 4b §3.3: pouzdanost tvrdnje po pet osa.
+class OcenaTvrdnje(UUIDModel):
+    """Pet osa pouzdanosti po tvrdnji (ADR-0031 §3.3).
+
+    Deterministička računica nad metapodacima izvora (`trust_score`, `source_kind`)
+    i grafom tvrdnji; ne bira pobednika među protivrečnim izvorima (ADR-0006 §3) —
+    `stabilnost` samo pada, tvrdnje ostaju. Jedna ocena po tvrdnji; izolovano u
+    `apps/libri`, bez diranja `KnowledgeFact`.
+    """
+
+    fact = models.ForeignKey(
+        "memory.KnowledgeFact", on_delete=models.CASCADE, related_name="libri_ocene",
+    )
+    pouzdanost = unit_interval()
+    nezavisnost = unit_interval()
+    blizina = unit_interval()
+    potkrepljenost = unit_interval()
+    stabilnost = unit_interval()
+    ukupno = unit_interval()
+    object_json = JSON_DICT()
+
+    class Meta:
+        db_table = "libri_ocena_tvrdnje"
+        constraints = [
+            models.UniqueConstraint(fields=["fact"], name="libri_ocena_unique_fact"),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(pouzdanost__gte=0) & models.Q(pouzdanost__lte=1)
+                    & models.Q(nezavisnost__gte=0) & models.Q(nezavisnost__lte=1)
+                    & models.Q(blizina__gte=0) & models.Q(blizina__lte=1)
+                    & models.Q(potkrepljenost__gte=0) & models.Q(potkrepljenost__lte=1)
+                    & models.Q(stabilnost__gte=0) & models.Q(stabilnost__lte=1)
+                    & models.Q(ukupno__gte=0) & models.Q(ukupno__lte=1)
+                ),
+                name="libri_ocena_axes_unit",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"ocena({self.fact_id})={self.ukupno}"
