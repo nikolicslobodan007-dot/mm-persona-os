@@ -15,7 +15,7 @@ from __future__ import annotations
 from django.core.management.base import BaseCommand, CommandError
 
 from api.context import bind
-from apps.libri import dosije, ekstrakt, entiteti, pouzdanost, tvrdnje, vektori
+from apps.libri import dosije, ekstrakt, entiteti, pouzdanost, steps, tvrdnje, vektori
 from apps.libri.models import Block, LibriDocument
 from apps.libri.uvoz import UvozError, uvezi
 
@@ -27,8 +27,9 @@ class Command(BaseCommand):
         parser.add_argument(
             "radnja",
             choices=["uvezi", "reindeksiraj", "pretrazi", "tvrdnje",
-                     "entiteti", "pouzdanost", "dosije"],
-            help="uvezi | reindeksiraj | pretrazi | tvrdnje | entiteti | pouzdanost | dosije")
+                     "entiteti", "pouzdanost", "dosije", "plan"],
+            help=("uvezi | reindeksiraj | pretrazi | tvrdnje | entiteti | "
+                  "pouzdanost | dosije | plan"))
         parser.add_argument("--iz", default="", help="Putanja do PDF-a (uvezi).")
         parser.add_argument("--naslov", default="",
                             help="Naslov dokumenta (podrazumevano: ime fajla).")
@@ -60,6 +61,8 @@ class Command(BaseCommand):
             self._pouzdanost(options)
         elif radnja == "dosije":
             self._dosije(options)
+        elif radnja == "plan":
+            self._plan(options)
         else:
             self._pretrazi(options)
 
@@ -175,6 +178,30 @@ class Command(BaseCommand):
         if dok is None:
             raise CommandError(f"Dokument ne postoji: {doc_id}.")
         self.stdout.write(dosije.sastavi(dok))
+
+    def _plan(self, options):
+        actor = options["actor"]
+        doc_id = options["dokument"]
+        if not actor.startswith("user:"):
+            raise CommandError(
+                "--actor mora da počne sa 'user:' (čovek pokreće Libri tok)."
+            )
+        if not doc_id:
+            raise CommandError("plan traži --dokument <document_id>.")
+        dok = LibriDocument.objects.filter(document_id=doc_id).first()
+        if dok is None:
+            raise CommandError(f"Dokument ne postoji: {doc_id}.")
+        try:
+            with bind(actor_id=actor):
+                rez = steps.pokreni(dok)
+        except steps.LibriPlanError as e:
+            raise CommandError(
+                f"Tok zaustavljen na fazi {e.faza}: {e.razlog}") from e
+        for f in rez["faze"]:
+            detalji = ", ".join(f"{k}: {v}" for k, v in f["rezultat"].items())
+            self.stdout.write(self.style.SUCCESS(f"  ✓ {f['naziv']} — {detalji}"))
+        self.stdout.write("")
+        self.stdout.write(rez["dosije"])
 
     def _pretrazi(self, options):
         upit = options["upit"]
