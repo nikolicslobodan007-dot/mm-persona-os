@@ -119,6 +119,18 @@
       cube([x,1.38,z+0.86],[0.36,0.36,0.36],'#d3b8a0');
     });
   }
+  // F3A: presence markers remain schematic, not evidence of RUNNING work.
+  function drawSeatMarkers(cube) {
+    const xs=[-4.2,-2.1,0,2.1,4.2];
+    state.shown.forEach((a,i)=>{
+      const x=xs[i],z=i%2===0?0.0:0.30;
+      const status=String(a.status||'').toUpperCase();
+      const color=status==='ACTIVE'?'#53dfc4':status==='READY'?'#7ab9ed':status==='PAUSED'?'#e6ac61':'#97a9bd';
+      // One visual occupancy token per real Office V1.2 agent; no fake movements.
+      cube([x,1.03,z+0.90],[0.38,0.49,0.28],a.public_id===state.selected?'#ef9a52':color);
+      cube([x,1.44,z+0.90],[0.33,0.32,0.32],'#d3b8a0');
+    });
+  }
   function createRenderer(canvas) {
     const gl=canvas.getContext('webgl',{antialias:true,alpha:false,depth:true});
     if (!gl) throw new Error('WebGL nije dostupan u ovom pregledaču. Lista agenata ostaje dostupna.');
@@ -135,6 +147,10 @@
     const uniforms={vp:gl.getUniformLocation(program,'uVP'),at:gl.getUniformLocation(program,'uTranslate'),
       scale:gl.getUniformLocation(program,'uScale'),color:gl.getUniformLocation(program,'uColor')};
     gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);
+    // All geometric models are pre-approved local GLBs, never executable source.
+    let f3a=null;
+    try { f3a=window.WKOfficeF3A?.create(gl)||null; }
+    catch(e){ console.warn('F3A unavailable; legacy WebGL remains active',e); }
     const rgb = hex => { const n=parseInt(hex.replace('#',''),16);return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255]; };
     function cube(pos,size,color) {
       gl.uniform3fv(uniforms.at,pos);gl.uniform3fv(uniforms.scale,size);
@@ -145,10 +161,26 @@
       const width=Math.max(1,Math.floor(rect.width*dpr)),height=Math.max(1,Math.floor(rect.height*dpr));
       if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}
       gl.viewport(0,0,width,height);gl.clearColor(0.055,0.101,0.16,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-      gl.uniformMatrix4fv(uniforms.vp,false,new Float32Array(vp));
-      drawOffice(cube);
+      if(f3a?.ready && f3a.render(vp,state.shown)) {
+        // F3A uses a separate shader/VBO; restore the legacy marker shader.
+        gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,vert);
+        gl.enableVertexAttribArray(aPosition);
+        gl.vertexAttribPointer(aPosition,3,gl.FLOAT,false,stride,0);
+        gl.enableVertexAttribArray(aNormal);
+        gl.vertexAttribPointer(aNormal,3,gl.FLOAT,false,stride,3*4);
+        gl.uniformMatrix4fv(uniforms.vp,false,new Float32Array(vp));
+        drawSeatMarkers(cube);
+      } else {
+        gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,vert);
+        gl.enableVertexAttribArray(aPosition);
+        gl.vertexAttribPointer(aPosition,3,gl.FLOAT,false,stride,0);
+        gl.enableVertexAttribArray(aNormal);
+        gl.vertexAttribPointer(aNormal,3,gl.FLOAT,false,stride,3*4);
+        gl.uniformMatrix4fv(uniforms.vp,false,new Float32Array(vp));
+        drawOffice(cube);
+      }
     }
-    return {render};
+    return {render,f3a};
   }
   // Accessible 2D projection fallback when WebGL is disabled by browser or policy.
   function createFallback(canvas) {
@@ -198,6 +230,15 @@
   let fallbackInfo='';
   try {renderer=createRenderer(ui.canvas);}
   catch(e) {renderer=createFallback(ui.canvas);fallbackInfo=e.message + ' Prikazana je 2D projekcija prostora.';message(fallbackInfo);}
+  // Start the graphical enhancement asynchronously. Failure never blocks V1.2 data.
+  const f3aAssets=[...document.querySelectorAll('meta[name="wk-f3a-model"]')]
+    .map(meta=>({key:meta.dataset.key,url:meta.content}));
+  if(renderer?.f3a) {
+    renderer.f3a.load(f3aAssets,window.location.origin)
+      .then(()=>{redraw();const badge=byId('renderMode');if(badge)badge.textContent='3D modeli · F3A';})
+      .catch(err=>{console.warn('F3A local assets unavailable; legacy scene kept',err);
+        const badge=byId('renderMode');if(badge)badge.textContent='Osnovni 3D prikaz';});
+  }
   let frame=0;
   function redraw() {
     if(frame)cancelAnimationFrame(frame);

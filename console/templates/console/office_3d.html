@@ -4,8 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
+  <!-- Exact same-origin filenames resolved through Django staticfiles / hashed collectstatic. -->
+  <meta name="wk-f3a-model" data-key="room" content="{% static 'console/office-3d-models/f3a-room.glb' %}">
+  <meta name="wk-f3a-model" data-key="desk" content="{% static 'console/office-3d-models/f3a-desk.glb' %}">
+  <meta name="wk-f3a-model" data-key="chair" content="{% static 'console/office-3d-models/f3a-chair.glb' %}">
+  <meta name="wk-f3a-model" data-key="plant" content="{% static 'console/office-3d-models/f3a-plant.glb' %}">
+  <meta name="wk-f3a-model" data-key="shelf" content="{% static 'console/office-3d-models/f3a-shelf.glb' %}">
   <title>Web Korporacija · 3D Virtual Office Pilot</title>
   <link rel="stylesheet" href="{% static 'console/office-3d.css' %}">
+  <script defer src="{% static 'console/office-3d-f3a.js' %}"></script>
   <script defer src="{% static 'console/office-3d.js' %}"></script>
 </head>
 <body>
@@ -33,7 +40,7 @@
           <span id="pageInfo" class="meta"></span><button id="prev" type="button" aria-label="Prethodnih pet radnih mesta">‹</button><button id="next" type="button" aria-label="Sledećih pet radnih mesta">›</button>
         </div>
         <div id="scene" class="scene" aria-label="3D model kancelarije"><canvas id="view3d" aria-hidden="true"></canvas><div id="labels" class="labels" aria-label="Radna mesta"></div>
-          <div class="scene-watermark" aria-hidden="true">WK / VIRTUAL OFFICE</div>
+          <div class="scene-watermark" aria-hidden="true">WK / VIRTUAL OFFICE <span id="renderMode">Osnovni 3D prikaz</span></div>
           <div class="scene-help">Prevuci za rotaciju · Točkić ili ± za zumiranje</div>
         </div>
         <div class="camera-controls"><button id="rotateLeft" type="button">↶ Rotiraj</button><button id="rotateRight" type="button">Rotiraj ↷</button><button id="zoomIn" type="button">+ Zum</button><button id="zoomOut" type="button">− Zum</button><button id="reset" type="button">Reset kamere</button></div>

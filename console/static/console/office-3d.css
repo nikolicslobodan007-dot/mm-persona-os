@@ -6,3 +6,6 @@ main{max-width:1532px;margin:0 auto;padding:27px 18px 50px}.heading{display:flex
 @media(max-width:1100px){.workspace{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}.sidebar .agent-list,.sidebar .inspector{grid-row:2}.detail-title{margin:0;padding:0;border:0}}
 @media(max-width:680px){.agent-label{display:none}.topbar{flex-wrap:wrap;gap:9px;padding:12px 16px}.topbar nav{gap:12px;font-size:12px}.safety{display:none}main{padding:17px 10px}.heading{align-items:flex-start}.heading p:last-child{font-size:12px}.heading .primary{font-size:11px;padding:8px}.stats{grid-template-columns:repeat(2,1fr);gap:8px;margin:17px 0}.stats>div{padding:13px}.stats strong{font-size:23px}.view-toolbar{flex-wrap:wrap}.view-toolbar select{flex:1;min-width:0;max-width:none}.view-toolbar .meta{margin-left:0}.scene{height:430px}.sidebar{display:block}.detail-title{margin-top:21px;padding-top:15px;border-top:1px solid var(--line)}.scene-help{font-size:10px}.camera-controls button{flex:1}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* F3A: explicit renderer mode; visually subordinate to actual business status. */
+#renderMode{letter-spacing:.3px;color:#85d4c1;font-weight:600;font-size:10px;margin-left:14px}
