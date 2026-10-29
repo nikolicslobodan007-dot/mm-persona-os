@@ -207,11 +207,15 @@ def izvuci_odnose(blocks: Iterable[Any], entiteti: list[dict]) -> list[dict]:
     return out
 
 
-def upisi(document) -> dict[str, int]:
+def upisi(document, *, kand_e=None, kand_o=None) -> dict[str, int]:
     """Izvuci entitete i odnose iz blokova dokumenta i upiši ih.
 
     Vezuje se za dokumentov `KnowledgeSource`. Delete+recreate po izvoru (isti
     obrazac kao `tvrdnje`). Jedna transakcija; zove se unutar `bind(actor)`.
+
+    `kand_e`/`kand_o` su spoljni kandidati (LLM pojačavač, ADR-0031 sloj 4b): kad
+    su dati, pišu se umesto determinističke osnove; kad su None, izvlači osnova.
+    Oba se daju zajedno — odnosi se vezuju za nazive datih entiteta.
     """
     from datetime import datetime
 
@@ -227,8 +231,10 @@ def upisi(document) -> dict[str, int]:
             "entitet ne sme da postoji bez izvora (Canon §4.1)."
         )
     blokovi = list(document.blocks.all())
-    kand_e = izvuci_entitete(blokovi)
-    kand_o = izvuci_odnose(blokovi, kand_e)
+    if kand_e is None:
+        kand_e = izvuci_entitete(blokovi)
+    if kand_o is None:
+        kand_o = izvuci_odnose(blokovi, kand_e)
 
     def _dt(iso):
         return make_aware(datetime.fromisoformat(iso + "T00:00:00")) if iso else None

@@ -15,7 +15,16 @@ from __future__ import annotations
 from django.core.management.base import BaseCommand, CommandError
 
 from api.context import bind
-from apps.libri import dosije, ekstrakt, entiteti, pouzdanost, steps, tvrdnje, vektori
+from apps.libri import (
+    dosije,
+    ekstrakt,
+    ekstrakt_entiteti,
+    entiteti,
+    pouzdanost,
+    steps,
+    tvrdnje,
+    vektori,
+)
 from apps.libri.models import Block, LibriDocument
 from apps.libri.uvoz import UvozError, uvezi
 
@@ -45,7 +54,7 @@ class Command(BaseCommand):
         parser.add_argument("--top", type=int, default=5,
                             help="Koliko blokova vratiti (pretrazi).")
         parser.add_argument("--llm", action="store_true",
-                            help="tvrdnje: LLM ekstraktor (fallback na osnovu).")
+                            help="tvrdnje/entiteti: LLM ekstraktor (fallback na osnovu).")
 
     def handle(self, *args, **options):
         radnja = options["radnja"]
@@ -140,11 +149,13 @@ class Command(BaseCommand):
             raise CommandError(f"Dokument ne postoji: {doc_id}.")
         try:
             with bind(actor_id=actor):
-                rez = entiteti.upisi(dok)
+                rez = (ekstrakt_entiteti.upisi(dok) if options["llm"]
+                       else entiteti.upisi(dok))
         except ValueError as e:
             raise CommandError(str(e)) from e
+        put = "LLM" if options["llm"] else "osnova"
         self.stdout.write(self.style.SUCCESS(
-            f"Entiteti za {doc_id}: {rez['entiteta']} entiteta, "
+            f"Entiteti za {doc_id} ({put}): {rez['entiteta']} entiteta, "
             f"{rez['odnosa']} odnosa, {rez['obrisano']} staro obrisano."
         ))
 
