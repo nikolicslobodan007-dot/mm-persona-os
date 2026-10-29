@@ -54,7 +54,7 @@ class Command(BaseCommand):
         parser.add_argument("--top", type=int, default=5,
                             help="Koliko blokova vratiti (pretrazi).")
         parser.add_argument("--llm", action="store_true",
-                            help="tvrdnje/entiteti: LLM ekstraktor (fallback na osnovu).")
+                            help="tvrdnje/entiteti/dosije: LLM sloj (fallback na osnovu).")
 
     def handle(self, *args, **options):
         radnja = options["radnja"]
@@ -188,7 +188,15 @@ class Command(BaseCommand):
         dok = LibriDocument.objects.filter(document_id=doc_id).first()
         if dok is None:
             raise CommandError(f"Dokument ne postoji: {doc_id}.")
-        self.stdout.write(dosije.sastavi(dok))
+        if options["llm"]:
+            actor = options["actor"]
+            if not actor.startswith("user:"):
+                raise CommandError(
+                    "--actor mora da počne sa 'user:' (čovek pokreće LLM analizu dosija).")
+            with bind(actor_id=actor):
+                self.stdout.write(dosije.sastavi(dok, llm=True))
+        else:
+            self.stdout.write(dosije.sastavi(dok))
 
     def _plan(self, options):
         actor = options["actor"]
