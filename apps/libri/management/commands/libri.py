@@ -23,6 +23,7 @@ from apps.libri import (
     pouzdanost,
     steps,
     tvrdnje,
+    uvoz_web,
     vektori,
 )
 from apps.libri.models import Block, LibriDocument
@@ -35,11 +36,13 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "radnja",
-            choices=["uvezi", "reindeksiraj", "pretrazi", "tvrdnje",
+            choices=["uvezi", "uvezi-web", "reindeksiraj", "pretrazi", "tvrdnje",
                      "entiteti", "pouzdanost", "dosije", "plan"],
-            help=("uvezi | reindeksiraj | pretrazi | tvrdnje | entiteti | "
-                  "pouzdanost | dosije | plan"))
+            help=("uvezi | uvezi-web | reindeksiraj | pretrazi | tvrdnje | "
+                  "entiteti | pouzdanost | dosije | plan"))
         parser.add_argument("--iz", default="", help="Putanja do PDF-a (uvezi).")
+        parser.add_argument("--url", default="",
+                            help="Javni URL (uvezi-web).")
         parser.add_argument("--naslov", default="",
                             help="Naslov dokumenta (podrazumevano: ime fajla).")
         parser.add_argument("--licenca", default="",
@@ -60,6 +63,8 @@ class Command(BaseCommand):
         radnja = options["radnja"]
         if radnja == "uvezi":
             self._uvezi(options)
+        elif radnja == "uvezi-web":
+            self._uvezi_web(options)
         elif radnja == "reindeksiraj":
             self._reindeksiraj(options)
         elif radnja == "tvrdnje":
@@ -99,6 +104,31 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"Uvezeno: {dok.document_id} „{dok.title}” — "
             f"{dok.pages} str., {dok.blocks.count()} blokova."
+        ))
+
+    def _uvezi_web(self, options):
+        url = options["url"]
+        actor = options["actor"]
+        if not url:
+            raise CommandError("uvezi-web traži --url <URL>.")
+        if not actor.startswith("user:"):
+            raise CommandError(
+                "--actor mora da počne sa 'user:' (ADR-0074 — čovek uvozi).")
+        if not options["licenca"]:
+            raise CommandError("uvezi-web traži --licenca.")
+        try:
+            with bind(actor_id=actor):
+                dok = uvoz_web.uvezi_url(
+                    url,
+                    naslov=options["naslov"],
+                    licenca=options["licenca"],
+                    naziv_licence=options["naziv_licence"],
+                )
+        except UvozError as e:
+            raise CommandError(str(e)) from e
+        self.stdout.write(self.style.SUCCESS(
+            f"Uvezeno (web): {dok.document_id} „{dok.title}” — "
+            f"{dok.blocks.count()} blokova."
         ))
 
     def _reindeksiraj(self, options):
