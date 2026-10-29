@@ -23,11 +23,13 @@ from apps.libri import (
     pouzdanost,
     steps,
     tvrdnje,
+    uvoz_mail,
     uvoz_web,
     vektori,
 )
 from apps.libri.models import Block, LibriDocument
 from apps.libri.uvoz import UvozError, uvezi
+from common import enums as E
 
 
 class Command(BaseCommand):
@@ -36,13 +38,18 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "radnja",
-            choices=["uvezi", "uvezi-web", "reindeksiraj", "pretrazi", "tvrdnje",
+            choices=["uvezi", "uvezi-web", "uvezi-mail", "mail-spisak",
+                     "reindeksiraj", "pretrazi", "tvrdnje",
                      "entiteti", "pouzdanost", "dosije", "plan"],
-            help=("uvezi | uvezi-web | reindeksiraj | pretrazi | tvrdnje | "
-                  "entiteti | pouzdanost | dosije | plan"))
+            help=("uvezi | uvezi-web | uvezi-mail | mail-spisak | reindeksiraj | "
+                  "pretrazi | tvrdnje | entiteti | pouzdanost | dosije | plan"))
         parser.add_argument("--iz", default="", help="Putanja do PDF-a (uvezi).")
         parser.add_argument("--url", default="",
                             help="Javni URL (uvezi-web).")
+        parser.add_argument("--poruka", default="",
+                            help="UUID MailMessage poruke (uvezi-mail).")
+        parser.add_argument("--persona", default="",
+                            help="public_id persone (mail-spisak).")
         parser.add_argument("--naslov", default="",
                             help="Naslov dokumenta (podrazumevano: ime fajla).")
         parser.add_argument("--licenca", default="",
@@ -65,6 +72,10 @@ class Command(BaseCommand):
             self._uvezi(options)
         elif radnja == "uvezi-web":
             self._uvezi_web(options)
+        elif radnja == "uvezi-mail":
+            self._uvezi_mail(options)
+        elif radnja == "mail-spisak":
+            self._mail_spisak(options)
         elif radnja == "reindeksiraj":
             self._reindeksiraj(options)
         elif radnja == "tvrdnje":
@@ -128,6 +139,58 @@ class Command(BaseCommand):
             raise CommandError(str(e)) from e
         self.stdout.write(self.style.SUCCESS(
             f"Uvezeno (web): {dok.document_id} „{dok.title}” — "
+            f"{dok.blocks.count()} blokova."
+        ))
+
+    def _mail_spisak(self, options):
+        persona_id = options["persona"]
+        if not persona_id:
+            raise CommandError("mail-spisak traži --persona <public_id>.")
+        from apps.channels.models import MailMessage
+        from apps.personas.models import Persona
+        p = Persona.objects.filter(public_id=persona_id).first()
+        if p is None:
+            raise CommandError(f"Persona ne postoji: {persona_id}.")
+        qs = MailMessage.objects.filter(
+            persona=p, direction=E.MailDirection.INBOUND.value).order_by("-received_at")[:20]
+        if not qs:
+            self.stdout.write("Nema dolaznih poruka za ovu personu.")
+            return
+        self.stdout.write("UUID                                  datum       od / naslov")
+        for m in qs:
+            datum = m.received_at.date().isoformat() if m.received_at else "?"
+            naslov = (m.subject or "(bez naslova)")[:60]
+            self.stdout.write(f"{m.id}  {datum:10}  {m.from_addr[:36]:36}  {naslov}")
+
+    def _uvezi_mail(self, options):
+        import uuid as _uuid
+
+        poruka = options["poruka"]
+        actor = options["actor"]
+        if not poruka:
+            raise CommandError("uvezi-mail traži --poruka <uuid>.")
+        try:
+            _uuid.UUID(str(poruka))
+        except ValueError:
+            raise CommandError("--poruka mora biti UUID (vidi `libri mail-spisak`).") from None
+        if not actor.startswith("user:"):
+            raise CommandError(
+                "--actor mora da počne sa 'user:' (ADR-0074 — čovek uvozi).")
+        if not options["licenca"]:
+            raise CommandError("uvezi-mail traži --licenca.")
+        from apps.channels.models import MailMessage
+        mm = MailMessage.objects.filter(id=poruka).first()
+        if mm is None:
+            raise CommandError(f"Poruka ne postoji: {poruka}.")
+        try:
+            with bind(actor_id=actor):
+                dok = uvoz_mail.ugradi_poruku(
+                    mm, licenca=options["licenca"],
+                    naziv_licence=options["naziv_licence"])
+        except UvozError as e:
+            raise CommandError(str(e)) from e
+        self.stdout.write(self.style.SUCCESS(
+            f"Uvezeno (mejl): {dok.document_id} „{dok.title}” — "
             f"{dok.blocks.count()} blokova."
         ))
 
