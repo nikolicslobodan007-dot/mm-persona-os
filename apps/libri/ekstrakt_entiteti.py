@@ -33,17 +33,8 @@ import logging
 from collections.abc import Iterable
 from typing import Any
 
-from apps.libri.ekstrakt import (
-    _MAX_BLOKOVA,
-    _PRAG,
-    _norm,
-    _preklapanje,
-    _spoljne_rute,
-    _tokeni,
-)
+from apps.libri import ekstrakt, entiteti
 from common import enums as E
-
-from apps.libri import entiteti
 
 log = logging.getLogger(__name__)
 
@@ -104,8 +95,8 @@ def _parse(text: str) -> tuple[list[dict], list[dict]]:
 
 
 def _uzemlji_entitete(kandidati: list[dict], blocks: Iterable[Any]) -> list[dict]:
-    """Zadrži entitete UZEMLJENE u citiranom bloku (preklapanje ≥ _PRAG, vrsta OK)."""
-    po_bloku = {b.block_id: (set(_tokeni(b.text)), b) for b in blocks}
+    """Zadrži entitete UZEMLJENE u citiranom bloku (preklapanje ≥ ekstrakt._PRAG, vrsta OK)."""
+    po_bloku = {b.block_id: (set(ekstrakt._tokeni(b.text)), b) for b in blocks}
     out: list[dict] = []
     vidjeno: set = set()
     for k in kandidati:
@@ -118,15 +109,15 @@ def _uzemlji_entitete(kandidati: list[dict], blocks: Iterable[Any]) -> list[dict
             continue  # vrsta van vokabulara → baca se
         if not naziv or not (2 <= len(naziv) <= 220):
             continue
-        if _preklapanje(naziv, blok_tokeni) < _PRAG:
+        if ekstrakt._preklapanje(naziv, blok_tokeni) < ekstrakt._PRAG:
             continue  # reči kojih nema u bloku → baca se (anti-halucinacija)
-        kljuc = (vrsta, _norm(naziv))
+        kljuc = (vrsta, ekstrakt._norm(naziv))
         if kljuc in vidjeno:
             continue
         vidjeno.add(kljuc)
         datum = entiteti._datum(b.text or "") if vrsta == "dogadjaj" else None
         out.append({
-            "name": naziv[:220], "kind": vrsta, "normalized": _norm(naziv)[:220],
+            "name": naziv[:220], "kind": vrsta, "normalized": ekstrakt._norm(naziv)[:220],
             "block_id": k["block_id"], "source_page": b.source_page,
             "desilo_se": datum.isoformat() if datum else None, "objavljeno": None,
             "confidence": 0.7,
@@ -137,7 +128,7 @@ def _uzemlji_entitete(kandidati: list[dict], blocks: Iterable[Any]) -> list[dict
 def _uzemlji_odnose(kandidati: list[dict], uzemljeni_e: list[dict],
                     blocks: Iterable[Any]) -> list[dict]:
     """Odnos samo IZMEĐU dva uzemljena entiteta, oba uzemljena u citiranom bloku."""
-    po_bloku = {b.block_id: (set(_tokeni(b.text)), b) for b in blocks}
+    po_bloku = {b.block_id: (set(ekstrakt._tokeni(b.text)), b) for b in blocks}
     imena = {e["normalized"] for e in uzemljeni_e}
     out: list[dict] = []
     vidjeno: set = set()
@@ -149,11 +140,11 @@ def _uzemlji_odnose(kandidati: list[dict], uzemljeni_e: list[dict],
         subj, obj, tip = k["subjekat"], k["objekat"], k["tip"]
         if tip not in TIPOVI_ODNOSA:
             continue  # tip van vokabulara → baca se
-        ns, no = _norm(subj), _norm(obj)
+        ns, no = ekstrakt._norm(subj), ekstrakt._norm(obj)
         if ns not in imena or no not in imena:
             continue  # veza van prepoznatih entiteta → baca se (visoka preciznost)
-        if (_preklapanje(subj, blok_tokeni) < _PRAG
-                or _preklapanje(obj, blok_tokeni) < _PRAG):
+        if (ekstrakt._preklapanje(subj, blok_tokeni) < ekstrakt._PRAG
+                or ekstrakt._preklapanje(obj, blok_tokeni) < ekstrakt._PRAG):
             continue  # oba naziva moraju biti u citiranom bloku → baca halucinaciju
         kljuc = (ns, tip, no)
         if kljuc in vidjeno:
@@ -198,7 +189,7 @@ def _llm_izvuci(blocks: list[Any], persona=None):
     """
     from apps.llm_gateway import gateway
 
-    rute = _spoljne_rute(persona)
+    rute = ekstrakt._spoljne_rute(persona)
     if not rute:
         return False, 0, [], 0, [], []
     paragrafi = [b for b in blocks if getattr(b, "block_type", "") == "paragraph"]
@@ -208,8 +199,8 @@ def _llm_izvuci(blocks: list[Any], persona=None):
     uzemljeni_e: list[dict] = []
     uzemljeni_o: list[dict] = []
     delovi: list[dict] = []
-    for poc in range(0, len(paragrafi), _MAX_BLOKOVA):
-        deo = paragrafi[poc:poc + _MAX_BLOKOVA]
+    for poc in range(0, len(paragrafi), ekstrakt._MAX_BLOKOVA):
+        deo = paragrafi[poc:poc + ekstrakt._MAX_BLOKOVA]
         tekst, razlog = _pozovi(gateway, rute, _prompt(deo), persona)
         if tekst is None:
             delovi.append({"entiteti_sirovo": 0, "entiteti_uzemljeno": 0,
