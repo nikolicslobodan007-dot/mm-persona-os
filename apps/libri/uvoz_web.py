@@ -120,16 +120,32 @@ def _ua() -> str:
         return _UA_FALLBACK
 
 
-def _robots_dozvoljava(url: str, ua: str) -> bool:
-    parts = urlsplit(url)
-    root = f"{parts.scheme}://{parts.netloc}"
+def _robots_odluka(robots_txt: str, ua: str, url: str) -> bool:
+    """Čista odluka nad tekstom robots.txt (bez mreže)."""
     rp = urllib.robotparser.RobotFileParser()
-    rp.set_url(f"{root}/robots.txt")
-    try:
-        rp.read()
-    except Exception:
-        return True  # nema/nedostupan robots.txt -> nije zabrana
+    rp.parse((robots_txt or "").splitlines())
     return rp.can_fetch(ua, url)
+
+
+def _robots_dozvoljava(url: str, ua: str) -> bool:
+    """Povuci robots.txt NAŠIM deklarisanim UA (kao F6 web adapter), pa odluči.
+
+    RobotFileParser.read() koristi podrazumevani Python-urllib UA, koji mnogi
+    sajtovi (npr. Wikimedia) vraćaju 403 → lažna zabrana. Zato fetch ide našim UA.
+    401/403 na sam robots.txt = izričita zabrana botova; 404/greška = nema robots
+    (dozvoljeno).
+    """
+    parts = urlsplit(url)
+    robots_url = f"{parts.scheme}://{parts.netloc}/robots.txt"
+    req = urllib.request.Request(robots_url, headers={"User-Agent": ua})
+    try:
+        with urllib.request.urlopen(req, timeout=_TIMEOUT) as r:
+            data = r.read(_MAX_BYTES).decode("utf-8", "replace")
+    except urllib.error.HTTPError as e:
+        return e.code not in (401, 403)  # 401/403 → zabrana; ostalo → dozvoljeno
+    except Exception:
+        return True  # robots.txt nedostupan → nije zabrana
+    return _robots_odluka(data, ua, url)
 
 
 def preuzmi(url: str) -> str:

@@ -110,3 +110,20 @@ def test_ugradi_losa_licenca_pada(db):
 def test_ugradi_slobodna_bez_naziva_pada(db):
     with pytest.raises(UvozError, match="SLOBODNA"):
         uvoz_web.ugradi("https://primer.rs/y", _HTML, licenca="SLOBODNA")
+
+
+# ---- robots.txt odluka (čista, bez mreže) ----
+
+def test_robots_odluka_dozvoljava_i_zabranjuje():
+    r = "User-agent: *\nDisallow: /private/\n"
+    assert uvoz_web._robots_odluka(r, "MMBot/1.0", "https://x.rs/wiki/Furnir") is True
+    assert uvoz_web._robots_odluka(r, "MMBot/1.0", "https://x.rs/private/tajna") is False
+
+
+def test_robots_odluka_prazno_dozvoljava():
+    assert uvoz_web._robots_odluka("", "MMBot/1.0", "https://x.rs/a") is True
+
+
+def test_robots_odluka_zabrani_sve():
+    r = "User-agent: *\nDisallow: /\n"
+    assert uvoz_web._robots_odluka(r, "MMBot/1.0", "https://x.rs/a") is False
