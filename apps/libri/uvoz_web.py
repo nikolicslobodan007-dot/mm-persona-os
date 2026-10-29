@@ -279,10 +279,11 @@ def ugradi(url: str, html: str, *, naslov="", licenca="", naziv_licence="") -> L
             persona=None,
             source_kind=E.SourceKind.PUBLIC_WEB_SOURCE.value,
             title=title,
+            uri=url,  # web izvor MORA imati uri (check constraint web_has_uri)
             trust_score=TRUST_PUBLIC_WEB,
             checksum=checksum,
             license_box=box.value,
-            license_note=naziv_licence.strip() or url,
+            license_note=naziv_licence.strip(),
         )
         dok = LibriDocument.objects.create(
             source=izvor,
