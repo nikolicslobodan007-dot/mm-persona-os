@@ -95,6 +95,7 @@ def _prikupi(document) -> dict[str, Any]:
         "blokova": len(blokovi), "tvrdnje": tvrdnje, "akteri": akteri,
         "dogadjaji": dogadjaji, "dokazi": dokazi, "odnosi": odnosi,
         "pouzdanost": ose, "kontradikcije": kontradikcije, "hronologija": hronologija,
+        "blok_idovi": list(po_bloku),
     }
 
 
@@ -181,11 +182,23 @@ def _markdown(p: dict[str, Any]) -> str:
     L.append("")
 
     L.append("## 9. Konkurentske hipoteze")
-    L.append("— (dolazi sa LLM slojem; deterministička osnova ne izvodi hipoteze)")
+    hip = p.get("hipoteze") or []
+    if hip:
+        for h in hip:
+            osl = ", ".join(h["oslonac"])
+            L.append(f"- {h['tekst']}  _(oslonac: {osl}; INFERRED \u2014 LLM, nije OBSERVED)_")
+    else:
+        L.append("— (dolazi sa LLM slojem; deterministička osnova ne izvodi hipoteze)")
     L.append("")
 
     L.append("## 10. Otvorena pitanja")
-    L.append("— (dolazi sa LLM slojem)")
+    pit = p.get("pitanja") or []
+    if pit:
+        for q in pit:
+            osl = ", ".join(q["oslonac"])
+            L.append(f"- {q['tekst']}  _(oslonac: {osl}; INFERRED \u2014 LLM, nije OBSERVED)_")
+    else:
+        L.append("— (dolazi sa LLM slojem)")
     L.append("")
 
     L.append("## 11. Hronologija")
@@ -207,6 +220,18 @@ def _markdown(p: dict[str, Any]) -> str:
     return "\n".join(L)
 
 
-def sastavi(document) -> str:
-    """Sastavi markdown dosije dokumenta (prikupljanje + formatiranje)."""
-    return _markdown(_prikupi(document))
+def sastavi(document, *, llm: bool = False, persona=None) -> str:
+    """Sastavi markdown dosije dokumenta (prikupljanje + formatiranje).
+
+    llm=True puni sekcije 9 (hipoteze) i 10 (pitanja) kroz LLM sloj (analiza),
+    uvek oznaceno kao INFERRED; bez rute/modela ostaju prazne (crtica),
+    deterministicka osnova (Canon 21). llm=False (podrazumevano) je cist
+    deterministicki dosije — nepromenjeno ponasanje.
+    """
+    prikup = _prikupi(document)
+    if llm:
+        from apps.libri import analiza
+        a = analiza.analiza(prikup, prikup["blok_idovi"], persona=persona)
+        prikup["hipoteze"] = a["hipoteze"]
+        prikup["pitanja"] = a["pitanja"]
+    return _markdown(prikup)
