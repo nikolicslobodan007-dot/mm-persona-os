@@ -33,8 +33,6 @@ import logging
 from collections.abc import Iterable
 from typing import Any
 
-from apps.libri import entiteti
-# Jedan izvor istine za prag uzemljenja, tokenizaciju i izbor spoljnih ruta:
 from apps.libri.ekstrakt import (
     _MAX_BLOKOVA,
     _PRAG,
@@ -44,6 +42,8 @@ from apps.libri.ekstrakt import (
     _tokeni,
 )
 from common import enums as E
+
+from apps.libri import entiteti
 
 log = logging.getLogger(__name__)
 
