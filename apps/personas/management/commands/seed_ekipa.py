@@ -19,7 +19,7 @@ from django.core.management.base import BaseCommand, CommandError
 from api.context import bind
 from apps.personas import ekipa as spisak
 from apps.personas import hiring, org
-from apps.personas.models import Persona, Position
+from apps.personas.models import Biography, Persona, Position
 
 
 class Command(BaseCommand):
@@ -29,8 +29,10 @@ class Command(BaseCommand):
         parser.add_argument("--pokazi", action="store_true")
         parser.add_argument("--samo", default="", help="Šifra sektora (npr. NABAVKA).")
         parser.add_argument("--actor", default="user:slobodan")
+        parser.add_argument("--osvezi", action="store_true",
+                            help="Osveži izgled i biografiju i postojećim agentima.")
 
-    def handle(self, *args, pokazi, samo, actor, **opts):
+    def handle(self, *args, pokazi, samo, actor, osvezi, **opts):
         mesta = {p.code: p for p in Position.objects.select_related("department")}
         redovi = [r for r in spisak.EKIPA
                   if not samo or mesta.get(r["mesto"]) is not None
@@ -47,10 +49,14 @@ class Command(BaseCommand):
             self.stdout.write(f"\nUkupno na spisku: {len(redovi)}")
             return
 
-        napravljeno, preskoceno = [], []
+        napravljeno, preskoceno, osvezeno = [], [], []
         for r in redovi:
             if self._postoji(r["ime"]):
-                preskoceno.append(f"{r['ime']}: već postoji")
+                if osvezi:
+                    poruka = self._osvezi(r, mesta, actor)
+                    (osvezeno if poruka.startswith("P-") else preskoceno).append(poruka)
+                else:
+                    preskoceno.append(f"{r['ime']}: već postoji")
                 continue
             mesto = mesta.get(r["mesto"])
             if mesto is None:
@@ -63,6 +69,7 @@ class Command(BaseCommand):
                                             if n.strip()])
                     org.set_dossier(p, actor=actor, birth_date=r.get("rodjen"),
                                     **spisak.dosije_od(r))
+                    self._upisi_bio(p, mesto, r)
             except (hiring.HiringError, org.OrgError) as e:
                 preskoceno.append(f"{r['ime']}: {e}")
                 continue
@@ -72,8 +79,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"  {red}"))
         for red in preskoceno:
             self.stdout.write(self.style.WARNING(f"  {red}"))
-        self.stdout.write(f"\nZaposleno: {len(napravljeno)}, preskočeno: "
-                          f"{len(preskoceno)}.")
+        for red in osvezeno:
+            self.stdout.write(self.style.SUCCESS(f"  osvežen {red}"))
+        self.stdout.write(f"\nZaposleno: {len(napravljeno)}, osveženo: "
+                          f"{len(osvezeno)}, preskočeno: {len(preskoceno)}.")
         if napravljeno:
             self.stdout.write(
                 "Svi su READY, sa L0 na svemu i bez ključa modela — dok im ne daš "
@@ -96,6 +105,26 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(
                 f"Bez sandučića: {len(fale)} ({', '.join(p.public_id for p in fale)}). "
                 "Proveri `manage.py mailbox bez`, pa `mailbox popuni`."))
+
+    def _osvezi(self, r, mesta, actor):
+        mesto = mesta.get(r["mesto"])
+        p = Persona.objects.filter(slug=hiring.slugify_sr(r["ime"])).first()
+        if p is None or mesto is None:
+            return f"{r['ime']}: ne mogu da osvežim"
+        with bind(actor_id=actor):
+            org.set_dossier(p, actor=actor, **spisak.dosije_od(r))
+            self._upisi_bio(p, mesto, r)
+        return f"{p.public_id} {p.display_name}"
+
+    @staticmethod
+    def _upisi_bio(p, mesto, r) -> None:
+        bio = spisak.biografija_od(r)
+        if not bio:
+            return
+        Biography.objects.filter(persona=p).update(
+            headline=bio["headline"], short_bio=bio["kratka"], long_bio=bio["duga"],
+            occupation_title=mesto.title, industry=mesto.department.name,
+            location_label=r.get("residence", "Srbija"))
 
     @staticmethod
     def _postoji(ime: str) -> bool:

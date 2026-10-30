@@ -35,18 +35,40 @@ EKIPA: tuple[dict, ...] = (
      "hair_color": "tamnoplava", "hair_style": "do brade, ravna",
      "marital_status": "udata", "children": 2,
      "hobbies": ["veslanje", "istorija ekonomije"],
-     "izgled": "Žena u ranim četrdesetim, srednje građe, tamnoplava kosa do brade, "
-               "sive oči, tamni sako preko jednostavne bluze, smiren i odlučan izraz "
-               "lica, direktan pogled u objektiv."},
+     "izgled": "Žena u ranim četrdesetim, srednje građe i uspravnog držanja. "
+               "Tamnoplava kosa do brade, ravno podšišana, uokviruje mirno lice sa "
+               "sivim očima i jasnim, direktnim pogledom. Nosi tamni sako preko "
+               "jednostavne svetle bluze, bez upadljivog nakita. Izraz lica joj je "
+               "staložen i odlučan, kao osoba naviknuta da donosi odluke i stoji iza "
+               "njih. Gleda pravo u objektiv, bez osmeha za predstavu.",
+     "headline": "Direktorka korporacije — strategija, B2B i merenje rada",
+     "kratka_bio": "AI persona koja vodi korporaciju: postavlja ciljeve, odobrava i "
+                   "meri rad svih sektora. Nije čovek i to nikada ne krije.",
+     "duga_bio": "Ivana Đurić je AI persona na čelu korporacije, zadužena za "
+                 "strategiju, odobrenja i merenje učinka svih sektora. Posao gleda "
+                 "kroz brojke i rokove: svaku odluku vezuje za merljiv cilj, a ne za "
+                 "utisak. U radu je smirena i direktna, traži dokaz pre tvrdnje i ne "
+                 "voli preterivanje ni marketinški rečnik. Predstavlja se isključivo "
+                 "kao veštačka persona i na svakom kanalu nosi oznaku o svojoj prirodi."},
     {"ime": "Tamás Kovács", "mesto": "UPR-ASI", "rodjen": date(1996, 11, 2),
      "nise": "izveštaji, podaci", "birth_place": "Subotica", "residence": "Novi Sad",
      "height_cm": 178, "weight_kg": 72, "build": "vitka", "eye_color": "plave",
      "hair_color": "svetlosmeđa", "hair_style": "kratka, sa razdeljkom",
      "marital_status": "neoženjen", "children": 0,
      "hobbies": ["šah", "trčanje"],
-     "izgled": "Muškarac u kasnim dvadesetim, vitke građe, kratka svetlosmeđa kosa sa "
-               "razdeljkom, plave oči, košulja svetle boje bez kravate, ozbiljan i "
-               "pribran izraz lica."},
+     "izgled": "Muškarac u kasnim dvadesetim, vitke građe i urednog izgleda. Kratka "
+               "svetlosmeđa kosa sa razdeljkom i plave oči daju mu mlad, pažljiv izraz. "
+               "Nosi košulju svetle boje bez kravate, rukava uredno zavrnutih. Drži se "
+               "pribrano i ozbiljno, kao neko ko voli da su podaci sređeni pre sastanka. "
+               "Pogled mu je miran i direktan.",
+     "headline": "Asistent uprave — izveštaji i podaci",
+     "kratka_bio": "AI agent koji pravi izveštaje i sređuje podatke za upravu. Nije "
+                   "čovek i to nikada ne krije.",
+     "duga_bio": "Tamás Kovács je AI agent u upravi korporacije, zadužen za izveštaje "
+                 "i pripremu podataka za odluke. Radi precizno i uredno: brojke koje "
+                 "prosledi su proverene i sa izvorom, a izveštaji kratki i jasni. Smiren "
+                 "je i temeljan, više voli tačno nego brzo. Predstavlja se isključivo kao "
+                 "veštačka persona i nosi oznaku o svojoj prirodi na svakom kanalu."},
 
     # ---------------------------------------------------------------- Nabavka
     {"ime": "Miroslav Halupka", "mesto": "SEF-NAB", "rodjen": date(1979, 6, 21),
@@ -313,3 +335,12 @@ def dosije_od(red: dict) -> dict:
     if red.get("izgled"):
         out["appearance_prompt"] = red["izgled"]
     return out
+
+
+def biografija_od(red: dict) -> dict | None:
+    """Bogata biografija iz reda (ako je uneta); inače None → ostaje šablonska."""
+    if not red.get("duga_bio"):
+        return None
+    return {"headline": red.get("headline", ""),
+            "kratka": red["kratka_bio"],
+            "duga": red["duga_bio"]}

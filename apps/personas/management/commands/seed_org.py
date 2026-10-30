@@ -21,6 +21,9 @@ from common import enums as E
 
 L = E.OrgLevel
 
+#: Gornji kapacitet po nivou (piramida: puno izvršilaca, malo šefova).
+_KAPACITET = {L.HEAD: 2, L.SENIOR: 20, L.MEDIOR: 80}
+
 #: (code, ime, čemu služi)
 DEPARTMENTS: tuple[tuple[str, str, str], ...] = (
     ("UPRAVA", "Uprava", "Ciljevi, odobrenja i merenje rada cele korporacije."),
@@ -200,7 +203,7 @@ class Command(BaseCommand):
                     defaults={"department": deps[dep], "title": title, "level": level,
                               "specialty": specialty, "duties": duties,
                               "needs": POSITION_NEEDS.get(code, []),
-                              "headcount_max": koliko})
+                              "headcount_max": max(koliko, _KAPACITET.get(level, koliko))})
                 made[code] = p
             for code, _dep, _t, _l, _s, boss, _d, _k in POSITIONS:
                 if boss:
