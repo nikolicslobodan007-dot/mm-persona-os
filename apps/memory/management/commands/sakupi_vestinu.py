@@ -22,13 +22,11 @@ from django.core.management.base import BaseCommand
 
 # Demo: pravi procedurni srpski tekst (hladni mejl) → grana „destiluj".
 _DEMO = (
-    "Pre slanja napravi segmentisanu listu potencijalnih klijenata po industriji i "
-    "veličini. Šalji s profesionalne adrese i vodi evidenciju kome si pisao. "
-    "Otvori mejl kratkim ličnim uvodom — imenom ili konkretnim pitanjem, bez uopštenih "
-    "pozdrava. Personalizuj svaku poruku primaocu i firmi. Piši kratko i aktivnim glasom: "
-    "pozdrav, kuka za interes, pa jasna ponuda. Ne najavljuj prodaju prerano. Završi jednim "
-    "jasnim pozivom na akciju. Dodaj jednostavan potpis i proveri pravopis. Ako nema "
-    "odgovora, pošalji kratak podsetnik bez pritiska."
+    "Hladni mejl šalji ovako. Prvo napravi segmentisanu listu klijenata po industriji "
+    "i veličini. Zatim otvori mejl kratkim ličnim uvodom — imenom ili konkretnim "
+    "pitanjem, bez uopštenih pozdrava. Potom personalizuj poruku primaocu i firmi i "
+    "piši kratko, aktivnim glasom. Na kraju daj jedan jasan poziv na akciju, dodaj "
+    "jednostavan potpis i proveri pravopis."
 )
 
 
