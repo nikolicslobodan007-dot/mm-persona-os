@@ -112,3 +112,13 @@ def test_osnova_meri_preciznost_i_odziv():
     # Determinističkoj osnovi na zlatnom skupu — bez lažnih, svi očekivani uhvaćeni.
     assert r["preciznost"] == 1.0, r["lazno"]
     assert r["odziv"] == 1.0, r["promaseno"]
+
+
+def test_cirilica_definiciona_tvrdnja():
+    """Ćirilični izvor (javni web/mejl): „X је Y" se hvata kao i latinica."""
+    b = SimpleNamespace(
+        block_type="paragraph", block_id="blk_000001", source_page=1,
+        text="Фурнир је танак лист дрвета који се лепи преко основе.")
+    kand = tvrdnje.izvuci([b])
+    assert len(kand) == 1
+    assert kand[0]["subject"] == "Фурнир"          # izlaz ostaje u originalnom pismu
