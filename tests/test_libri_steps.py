@@ -85,3 +85,21 @@ def test_idempotentno(db):
         drugi = steps.pokreni(dok)
     assert (prvi["faze"][0]["rezultat"]["tvrdnje"]
             == drugi["faze"][0]["rezultat"]["tvrdnje"])
+
+
+@requires_db
+@pytest.mark.django_db
+def test_pokreni_llm_bez_modela_jednak_osnovi(db):
+    dok = _dok([
+        "Furnir je tanak list drveta koji se lepi preko osnove.",
+        "Milan Jovanović radi u kompaniji Vinogradi.",
+    ], document_id="doc_plan_llm")
+
+    def _rez(r):
+        return {f["naziv"]: f["rezultat"] for f in r["faze"]}
+
+    with bind(actor_id="user:qa"):
+        osnova = steps.pokreni(dok, llm=False)
+        llm = steps.pokreni(dok, llm=True)   # isti dok (idempotentno); nema rute → fallback
+    assert llm["llm"] is True
+    assert _rez(osnova) == _rez(llm)         # bez spoljne rute LLM == deterministička osnova
