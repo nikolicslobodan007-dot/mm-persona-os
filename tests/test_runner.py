@@ -222,7 +222,7 @@ class TestNeuspehBezLazneKapije:
         runner.obradi(self.TASK)
         assert not any(p.endswith("/unapplied") for p in self._putanje(zvao))
 
-    def test_petlja_prezivljava_pao_zadatak(self, runner, monkeypatch, zvao):
+    def test_petlja_prezivljava_pao_zadatak(self, runner, monkeypatch, zvao, tmp_path):
         """Prvi poziv u `obradi` stoji pre `try`; petlja mora da ga preživi.
 
         Bez ovoga je jedan neuspeo poziv gasio ceo proces, a red je posle ćutao —
@@ -250,6 +250,11 @@ class TestNeuspehBezLazneKapije:
         monkeypatch.setattr(runner, "api", api_koji_pada_na_radu)
         monkeypatch.setattr(runner, "TOKEN", "t")
         monkeypatch.setattr(runner, "PAUZA", 0)
+        # Izoluj setup main() (kao u _main) da test ne zavisi od docker-a
+        # na CI — inače moze_da_se_proveri()/docker_vidi_isto mogu da vrate
+        # rano (return 3) pre petlje, pa je test bio flaky.
+        monkeypatch.setattr(runner, "RADNI_KOREN", tmp_path)
+        monkeypatch.setattr(runner, "moze_da_se_proveri", lambda: False)
 
         def stani(_):
             raise KeyboardInterrupt
