@@ -20,7 +20,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from apps.libri import dosije, entiteti, pouzdanost, tvrdnje
+from apps.libri import dosije, ekstrakt, ekstrakt_entiteti, entiteti, pouzdanost, tvrdnje
 
 
 class LibriPlanError(Exception):
@@ -38,23 +38,24 @@ class Faza:
     izvrsi: Callable[..., dict]
 
 
-def _citac(document) -> dict:
-    r = tvrdnje.upisi(document)
+def _citac(document, *, llm=False, persona=None) -> dict:
+    r = ekstrakt.upisi(document, persona=persona) if llm else tvrdnje.upisi(document)
     return {"tvrdnje": r["upisano"]}
 
 
-def _kartograf(document) -> dict:
-    r = entiteti.upisi(document)
+def _kartograf(document, *, llm=False, persona=None) -> dict:
+    r = (ekstrakt_entiteti.upisi(document, persona=persona) if llm
+         else entiteti.upisi(document))
     return {"entiteti": r["entiteta"], "odnosi": r["odnosa"]}
 
 
-def _proveravac(document) -> dict:
-    r = pouzdanost.upisi(document)
+def _proveravac(document, *, llm=False, persona=None) -> dict:
+    r = pouzdanost.upisi(document)  # nema LLM varijante — uvek determinističko
     return {"ocenjeno": r["ocenjeno"]}
 
 
-def _bibliotekar(document) -> dict:
-    md = dosije.sastavi(document)
+def _bibliotekar(document, *, llm=False, persona=None) -> dict:
+    md = dosije.sastavi(document, llm=llm, persona=persona)
     return {"dosije_duzina": len(md), "dosije": md}
 
 
@@ -75,20 +76,23 @@ def _cuvar(document) -> None:
         raise LibriPlanError("Čuvar", "dokument nema blokove (uvezi/reindeksiraj prvo)")
 
 
-def pokreni(document) -> dict:
+def pokreni(document, *, llm: bool = False, persona=None) -> dict:
     """Pokreni ceo Libri tok nad dokumentom (zove se unutar `bind(actor)`).
 
-    Vraća {"faze": [{"naziv", "rezultat"}…], "dosije": <markdown>}. Faza koja
-    padne (`ValueError` iz upisa) zaustavlja tok uz `LibriPlanError` — nikad tiho.
+    `llm=True` vodi tok kroz LLM pojačavač (ekstrakt tvrdnje/entiteti, dosije
+    §9/§10) iza istih potpisa; bez rute/modela pada na determinističku osnovu
+    (isti rezultat). `llm=False` (podrazumevano) je čist deterministički tok.
+    Vraća {"faze": [{"naziv", "rezultat"}…], "dosije": <markdown>, "llm": bool}.
+    Faza koja padne (`ValueError` iz upisa) zaustavlja tok uz `LibriPlanError`.
     """
     _cuvar(document)
     faze: list[dict] = []
     dosije_md = ""
     for f in FAZE:
         try:
-            out = f.izvrsi(document)
+            out = f.izvrsi(document, llm=llm, persona=persona)
         except ValueError as e:
             raise LibriPlanError(f.naziv, str(e)) from e
         dosije_md = out.pop("dosije", "") or dosije_md
         faze.append({"naziv": f.naziv, "rezultat": out})
-    return {"faze": faze, "dosije": dosije_md}
+    return {"faze": faze, "dosije": dosije_md, "llm": llm}

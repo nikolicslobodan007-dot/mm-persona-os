@@ -64,7 +64,7 @@ class Command(BaseCommand):
         parser.add_argument("--top", type=int, default=5,
                             help="Koliko blokova vratiti (pretrazi).")
         parser.add_argument("--llm", action="store_true",
-                            help="tvrdnje/entiteti/dosije: LLM sloj (fallback na osnovu).")
+                            help="tvrdnje/entiteti/dosije/plan: LLM sloj (fallback na osnovu).")
 
     def handle(self, *args, **options):
         radnja = options["radnja"]
@@ -305,10 +305,12 @@ class Command(BaseCommand):
             raise CommandError(f"Dokument ne postoji: {doc_id}.")
         try:
             with bind(actor_id=actor):
-                rez = steps.pokreni(dok)
+                rez = steps.pokreni(dok, llm=options["llm"])
         except steps.LibriPlanError as e:
             raise CommandError(
                 f"Tok zaustavljen na fazi {e.faza}: {e.razlog}") from e
+        put = "LLM" if options["llm"] else "osnova"
+        self.stdout.write(self.style.SUCCESS(f"Libri tok ({put}):"))
         for f in rez["faze"]:
             detalji = ", ".join(f"{k}: {v}" for k, v in f["rezultat"].items())
             self.stdout.write(self.style.SUCCESS(f"  ✓ {f['naziv']} — {detalji}"))
