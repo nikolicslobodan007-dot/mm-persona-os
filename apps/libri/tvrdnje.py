@@ -17,15 +17,19 @@ import re
 from collections.abc import Iterable
 from typing import Any
 
+from apps.libri.pismo import VELIKA, u_latinicu
+
 PREDIKAT = "libri.tvrdnja"
 
 _KOPULA = (
     r"(je|su|jeste|jesu|predstavlja|predstavljaju|"
-    r"označava|označavaju|podrazumeva|podrazumevaju)"
+    r"označava|označavaju|podrazumeva|podrazumevaju|"
+    r"је|су|јесте|јесу|представља|представљају|"
+    r"означава|означавају|подразумева|подразумевају)"
 )
 _RECENICA = re.compile(r"[^.!?]+[.!?]")
 _DEF = re.compile(
-    r"^\s*([A-ZČĆŽŠĐ][\wčćžšđ]*(?:\s+[\wčćžšđ]+){0,2})\s+"
+    rf"^\s*([{VELIKA}][\wčćžšđ]*(?:\s+[\wčćžšđ]+){{0,2}})\s+"
     + _KOPULA
     + r"\s+(.+?)\s*[.!?]?\s*$"
 )
@@ -55,7 +59,7 @@ def izvuci(blocks: Iterable[Any]) -> list[dict]:
             subjekat = m.group(1).strip()
             relacija = m.group(2).strip()
             vrednost = m.group(3).strip()
-            if subjekat.lower() in _STOP or len(subjekat) < 3:
+            if u_latinicu(subjekat).lower() in _STOP or len(subjekat) < 3:
                 continue
             if not (8 <= len(vrednost) <= 240):
                 continue

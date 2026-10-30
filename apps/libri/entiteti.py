@@ -25,13 +25,15 @@ from collections.abc import Iterable
 from datetime import date
 from typing import Any
 
+from apps.libri.pismo import VELIKA, u_latinicu
+
 VRSTE = ("osoba", "organizacija", "dogadjaj")
 TIPOVI_ODNOSA = ("radi_u", "vodi", "deo_od", "nalazi_se_u", "osnovao")
 
 # Granica rečenice: `.!?` + razmak + veliko slovo (ili kraj) — tako datum
 # „12.03.2026." i skraćenica „d.o.o." ostaju celi, ne cepaju se po tačkama.
-_GRANICA = re.compile(r"(?<=[.!?])\s+(?=[A-ZČĆŽŠĐ])")
-_TOKEN = r"[A-ZČĆŽŠĐ][\wčćžšđ.-]*"
+_GRANICA = re.compile(rf"(?<=[.!?])\s+(?=[{VELIKA}])")
+_TOKEN = rf"[{VELIKA}][\wčćžšđ.-]*"
 _DATUM = re.compile(r"\b(\d{1,2})\.\s?(\d{1,2})\.\s?(\d{4})\b")
 
 # Pokazne reči (mala slova) — vezuju susedni naziv za vrstu.
@@ -65,20 +67,27 @@ _OSOBA_GLAGOL = frozenset((
 
 # Relacioni obrasci nad rečenicom: grupe 1 i 2 su nazivi entiteta.
 _ODNOSI = (
-    (re.compile(rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})\s+(?:radi|zaposlen[a]?)\s+u\s+"
-                rf"(?:kompaniji|preduzeću|firmi)?\s*({_TOKEN}(?:\s+{_TOKEN}){{0,2}})"),
-     "radi_u"),
-    (re.compile(rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})\s+je\s+(?:direktor|direktorka)\s+"
-                rf"(?:kompanije|preduzeća|firme)?\s*({_TOKEN}(?:\s+{_TOKEN}){{0,2}})"),
-     "vodi"),
-    (re.compile(rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})\s+deo\s+je\s+"
-                rf"(?:udruženja|kompanije|preduzeća)?\s*({_TOKEN}(?:\s+{_TOKEN}){{0,2}})"),
-     "deo_od"),
-    (re.compile(rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})\s+se\s+nalazi\s+u\s+"
+    (re.compile(rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})\s+"
+                rf"(?:radi|ради|zaposlen[a]?|запослен[а]?)\s+(?:u|у)\s+"
+                rf"(?:kompaniji|preduzeću|firmi|компанији|предузећу|фирми)?\s*"
                 rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})"),
+     "radi_u"),
+    (re.compile(rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})\s+(?:je|је)\s+"
+                rf"(?:direktor|direktorka|директор|директорка)\s+"
+                rf"(?:kompanije|preduzeća|firme|компаније|предузећа|фирме)?\s*"
+                rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})"),
+     "vodi"),
+    (re.compile(rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})\s+(?:deo|део)\s+(?:je|је)\s+"
+                rf"(?:udruženja|kompanije|preduzeća|удружења|компаније|предузећа)?\s*"
+                rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})"),
+     "deo_od"),
+    (re.compile(rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})\s+(?:se|се)\s+(?:nalazi|налази)\s+"
+                rf"(?:u|у)\s+({_TOKEN}(?:\s+{_TOKEN}){{0,2}})"),
      "nalazi_se_u"),
-    (re.compile(rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})\s+je\s+osnova[ol]a?\s+"
-                rf"(?:kompaniju|preduzeće|firmu)?\s*({_TOKEN}(?:\s+{_TOKEN}){{0,2}})"),
+    (re.compile(rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})\s+(?:je|је)\s+"
+                rf"(?:osnova[ol]a?|основа[ол]а?)\s+"
+                rf"(?:kompaniju|preduzeće|firmu|компанију|предузеће|фирму)?\s*"
+                rf"({_TOKEN}(?:\s+{_TOKEN}){{0,2}})"),
      "osnovao"),
 )
 
@@ -97,7 +106,7 @@ def _gol(tok: str) -> str:
 
 
 def _cap(tok: str) -> bool:
-    t = _gol(tok)
+    t = u_latinicu(_gol(tok))
     return bool(t) and t[0] in "ABCČĆDĐEFGHIJKLMNOPRSŠTUVZŽ"
 
 
@@ -114,7 +123,7 @@ def _datum(recenica: str):
 
 def _vrsta(span_tokens: list[str], prev: str, nxt: str) -> str | None:
     """Vrsta po susednim rečima i obliku naziva; bez jasne pokazne → None."""
-    low = [_gol(t).lower() for t in span_tokens]
+    low = [u_latinicu(_gol(t)).lower() for t in span_tokens]
     if prev in _ORG_CUE or low[0] in _ORG_CUE or low[-1] in _ORG_SUFFIX:
         return "organizacija"
     if low[0] in _DOGADJAJ_CUE or nxt in _DOGADJAJ_GLAGOL:
@@ -122,7 +131,7 @@ def _vrsta(span_tokens: list[str], prev: str, nxt: str) -> str | None:
     if prev in _OSOBA_CUE:
         return "osoba"
     if (len(span_tokens) == 2 and nxt in _OSOBA_GLAGOL and all(
-        re.fullmatch(r"[A-ZČĆŽŠĐ][a-zčćžšđ]+", _gol(t)) for t in span_tokens
+        re.fullmatch(r"[A-ZČĆŽŠĐ][a-zčćžšđ]+", u_latinicu(_gol(t))) for t in span_tokens
     )):
         return "osoba"
     return None
@@ -139,8 +148,8 @@ def _spanovi(rec: str):
                 j += 1
             span_tokens = [_gol(t) for t in toks[i:j + 1]]
             naziv = _norm(" ".join(span_tokens))
-            prev = _gol(toks[i - 1]).lower() if i > 0 else ""
-            nxt = _gol(toks[j + 1]).lower() if j + 1 < len(toks) else ""
+            prev = u_latinicu(_gol(toks[i - 1])).lower() if i > 0 else ""
+            nxt = u_latinicu(_gol(toks[j + 1])).lower() if j + 1 < len(toks) else ""
             yield naziv, span_tokens, prev, nxt
             i = j + 1
         else:

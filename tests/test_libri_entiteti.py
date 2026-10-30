@@ -143,3 +143,21 @@ def test_osnova_meri_preciznost_i_odziv():
     assert r["odziv_entiteti"] == 1.0, r["promaseno"]
     assert r["preciznost_odnosa"] == 1.0, r["lazno"]
     assert r["odziv_odnosa"] == 1.0, r["promaseno"]
+
+
+def test_cirilica_entiteti_i_odnos():
+    """Ćirilica: entiteti (osoba/organizacija) i odnos radi_u kao kod latinice."""
+    blok = _blok("Милан Јовановић ради у компанији Виногради.", i=1)
+    ent = entiteti.izvuci_entitete([blok])
+    assert {(e["name"], e["kind"]) for e in ent} == {
+        ("Милан Јовановић", "osoba"), ("Виногради", "organizacija")}
+    odn = entiteti.izvuci_odnose([blok], ent)
+    assert [(o["subject"], o["relation_type"], o["object"]) for o in odn] == \
+        [("Милан Јовановић", "radi_u", "Виногради")]
+
+
+def test_cirilica_dogadjaj_dvostruko_vreme():
+    ent = entiteti.izvuci_entitete([_blok("Сајам Дрво одржан је 12.03.2026.", i=1)])
+    assert len(ent) == 1
+    assert ent[0]["kind"] == "dogadjaj"
+    assert ent[0]["desilo_se"] == "2026-03-12"
