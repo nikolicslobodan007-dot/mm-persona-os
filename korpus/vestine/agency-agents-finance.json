@@ -1,0 +1,239 @@
+[
+  {
+    "ime": "Sprovođenje mesečnog zatvaranja knjiga",
+    "koraci": [
+      "Pripremiti kalendar zatvaranja i podeliti zadatke pre početka procesa",
+      "Proveriti da su svi bankovni izvodi, fakture i platni spiskovi uneti do datuma preseka",
+      "Proknjižiti standardne i korektivne stavke uz obračune troškova i prihoda",
+      "Izraditi finansijske izveštaje i analizu odstupanja u odnosu na budžet i prethodni mesec",
+      "Izvršiti kontrolni pregled, zaključati period i distribuirati izveštaj menadžmentu",
+      "Održati retrospektivu zatvaranja radi unapređenja procesa"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-bookkeeper-controller.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Usklađivanje bilansnih konta",
+    "koraci": [
+      "Uporediti saldo iz glavne knjige sa podacima iz pomoćne evidencije",
+      "Identifikovati i dokumentovati sve stavke razlike sa datumom i opisom",
+      "Istražiti uzrok svake neusklađenosti bez obzira na iznos",
+      "Proknjižiti korektivnu stavku uz odgovarajuću dokumentaciju i odobrenje",
+      "Potvrditi da je razlika svedena na nulu i arhivirati dokaznu dokumentaciju"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-bookkeeper-controller.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Uspostavljanje internih kontrola i revizorske spremnosti",
+    "koraci": [
+      "Definisati matricu ovlašćenja i razdvajanje dužnosti za ključne transakcije",
+      "Zahtevati opis, dokumentaciju i odobrenje za svaku ručnu knjigovodstvenu stavku",
+      "Redovno testirati ključne kontrole i pratiti izuzetke",
+      "Pripremati i ažurirati dokumentaciju tako da bude dostupna reviziji u roku od 24 sata",
+      "Beležiti i otklanjati uzroke kontrolnih propusta radi jačanja procesa"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-bookkeeper-controller.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje potraživanjima, obavezama i gotovinom",
+    "koraci": [
+      "Obrađivati i knjižiti fakture dobavljača uz odobrenje po delegiranim ovlašćenjima",
+      "Izdavati fakture kupcima, pratiti naplatu i ažurirati starosnu strukturu potraživanja",
+      "Pratiti dnevnu poziciju gotovine i usklađivati bankovne transakcije",
+      "Eskalirati zakasnele naplate prema politici naplate i planirati plaćanja prema roku dospeća"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-bookkeeper-controller.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Izrada trostepenog finansijskog modela",
+    "koraci": [
+      "Prikupiti finansijske podatke iz ERP sistema i izveštaja menadžmenta",
+      "Uskladiti podatke sa revidiranim finansijskim izveštajima i obeležiti nedoslednosti",
+      "Definisati svrhu, publiku i strukturu modela sa jasnim ulazima i izlazima",
+      "Povezati bilans uspeha, bilans stanja i tok gotovine dinamičkim formulama",
+      "Ugraditi kontrole grešaka i upravljanje kružnim referencama",
+      "Dokumentovati sve pretpostavke sa izvorima i nivoom pouzdanosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-financial-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Scenario i senzitivna analiza",
+    "koraci": [
+      "Postaviti bazni, optimistični i pesimistični scenario sa jasnim pokretačima razlika",
+      "Sprovesti test osetljivosti na ključne pretpostavke promenom za 10-15%",
+      "Proveriti da li se preporuka menja pri promeni ključnih faktora",
+      "Prikazati rezultate kroz tabele osetljivosti, tornado grafikone ili vodopad dijagrame",
+      "Stres-testirati model u ekstremnim uslovima"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-financial-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Analiza varijansi budžet-ostvarenje",
+    "koraci": [
+      "Uporediti planirane i ostvarene prihode i troškove po stavkama",
+      "Izračunati apsolutnu i procentualnu varijansu za svaku kategoriju",
+      "Identifikovati osnovni uzrok svake značajne varijanse",
+      "Predložiti konkretne akcije sa odgovornim licima i rokovima",
+      "Proceniti uticaj varijansi na prognozu za ostatak godine"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-financial-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Priprema izveštaja za donošenje odluka",
+    "koraci": [
+      "Jasno razdvojiti istorijske podatke od projekcija u izveštaju",
+      "Formulisati zaključak i preporuku odmah na početku izveštaja (so-what pristup)",
+      "Kvantifikovati finansijski uticaj svake preporučene opcije",
+      "Prilagoditi nivo detalja i format publici (izvršni tim, odbor, operativa)",
+      "Navesti ključne rizike, pretpostavke i tačke praćenja koje mogu promeniti zaključak"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-financial-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Izrada godišnjeg operativnog plana",
+    "koraci": [
+      "Uskladiti strateške prioritete sa rukovodstvom i definisati finansijske ciljeve",
+      "Postaviti targete prihoda i profitabilnosti odozgo-nadole sa CFO/CEO",
+      "Izgraditi detaljne planove troškova i broja zaposlenih odozdo-nagore sa šefovima odeljenja",
+      "Uskladiti razlike između top-down targeta i bottom-up plana",
+      "Razviti scenarije rasta, pada i stres-test",
+      "Pripremiti prezentaciju za odbor i uneti odobreni budžet u sistem za planiranje"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-fpa-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Mesečna analiza odstupanja i izveštavanje",
+    "koraci": [
+      "Prikupiti stvarne rezultate od računovodstva i operativne pokazatelje učinka",
+      "Izraditi analizu odstupanja prihoda, troškova i broja zaposlenih sa uzrocima",
+      "Razgovarati sa šefovima odeljenja o odstupanjima i potvrditi dalja očekivanja",
+      "Ažurirati rolling prognozu na osnovu najnovijih informacija",
+      "Pripremiti i prezentovati mesečni izveštaj rukovodstvu sa akcionim stavkama"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-fpa-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Kvartalno ažuriranje rolling prognoze",
+    "koraci": [
+      "Preispitati godišnji izgled na osnovu rezultata od početka godine i podataka iz prodajnog levka",
+      "Uključiti promene u dinamici zapošljavanja, kašnjenju projekata i tržišnim uslovima",
+      "Ažurirati raspone scenarija i ponovo stres-testirati prognozu",
+      "Prezentovati revidiranu prognozu uz jasno objašnjenje razlike u odnosu na prethodnu"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-fpa-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Podrška strateškim odlukama kroz scenario analizu",
+    "koraci": [
+      "Povezati svaki zahtev za budžet sa konkretnim poslovnim pokretačem i očekivanim ishodom",
+      "Izraditi osnovni, optimistični i pesimistični scenario sa jasnim pretpostavkama",
+      "Prikazati koje se druge stavke moraju smanjiti ili odložiti da bi se finansirala nova investicija",
+      "Prevesti finansijske pokazatelje u jezik razumljiv relevantnom funkcionalnom timu",
+      "Preporučiti odluku uz kvantifikovan povraćaj ulaganja i period isplativosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-fpa-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Izrada investicione teze sa bull i bear scenarijem",
+    "koraci": [
+      "Definisati jasnu tezu zasnovanu na merljivim podacima, a ne na priči",
+      "Razraditi argumente za rast (bull) sa konkretnim brojevima i katalizatorima",
+      "Podjednako rigorozno razraditi rizike i razloge za pad (bear)",
+      "Odrediti tačke koje bi obesnažile tezu (thesis breakers) i pratiti ih",
+      "Jasno navesti investicioni horizont i nivo uverenosti u tezu"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-investment-researcher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Fundamentalna i kvantitativna analiza kompanije",
+    "koraci": [
+      "Proučiti finansijske izveštaje i transkripte poziva za poslednje tri godine",
+      "Oceniti konkurentsku prednost i poziciju na tržištu kompanije",
+      "Izraditi finansijski model sa DCF analizom i scenarijima (bull, base, bear)",
+      "Uporediti kompaniju sa konkurentima kroz relevantne multiplikatore",
+      "Izračunati rizik-metrike poput beta koeficijenta, VaR i maksimalnog pada"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-investment-researcher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Sprovođenje dubinske provere (due diligence)",
+    "koraci": [
+      "Proveriti kvalitet prihoda i koncentraciju kupaca kompanije",
+      "Analizirati bilans stanja i otkriti skrivene obaveze ili rizike",
+      "Obaviti razgovore sa kupcima, dobavljačima i bivšim zaposlenima radi provere",
+      "Proceniti tehnologiju, intelektualnu svojinu i regulatorne rizike",
+      "Sastaviti listu crvenih zastavica sa procenom ozbiljnosti i preporukama"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-investment-researcher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Praćenje i ažuriranje aktivnih pozicija",
+    "koraci": [
+      "Pratiti kvartalne rezultate i upoređivati ih sa projekcijama modela",
+      "Nadzirati okidače koji bi obesnažili investicionu tezu",
+      "Prilagoditi veličinu pozicije na osnovu novih informacija",
+      "Objavljivati ažurirane beleške kada se dogode značajne promene"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-investment-researcher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Procena poreske pozicije i mapiranje obaveza",
+    "koraci": [
+      "Pregledati postojeću strukturu entiteta i istorijske poreske prijave",
+      "Mapirati sve jurisdikcije u kojima postoji obaveza prijavljivanja i nexus izloženost",
+      "Identifikovati kredite, olakšice i prenosive gubitke kojima ističe rok",
+      "Proveriti politike transfernih cena i interkompanijske aranžmane"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-tax-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Identifikacija prilika za poresku optimizaciju",
+    "koraci": [
+      "Analizirati efektivnu poresku stopu da se pronađu poluge za optimizaciju",
+      "Istražiti dostupne poreske kredite, podsticaje i pogodnosti iz ugovora o izbegavanju dvostrukog oporezivanja",
+      "Modelirati alternativne strukture i njihov uticaj na rezultat posle oporezivanja",
+      "Uporediti efektivnu stopu sa konkurencijom u industriji"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-tax-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada poreske strategije i memoranduma",
+    "koraci": [
+      "Dizajnirati preporučenu strukturu sa planom implementacije",
+      "Pripremiti memorandum sa analizom pravnog osnova i procenom rizika",
+      "Kvantifikovati očekivanu uštedu sa rasponom pouzdanosti",
+      "Uskladiti strukturne promene sa pravnim timom"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-tax-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Sprovođenje i praćenje usklađenosti",
+    "koraci": [
+      "Izvršiti izbore, prijave i strukturne promene po utvrđenom rasporedu",
+      "Pripremiti i proveriti sve potrebne poreske prijave i obelodanjivanja",
+      "Voditi dokumentaciju za svaku nesigurnu ili značajnu poresku poziciju",
+      "Pratiti zakonodavne i regulatorne promene koje utiču na postojeće strategije",
+      "Ažurirati studije transfernih cena na godišnjem nivou"
+    ],
+    "napomene": "Destilovano iz agency-agents/finance/finance-tax-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  }
+]

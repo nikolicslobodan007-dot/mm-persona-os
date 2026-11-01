@@ -1,0 +1,286 @@
+[
+  {
+    "ime": "Izrada izvršnih dashboard-a sa KPI metrikama",
+    "koraci": [
+      "Prikupi i agreguj ključne poslovne podatke po mesecima ili relevantnim periodima",
+      "Izračunaj glavne metrike poput prihoda, broja aktivnih kupaca i prosečne vrednosti narudžbine",
+      "Dodaj poređenje sa prethodnim periodom i stopu rasta",
+      "Kategoriši rezultate u statuse poput visokog rasta ili potrebe za pažnjom",
+      "Prikaži rezultate u dashboard formatu sa mogućnošću praćenja u realnom vremenu"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-analytics-reporter.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Segmentacija kupaca pomoću RFM analize",
+    "koraci": [
+      "Izračunaj za svakog kupca skorašnjost, učestalost i novčanu vrednost kupovina",
+      "Rangiraj kupce po percentilima za svaku od tri dimenzije",
+      "Dodeli svakom kupcu kombinovani RFM skor",
+      "Klasifikuj kupce u segmente poput šampiona, lojalnih, rizičnih i novih korisnika",
+      "Pripremi preporuke za svaki segment i proveri da pravila klasifikacije nisu preklapajuća"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-analytics-reporter.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Analiza marketinškog ROI i atribucije",
+    "koraci": [
+      "Poveži dodirne tačke kupca sa konverzijama na osnovu vremenskog redosleda",
+      "Dodeli težinu svakom dodiru u zavisnosti od pozicije u putovanju kupca",
+      "Izračunaj prihod i broj konverzija po kanalu i kampanji",
+      "Izračunaj ukupan ROI, trošak po konverziji i multiplikator prihoda",
+      "Filtriraj kampanje sa značajnom potrošnjom radi preciznijeg poređenja"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-analytics-reporter.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada strukturisanog izveštaja o poslovnim uvidima",
+    "koraci": [
+      "Sumiraj ključne nalaze i njihov kvantifikovani uticaj na poslovanje",
+      "Opiši izvore podataka, metodologiju i statističku pouzdanost analize",
+      "Definiši prioritetne akcije sa očekivanim uticajem i rokovima",
+      "Predloži plan implementacije kroz kratkoročne i dugoročne faze",
+      "Odredi KPI-jeve i učestalost praćenja uspeha preporuka"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-analytics-reporter.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Strukturiranje poslovnog problema po SCQA okviru",
+    "koraci": [
+      "Pregledati ceo ulazni materijal i izdvojiti ključne činjenice",
+      "Definisati trenutnu situaciju i kontekst koji je bitan sada",
+      "Identifikovati komplikaciju odnosno jaz između trenutnog i željenog stanja",
+      "Formulisati centralno pitanje na koje odgovor treba da pruži rešenje",
+      "Oblikovati jasan i direktan odgovor kao osnovu rezimea"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-executive-summary-generator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izvlačenje i kvantifikovanje ključnih nalaza",
+    "koraci": [
+      "Izdvojiti tri do pet najvažnijih uvida iz dostupnih podataka",
+      "Svaki nalaz potkrepiti bar jednim brojčanim ili uporednim pokazateljem",
+      "Rangirati nalaze prema njihovom uticaju na poslovanje",
+      "Istaći strateške implikacije svakog nalaza podebljanim tekstom",
+      "Proveriti da nijedan nalaz nije zasnovan na pretpostavci van podataka"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-executive-summary-generator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kreiranje akcionih preporuka sa vlasništvom",
+    "koraci": [
+      "Definisati tri do četiri prioritizovane akcije označene po važnosti",
+      "Za svaku akciju odrediti odgovornu osobu ili ulogu",
+      "Postaviti konkretan rok izvršenja za svaku preporuku",
+      "Navesti očekivani kvantifikovani rezultat svake akcije",
+      "Dodati potrebne resurse ili međufunkcijske zavisnosti ako postoje"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-executive-summary-generator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Kontrola kvaliteta i formata izveštaja",
+    "koraci": [
+      "Proveriti da ukupan broj reči bude u opsegu od 325 do 475",
+      "Potvrditi da svaki nalaz sadrži kvantifikovan podatak",
+      "Proveriti da preporuke imaju vlasnika, rok i očekivani rezultat",
+      "Uskladiti ton teksta da bude odlučan, činjeničan i usmeren ka ishodu",
+      "Definisati sledeće korake sa rokom do 30 dana i tačku odlučivanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-executive-summary-generator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada budžeta i analiza odstupanja",
+    "koraci": [
+      "Prikupi i proveri tačnost finansijskih podataka pre analize",
+      "Kreiraj godišnji budžet sa kvartalnom i mesečnom podelom po sektorima",
+      "Uporedi planirane i ostvarene iznose i izračunaj procenat odstupanja",
+      "Označi status svakog sektora kao u planu, preko ili ispod budžeta",
+      "Predloži korektivne mere za sektore sa značajnim odstupanjem"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-finance-tracker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje i prognoza novčanog toka",
+    "koraci": [
+      "Analiziraj istorijske obrasce priliva i odliva novca",
+      "Napravi prognozu novčanog toka za narednih 12 meseci uz sezonske faktore",
+      "Identifikuj periode niske likvidnosti i rizike nedostatka gotovine",
+      "Prepoznaj periode viška gotovine i predloži mogućnosti ulaganja",
+      "Optimizuj raspored plaćanja radi iskorišćenja popusta i bolje likvidnosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-finance-tracker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Analiza investicionih odluka",
+    "koraci": [
+      "Izračunaj neto sadašnju vrednost (NPV) investicije na osnovu očekivanih tokova",
+      "Odredi internu stopu prinosa (IRR) i period povraćaja ulaganja",
+      "Proceni rizik investicije na osnovu stabilnosti novčanih tokova",
+      "Formiraj preporuku za ulaganje na osnovu NPV, IRR i nivoa rizika"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-finance-tracker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izveštavanje o finansijskim performansama",
+    "koraci": [
+      "Sastavi pregled ključnih finansijskih pokazatelja za izveštajni period",
+      "Uporedi prihode, troškove i neto dobit sa planom i prethodnim periodom",
+      "Analiziraj strukturu troškova i identifikuj mogućnosti uštede",
+      "Definiši hitne, kratkoročne i strateške akcione korake",
+      "Pripremi dokumentaciju usklađenu sa standardima revizije i usaglašenosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-finance-tracker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Postavljanje monitoringa i alarma za infrastrukturu",
+    "koraci": [
+      "Definisati metrike za CPU, memoriju, disk i mrežu na svim serverima",
+      "Konfigurisati alatke poput Prometheus-a za prikupljanje podataka u redovnim intervalima",
+      "Postaviti pravila za alarme kada vrednosti pređu bezbedne pragove",
+      "Povezati alarme sa sistemom za obaveštavanje tima",
+      "Redovno proveravati i podešavati pragove na osnovu stvarnog ponašanja sistema"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-infrastructure-maintainer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Automatizacija infrastrukture kroz kod",
+    "koraci": [
+      "Opisati mrežu, servere i baze podataka kroz Terraform konfiguracije",
+      "Čuvati stanje infrastrukture u bezbednom i deljenom skladištu",
+      "Definisati automatsko skaliranje servera prema opterećenju",
+      "Testirati promene pre primene u produkciji",
+      "Dokumentovati svaku izmenu sa procedurom za vraćanje na prethodno stanje"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-infrastructure-maintainer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Izrada sistema za bekap i oporavak",
+    "koraci": [
+      "Automatizovati redovno pravljenje bekapa baza podataka i fajlova",
+      "Šifrovati sve bekape pre skladištenja radi bezbednosti",
+      "Prebacivati bekape na eksterno skladište poput S3",
+      "Proveravati ispravnost bekapa kroz test dekripcije",
+      "Brisati zastarele bekape prema utvrđenoj politici čuvanja",
+      "Slati obaveštenja timu o uspehu ili neuspehu procesa"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-infrastructure-maintainer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Analiza troškova i optimizacija resursa",
+    "koraci": [
+      "Pratiti potrošnju resursa i identifikovati preterano dimenzionisane servere",
+      "Predlagati prelazak na rezervisane ili jeftinije instance kada je moguće",
+      "Kreirati izveštaje o troškovima po kategorijama infrastrukture",
+      "Primeniti automatsko skaliranje radi smanjenja nepotrebnih troškova",
+      "Pratiti uštede nakon sprovedenih optimizacija"
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-infrastructure-maintainer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada GDPR/CCPA okvira usklađenosti",
+    "koraci": [
+      "Identifikovati kategorije ličnih podataka i njihov pravni osnov obrade.",
+      "Definisati rokove čuvanja podataka za svaku kategoriju.",
+      "Uspostaviti procedure za ostvarivanje prava korisnika kao što su pristup, brisanje i prenosivost podataka.",
+      "Pripremiti plan reagovanja na proboj podataka sa rokovima za obaveštavanje nadležnih organa.",
+      "Dokumentovati sve odluke radi revizorskog traga."
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-legal-compliance-checker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Generisanje politike privatnosti",
+    "koraci": [
+      "Prikupiti informacije o kompaniji i jurisdikcijama u kojima posluje.",
+      "Opisati koje se vrste podataka prikupljaju i na koji način.",
+      "Navesti pravni osnov obrade i prava korisnika prema primenljivim propisima.",
+      "Dodati odeljke o deljenju podataka, kolačićima i međunarodnom prenosu podataka.",
+      "Proveriti usklađenost dokumenta kroz kontrolnu listu zahteva GDPR i CCPA."
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-legal-compliance-checker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Automatizovana provera ugovora",
+    "koraci": [
+      "Skenirati tekst ugovora na ključne reči visokog i srednjeg rizika.",
+      "Izračunati ukupnu ocenu rizika i odrediti nivo potrebnog odobrenja.",
+      "Analizirati klauzule vezane za zaštitu podataka, bezbednost i međunarodne odredbe.",
+      "Sastaviti preporuke za izmenu rizičnih odredbi poput ograničenja odgovornosti.",
+      "Izraditi izveštaj o pregledu sa preporukama i statusom odobrenja."
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-legal-compliance-checker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Procena rizika i izrada izveštaja o usklađenosti",
+    "koraci": [
+      "Sprovesti reviziju poslovnih procesa u odnosu na primenljive propise.",
+      "Identifikovati kritične, srednje i niske rizike sa procenom uticaja.",
+      "Pregledati postojeće politike i ugovore sa dobavljačima radi utvrđivanja nedostataka.",
+      "Predložiti plan otklanjanja nedostataka sa rokovima po fazama.",
+      "Pratiti ključne pokazatelje usklađenosti i ažurirati izveštaj periodično."
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-legal-compliance-checker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Obrada korisničkih upita kroz više kanala",
+    "koraci": [
+      "Analiziraj kontekst, istoriju i hitnost upita korisnika.",
+      "Usmeri zahtev ka odgovarajućem nivou podrške prema složenosti problema.",
+      "Održavaj dosledan kvalitet odgovora na email, chat, telefonu i društvenim mrežama.",
+      "Prati rokove za prvi odgovor i rešenje definisane standardima usluge."
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-support-responder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Sistematsko rešavanje problema korisnika",
+    "koraci": [
+      "Sprovedi dijagnostiku problema korak po korak.",
+      "Sarađuj sa tehničkim timovima kada je potrebno specijalističko znanje.",
+      "Potvrdi rešenje sa korisnikom i izmeri njegovo zadovoljstvo.",
+      "Dokumentuj proces rešavanja radi ažuriranja baze znanja."
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-support-responder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Praćenje korisnika i proaktivna podrška",
+    "koraci": [
+      "Pošalji naknadnu poruku radi potvrde da je problem rešen.",
+      "Prikupi povratne informacije o zadovoljstvu korisnika.",
+      "Identifikuj korisnike sa učestalim problemima ili niskim zadovoljstvom za dodatnu pažnju.",
+      "Prepoznaj prilike za dodatnu ponudu na osnovu potreba korisnika."
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-support-responder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Upravljanje bazom znanja i analitikom podrške",
+    "koraci": [
+      "Kreiraj i ažuriraj članke baze znanja na osnovu čestih problema.",
+      "Prati ključne metrike podrške poput vremena odgovora i stope rešavanja od prvog kontakta.",
+      "Analiziraj trendove i generiši preporuke za poboljšanje procesa.",
+      "Podeli uvide sa timom proizvoda i podrške radi kontinuiranog unapređenja."
+    ],
+    "napomene": "Destilovano iz agency-agents/support/support-support-responder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  }
+]

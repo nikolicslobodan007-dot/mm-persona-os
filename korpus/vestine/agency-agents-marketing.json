@@ -1,0 +1,1747 @@
+[
+  {
+    "ime": "Audit temelja AEO infrastrukture",
+    "koraci": [
+      "Proveri robots.txt da li sadrži pravila za AI botove poput GPTBot, ClaudeBot i PerplexityBot",
+      "Proveri postojanje llms.txt, llms-full.txt, AGENTS.md i agent-permissions.json fajlova",
+      "Pregledaj server logove da vidiš koji AI crawleri pristupaju sajtu i šta im je blokirano",
+      "Oceni sloj otkrivanja, parsiranja i mogućnosti sajta na skali i izračunaj ukupan skor"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-aeo-foundations.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Konfigurisanje pristupa AI crawlerima u robots.txt",
+    "koraci": [
+      "Klasifikuj AI botove prema nameni - trening, pretraga ili agresivno skupljanje podataka",
+      "Podrazumevano dozvoli pristup AI crawlerima osim ako postoji jasan poslovni razlog za blokadu",
+      "Predstavi vlasniku sajta opcije blokiranja trening botova uz zadržavanje pretraživačkih botova",
+      "Implementiraj odluku u robots.txt i označi datum poslednje izmene",
+      "Blokiraj poznate agresivne scrapere poput Bytespider-a"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-aeo-foundations.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Kreiranje i održavanje llms.txt fajla",
+    "koraci": [
+      "Napravi kratak opis sajta i njegove namene na vrhu fajla",
+      "Navedi ključne stranice sa jednorečeničnim opisima za svaku",
+      "Organizuj sadržaj po temama sa procenom broja tokena za svaku stranicu",
+      "Postavi fajl na koren sajta i proveri da li je dostupan",
+      "Planiraj kvartalni pregled fajla kako bi ostao ažuran"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-aeo-foundations.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Analiza i usklađivanje sadržaja sa budžetom tokena",
+    "koraci": [
+      "Izmeri broj tokena za najvažnije stranice koristeći tokenizator poput tiktoken",
+      "Uporedi izmerene vrednosti sa ciljnim budžetom za svaki tip sadržaja",
+      "Podeli predugačke vodiče u više fokusiranih delova ili dodaj sažetak na vrh",
+      "Proveri da li je sadržaj dostupan kao čist Markdown ili semantički HTML umesto JS renderovanja",
+      "Testiraj stranice sa isključenim JavaScript-om da potvrdiš vidljivost ključnog sadržaja"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-aeo-foundations.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Audit spremnosti za WebMCP i kompletiranje zadataka",
+    "koraci": [
+      "Izdvoji 3-5 najvažnijih tokova zadataka na sajtu poput rezervacije, kupovine ili registracije",
+      "Mapiraj svaki tok od ulazne tačke do konačnog uspešnog stanja",
+      "Testiraj svaki tok sa stvarnim browser agentom, ne simulacijom",
+      "Zabeleži na kom koraku agent otkazuje, degradira ili odustaje",
+      "Proveri postojanje WebMCP atributa i imperativnih registracija u kodu",
+      "Izračunaj stopu kompletiranja zadataka kao odnos uspešnih i ukupno testiranih tokova"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-agentic-search-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Implementacija deklarativnog WebMCP markupa",
+    "koraci": [
+      "Prepoznaj prirodne HTML forme pogodne za deklarativno označavanje",
+      "Dodaj atribute toolname i tooldescription na formu",
+      "Imenuj i poveži sva polja sa odgovarajućim labelama i validacijom",
+      "Proveri ručno slanje forme i poruku potvrde nakon uspešnog unosa"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-agentic-search-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Implementacija imperativnog WebMCP registrovanja alata",
+    "koraci": [
+      "Identifikuj dinamičke tokove zavisne od stanja korisnika ili konteksta aplikacije",
+      "Proveri podršku browsera za document.modelContext pre implementacije",
+      "Registruj alat sa jasnim opisom, šemom ulaznih podataka i funkcijom izvršavanja",
+      "Poveži registrovani alat sa stvarnim API pozivom i obradi odgovor servera",
+      "Testiraj otkrivanje alata pomoću getTools funkcije u podržanim verzijama",
+      "Zadrži postojeći korisnički interfejs kao rezervnu opciju"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-agentic-search-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Mapiranje tačaka trenja i uklanjanje prepreka za agente",
+    "koraci": [
+      "Napravi korak-po-korak mapu trenja za svaki testirani tok zadatka",
+      "Klasifikuj svaki neuspeh kao nedostatak deklaracije, nepristupačan vidžet, prepreku autentifikacije ili dinamički sadržaj",
+      "Prepoznaj neprijateljske obrasce poput custom kalendara, CAPTCHA provera i obaveznog nalaganja naloga",
+      "Zameni problematične komponente pristupačnim nativnim poljima gde je moguće",
+      "Ponovo testiraj tokove nakon ispravki i uporedi stopu kompletiranja sa osnovnom merenom vrednošću"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-agentic-search-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Multi-platformski audit citiranja brenda",
+    "koraci": [
+      "Definisati brend, kategoriju i glavne konkurente",
+      "Kreirati skup od 20 do 40 upita koje bi ciljna publika postavila AI asistentu",
+      "Postaviti iste upite na ChatGPT, Claude, Gemini i Perplexity",
+      "Zabeležiti koji brendovi se citiraju i u kom kontekstu na svakoj platformi",
+      "Izračunati stopu citiranja po platformi i napraviti uporedni skorkard"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-ai-citation-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Analiza izgubljenih upita i konkurencije",
+    "koraci": [
+      "Izdvojiti upite gde se brend ne pojavljuje a konkurenti jesu",
+      "Utvrditi koja vrsta sadržaja i struktura omogućava konkurentu citiranje",
+      "Kategorisati upite po nameri: preporuka, poređenje, uputstvo, najbolje-od",
+      "Rangirati izgubljene upite po prioritetu za ispravku"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-ai-citation-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada prioritizovanog paketa ispravki sadržaja",
+    "koraci": [
+      "Identifikovati nedostatke u sadržaju, šemi i signalima entiteta",
+      "Kreirati FAQ i poredbene stranice usklađene sa stvarnim obrascima upita",
+      "Dodati strukturirane podatke (schema markup) poput FAQPage i Product",
+      "Poređati ispravke po očekivanom uticaju na stopu citiranja, ne po lakoći izrade",
+      "Pripremiti implementacioni plan sa procenjenim uticajem svake ispravke"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-ai-citation-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Merenje napretka kroz ponovnu proveru",
+    "koraci": [
+      "Postaviti baznu stopu citiranja pre uvođenja izmena",
+      "Nakon implementacije, ponovo pokrenuti isti skup upita na svim platformama",
+      "Uporediti promenu stope citiranja po platformi i kategoriji upita",
+      "Pratiti trendove tokom vremena jer se ponašanje modela menja sa ažuriranjima",
+      "Generisati novi paket ispravki za preostale praznine"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-ai-citation-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Istraživanje i optimizacija ključnih reči",
+    "koraci": [
+      "Analiziraj tržište i konkurenciju da pronađeš prilike za ključne reči",
+      "Identifikuj primarne i long-tail ključne reči po obimu pretrage i relevantnosti",
+      "Pronađi praznine u strategiji konkurenata koje nisu iskoristili",
+      "Rasporedi ključne reči prirodno u naslov, podnaslov i opis aplikacije",
+      "Prati rangiranje po ključnim rečima i prilagođavaj strategiju na osnovu rezultata"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-app-store-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Optimizacija vizuelnih elemenata radi konverzije",
+    "koraci": [
+      "Dizajniraj ikonicu aplikacije da bude prepoznatljiva i različita od konkurencije",
+      "Kreiraj niz snimaka ekrana koji kroz priču prikazuju ključne funkcije i prednosti",
+      "Napravi video pregled aplikacije sa jasnim otvaranjem, demonstracijom i pozivom na akciju",
+      "Testiraj varijante vizuelnih elemenata (boje, ikone, redosled snimaka) A/B metodom",
+      "Prilagodi vizuelne materijale lokalnim tržištima i kulturnim specifičnostima"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-app-store-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada i sprovođenje ASO strategije",
+    "koraci": [
+      "Definiši ciljeve poput rasta organskih preuzimanja i poboljšanja konverzije",
+      "Izradi plan metapodataka - naslov, podnaslov i opis optimizovan za pretragu i korisnike",
+      "Postavi plan A/B testiranja za sve tekstualne i vizuelne elemente prodavnice",
+      "Implementiraj praćenje konverzija i analitiku performansi od samog starta"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-app-store-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Praćenje performansi i kontinuirana optimizacija",
+    "koraci": [
+      "Prati dnevno rangiranje, broj preuzimanja i ocene aplikacije",
+      "Analiziraj nedeljno stope konverzije i vidljivost u pretrazi",
+      "Sprovodi mesečne preglede i prilagođavaj strategiju na osnovu rezultata",
+      "Upravljaj recenzijama korisnika radi održavanja visoke ocene",
+      "Širi uspešne strategije na dodatna tržišta i proizvode"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-app-store-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Uspostavljanje regulatorne usklađenosti za Baidu",
+    "koraci": [
+      "Proveriti postojanje validne ICP dozvole ili pokrenuti proces prijave",
+      "Potvrditi da je hosting fizički smešten u Kini sa niskom latencijom",
+      "Identifikovati i zameniti sve blokirane strane servise domaćim alternativama",
+      "Registrovati i verifikovati sajt na Baidu alatu za vebmastere i poslati mape sajta"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-baidu-seo-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Istraživanje kineskih ključnih reči",
+    "koraci": [
+      "Koristiti Baidu Index i druge alate za procenu obima pretrage",
+      "Analizirati konkurenciju radi otkrivanja praznina u pokrivenosti ključnih reči",
+      "Klasifikovati ključne reči po tipu namere i težini rangiranja",
+      "Uzeti u obzir lingvističke specifičnosti poput sinonima, dijalekata i pinjin pretraga",
+      "Napraviti kalendar sadržaja usklađen sa sezonskim trendovima pretrage"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-baidu-seo-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Tehnička optimizacija stranice za Baiduspider",
+    "koraci": [
+      "Optimizovati naslove i meta opise prema ograničenjima karaktera za Baidu",
+      "Urediti strukturu sadržaja i interno povezivanje radi lakšeg indeksiranja",
+      "Obezbediti responzivnu mobilnu optimizaciju sajta",
+      "Ubrzati učitavanje stranice koristeći CDN prilagođen kineskoj mreži",
+      "Implementirati Baidu MIP za brže mobilne stranice"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-baidu-seo-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izgradnja autoriteta u Baidu ekosistemu",
+    "koraci": [
+      "Kreirati i održavati unos na Baidu Baike enciklopediji",
+      "Postavljati pitanja i davati odgovore na Baidu Zhidao platformi",
+      "Graditi prisustvo u relevantnim Baidu Tieba zajednicama",
+      "Objavljivati stručne dokumente i vodiče na Baidu Wenku",
+      "Pratiti i upravljati reputacijom brenda u rezultatima pretrage"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-baidu-seo-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Kreiranje sadržajne strategije za UP主 nalog",
+    "koraci": [
+      "Analiziraj konkurenciju i poziciju u ciljanoj vertikali sadržaja.",
+      "Definiši jasan identitet, ton i vrednosnu ponudu kanala.",
+      "Podeli sadržaj na stubne, trending, komunikacijske i eksperimentalne formate po procentima.",
+      "Postavi merljive ciljeve za preglede, triple-combo stopu i rast pratilaca.",
+      "Prati sedmične i sezonske trendove da bi se plan redovno ažurirao."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-bilibili-content-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn danmaku interakcije u videu",
+    "koraci": [
+      "Mapiraj ključne trenutke u videu gde se očekuje reakcija gledalaca.",
+      "Unapred pripremi set komentara koji podstiču određeni tip danmaku odgovora.",
+      "Ubaci prepoznatljive fraze i callback-ove na stare epizode radi lojalnosti fanova.",
+      "Zasadi 10-15 pripremljenih komentara odmah nakon objave da pokrenu interakciju.",
+      "Prati gustinu i ton danmaku poruka i prilagođavaj naredne videe."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-bilibili-content-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Optimizacija naslovne slike i naslova",
+    "koraci": [
+      "Napravi naslovnu sliku sa jasnim kontrastom i prepoznatljivim izrazom lica ili lika.",
+      "Ograniči tekst na slici na kratku, udarnu poruku.",
+      "Formuliši naslov kombinujući kategoriju, zanimljivu činjenicu i emotivnu poentu.",
+      "Testiraj dve verzije naslovne slike kroz ugrađeni A/B alat platforme.",
+      "Analiziraj klik-stopu u prvih 48 sati i sačuvaj uspešne obrasce za buduće korišćenje."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-bilibili-content-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Upravljanje objavom i rastom zajednice",
+    "koraci": [
+      "Objavi video u periodu najveće aktivnosti publike.",
+      "Najavi novi sadržaj unapred kroz feed objave i fan grupe.",
+      "Prati prvi sat nakon objave, odgovaraj na komentare i prati osnovne metrike.",
+      "Deli sadržaj prilagođeno i na drugim platformama radi dodatnog dosega.",
+      "Analiziraj podatke o gledanosti i angažovanju nakon svake objave i prilagodi sledeći sadržaj.",
+      "U slučaju negativnih reakcija zajednice, reaguj brzo i iskreno kako bi se obnovilo poverenje."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-bilibili-content-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada plana poglavlja",
+    "koraci": [
+      "Razjasniti cilj, publiku i strategiju pre pisanja teksta",
+      "Definisati šta poglavlje dokazuje i zašto je bitno čitaocu",
+      "Odrediti ulogu poglavlja u celokupnoj knjizi",
+      "Sastaviti kratku strukturu sa scenom, argumentom, primerom i zaključkom"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-book-co-author.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Pisanje nacrta u prvom licu",
+    "koraci": [
+      "Pretvoriti glasovne beleške i fragmente ideja u koherentan tekst",
+      "Zadržati jednu dominantnu ideju po odeljku",
+      "Koristiti konkretne scene, odluke i primere umesto uopštenih saveta",
+      "Sačuvati autentičan ton i ritam autora"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-book-co-author.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Strateška revizija argumenata",
+    "koraci": [
+      "Proveriti logiku i uočiti slabe ili nepotkrepljene tvrdnje",
+      "Ukloniti klišee i generičke fraze koje mogu stajati u bilo kojoj knjizi",
+      "Povezati svaku tvrdnju sa izvorom, beleškom ili jasnom pretpostavkom",
+      "Obeležiti nedostatak dokaza ili nejasnu hronologiju direktno u napomenama"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-book-co-author.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Isporuka paketa za reviziju",
+    "koraci": [
+      "Jasno označiti verziju nacrta i njegov status",
+      "Priložiti editorijalne napomene sa pretpostavkama i rizicima",
+      "Formulisati konkretna pitanja za sledeći krug povratnih informacija",
+      "Predložiti tačan sledeći korak revizije umesto nejasnog zaključka"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-book-co-author.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Analiza sajta i izvlačenje poslovnih podataka",
+    "koraci": [
+      "Otvori ciljani sajt i njegove interne stranice pomoću Playwright alata",
+      "Izvuci brend elemente poput boja, logotipa i tipografije",
+      "Pronađi karakteristike proizvoda, cene, testimonijale i statistiku",
+      "Prepoznaj tip biznisa i niše kako bi se prilagodila priča",
+      "Detektuj konkurente pomenute na sajtu za kasniju upotrebu u sadržaju"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-carousel-growth-engine.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Generisanje vizuelno usklađenog karusela od 6 slajdova",
+    "koraci": [
+      "Kreiraj prvi slajd sa tekstualnim promptom koji definiše vizuelni stil",
+      "Koristi prvi slajd kao referencu za generisanje preostalih pet slajdova",
+      "Prati strukturu priče: kuka, problem, pojačavanje, rešenje, karakteristika, poziv na akciju",
+      "Proveri svaki slajd vizuelno radi čitljivosti teksta, pravopisa i kvaliteta",
+      "Ponovo generiši samo one slajdove koji ne prođu proveru kvaliteta",
+      "Sačuvaj slike u JPG formatu u vertikalnom 9:16 odnosu"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-carousel-growth-engine.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Objavljivanje karusela na TikTok i Instagram",
+    "koraci": [
+      "Pripremi šest finalnih JPG slajdova za objavu",
+      "Pošalji sadržaj na obe platforme putem konfigurisanog servisa ili zvaničnih API-ja",
+      "Uključi automatsko dodavanje trending muzike na TikToku radi boljeg dosega",
+      "Sačuvaj identifikatore objava za kasnije praćenje performansi",
+      "Obavesti korisnika tek nakon uspešne objave sa linkovima ka postovima"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-carousel-growth-engine.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Učenje iz analitike i optimizacija narednog karusela",
+    "koraci": [
+      "Preuzmi podatke o performansama profila i pojedinačnih objava",
+      "Analiziraj koji stilovi kuka i vizuala donose najviše pregleda i angažovanja",
+      "Ažuriraj bazu znanja sa najboljim praksama i optimalnim vremenima objavljivanja",
+      "Primeni stečene uvide prilikom planiranja sledećeg karusela",
+      "Podesi raspored objavljivanja prema vremenu najboljeg angažovanja publike"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-carousel-growth-engine.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Optimizacija prikaza proizvoda po platformama",
+    "koraci": [
+      "Istražiti ključne reči i konkurenciju za svaku platformu posebno",
+      "Formulisati naslov proizvoda prema specifičnoj formuli platforme (brend, atribut, cena, specifikacija)",
+      "Rasporediti pet glavnih slika po funkciji: hero kadar, prodajna poenta, scenario korišćenja, društveni dokaz, poziv na akciju",
+      "Složiti stranicu sa detaljima po redosledu: vrednost, problem-rešenje, specifikacije, poređenje, recenzije, FAQ",
+      "Testirati i rotirati kreativne elemente na osnovu podataka o konverziji"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-china-ecommerce-operator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Planiranje i izvršenje velike kampanje (618/Double 11)",
+    "koraci": [
+      "Postaviti cilj GMV-a 60 dana unapred i razraditi potrebe za saobraćajem i konverzijom",
+      "Definisati asortiman proizvoda po ulogama: privlačenje saobraćaja, profit, promocija",
+      "Pripremiti kreativne materijale, mehanike kampanje (pretprodaja, depoziti, kuponi) i oglašavanje 30 dana unapred",
+      "U periodu zagrevanja aktivirati pretprodaju, pojačati oglase i najaviti kampanju kroz sadržaj",
+      "Tokom same kampanje pratiti GMV, zalihe i korisničku podršku u realnom vremenu i prilagođavati ponude po satima",
+      "Nakon kampanje analizirati rezultate, obraditi povrate i pokrenuti kampanje zadržavanja kupaca"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-china-ecommerce-operator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje oglašavanjem i ROI optimizacija",
+    "koraci": [
+      "Definisati ciljani ROAS za svaku platformu i vrstu oglasa posebno",
+      "Raspodeliti budžet između dokazanih reči, testiranja novih termina i brend pojmova",
+      "Testirati više kreativa nedeljno i eliminisati one sa lošijim rezultatima",
+      "Pratiti sedmični ciklus: analiza podataka, testiranje, optimizacija ponuda, mesečna revizija strategije"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-china-ecommerce-operator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Razvoj live commerce operacija",
+    "koraci": [
+      "Uspostaviti produkcioni tok i obučiti voditelje za prenos uživo",
+      "Kreirati nedeljni kalendar sadržaja usklađen sa promocijama proizvoda",
+      "Pregovarati i upravljati saradnjom sa influenserima na više platformi",
+      "Pratiti analitiku prenosa uživo (zadržavanje gledalaca, klikovi, konverzija) i prilagođavati nastup",
+      "Integrisati rezultate live commerce-a u ukupnu strategiju prodavnice"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-china-ecommerce-operator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Detekcija i validacija trend signala",
+    "koraci": [
+      "Prikupi podatke sa liste trendova na više kineskih platformi istovremeno",
+      "Prati rang, smer kretanja i trajanje svake teme",
+      "Unakrsno proveri signal na najmanje dve platforme pre donošenja zaključka",
+      "Razlikuj kratkotrajne hirove od dugoročnih strukturnih promena",
+      "Označi teme koje se šire na više platformi kao prioritetne"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-china-market-localization-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Pretvaranje trenda u tržišnu priliku",
+    "koraci": [
+      "Analiziraj sadržaj radi uočavanja popularnih formata, ključnih reči i praznina na tržištu",
+      "Analiziraj komentare radi izdvajanja potreba, bolnih tačaka i rizičnih reči korisnika",
+      "Sistematizuj nalaze u pet kategorija: izbor proizvoda, prodajni argumenti, sadržajni šabloni, rizici i akcioni plan",
+      "Dodeli svakoj preporuci prioritet, procenu truda i merljiv cilj uspeha"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-china-market-localization-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Kreiranje platformski prilagođene strategije sadržaja",
+    "koraci": [
+      "Prilagodi strategiju svakoj platformi posebno umesto kopiranja istog sadržaja",
+      "Odredi ulogu platforme u levku: svest, razmatranje, konverzija ili zadržavanje",
+      "Izradi konkretne šablone sadržaja sa tačno definisanim strukturama i vremenima objave",
+      "Uskladi ton i format sa specifičnostima publike date platforme"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-china-market-localization-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Planiranje i praćenje faznog izlaska na tržište (GTM)",
+    "koraci": [
+      "Podeli lansiranje proizvoda na jasne faze od validacije signala do zrelog poslovanja",
+      "Definiši kriterijume za prelazak u svaku sledeću fazu",
+      "Izradi izvodljive liste zadataka prilagođene malim timovima ili pojedincima",
+      "Postavi sistem merenja i redovno ažuriraj nalaze na osnovu novih podataka"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-china-market-localization-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Kreiranje sadržajne strategije",
+    "koraci": [
+      "Definisati ciljnu publiku i njene potrebe",
+      "Postaviti glavne tematske stubove sadržaja",
+      "Napraviti editorijalni kalendar za sve platforme",
+      "Uskladiti teme sa ciljevima brenda i kanalima distribucije"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-content-creator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Pisanje i produkcija sadržaja u više formata",
+    "koraci": [
+      "Istražiti ključne reči i teme relevantne za publiku",
+      "Napisati tekst bloga, skriptu za video ili podkast",
+      "Prilagoditi ton i stil glasu brenda",
+      "Optimizovati sadržaj za pretragu i čitljivost",
+      "Pripremiti vizuelne elemente poput infografika ili thumbnail-ova"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-content-creator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Prilagođavanje i distribucija sadržaja",
+    "koraci": [
+      "Analizirati specifičnosti svake platforme",
+      "Preraditi postojeći sadržaj za različite formate i kanale",
+      "Planirati taktike za širenje i promociju sadržaja",
+      "Uključiti korisnički generisan sadržaj ili saradnju sa influenserima"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-content-creator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Merenje i optimizacija performansi",
+    "koraci": [
+      "Pratiti angažman, dosege i stopu deljenja sadržaja",
+      "Analizirati koji formati i teme najbolje funkcionišu",
+      "Testirati varijante poruka kroz A/B testiranje",
+      "Prilagoditi strategiju na osnovu rezultata analize"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-content-creator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Istraživanje tržišta i selekcija proizvoda",
+    "koraci": [
+      "Analizirati obim pretrage, konkurenciju i cenovni rang kategorije pomoću alata za selekciju proizvoda",
+      "Proceniti sezonalnost, trend rasta i potencijalnu maržu proizvoda",
+      "Proveriti usklađenost sa propisima i rizik od povrede intelektualne svojine pre lansiranja",
+      "Potvrditi stabilnost lanca snabdevanja i naručiti uzorke za testiranje"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-cross-border-ecommerce.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Priprema usklađenosti i otvaranje naloga",
+    "koraci": [
+      "Pribaviti potrebne sertifikate proizvoda za ciljno tržište pre izlaska",
+      "Registrovati PDV broj, zaštitni znak i brend na relevantnim platformama",
+      "Otvoriti i urediti prodavnice na odabranim marketplace platformama",
+      "Odabrati logistički model - sopstveno skladište, FBA ili fulfillment od strane prodavca"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-cross-border-ecommerce.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Optimizacija višejezičnog oglasa proizvoda",
+    "koraci": [
+      "Izraditi oglas na ciljnom jeziku uz obaveznu proveru od strane izvornog govornika",
+      "Pripremiti vizuale i A+ sadržaj prilagođen estetici ciljnog tržišta",
+      "Sprovesti istraživanje ključnih reči i uneti ih u backend search terms",
+      "Definisati cenu kombinujući konkurentsku analizu, troškovni model i kursne razlike"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-cross-border-ecommerce.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Upravljanje Amazon PPC kampanjama kroz faze",
+    "koraci": [
+      "U fazi lansiranja pokrenuti auto i manuelne kampanje radi prikupljanja podataka o ključnim rečima",
+      "U fazi rasta prebaciti uspešne termine u manuelne kampanje i isključiti neprofitabilne",
+      "Kontrolisati ACOS ispod granice bruto marže i pratiti TACOS",
+      "U zreloj fazi fokusirati se na odbranu brenda i postepeno smanjiti zavisnost od oglasa"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-cross-border-ecommerce.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Arhitektura developer zajednice",
+    "koraci": [
+      "Mapiraj postojeću zajednicu i utvrdi koji tipovi članova dominiraju",
+      "Intervjuiši nekoliko aktivnih članova o tome šta im smeta a šta cene",
+      "Organizuj kanale prema aktivnostima članova, a ne prema organizaciji firme",
+      "Napiši pravila koja štite članove jedne od drugih, ne firmu od članova",
+      "Pripremi tok onboardinga i popuni sadržaj pre nego što dođu prvi članovi",
+      "Pokreni zajednicu sa malom grupom pravih korisnika i nekoliko 'anchor' članova"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-developer-community-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja programa za kontributore",
+    "koraci": [
+      "Definiši nivoe doprinosa sa jasnim kriterijumima za svaki nivo",
+      "Poveži svaki nivo sa konkretnim i merljivim pogodnostima",
+      "Uspostavi redovan ritam javnog priznanja i promovisanja u viši nivo",
+      "Lično pozovi najbolje pomagače u program svakog kvartala",
+      "Prati da li priznanja zaista zadržavaju ljude ili su samo jednokratni podsticaj",
+      "Objavi javno kada predlog iz zajednice postane stvarna funkcija proizvoda"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-developer-community-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Praćenje zdravlja zajednice",
+    "koraci": [
+      "Definiši nedeljne operativne metrike poput stope odgovora i vremena do odgovora",
+      "Prati mesečne strateške metrike kao što su zadržavanje i NPS",
+      "Postavi pragove upozorenja za pad aktivnosti ili rast neodgovorenih pitanja",
+      "Prepoznaj rana upozorenja toksičnosti, poput smanjenja objava u showcase kanalu",
+      "Reaguj na pad metrika u roku od nedelju dana, ne tromesečno",
+      "Izveštavaj i o veličini i o stvarnoj aktivnosti zajednice, ne samo o broju članova"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-developer-community-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Upravljanje konfliktima i krizama u zajednici",
+    "koraci": [
+      "Unapred napiši plan postupanja za kontroverzne odluke i sukobe",
+      "Identifikuj loše namerne aktere i definiši jasne korake moderacije",
+      "Javno hvali doprinose, a prekršaje pravila rešavaj prvo privatnom porukom",
+      "Nikada ne koristi zajednicu za pritisak na medije, konkurenciju ili interne sukobe firme",
+      "Dosledno primenjuj ista pravila na sve kako bi se izbegli presedani"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-developer-community-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Kreiranje scenarija za viralni kratak video",
+    "koraci": [
+      "Osmisli zlatnu kuku u prve tri sekunde kroz konflikt, vrednost, misteriju ili prepoznatljivu situaciju",
+      "Razradi centralni deo sa bolnom tačkom, rešenjem i demonstracijom rezultata",
+      "Dodaj poređenje pre i posle sa konkretnim podacima radi uverljivosti",
+      "Završi jasnom porukom vrednosti i pozivom na akciju ili najavu nastavka",
+      "Uskladi dužinu videa sa tipom sadržaja i koristi titlove i aktuelnu muziku",
+      "Prioritizuj stopu završetka gledanja kao ključni pokazatelj uspeha"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-douyin-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Planiranje matrice sadržaja i operativa saobraćaja",
+    "koraci": [
+      "Definiši poziciju naloga na osnovu publike, konkurencije i monetizacionog pravca",
+      "Napravi nedeljni kalendar sadržaja sa raznovrsnim formatima poput edukacije, priče i recenzije",
+      "Optimizuj vreme objavljivanja prema aktivnosti pratilaca",
+      "Koristi DOU+ za precizno targetiranje publike umesto masovnog ulaganja",
+      "Kombinuj organski i plaćeni saobraćaj kroz koordinaciju glavnog i pomoćnih naloga",
+      "Upravljaj sekcijom komentara kroz odgovore i istaknute komentare radi podsticanja interakcije"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-douyin-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Dizajn i vođenje prodajnog livestreama",
+    "koraci": [
+      "Pripremi scenu, osvetljenje i opremu prema definisanoj listi provere",
+      "Strukturiši scenario emisije kroz uvodnu kuku, predstavljanje proizvoda, hitnost i naknadnu prodaju",
+      "Rasporedi proizvode po ulogama poput privlačenja pažnje, profita, prestiža i akcijske ponude",
+      "Održavaj ritam emisije sa vrhuncima posete na svakih petnaest minuta",
+      "Prati ključne pokazatelje poput GPM-a, prosečnog vremena gledanja i konverzije",
+      "Prilagodi tempo prodaje u zavisnosti od reakcije publike u realnom vremenu"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-douyin-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Analiza podataka i iterativno poboljšanje sadržaja",
+    "koraci": [
+      "Prati osnovne metrike poput stope završetka, angažovanja i rasta pratilaca",
+      "Analiziraj zajedničke karakteristike videa koji su postigli viralni uspeh",
+      "Identifikuj tačke gde gledaoci napuštaju video i testiraj alternativne verzije",
+      "Kontinuirano prilagođavaj formulu sadržaja na osnovu dobijenih rezultata",
+      "Poštuj pravila usklađenosti izbegavajući apsolutne tvrdnje i lažna obećanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-douyin-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Projektovanje segmentacione arhitekture",
+    "koraci": [
+      "Definisati najmanje dva atributa za svaki segment, na primer jezik i fazu u lifecycle-u",
+      "Izbeći broadcast slanja i uvek ciljati precizno definisanu grupu kontakata",
+      "Uključiti izuzetke poput already-in-sequence ili irelevantnih kontakata",
+      "Kombinovati bihevioralne okidače sa statičkim atributima za dinamičke segmente"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-email-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Izrada lifecycle email sekvenci",
+    "koraci": [
+      "Kreirati sekvence za svaku fazu: dobrodošlicu, nurture, reaktivaciju, recenziju i preporuku",
+      "Definisati tajming, broj mejlova i A/B varijante za svaki korak",
+      "Postaviti jasne uslove za izlazak iz sekvence poput konverzije ili odjave",
+      "Uskladiti sadržaj sa trenutnim statusom kontakta, a ne sa stanjem u trenutku prikupljanja",
+      "Testirati prikaz sadržaja na različitim mejl klijentima pre lansiranja"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-email-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Sinhronizacija CRM i ESP sistema",
+    "koraci": [
+      "Mapirati CRM polja na ESP atribute uz definisan tip i moguće vrednosti",
+      "Odrediti učestalost sinhronizacije i način obrade grešaka",
+      "Koristiti automatizacione alate poput n8n ili Zapier za ažuriranje po događaju",
+      "Sprečiti prepisivanje postojećih podataka praznim vrednostima prilikom update-a"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-email-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje isporučivošću i merenjem",
+    "koraci": [
+      "Proveriti i podesiti SPF, DKIM i DMARC zapise za domen",
+      "Pratiti stopu pritužbi, hard bounce i blokliste redovno",
+      "Čistiti listu uklanjanjem bounce-ova i neaktivnih kontakata",
+      "Meriti uspeh kampanje preko CTR-a, CTOR-a i konverzije, a ne preko stope otvaranja",
+      "Postaviti alarmne pragove za ključne metrike i reagovati na odstupanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-email-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Definisanje pozicioniranja i koncepta emisije",
+    "koraci": [
+      "Napraviti detaljan profil ciljnog slušaoca sa njegovim navikama i potrebama",
+      "Analizirati 15-20 konkurentskih emisija po formatu, dužini i nedostacima",
+      "Identifikovati jedinstvenu razliku koju emisija nudi u odnosu na konkurenciju",
+      "Sastaviti dokument sa nazivom, tonom, formatom i učestalošću objavljivanja",
+      "Odrediti primarnu platformu za rast prema profilu ciljne publike"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-global-podcast-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja sistema za produkciju sadržaja",
+    "koraci": [
+      "Kreirati standardizovan brif za svaku epizodu sa kukom, porukom i pitanjima",
+      "Postaviti tri izvora tema - evergrin, aktuelne vesti i pitanja publike",
+      "Rasporediti goste u tri nivoa prema dostupnosti i uticaju",
+      "Snimati epizode u serijama radi zalihe od 4 do 6 nedelja unapred",
+      "Osmisliti strukturu uvoda koja zadržava pažnju u prvih 90 sekundi"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-global-podcast-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Optimizacija distribucije i vidljivosti",
+    "koraci": [
+      "Pisati naslove epizoda kao odgovore na konkretna pitanja slušalaca radi boljeg pretraživanja",
+      "Izdvojiti 3 do 5 isečaka po epizodi za društvene mreže sa jakim naslovima",
+      "Poslati najavu epizode putem imejla u roku od dva sata od objave",
+      "Dogovoriti razmenu gostovanja sa srodnim emisijama radi zajedničkog rasta publike",
+      "Pisati optimizovane beleške emisije od 400 do 800 reči za ključne reči",
+      "Tražiti ocene i recenzije na ključnim mestima u prve tri epizode novog slušaoca"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-global-podcast-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Razvoj zajednice i monetizacije",
+    "koraci": [
+      "Formirati zajednicu slušalaca na platformi koja odgovara profilu publike",
+      "Pripremiti medija-kit sa statistikama slušanosti za pregovore o sponzorstvima",
+      "Pokrenuti model plaćene podrške sa jasnim nivoima i vrednostima za pretplatnike",
+      "Mapirati put slušaoca od pasivnog praćenja do kupovine proizvoda",
+      "Sprovoditi kvartalne ankete i pratiti povratne informacije radi unapređenja sadržaja"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-global-podcast-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Dizajn i izvođenje growth eksperimenata",
+    "koraci": [
+      "Definiši hipotezu i ključnu metriku koja se testira",
+      "Postavi A/B ili multivarijantni test sa jasnim kontrolnim grupama",
+      "Prikupi dovoljno podataka za statistički značajan rezultat",
+      "Analiziraj rezultate i odluči da li se tretman skalira ili odbacuje",
+      "Dokumentuj naučeno i planiraj sledeći eksperiment"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-growth-hacker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Optimizacija funnela akvizicije i konverzije",
+    "koraci": [
+      "Mapiraj korake od prvog kontakta do konverzije korisnika",
+      "Identifikuj faze sa najvećim padom broja korisnika",
+      "Testiraj izmene na tim kritičnim tačkama radi poboljšanja stope prolaska",
+      "Prati CAC i LTV kako bi se procenila isplativost kanala",
+      "Iterativno unapređuj funnel na osnovu podataka"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-growth-hacker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Kreiranje virusnih i referalnih mehanizama",
+    "koraci": [
+      "Osmisli podsticaj za korisnike da dele proizvod sa drugima",
+      "Implementiraj referalni program sa merljivim nagradama",
+      "Prati viralni koeficijent (K-factor) i podesi mehaniku za rast preko 1.0",
+      "Optimizuj tačke deljenja unutar proizvoda za veći domet"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-growth-hacker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Unapređenje aktivacije i zadržavanja korisnika",
+    "koraci": [
+      "Analiziraj onboarding proces i pronađi tačke napuštanja",
+      "Pojednostavi korake do prvog 'aha' trenutka korisnika",
+      "Segmentiraj korisnike po kohortama radi praćenja ponašanja kroz vreme",
+      "Kreiraj personalizovane email i retargeting kampanje za vraćanje korisnika",
+      "Prati stope zadržavanja na 7, 30 i 90 dana i prilagođavaj strategiju"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-growth-hacker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Razvoj vizuelnog identiteta brenda",
+    "koraci": [
+      "Analiziraj trenutni izgled naloga i konkurenciju",
+      "Definiši paletu boja, tipografiju i stil fotografije",
+      "Isplaniraj izgled mreže od devet objava radi skladnog utiska",
+      "Kreiraj šablone za highlights, objave i grafičke elemente"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-instagram-curator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Planiranje sadržaja po formatima",
+    "koraci": [
+      "Rasporedi sadržaj po pravilu jedna trećina brend, jedna edukacija, jedna zajednica",
+      "Planiraj objave, karuseli i video sadržaj za feed",
+      "Osmisli priče sa interaktivnim elementima i kupovinom",
+      "Razvij Reels sadržaj koristeći popularnu muziku i edukativne teme",
+      "Napravi mesečni kalendar sadržaja sa raspodelom formata"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-instagram-curator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Izgradnja zajednice i UGC kampanje",
+    "koraci": [
+      "Odgovaraj na komentare i poruke u roku od dva sata",
+      "Pokreni kampanje sa brendiranim hešteg izazovima",
+      "Organizuj isticanje korisnika i njihovih priča",
+      "Uspostavi saradnju sa mikro-influenserima i ambasadorima brenda",
+      "Planiraj uživo sesije za pitanja, lansiranja i zakulisne sadržaje"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-instagram-curator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Optimizacija prodaje i performansi",
+    "koraci": [
+      "Podesi i optimizuj katalog proizvoda i oznake za kupovinu",
+      "Prati konverzije iz Instagram Shopping funkcije",
+      "Analiziraj vreme objavljivanja i učinak heštegova",
+      "Prati stopu angažovanja, dovršetka priča i rasta dosega",
+      "Prilagođavaj strategiju na osnovu najboljih objava i promena algoritma"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-instagram-curator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.86
+  },
+  {
+    "ime": "Izrada strategije pozicioniranja Kuaishou naloga",
+    "koraci": [
+      "Analiziraj ciljanu publiku prema gradskom nivou, godinama i navikama trošenja",
+      "Definiši autentičan kreatorski lik koji deluje kao 'jedan od nas'",
+      "Postavi stil sadržaja koji je sirov i realan, a ne uglađen",
+      "Odredi jasnu vrednost koju pratioci dobijaju praćenjem naloga",
+      "Objasni razliku pristupa u odnosu na Douyin strategiju"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-kuaishou-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Vođenje operacija live commerce sesije",
+    "koraci": [
+      "Pripremi najavu sesije kroz kratke video objave i poruke fan grupi pre emitovanja",
+      "Organizuj tok emitovanja po fazama: zagrevanje, uvodni proizvod, glavna prodaja, pitanja, flash ponude, zahvalnica",
+      "Koristi proveren govorni okvir koji ističe problem, demonstraciju i neodoljivu ponudu",
+      "Nakon emitovanja analiziraj podatke o gledanosti i konverziji",
+      "Odgovori na sva pitanja iz komentara i pripremi isečke za nove objave",
+      "Uskladi zalihe i logistiku sa timom nakon sesije"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-kuaishou-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja poverenja i zajednice (老铁 kultura)",
+    "koraci": [
+      "Redovno komuniciraj i odgovaraj na komentare kako bi gradio blizak odnos",
+      "Osnuj fan grupe za direktan kontakt sa publikom",
+      "Deli sadržaj koji gradi poverenje poput poseta fabrici i iskrenih recenzija proizvoda",
+      "Održavaj dosledno dnevno objavljivanje umesto da ciljaš jednokratnu viralnost",
+      "Podsti organsku odbranu brenda od strane lojalnih pratilaca kroz iskreno poslovanje"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-kuaishou-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Skaliranje i širenje u privatni domen",
+    "koraci": [
+      "Prati podatke o konverziji po proizvodu i zadržavanju gledalaca radi optimizacije",
+      "Pregovaraj bolje marže kroz direktne odnose sa fabrikama",
+      "Razvijaj dodatne naloge za različite kategorije proizvoda",
+      "Prebacuj lojalne pratioce sa Kuaishou-a u WeChat privatni domen radi dugoročne vrednosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-kuaishou-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Pisanje udarnog otvaranja posta (hook)",
+    "koraci": [
+      "Definiši konkretnu osobu i problem kome se obraćaš umesto generalne publike.",
+      "Napiši tri varijante hoka: znatiželjni jaz, smela tvrdnja i specifična priča.",
+      "Proveri da li bi tekst zaustavio skrolovanje i naterao na klik 'vidi više'.",
+      "Izaberi verziju koja ne otkriva poentu unapred.",
+      "Izbegavaj uopštene i inspirativne fraze, koristi konkretne brojke i detalje."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-linkedin-content-creator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Struktuiranje i formatiranje posta po tipu sadržaja",
+    "koraci": [
+      "Odaberi tip posta: priča, ekspertiza, mišljenje ili podatak, i prati odgovarajuću strukturu.",
+      "Kod mišljenja prvo iznesi stav, zatim prepoznaj suprotan argument i odbrani svoj.",
+      "Piši kratke pasuse od po jedne ideje, maksimalno dva do tri reda.",
+      "Napravi prekid teksta na mestu napetosti da podstakneš klik na 'vidi više'.",
+      "Završi pitanjem ili pozivom na komentar umesto obične izjave.",
+      "Koristi tri do pet specifičnih heštegova i nikad spoljašnje linkove u telu posta."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-linkedin-content-creator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada meseçnog kalendara i karusel skripti",
+    "koraci": [
+      "Definiši tri do pet stubova sadržaja na preseku ekspertize i potreba publike.",
+      "Rasporedi tipove postova (priča, ekspertiza, mišljenje, podatak) kroz četiri nedelje po stubovima.",
+      "Za karusel napravi prvi slajd kao samostalan hook koji nosi vrednost i bez listanja.",
+      "Svaki unutrašnji slajd svedi na jednu ideju i maksimalno petnaest reči.",
+      "Postavi slajd sa otkrićem pred kraj, a poslednji slajd neka sadrži konkretan poziv na akciju i praćenje.",
+      "Postavljaj karusele kao nativni dokument, ne kao slike."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-linkedin-content-creator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Optimizacija profila i strategija angažovanja",
+    "koraci": [
+      "Napiši naslov profila po formuli: šta radiš, kome pomažeš, koji je ishod.",
+      "Strukturiši 'O meni' sekciju: hook, opis delatnosti, dokazna priča, socijalni dokaz i jasan poziv na akciju.",
+      "Pre objave ostavi pet do deset suštinskih komentara na relevantne postove da zagreješ feed.",
+      "Nakon objave odgovori na svaki komentar u prvih sat vremena, prioritet daj suštinskim pitanjima.",
+      "Svakodnevno komentariši postove ciljanih naloga (poslodavci, klijenti, autoriteti u industriji) pre nego što im bilo šta zatražiš.",
+      "Šalji personalizovane zahteve za povezivanje koji se pozivaju na konkretan sadržaj."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-linkedin-content-creator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Kreiranje prodajnog skripta za livestream",
+    "koraci": [
+      "Otvoriti stream kukom za zadržavanje pažnje i postavljanjem bolne tačke publike.",
+      "Predstaviti proizvod kroz priču o brendu i lično iskustvo da se izgradi poverenje.",
+      "Otkriti cenu postepeno uz poklone i vremensko ograničenje da se stvori hitnost.",
+      "Zatvoriti prodaju odbrojavanjem i pozivom na akciju.",
+      "Na kraju segmenta potvrditi kupovine i najaviti sledeći proizvod radi zadržavanja gledalaca.",
+      "Pripremiti listu zamenskih fraza za zabranjene izjave o efikasnosti i ceni."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-livestream-commerce-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Balansiranje plaćenog i organskog saobraćaja",
+    "koraci": [
+      "U fazi hladnog starta usmeriti veći deo budžeta na plaćene kampanje radi privlačenja ciljane publike.",
+      "Postepeno smanjivati udeo plaćenog saobraćaja kako raste angažovanost gledalaca.",
+      "Pratiti ROI svake kampanje i gasiti one koje padaju ispod praga.",
+      "Pojačavati ponude tokom vršnih talasa posete, a smanjivati tokom padova.",
+      "U zreloj fazi održavati organski saobraćaj iznad polovine ukupnog gledanosti."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-livestream-commerce-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Raspoređivanje proizvoda prema talasima saobraćaja",
+    "koraci": [
+      "Podeliti proizvode na one za privlačenje gledalaca, glavne hitove, profitne artikle i akcijske ponude.",
+      "Uskladiti redosled prikazivanja proizvoda sa očekivanim skokovima posete.",
+      "Pripremiti rezervni plan za brzu promenu proizvoda kada broj gledalaca opadne.",
+      "Dogovoriti sa dobavljačima posebne cene i garancije povrata pre emitovanja."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-livestream-commerce-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Analiza podataka i optimizacija uživo",
+    "koraci": [
+      "Proveravati ključne pokazatelje svakih 15 minuta tokom emitovanja.",
+      "Prepoznati pad broja gledalaca i odmah pokrenuti akcijsku ponudu ili interaktivnu igru.",
+      "Analizirati levak konverzije od prikaza do plaćanja i uočiti gde se gubi publika.",
+      "Nakon emitovanja sastaviti izveštaj sa predlozima za unapređenje sledećeg strima.",
+      "Upoređivati nedeljne rezultate i定ifisati prioritete za narednu nedelju."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-livestream-commerce-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Procena podobnosti platforme za sadržaj",
+    "koraci": [
+      "Analiziraj tip sadržaja i uporedi ga sa pravilima svake platforme",
+      "Odbaci platforme koje se ne uklapaju u prirodu teksta",
+      "Predloži optimalnih 3-5 platformi umesto slanja na sve",
+      "Traži potvrdu korisnika pre nastavka"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-multi-platform-publisher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Prilagođavanje sadržaja po platformama",
+    "koraci": [
+      "Učitaj izvorni tekst ili zatraži da ga kreira specijalista za sadržaj",
+      "Prosledi tekst odgovarajućim stil-specijalistima za svaku ciljnu platformu",
+      "Proveri ograničenja dužine naslova i tela teksta za svaku platformu",
+      "Obezbedi da nijedna platforma ne dobije identičan sirovi tekst"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-multi-platform-publisher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Bezbedno objavljivanje u režimu nacrta",
+    "koraci": [
+      "Proveri autentifikaciju naloga na svakoj ciljnoj platformi pre sinhronizacije",
+      "Pošalji sadržaj isključivo kao nacrt preko odgovarajućeg alata za svaku platformu",
+      "Nikada ne aktiviraj automatsko objavljivanje u produkciju",
+      "Vrati korisniku listu linkova ka nacrtima na pregled i ručno objavljivanje"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-multi-platform-publisher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kontrola rizika i izveštavanje o greškama",
+    "koraci": [
+      "Poštuj dnevne limite objava i nasumične pauze između postova po platformi",
+      "Variraj slike kako bi se izbegla detekcija duplikata",
+      "Kada sinhronizacija ne uspe, dijagnostikuj uzrok (token, kolačić, dužina, port)",
+      "Izveštaj korisnika tabelarno sa statusom, linkom i napomenom za svaku platformu"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-multi-platform-publisher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Pozicioniranje i brendiranje podkasta",
+    "koraci": [
+      "Odrediti format emisije - stručni, intervju, narativni ili opušteni razgovor",
+      "Definisati ciljanu publiku prema uzrastu, zanimanju i kontekstu slušanja",
+      "Pronaći jedinstven glas i ugao koji razlikuje emisiju od konkurencije",
+      "Kreirati naziv, naslovnu sliku i opis koji jasno prenose vrednost emisije",
+      "Odbaciti nejasnu poziciju tipa 'pričamo o svemu' i insistirati na konkretnom fokusu"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-podcast-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Planiranje sadržaja i priprema epizode",
+    "koraci": [
+      "Praviti bazu tema kroz četiri kategorije - trajne, aktuelne, serijske i eksperimentalne",
+      "Birati i proveravati goste prema stručnosti, komunikativnosti i uklapanju u publiku",
+      "Napraviti plan objavljivanja sa stabilnom učestalošću, idealno nedeljno",
+      "Pripremiti detaljan vodič za snimanje sa ključnim pitanjima i procenom trajanja segmenata",
+      "Testirati privlačnost teme kroz ankete i angažovanje zajednice pre snimanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-podcast-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Produkcija i post-produkcija zvuka",
+    "koraci": [
+      "Proveriti opremu, okruženje za snimanje i uraditi probu zvuka pre snimanja",
+      "Snimati svakog učesnika na posebnom kanalu radi lakše naknadne obrade",
+      "Ukloniti poštapalice i suvišne delove uz zadržavanje prirodnog toka razgovora",
+      "Dodati prelazne zvučne efekte, muzičku podlogu i standardizovani intro/outro",
+      "Izvršiti masterovanje sa normalizacijom glasnoće na -16 LUFS i uklanjanjem šuma"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-podcast-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Distribucija, rast publike i monetizacija",
+    "koraci": [
+      "Postaviti RSS feed i sinhronizovati objavu na sve podržane platforme",
+      "Pisati detaljne shownotes sa vremenskim oznakama, ključnim rečima i linkovima",
+      "Deliti isečke, citate i zakulisni sadržaj na društvenim mrežama radi privlačenja slušalaca",
+      "Graditi zajednicu kroz grupe i podsticati goste da dele epizodu svojoj publici",
+      "Pratiti broj preslušavanja, stopu dovršenosti i rast pretplata radi prilagođavanja strategije",
+      "Uvoditi monetizaciju kroz sponzorisane serije, reklame u stilu voditelja i plaćeni sadržaj"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-podcast-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Pisanje saopštenja za javnost",
+    "koraci": [
+      "Formulisati naslov u aktivnom glasu koji nosi jasnu vest u manje od deset reči",
+      "U prvih pedeset reči odgovoriti ko, šta, kada, gde i zašto",
+      "Dodati citat rukovodioca koji donosi perspektivu, ne ponavlja uvod",
+      "Uneti potkrepljujuće podatke i opciono drugi citat partnera ili klijenta",
+      "Završiti sa 'o kompaniji' delom i kontakt podacima za medije",
+      "Proveriti da nema nedokazanih superlativa i da vest nije zakopana u tekstu"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-pr-communications-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Kreiranje i slanje medijskog pitcha novinarima",
+    "koraci": [
+      "Istražiti poslednjih desetak tekstova novinara da se razume njegov fokus i stil",
+      "Napisati kratak naslov poruke koji ističe priču, a ne ime kompanije",
+      "Personalizovati uvodni pasus pozivanjem na konkretan prethodni članak",
+      "Predstaviti priču kroz trend ili podatak, uz kompaniju kao dokaz, ne glavnu temu",
+      "Ponuditi konkretnu pogodnost poput ekskluzive, pristupa izvršnom direktoru ili podataka",
+      "Postaviti jedan jasan i jednostavan zahtev i poslati najviše jedan podsetnik posle 3-5 dana"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-pr-communications-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Upravljanje komunikacijom u krizi",
+    "koraci": [
+      "U prvih 30 minuta prikupiti činjenice i proceniti ozbiljnost situacije",
+      "Odmah izdati privremenu izjavu koja priznaje situaciju i najavljuje sledeće ažuriranje",
+      "Formirati krizni tim i odrediti jednog zvaničnog govornika za medije",
+      "Obavestiti interne zainteresovane strane pre eksternog objavljivanja",
+      "Pratiti medije i društvene mreže u realnom vremenu i beležiti svaki upit",
+      "Redovno ažurirati javnost prema najavljenom rasporedu do razrešenja krize"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-pr-communications-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.94
+  },
+  {
+    "ime": "Izgradnja pozicioniranja izvršnog lidera kao stručnjaka",
+    "koraci": [
+      "Definisati uzak domen stručnosti koji spaja lično znanje, relevantnost kompanije i potrebu tržišta",
+      "Planirati redovan sopstveni sadržaj poput objava na LinkedIn-u i dužih tekstova mesečno",
+      "Aktivno predlagati gostovanja u medijima, kolumne i govorničke prilike na konferencijama",
+      "Pripremiti izvršioca kroz medijski trening sa najviše tri ključne poruke i tehnikama premošćavanja",
+      "Pratiti napredak kroz udeo glasa, rast pratilaca i broj poziva za intervjue"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-pr-communications-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Konfigurisanje WeCom SCRM sistema",
+    "koraci": [
+      "Napraviti kanal QR kodove za svaki izvor privlačenja korisnika (paket, live, prodavnica).",
+      "Definisati dobrodošlicu poruke i automatsko tagovanje po izvoru i ponašanju korisnika.",
+      "Postaviti sistem oznaka po poreklu, potrošnji, životnom ciklusu i interesovanjima.",
+      "Povezati WeCom identitete sa Mini Program nalozima radi jedinstvenog profila korisnika.",
+      "Integrisati treće SCRM alate radi automatizacije i arhiviranja razgovora po propisima."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-private-domain-operator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Vođenje segmentisanih zajednica",
+    "koraci": [
+      "Podeliti korisnike u grupe prema vrednosti: akvizicija, pogodnosti, VIP i super korisnici.",
+      "Napraviti SOP tok grupe: dobrodošlica, predstavljanje, vredan sadržaj, akcija, konverzija.",
+      "Sastaviti dnevni i nedeljni kalendar sadržaja da se izgradi navika korisnika.",
+      "Redovno unapređivati aktivne i smanjivati angažovanje neaktivnih članova.",
+      "Uvesti periode posmatranja novih članova da se spreči zloupotreba pogodnosti."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-private-domain-operator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Upravljanje životnim ciklusom korisnika",
+    "koraci": [
+      "Aktivirati nove korisnike u prvih 7 dana kroz poklone i vodiče za proizvod.",
+      "Negovati korisnike u fazi rasta sadržajem i podsticajima za ponovnu kupovinu.",
+      "Pružiti posebne pogodnosti i personalizovanu uslugu zrelim korisnicima.",
+      "Reaktivirati neaktivne korisnike posebnim ponudama i anketama o zadovoljstvu.",
+      "Primeniti model ranog upozorenja na osnovu ponašanja da se predvidi odliv korisnika."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-private-domain-operator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Optimizacija konverzionog levka",
+    "koraci": [
+      "Pratiti ulazne tačke privlačenja korisnika iz javnih kanala do dodavanja u WeCom.",
+      "Meriti konverziju od dodavanja prijatelja do prve interakcije i kupovine.",
+      "Analizirati konverziju unutar grupa i identifikovati tačke gubitka korisnika.",
+      "Sprovoditi 1-na-1 razgovore za dijagnozu potreba i prevazilaženje prigovora.",
+      "Pratiti stope ponovne kupovine i preporuka radi unapređenja levka."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-private-domain-operator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.86
+  },
+  {
+    "ime": "Istraživanje i integracija u subreddite",
+    "koraci": [
+      "Identifikovati relevantne glavne, sporedne, lokalne i nišne zajednice",
+      "Proučiti pravila, kulturu, tajming i odnose sa moderatorima svake zajednice",
+      "Početi sa autentičnim učešćem bez promotivne namere",
+      "Prepoznati bolne tačke i praznine u znanju zajednice"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-reddit-community-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kreiranje edukativnog sadržaja po pravilu 90/10",
+    "koraci": [
+      "Praviti vodiče, uvide iz industrije i korisne resurse umesto reklamnih poruka",
+      "Deliti besplatne alate, šablone i izveštaje koji donose vrednost zajednici",
+      "Objavljivati studije slučaja i transparentna iskustva sa naučenim lekcijama",
+      "Odgovarati na pitanja zajednice rešavajući njihove konkretne probleme",
+      "Održavati odnos maksimalno 10% promotivnog prema 90% korisnog sadržaja"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-reddit-community-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja dugoročne reputacije u zajednici",
+    "koraci": [
+      "Redovno učestvovati u diskusijama i pružati korisne odgovore",
+      "Demonstrirati stručnost deljenjem relevantnih uvida iz industrije",
+      "Podržavati druge članove glasanjem za vredan sadržaj",
+      "Graditi poverenje postepeno tokom meseci i godina, ne kroz kampanje",
+      "Pratiti promene kulture i pravila subreddita i prilagođavati pristup"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-reddit-community-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Organizacija AMA sesija i praćenje reputacije brenda",
+    "koraci": [
+      "Pripremiti stručnjaka sa ključnim porukama i očekivanim pitanjima",
+      "Odabrati najrelevantniji i najaktivniji subreddit za sesiju",
+      "Brzo i detaljno odgovarati na pitanja tokom AMA sesije",
+      "Pratiti pominjanja brenda i analizirati sentiment komentara",
+      "Odgovarati autentično i fokusirano na korist zajednice, ne odbranu kompanije"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-reddit-community-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Tehnički SEO audit sajta",
+    "koraci": [
+      "Proveriti robots.txt i XML mapu sajta radi ispravnog indeksiranja",
+      "Analizirati budžet indeksiranja i pronaći stranice koje troše resurse uzalud",
+      "Izmeriti Core Web Vitals (LCP, INP, CLS) na mobilnom i desktop uređaju",
+      "Proveriti strukturirane podatke i ispraviti greške u šema markupu",
+      "Pregledati internu arhitekturu linkova i pronaći napuštene stranice"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-seo-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Audit kanibalizacije ključnih reči",
+    "koraci": [
+      "Povući podatke iz Search Console-a po dimenzijama stranica i upita",
+      "Pronaći stranice koje se nadmeću za isti ključni pojam",
+      "Dodeliti jednoj stranici vlasništvo nad svakim upitom na osnovu klikova i impresija",
+      "Preraditi naslove i H1 oznake da se izbegne preklapanje primarnih ključnih reči",
+      "Dodati interne linkove ka vlasničkoj stranici i proveriti kanonske tagove"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-seo-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Istraživanje ključnih reči i planiranje sadržaja",
+    "koraci": [
+      "Izgraditi skup ključnih reči grupisan po temama i nameri pretrage",
+      "Mapirati postojeći sadržaj prema ciljnim ključnim rečima i pronaći praznine",
+      "Dizajnirati strukturu glavnih i pratećih stranica sa internim povezivanjem",
+      "Prioritizovati izradu sadržaja prema potencijalnom uticaju i izvodljivosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-seo-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja autoritativnih linkova",
+    "koraci": [
+      "Analizirati trenutni profil linkova i identifikovati toksične backlinkove",
+      "Kreirati originalne istraživačke sadržaje i alate za privlačenje linkova",
+      "Sprovesti digitalni PR i kontaktirati novinare i blogere radi pomena",
+      "Pretvoriti nepovezane pomene brenda u linkove i popraviti pokidane linkove",
+      "Pratiti mesečne ciljeve broja i kvaliteta novih linkova"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-seo-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Primarna i sekundarna korekcija boje",
+    "koraci": [
+      "Prvo izjednačiti ekspoziciju i balans belog na svim kadrovima pomoću histograma.",
+      "Podesiti kontrast i svetla/senke da slika dobije prirodan izgled.",
+      "Koristiti HSL i krive za ciljano podešavanje pojedinačnih boja poput neba ili tena.",
+      "Proveriti ton kože preko vektorskopa da ostane na liniji za kožu.",
+      "Primeniti LUT kao polaznu tačku i dodatno fino podesiti parametre na 60-80% jačine.",
+      "Uskladiti stil kolor gradinga kroz ceo video i celu seriju sadržaja."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-short-video-editing-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Obrada i miksovanje zvuka",
+    "koraci": [
+      "Snimiti čist uzorak šuma prostorije i primeniti redukciju buke bez preterivanja.",
+      "Postaviti high-pass filter oko 80-120Hz da se ukloni nizak šum vetra i podrumski zvuk.",
+      "Pojačati jasnoću glasa u opsegu 2-5kHz i primeniti kompresor za ujednačenu glasnoću.",
+      "Uskladiti BGM sa ritmom video zapisa, obeležavajući jake udarce za rezove.",
+      "Izmiksovati nivoe tako da glas uvek bude dominantan (-12 do -6dB), a muzika tiša (-24 do -18dB).",
+      "Normalizovati konačan izlaz na -14 LUFS i izbegavati klipovanje iznad -1dBFS."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-short-video-editing-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Kreiranje pokretne grafike i efekata",
+    "koraci": [
+      "Postaviti ključne kadrove za poziciju, skaliranje, rotaciju ili providnost i definisati početno i krajnje stanje.",
+      "Primeniti krive ublažavanja (ease-in/ease-out) da pokret deluje prirodno, a ne mehanički.",
+      "Dodati animaciju teksta kratkog trajanja (0,3-0,5 sekundi) prilagođenu tonu sadržaja.",
+      "Koristiti brzinske rampe za efekat usporavanja/ubrzavanja unutar jednog kadra radi naglašavanja akcije.",
+      "Primeniti zelenu pozadinu ili AI isecanje uz naknadno čišćenje ivica radi urednog spajanja slojeva.",
+      "Koristiti čestice i vizuelne efekte umereno, tako da podržavaju atmosferu a ne odvlače pažnju."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-short-video-editing-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Optimizacija izvoza za više platformi",
+    "koraci": [
+      "Odrediti ciljnu platformu i njen format (vertikalni 9:16 ili horizontalni 16:9).",
+      "Podesiti rezoluciju, broj frejmova i bitrejt prema preporukama za tu platformu.",
+      "Ostaviti sigurnosnu marginu za UI elemente platforme kod vertikalnog formata.",
+      "Izabrati odgovarajući kodek (H.264 za kompatibilnost, H.265 za manju veličinu fajla).",
+      "Napraviti više verzija minijatura i testirati koja ostvaruje bolji CTR.",
+      "Proveriti ceo snimak pre objave radi sinhronizacije zvuka, titlova i odsustva grešaka."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-short-video-editing-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kreiranje unakrsne strategije za platforme",
+    "koraci": [
+      "Definisati zajedničku poruku i teme koje se prilagođavaju svakoj platformi",
+      "Planirati sadržaj prvo za LinkedIn, pa ga adaptirati za Twitter i druge mreže",
+      "Uskladiti ton i format sa kulturom svake platforme",
+      "Pratiti korisnički put kroz platforme radi merenja konverzija"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-social-media-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Razvoj liderstva u mišljenju i lične brendiranje",
+    "koraci": [
+      "Izgraditi autoritet izvršnog lica kroz redovno objavljivanje sadržaja",
+      "Pisati komentare na aktuelne teme i trendove u industriji",
+      "Koristiti prisustvo na mrežama za dobijanje poziva na konferencije i podkaste",
+      "Dokumentovati postignuća radi prijave za industrijske nagrade"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-social-media-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Upravljanje višeplatformskim kampanjama",
+    "koraci": [
+      "Postaviti jasne ciljeve kampanje usklađene sa poslovnim ishodima",
+      "Segmentirati publiku prema specifičnostima svake platforme",
+      "Izraditi kreativne sadržaje prilagođene svakom kanalu",
+      "Koordinisati raspored objavljivanja i budžet za oglase",
+      "Pratiti rezultate i sprovoditi A/B testiranje sadržaja"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-social-media-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Analiza performansi i izveštavanje",
+    "koraci": [
+      "Pregledati nativnu analitiku svake platforme posebno",
+      "Objediniti podatke u zajednički izveštaj o dosegu i angažovanju",
+      "Uporediti rezultate sa konkurencijom u industriji",
+      "Predložiti strateške izmene na osnovu dobijenih uvida"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-social-media-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Kreiranje virusnog sadržaja",
+    "koraci": [
+      "Analiziraj aktuelne trendove zvuka, efekata i izazova na platformi.",
+      "Osmisli upečatljiv uvod koji zadrži pažnju u prve tri sekunde.",
+      "Primeni formulu priče sa jasnim početkom, sredinom i krajem radi boljeg procenta gledanja do kraja.",
+      "Uklopi trending zvuk ili efekat uz autentičnu brend poruku.",
+      "Dodaj poziv na akciju koji podstiče komentare, duete ili deljenja."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-tiktok-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Optimizacija za algoritam",
+    "koraci": [
+      "Prati promene u faktorima rangiranja TikTok algoritma.",
+      "Fokusiraj se na povećanje procenta završenog gledanja videa.",
+      "Podstiči brzo generisanje lajkova, komentara i deljenja u prvom satu objave.",
+      "Koristi mešavinu trending, niš i brend heštegova (5-8 ukupno).",
+      "Podstiči posete profilu i praćenje kroz sadržaj koji poziva na dalju interakciju."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-tiktok-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Upravljanje saradnjom sa kreatorima",
+    "koraci": [
+      "Podeli kreatore po nivoima (nano, mikro, mid-tier, makro) prema broju pratilaca.",
+      "Odaberi model saradnje poput slanja proizvoda, sponzorisanog sadržaja ili ambasadorstva.",
+      "Pokreni UGC kampanju ili brend hešteg izazov za uključivanje zajednice.",
+      "Prati povrat ulaganja u saradnju sa kreatorima i optimizuj buduća partnerstva."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-tiktok-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Vođenje TikTok oglašavanja i analitike",
+    "koraci": [
+      "Izaberi odgovarajući format oglasa (in-feed, Spark Ads, TopView, brend hešteg izazov).",
+      "Testiraj više kreativnih varijanti videa radi poređenja performansi.",
+      "Targetiraj publiku na osnovu interesovanja, ponašanja i sličnih korisnika.",
+      "Prati konverzije i prilagodi kampanju na osnovu rezultata.",
+      "Adaptiraj uspešan sadržaj za Instagram Reels i YouTube Shorts."
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-tiktok-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Praćenje trendova i učešće u razgovorima u realnom vremenu",
+    "koraci": [
+      "Pratiti aktuelne teme, heštagove i industrijske diskusije svakodnevno",
+      "Identifikovati relevantne influensere, klijente i glasove iz industrije",
+      "Uključiti se u razgovore sa korisnim i autentičnim komentarima",
+      "Reagovati na vesti iz industrije stručnim mišljenjem i analizom",
+      "Balansirati planirani sadržaj sa spontanim učešćem u diskusijama"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-twitter-engager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Upravljanje krizom i reputacijom u realnom vremenu",
+    "koraci": [
+      "Pratiti pominjanja brenda radi uočavanja negativnog sentimenta i naglih skokova obima",
+      "Primeniti protokol eskalacije i interne koordinacije pri pojavi problema",
+      "Odgovoriti u roku od 30 minuta kroz priznavanje, istragu i konkretan odgovor",
+      "Obezbediti transparentnu i promišljenu komunikaciju tokom krize",
+      "Sprovesti naknadnu akciju i dugoročnu strategiju obnavljanja poverenja"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-twitter-engager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Vođenje Twitter Spaces sesija i izgradnja zajednice",
+    "koraci": [
+      "Planirati nedeljne tematske diskusije, intervjue sa stručnjacima i Q&A sesije",
+      "Pozivati goste iz industrije, klijente i partnere kao ko-voditelje",
+      "Redovno angažovati i prepoznavati stalne učesnike zajednice",
+      "Repurposovati najbolje delove sesija za druge platforme i naknadni sadržaj",
+      "Pratiti posećenost i prilagođavati format na osnovu povratnih informacija"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-twitter-engager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Optimizacija naslova i thumbnail-a",
+    "koraci": [
+      "Istražiti ključne reči i konkurentske video snimke za temu",
+      "Osmisliti više varijanti naslova zasnovanih na radoznalosti, direktnoj koristi ili pretrazi",
+      "Kreirati koncepte sličica sa jasnim vizuelnim elementom i maksimalno tri reči teksta",
+      "Uskladiti naslov i sličicu da zajedno pričaju jednu celovitu priču",
+      "Pripremiti varijante za A/B testiranje"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-video-optimization-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Strukturiranje videa i hook-a",
+    "koraci": [
+      "Detaljno isplanirati prvih 30 sekundi videa kao snažnu kuku za pažnju",
+      "Podeliti sadržaj na jasna poglavlja sa vremenskim oznakama",
+      "Prepoznati mesta pada tempa i dodati vizuelne prekide pažnje",
+      "Rasporediti ključne poente neposredno pre očekivanog pada koncentracije gledaoca",
+      "Završiti video jasnim pozivom na akciju umesto generičkog zahvaljivanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-video-optimization-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "SEO i metapodaci za video",
+    "koraci": [
+      "Napisati prve dve rečenice opisa sa fokusom na ključne reči",
+      "Odabrati strateške tagove i heštagove relevantne za temu",
+      "Planirati karte i krajnji ekran da zadrže gledaoca u sesiji gledanja",
+      "Povezati video sa sledećim relevantnim sadržajem radi produženja sesije"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-video-optimization-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Analiza performansi i unapređenje zadržavanja",
+    "koraci": [
+      "Pregledati grafikone zadržavanja i izvore saobraćaja u analitici",
+      "Identifikovati tačke gde gledaoci najčešće napuštaju video",
+      "Predložiti konkretne izmene u tempu ili sadržaju na osnovu podataka",
+      "Pratiti CTR i prosečno trajanje gledanja nakon promena",
+      "Prilagoditi strategiju monetizacije i postavljanja reklama prema ponašanju publike"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-video-optimization-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.82
+  },
+  {
+    "ime": "Kreiranje strategije sadržaja i kalendara objava",
+    "koraci": [
+      "Analiziraj trenutne pretplatnike, demografiju i učinak sadržaja",
+      "Definiši jasne poslovne ciljeve kao što su prepoznatljivost brenda ili prodaja",
+      "Odredi 4-5 glavnih tema sadržaja usklađenih sa interesima pretplatnika",
+      "Napravi tromesečni uređivački kalendar sa rasporedom objavljivanja i sezonskim temama",
+      "Postavi mešavinu formata po pravilu 60 odsto vrednost, 30 odsto zajednica, 10 odsto promocija"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-wechat-official-account.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Optimizacija i pisanje sadržaja za mobilne korisnike",
+    "koraci": [
+      "Pisi privlačne naslove i emocionalne uvode koji podstiču otvaranje",
+      "Strukturiraj tekst sa kratkim pasusima, podnaslovima i nabrajanjem radi lakšeg skeniranja",
+      "Postavi ključne reči u naslov i telo teksta radi boljeg internog pretraživanja",
+      "Dodaj jasan poziv na akciju u svaki sadržaj",
+      "Prilagodi vizuelni dizajn i format za čitanje na mobilnim uređajima"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-wechat-official-account.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Postavljanje automatizacije i arhitekture menija",
+    "koraci": [
+      "Dizajniraj glavni meni naloga za jednostavnu navigaciju",
+      "Podesi automatske odgovore za dobrodošlicu i česta pitanja",
+      "Kreiraj automatizovane odgovore na osnovu ključnih reči",
+      "Integriši mini programe za dodatnu funkcionalnost i zadržavanje korisnika",
+      "Segmentiraj pretplatnike radi ciljane komunikacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-wechat-official-account.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Praćenje performansi i kontinuirana optimizacija",
+    "koraci": [
+      "Nedeljno prati stopu otvaranja, klikova i dovršavanja čitanja članaka",
+      "Analiziraj koji sadržaj i formati najbolje funkcionišu",
+      "Prikupljaj povratne informacije pretplatnika kroz poruke i komentare",
+      "Sprovodi A/B testiranje naslova, vremena slanja i formata sadržaja",
+      "Širi uspešne obrasce sadržaja i prilagođavaj strategiju publici"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-wechat-official-account.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Planiranje i jahanje trending tema",
+    "koraci": [
+      "Prati listu trendova u realnom vremenu da uočiš priliku za brend",
+      "Osmisli hashtag temu sa niskom barijerom za učešće i jakim emotivnim okidačem",
+      "Lansiraj sadržaj u roku od 30 minuta od pojave trenda uz pomoć top KOL-ova",
+      "Rasporedi faze kampanje: najava, paljenje, pojačavanje i zaokruživanje teme",
+      "Pripremi prateće materijale poput vizuala, komentara za podsticanje i skriptova odgovora"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-weibo-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Upravljanje krizom i sentimentom",
+    "koraci": [
+      "Uspostavi sistem ranog upozorenja za ključne reči brenda i industrije",
+      "Klasifikuj ozbiljnost situacije kroz četiri nivoa opasnosti",
+      "Primeni pravilo zlatnih 4 sata: otkrij, proceni, odgovori i prati razvoj",
+      "Odaberi strategiju odgovora - direktnu, indirektnu ili strateško ćutanje",
+      "Upravljaj sekcijom komentara isticanjem ključnih odgovora i suzbijanjem lažnih naloga",
+      "Izradi izveštaj posle incidenta sa analizom toka širenja i efikasnosti odgovora"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-weibo-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Izgradnja i aktivacija fan zajednice",
+    "koraci": [
+      "Kreiraj i konfiguriši Super Topic zajednicu sa jasnim pravilima",
+      "Razvijaj UGC sadržaj i podsticaj jezgro lojalnih pratilaca kroz nivoe i nagrade",
+      "Organizuj tematske aktivnosti poput nagradnih igara i zajedničkih izazova",
+      "Koristi Fan Headlines alat za širenje ključnih objava među pratiocima"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-weibo-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Selekcija KOL partnera i analiza performansi",
+    "koraci": [
+      "Proveri kvalitet pratilaca KOL-a umesto samo broja pratilaca",
+      "Oceni usklađenost tona sadržaja KOL-a sa identitetom brenda",
+      "Analiziraj istorijske podatke kampanja poput angažovanja i konverzija",
+      "Kombinuj top, srednje i mikro influensere po piramidalnom modelu",
+      "Prati osnovne metrike poput stope angažovanja i dubine reposta radi optimizacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-weibo-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Planiranje obima i izvora istraživanja",
+    "koraci": [
+      "Definiše poslovno pitanje, rok i potreban nivo dokaza",
+      "Mapira ključne reči, heštagove, naloge i varijante naziva konkurenata",
+      "Odredi vremenski period pretrage, jezike i izuzetke",
+      "Dokumentuje granice privatnosti i pravne rizike pre prikupljanja podataka"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-x-twitter-intelligence-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Prikupljanje i čišćenje signala",
+    "koraci": [
+      "Izvršava pretragu postova, profila i javnih konverzacija po zadatim upitima",
+      "Uklanja duplikate, spam i irelevantne rezultate",
+      "Ocenjuje izvore prema relevantnosti, stručnosti i blizini događaja",
+      "Čuva URL-ove, vremenske oznake i beleške o prikupljanju kao dokaz"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-x-twitter-intelligence-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Analiza trendova i procena rizika",
+    "koraci": [
+      "Grupiše ponavljajuće teme, pitanja, pritužbe i narative",
+      "Proverava brzinu širenja i raznovrsnost izvora da potvrdi pravi trend",
+      "Mapira poteze konkurencije i reakcije publike na njihove kampanje",
+      "Klasifikuje rizike po ozbiljnosti, od šuma do krizne eskalacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-x-twitter-intelligence-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada izveštaja i uspostavljanje praćenja",
+    "koraci": [
+      "Sastavlja sažet izveštaj sa nalazima, dokazima i preporučenim akcijama",
+      "Definiše pragove uzbune, vlasnike i učestalost pregleda",
+      "Prosleđuje uvide relevantnim timovima za dalju akciju",
+      "Prati koje su upite i upozorenja bili korisni radi unapređenja procesa"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-x-twitter-intelligence-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Pozicioniranje lifestyle brenda",
+    "koraci": [
+      "Istražiti demografiju, interesovanja i aspiracije ciljne publike",
+      "Razviti brend narativ, vrednosti i estetsku ličnost",
+      "Definisati stil fotografije, filtere i paletu boja",
+      "Analizirati konkurenciju i pronaći prostor za diferencijaciju"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-xiaohongshu-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Kreiranje sadržajne strategije i kalendara",
+    "koraci": [
+      "Pratiti nedeljne trendove i sezonske prilike za sadržaj",
+      "Balansirati sadržaj po formuli 70% lifestyle, 20% trend, 10% brend",
+      "Definisati 4-5 glavnih tematskih stubova sadržaja",
+      "Napraviti kalendar objava za 30 dana sa optimalnim terminima i hashtagovima"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-xiaohongshu-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Produkcija i optimizacija mikro-sadržaja",
+    "koraci": [
+      "Snimati vizuelno dosledan sadržaj prema definisanom estetskom okviru",
+      "Pisati tekstove sa emotivnim hukovima i jasnim pozivom na akciju",
+      "Prilagoditi format objave platformi (vertikalni video, kratki klipovi 15-60s)",
+      "Objavljivati 3-5 puta nedeljno u terminima najveće aktivnosti publike"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-xiaohongshu-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izgradnja zajednice i analiza performansi",
+    "koraci": [
+      "Odgovarati na komentare i poruke u roku od dva sata od objave",
+      "Sarađivati sa mikro-influenserima radi autentičnog širenja sadržaja",
+      "Pokretati kampanje korisničkog sadržaja i hashtag izazove",
+      "Nedeljno analizirati performanse i prilagođavati strategiju prema podacima"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-xiaohongshu-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Strateško biranje pitanja i izrada odgovora",
+    "koraci": [
+      "Prati trending teme i pitanja u 3-5 ključnih oblasti stručnosti",
+      "Odaberi pitanja koja su usklađena sa poslovnim ciljevima i gde postoji stvarna ekspertiza",
+      "Napiši sveobuhvatan odgovor sa podacima, primerima i studijama slučaja",
+      "Dodaj slike, tabele i formatiranje radi preglednosti i lakšeg čitanja",
+      "Ugradi suptilan poziv na akciju bez agresivne prodaje",
+      "Podstakni diskusiju kroz pitanja koja produbljuju angažman čitalaca"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-zhihu-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Razvoj kolone za izgradnju autoriteta",
+    "koraci": [
+      "Definiši jedinstvenu temu kolone koja gradi dugoročno vođstvo u znanju",
+      "Napravi plan objava za šest meseci sa temama i rasporedom",
+      "Pokreni kolonu uz strateško promovisanje za prikupljanje prvih pretplatnika",
+      "Objavljuj redovno, jednom do dva puta nedeljno, radi održavanja angažmana",
+      "Neguj pretplatnike kroz komentare i naknadne diskusije"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-zhihu-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izgradnja odnosa i saradnje sa stručnjacima",
+    "koraci": [
+      "Pronađi i poveži se sa drugim stručnjacima i liderima mišljenja na platformi",
+      "Dogovori zajedničke odgovore, unakrsnu promociju i gostujuće kolone",
+      "Koristi uživo događaje za dublji angažman sa najzainteresovanijim pratiocima",
+      "Sastavi najbolje odgovore u publikaciju radi dodatnog signala kredibiliteta",
+      "Aktivno učestvuj u diskusijama radi jačanja prisustva u zajednici"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-zhihu-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Analiza performansi i optimizacija strategije",
+    "koraci": [
+      "Prati mesečno broj glasova, vidljivost i obrasce angažmana",
+      "Identifikuj koje teme i pitanja donose najbolje poslovne rezultate",
+      "Analiziraj najuspešnije odgovore i ponovi obrasce koji funkcionišu",
+      "Prati kvalitet generisanih kontakata i njihov uticaj na prodaju",
+      "Prilagodi fokus tema i strategiju angažmana na osnovu podataka"
+    ],
+    "napomene": "Destilovano iz agency-agents/marketing/marketing-zhihu-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  }
+]

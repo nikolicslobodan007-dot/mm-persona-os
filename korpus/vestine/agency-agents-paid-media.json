@@ -1,0 +1,326 @@
+[
+  {
+    "ime": "Sveobuhvatna provera strukture naloga",
+    "koraci": [
+      "Proveriti organizaciju kampanja, grupa oglasa i konvencije imenovanja.",
+      "Analizirati geografsko targetiranje, podešavanja uređaja i dayparting.",
+      "Proveriti korišćenje labela i granularnost strukture naloga.",
+      "Uočene probleme označiti po ozbiljnosti i poslovnom uticaju."
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Provera praćenja i merenja konverzija",
+    "koraci": [
+      "Proveriti konfiguraciju konverzionih akcija i model atribucije.",
+      "Verifikovati implementaciju GTM/GA4 i unapređene konverzije.",
+      "Proveriti uvoz offline konverzija i unakrsno praćenje domena.",
+      "Uporediti podatke o konverzijama između platformi radi validacije tačnosti."
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Analiza bidovanja, budžeta i targetiranja",
+    "koraci": [
+      "Oceniti adekvatnost strategije ponuda i poštovanje perioda učenja.",
+      "Identifikovati kampanje ograničene budžetom i proveriti portfolio strategije.",
+      "Analizirati distribuciju tipova podudaranja ključnih reči i negativne liste.",
+      "Proveriti kvalitet skor i relevantnost ključnih reči prema oglasima."
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Izrada izveštaja sa prioritizovanim preporukama",
+    "koraci": [
+      "Prikupiti nalaze iz svih kategorija audita i dodeliti nivo ozbiljnosti.",
+      "Proceniti očekivani uticaj svake preporuke na prihod ili efikasnost.",
+      "Sastaviti izvršni rezime razumljiv i netehničkim zainteresovanim stranama.",
+      "Definisati konkretne korake za implementaciju svake preporuke."
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada RSA oglasa sa 15 naslova",
+    "koraci": [
+      "Analiziraj postojeće oglase i performanse pre pisanja novih",
+      "Kreiraj naslove po kategorijama: brend, benefit, karakteristika, poziv na akciju, društveni dokaz",
+      "Upari opise tako da svaka kombinacija naslova i opisa ima smisla",
+      "Proveri gramatičku i logičku koherentnost svih mogućih kombinacija",
+      "Dodaj ekstenzije poput sitelinkova, isticanja i strukturiranih fragmenata",
+      "Proveri ocenu snage oglasa i unapredi dok ne dostigne 'dobar' ili 'odličan' status"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-creative-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn kreative za Performance Max asset grupe",
+    "koraci": [
+      "Definiši tematske signale koji usmeravaju sadržaj kreative",
+      "Napiši tekstualne asete usklađene sa zahtevima platforme",
+      "Pripremi slike i video materijale prema tehničkim zahtevima",
+      "Uskladi asset grupu sa ciljnim signalnim grupama kampanje"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-creative-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Testiranje i praćenje zamora kreative",
+    "koraci": [
+      "Postavi A/B test sa jasnom hipotezom i kriterijumima pobednika",
+      "Prati metrike na nivou oglasa radi uočavanja pada CTR-a",
+      "Označi oglase koji su prešli optimalni prag prikazivanja",
+      "Sačekaj statističku značajnost pre donošenja odluke",
+      "Pokreni novi kreativni test na svake dve nedelje po kampanji",
+      "Zameni oglase koji pokazuju zamor novim varijacijama"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-creative-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Konkurentska analiza i usklađivanje sa landing stranicom",
+    "koraci": [
+      "Istraži biblioteke oglasa konkurencije radi identifikacije tema",
+      "Pronađi praznine u porukama i definiši strategiju diferencijacije",
+      "Uporedi naslove oglasa sa sadržajem landing stranice",
+      "Proveri konzistentnost poziva na akciju između oglasa i stranice"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-creative-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.82
+  },
+  {
+    "ime": "Projektovanje full-funnel kampanje na društvenim mrežama",
+    "koraci": [
+      "Definisati faze levka od prospektiranja do retencije",
+      "Podeliti budžet po fazama levka i platformama",
+      "Prilagoditi strukturu kampanje svakoj platformi posebno",
+      "Kontrolisati frekvenciju prikazivanja po fazama kako ne bi došlo do zasićenja"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-paid-social-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja i segmentacija publike",
+    "koraci": [
+      "Kreirati prilagođene publike na osnovu piksela, CRM lista i angažovanja",
+      "Generisati lookalike/slične publike za proširenje dometa",
+      "Analizirati preklapanje publika i postaviti isključenja",
+      "Sprečiti preopterećenje frekvencijom primenom suzbijanja publike na više platformi"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-paid-social-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Razvoj kreativne strategije prilagođene platformi",
+    "koraci": [
+      "Prilagoditi stil kreative svakoj platformi (UGC za TikTok/Meta, profesionalan ton za LinkedIn)",
+      "Testirati više kreativnih koncepata mesečno po platformi",
+      "Pratiti zamor kreative i planirati automatsko osvežavanje",
+      "Pratiti trendove na TikToku i brzo ih adaptirati u oglase"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-paid-social-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Merenje performansi i unakrsna validacija konverzija",
+    "koraci": [
+      "Implementirati server-side praćenje konverzija (Conversions API) na više platformi",
+      "Uporediti podatke iz pretrage i društvenih mreža radi izbegavanja duplog brojanja konverzija",
+      "Proveriti inkrementalnost kako bi se potvrdilo da kampanje generišu nove konverzije",
+      "Pratiti odstupanje između izveštaja platforme i CRM verifikovanih konverzija"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-paid-social-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.82
+  },
+  {
+    "ime": "Dizajn arhitekture naloga",
+    "koraci": [
+      "Analiziraj poslovne ciljeve i obim naloga pre podele na kampanje",
+      "Kreiraj slojevitu strukturu kampanja po brendu, nebrendu, konkurenciji i osvajanju tržišta",
+      "Definiši taksonomiju grupa oglasa i konvencije imenovanja koje mogu da skaliraju",
+      "Postavi sistem oznaka radi lakšeg praćenja i izveštavanja",
+      "Proveri da struktura omogućava jasnu izolaciju signala između kampanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-ppc-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izbor i podešavanje strategije ponuda",
+    "koraci": [
+      "Proceni zrelost podataka i volumen konverzija pre izbora strategije",
+      "Odaberi odgovarajuću automatizovanu strategiju ponuda poput tCPA, tROAS ili maksimizacije konverzija",
+      "Planiraj postepeni prelaz sa ručnog na automatizovano licitiranje",
+      "Primeni portfolio strategije ponuda za grupe sličnih kampanja",
+      "Prati rezultate i prilagođavaj ciljeve efikasnosti po potrebi"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-ppc-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Upravljanje budžetom i raspodela sredstava",
+    "koraci": [
+      "Analiziraj trenutnu potrošnju i tempo trošenja budžeta po kampanjama",
+      "Izradi okvir za raspodelu budžeta na osnovu prioriteta i učinka",
+      "Sprovedi analizu opadajućih prinosa da identifikuješ granice efikasnog trošenja",
+      "Testiraj inkrementalno povećanje budžeta da proveriš dodatni efekat",
+      "Prilagođavaj budžet sezonski i prema promenama u potražnji"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-ppc-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Dijagnostika i optimizacija učinka kampanja",
+    "koraci": [
+      "Preuzmi aktuelne podatke o nalogu i uvide iz aukcija pre analize",
+      "Identifikuj uzroke promena u CPC-u, stopi konverzije ili udelu impresija",
+      "Uporedi konkurentsku aktivnost i tržišni udeo kroz analizu aukcionih uvida",
+      "Predloži strukturne ili budžetske izmene na osnovu dijagnoze",
+      "Postavi redovno automatizovano praćenje anomalija i zdravlja naloga"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-ppc-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Kreiranje i optimizacija managed placement liste na GDN-u",
+    "koraci": [
+      "Identifikuj relevantne sajtove po industrijskoj vertikali za ciljanu publiku.",
+      "Postavi targetiranje po temama, interesovanjima i custom intent audience grupama.",
+      "Povuci izveštaj o učinku na nivou placementa pre donošenja odluka o proširenju.",
+      "Isključi placemente sa visokom potrošnjom i bez konverzija ili niskom vidljivošću.",
+      "Redovno ažuriraj listu isključenja kako bi se sprečilo rasipanje budžeta."
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-programmatic-buyer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje programatskim DSP kampanjama",
+    "koraci": [
+      "Podesi deal ID i izaberi tip dogovora (PMP, programmatic guaranteed ili open exchange).",
+      "Optimizuj put nabavke (supply path) radi smanjenja nepotrebnih troškova.",
+      "Kontroliši frekvenciju prikazivanja po platformama da se izbegne zamor publike.",
+      "Prati preklapanje publike između platformi radi sprečavanja dupliranja dosega.",
+      "Primeni brand safety i IVT standarde kroz blocklist i allowlist upravljanje."
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-programmatic-buyer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Vođenje partner media strategije i AMP tabele",
+    "koraci": [
+      "Evaluiraj newsletter i sponsored content prilike na osnovu media kitova partnera.",
+      "Pregovaraj uslove saradnje sa izdavačima i partnerima.",
+      "Strukturiraj AMP tabelu sa podacima o 25+ partnera po kanalima.",
+      "Prati ROI partnerskih plasmana u okviru 90-dnevnog prozora atribucije."
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-programmatic-buyer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Dizajn i optimizacija ABM display programa",
+    "koraci": [
+      "Izgradi i očisti listu ciljanih naloga (dedupliciraj i obogati podatke).",
+      "Postavi firmografsko targetiranje i skoring angažovanja na platformama poput Demandbase ili 6Sense.",
+      "Poveži CRM podatke sa display aktivacijom radi preciznijeg ciljanja.",
+      "Prati dostignuti procenat pokrivenosti ciljane liste naloga tokom trajanja kampanje."
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-programmatic-buyer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Analiza izveštaja o pretraživačkim terminima",
+    "koraci": [
+      "Preuzmi aktuelan izveštaj o pretraživačkim terminima direktno iz naloga pre bilo kakve preporuke.",
+      "Primeni n-gram analizu da pronađeš ponavljajuće irelevantne reči i obrasce trošenja budžeta.",
+      "Grupiši upite po nameri korisnika (informativna, navigaciona, komercijalna, transakciona).",
+      "Označi upite bez konverzija i one sa visokim CPC a niskom vrednošću kao potencijalni otpad."
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-search-query-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Izgradnja i revizija negativnih ključnih reči",
+    "koraci": [
+      "Napravi slojevitu strukturu negativnih reči na nivou naloga, kampanje i grupe oglasa.",
+      "Kreiraj deljene liste negativnih reči i proveri da li postoje konflikti sa postojećim ključnim rečima.",
+      "Definiši pravila odlučivanja (ako upit sadrži X i Y, dodaj negativ na nivou Z).",
+      "Primeni negativne reči direktno u nalogu kroz dostupne alate ili API integracije.",
+      "Proveri da stopa konflikata negativnih i aktivnih ključnih reči bude nula."
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-search-query-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Usmeravanje upita i optimizacija tipova podudaranja",
+    "koraci": [
+      "Analiziraj uticaj bliskih varijanti i proširenja kod širokog podudaranja.",
+      "Testiraj granice fraznog podudaranja da sprečiš unutrašnju konkurenciju kampanja.",
+      "Usmeri upite ka pravim kampanjama i grupama oglasa pomoću negativnih reči i kombinacija tipova podudaranja.",
+      "Proveri preklapanje upita između kampanja i reši identifikovane sukobe.",
+      "Prati procenat upita koji završe u predviđenoj kampanji kao meru tačnosti usmeravanja."
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-search-query-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Otkrivanje novih prilika iz konvertujućih upita",
+    "koraci": [
+      "Pregledaj upite koji već donose konverzije a nisu uključeni kao ključne reči.",
+      "Identifikuj dugorepe fraze sa potencijalom za novu grupu oglasa ili kampanju.",
+      "Proveri usklađenost namere upita sa sadržajem odredišne stranice i oglasa.",
+      "Predloži 5 do 10 novih ključnih reči po ciklusu analize na osnovu stvarnih podataka."
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-search-query-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Implementacija GTM i GA4 praćenja",
+    "koraci": [
+      "Projektuj arhitekturu GTM kontejnera sa trigerima, varijablama i redosledom okidanja tagova",
+      "Definiši taksonomiju GA4 događaja i dataLayer strukturu za ecommerce ili lead generaciju",
+      "Podesi napredna merenja, prilagođene dimenzije i cross-domain praćenje",
+      "Implementiraj consent mode da tagovi poštuju saglasnost korisnika",
+      "Proveri ispravnost pomoću Tag Assistant i GA4 DebugView alata"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-tracking-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Podešavanje i validacija konverzija",
+    "koraci": [
+      "Konfiguriši primarne i sekundarne konverzione akcije u Google Ads nalogu",
+      "Uvedi enhanced conversions sa hešovanim korisničkim podacima za web i leadove",
+      "Postavi uvoz offline konverzija preko API-ja i proveri stopu poklapanja GCLID-a",
+      "Uporedi izveštaje platforme sa API podacima da bi se otkrile neslaganja",
+      "Dizajniraj hijerarhiju mikro-konverzija koje hrane algoritam za učenje"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-tracking-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Server-side tagiranje i Meta CAPI deduplikacija",
+    "koraci": [
+      "Postavi server-side GTM kontejner za prikupljanje prvih podataka",
+      "Implementiraj Meta Conversions API paralelno sa browser pikselom",
+      "Uskladi event_id vrednosti da se izbegne dupliranje konverzija između piksela i CAPI-ja",
+      "Verifikuj domen i konfigurisanje agregiranog merenja događaja",
+      "Testiraj setup u Meta Event Manageru pre puštanja u produkciju"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-tracking-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.89
+  },
+  {
+    "ime": "Dijagnostika neslaganja i revizija praćenja",
+    "koraci": [
+      "Uporedi broj konverzija između GA4, Google Ads i CRM sistema",
+      "Analiziraj mrežne zahteve i dataLayer da pronađeš gde dolazi do gubitka podataka",
+      "Proveri uticaj consent mode-a na procenu izgubljenih konverzija zbog odbijanja kolačića",
+      "Identifikuj i otkloni greške u GTM kontejneru poput bloata ili problema sa okidanjem",
+      "Dokumentuj uzrok problema i primeni rešenje u roku od nekoliko sati"
+    ],
+    "napomene": "Destilovano iz agency-agents/paid-media/paid-media-tracking-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  }
+]

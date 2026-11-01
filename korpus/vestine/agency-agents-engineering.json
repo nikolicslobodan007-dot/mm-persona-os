@@ -1,0 +1,3058 @@
+[
+  {
+    "ime": "Semantička kompresija anomalija",
+    "koraci": [
+      "Prikupi redove podataka označene kao sumnjive nakon osnovne validacije.",
+      "Generiši vektorske reprezentacije redova pomoću lokalnog modela za embedovanje.",
+      "Grupiši slične redove u klastere koristeći vektorsku bazu podataka.",
+      "Izdvoji nekoliko reprezentativnih primera iz svakog klastera za dalju analizu.",
+      "Time se hiljade grešaka svode na desetak obrazaca umesto pojedinačne obrade."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-ai-data-remediation-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Generisanje logike za ispravku putem lokalnog modela",
+    "koraci": [
+      "Pošalji reprezentativne uzorke klastera lokalnom malom jezičkom modelu preko Ollama-e.",
+      "Zahtevaj strogo strukturiran odgovor koji sadrži samo sigurnu funkciju transformacije.",
+      "Proveri da li izlaz počinje sa lambda i ne sadrži zabranjene komande poput import, exec ili eval.",
+      "Odbaci i karantiniraj klaster ako generisana logika ne prođe bezbednosnu proveru.",
+      "Nijedan podatak ne napušta lokalnu infrastrukturu niti se šalje ka spoljnim servisima."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-ai-data-remediation-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Primena ispravke na nivou klastera uz kontrolu pouzdanosti",
+    "koraci": [
+      "Primeni validiranu lambda funkciju na sve redove unutar klastera vektorizovano, bez petlje po redu.",
+      "Ako je nivo pouzdanosti ispod praga, prebaci redove u status za ljudsku proveru umesto automatske ispravke.",
+      "Obeleži svaki popravljeni red statusom i razlogom primenjene transformacije.",
+      "Sačuvaj rezultate u privremenoj zoni pre bilo kakvog upisa u produkciju."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-ai-data-remediation-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Rekonsilijacija i garancija nultog gubitka podataka",
+    "koraci": [
+      "Prebroj ukupan broj ulaznih, uspešno popravljenih i karantiniranih redova.",
+      "Proveri da zbir uspešnih i karantiniranih redova tačno odgovara ukupnom broju ulaznih redova.",
+      "Ako postoji neslaganje, odmah pokreni kritično upozorenje i zaustavi dalju obradu.",
+      "Vodi potpun i nepromenljiv dnevnik svake izmene radi revizije i mogućeg vraćanja unazad."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-ai-data-remediation-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.94
+  },
+  {
+    "ime": "Razvoj mašinskih modela",
+    "koraci": [
+      "Proceni zahteve projekta i raspoložive izvore podataka",
+      "Pripremi podatke kroz čišćenje, validaciju i inženjering obeležja",
+      "Istreniraj model uz izbor algoritma i podešavanje hiperparametara",
+      "Evaluiraj performanse modela, proveri pristrasnost i objašnjivost",
+      "Validiraj model kroz A/B testiranje i procenu poslovnog uticaja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-ai-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Puštanje modela u produkciju",
+    "koraci": [
+      "Serijalizuj i verzioniši model pomoću alata poput MLflow",
+      "Kreiraj API endpoint sa autentifikacijom i ograničenjem broja zahteva",
+      "Podesi balansiranje opterećenja i automatsko skaliranje",
+      "Uspostavi sisteme za praćenje i upozoravanje na pad performansi"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-ai-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Nadzor i optimizacija modela u produkciji",
+    "koraci": [
+      "Prati odstupanje performansi modela i pokreći automatsko ponovno treniranje",
+      "Nadziraj kvalitet podataka i kašnjenje predikcija",
+      "Prati troškove i primenjuj strategije optimizacije",
+      "Kontinuirano unapređuj model i upravljaj verzijama"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-ai-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Implementacija etičkih i bezbednosnih mera u AI",
+    "koraci": [
+      "Sprovodi testiranje pristrasnosti po demografskim grupama",
+      "Obezbedi transparentnost i interpretabilnost modela",
+      "Primeni tehnike zaštite privatnosti pri obradi podataka",
+      "Ugradi mere za bezbednost sadržaja i sprečavanje štete"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-ai-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Dizajn API ugovora pre implementacije",
+    "koraci": [
+      "Prvo modeluj resurse, njihove odnose i životni ciklus",
+      "Napiši OpenAPI ili gRPC specifikaciju kao jedini izvor istine",
+      "Proveri specifikaciju validatorom da nema nerazrešenih referenci",
+      "Pregledaj naming, tipove i strukturu sa fokusom na dugoročnu održivost",
+      "Tek nakon odobrenja specifikacije kreni na implementaciju"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-api-platform-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Upravljanje verzijama i gracioznim gašenjem endpointa",
+    "koraci": [
+      "Klasifikuj svaku izmenu kao aditivnu ili rušilačku prema tabeli kompatibilnosti",
+      "Rušilačke promene uvek idu kroz novu major verziju, nikad tihu izmenu",
+      "Najavi deprecaciju unapred uz migracioni vodič i rok gašenja",
+      "Emituj Deprecation i Sunset header-e i prati preostali saobraćaj po klijentu",
+      "Ukloni endpoint tek kada je upotreba blizu nule i rok je prošao"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-api-platform-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Definisanje konzistentnih konvencija i gateway pravila",
+    "koraci": [
+      "Fiksiraj jednom imenovanje polja, format datuma i format ID-ova za ceo API",
+      "Standardizuj jedinstven oblik greške sa stabilnim kodom, porukom i request_id poljem",
+      "Postavi autentifikaciju, rate limiting i kvote sa jasnim header-ima o limitu",
+      "Učini write operacije idempotentnim koristeći ključeve za ponovne pokušaje",
+      "Automatizuj proveru kompatibilnosti specifikacije u CI pre svakog objavljivanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-api-platform-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Generisanje SDK-ova i izgradnja developer portala",
+    "koraci": [
+      "Generiši tipizirane SDK-ove u ciljanim jezicima direktno iz specifikacije",
+      "Poveži generisanje sa CI-jem tako da se SDK i dokumentacija ažuriraju automatski",
+      "Napravi brzi vodič za start koji omogućava prvi uspešan poziv za par minuta",
+      "Dodaj interaktivnu referencu, primere koda i samostalno upravljanje ključevima",
+      "Prikupljaj povratne informacije iz tiketa podrške i analitike portala za poboljšanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-api-platform-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Audit strukture i linearizacije dokumenta",
+    "koraci": [
+      "Proveri da li je tekst u PDF-u pravi selektabilni unicode sloj a ne slika",
+      "Pretraži dokument na PUA karaktere i znakove zamene koji nastaju usled lošeg fonta",
+      "Proveri redosled čitanja kolona i sidebar sekcija da se ne mešaju u skener logici",
+      "Oceni gustinu teksta i broj reči u odnosu na preporučeni opseg za jednu ili dve strane",
+      "Proveri da li su naslovi sekcija standardizovani i prepoznatljivi parseru"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-ats-validator-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Deterministička provera ključnih reči (IR/BM25)",
+    "koraci": [
+      "Tokenizuj tekst na unigrame, bigrame i trigrame posle uklanjanja stop reči",
+      "Uporedi izvučene termine sa opisom posla ili unapred definisanom listom veština",
+      "Identifikuj nedostajuće ključne pojmove i označi prioritet po učestalosti u oglasu",
+      "Prepoznaj sinonime i skraćenice kroz standardizovanu ontologiju pojmova",
+      "Izračunaj pokrivenost ključnih reči u realnom vremenu na klijentskoj strani"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-ats-validator-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kalibrisano ocenjivanje X-Y-Z rečenica u iskustvu",
+    "koraci": [
+      "Rastavi svaku stavku iskustva na akciju, merljiv rezultat i metod rada",
+      "Primeni regex filtere da isključiš lažne brojeve poput verzija alata ili portova",
+      "Izračunaj ocenu po formuli koja kombinuje težine akcije, metrike i tehnike uz kazne",
+      "Uporedi udeo kvantifikovanih stavki sa ciljnim odnosom za dati nivo senioriteta",
+      "Predloži preformulaciju pasivnih ili neopravdanih tvrdnji bez izmišljanja podataka"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-ats-validator-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada transparentnog izveštaja o usklađenosti i predaja agentu",
+    "koraci": [
+      "Izračunaj ukupan skor kombinovanjem četiri merljiva stuba sa jasnim težinama",
+      "Poveži svako umanjenje poena sa konkretnim pravilom radi pune objašnjivosti",
+      "Proveri usklađenost sa regulativama poput EU AI Act i NYC LL 144 pravila o odnosu selekcije",
+      "Generiši standardizovane izveštaje i matrice nedostajućih veština i loših rečenica",
+      "Pripremi spreman tekst za eksterni jezički model radi doterivanja uz zaštitu privatnosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-ats-validator-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Senčano testiranje modela (Shadow Testing)",
+    "koraci": [
+      "Preusmeri mali procenat stvarnog saobraćaja na eksperimentalni model bez uticaja na produkciju.",
+      "Definiši matematičke kriterijume ocenjivanja pre pokretanja testa (format, latencija, halucinacije).",
+      "Uporedi rezultate eksperimentalnog modela sa trenutnim produkcionim modelom na istim zadacima.",
+      "Prikupi statistiku o tačnosti, brzini i troškovima kroz veliki broj izvršavanja.",
+      "Donesi odluku o promociji modela tek kada rezultati statistički prevaziđu osnovnu liniju."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-autonomous-optimization-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Postavljanje finansijskih i sigurnosnih ograničenja",
+    "koraci": [
+      "Definiši maksimalni dozvoljeni trošak po izvršavanju pre implementacije rutiranja.",
+      "Postavi strogi limit broja pokušaja i vremensko ograničenje za svaki spoljni poziv.",
+      "Rezerviši procenjeni trošak unapred pre poziva skupog provajdera.",
+      "Prati potrošnju tokom izvršavanja i prekini rad ako pređe budžet.",
+      "Vodi evidenciju neuspelih i isteklih naplata radi tačnog obračuna troškova."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-autonomous-optimization-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Automatsko prebacivanje na rezervni provajder (Circuit Breaker)",
+    "koraci": [
+      "Mapiraj jeftiniju alternativu za svaki skup API koji se koristi.",
+      "Prati učestalost grešaka i neuobičajene skokove saobraćaja po provajderu.",
+      "Prekini vezu sa provajderom čim se detektuje sumnjivo ponašanje ili učestali kvarovi.",
+      "Automatski preusmeri saobraćaj na jeftiniji rezervni API.",
+      "Pošalji upozorenje administratoru o prekidu i razlogu intervencije."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-autonomous-optimization-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Autonomno rangiranje i rutiranje provajdera",
+    "koraci": [
+      "Rangiraj dostupne provajdere na osnovu istorijskih performansi i cene.",
+      "Isprobaj provajdere redom dok jedan uspešno ne izvrši zadatak u okviru budžeta.",
+      "Ažuriraj težine rutiranja kada novi model dokazano nadmaši postojeći po ceni i kvalitetu.",
+      "Beleži obrasce neuspeha kako bi se izbegli problematični prompt-ovi ili modeli u budućnosti."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-autonomous-optimization-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Projektovanje skalabilne arhitekture sistema",
+    "koraci": [
+      "Analiziraj veličinu tima, granice domena i potrebe za skaliranjem pre izbora pristupa",
+      "Izaberi između monolita, modularnog monolita, mikroservisa ili serverless rešenja prema stvarnim potrebama",
+      "Definiši obrasce komunikacije, podataka i deploymenta za sistem",
+      "Uvedi mikroservise samo kada nezavisno skaliranje ili vlasništvo nad delovima to opravdava",
+      "Dokumentuj put ka horizontalnom skaliranju za buduće potrebe"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-backend-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn i optimizacija baze podataka",
+    "koraci": [
+      "Modeluj šeme podataka optimizovane za performanse i konzistentnost",
+      "Dodaj indekse prilagođene najčešćim upitima i filtriraj po aktivnim zapisima",
+      "Primeni soft delete i validaciona ograničenja na nivou kolona",
+      "Planiraj migracije bez prekida rada korišćenjem expand-and-contract pristupa",
+      "Proveri migrirane podatke kroz rekonsilijacione provere i audit zapise"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-backend-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Definisanje API ugovora i pouzdanosti servisa",
+    "koraci": [
+      "Opiši API kontrakte koristeći OpenAPI, AsyncAPI ili protobuf specifikacije",
+      "Standardizuj formate grešaka, paginaciju, filtriranje i korelacione identifikatore",
+      "Odredi budžete za timeout, retry politike i idempotentnost za svaki eksterni poziv",
+      "Uvedi circuit breaker, bulkhead i dead-letter queue mehanizme za izolaciju kvarova",
+      "Održavaj unazadnu kompatibilnost kroz verzionisanje i period deprecijacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-backend-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Implementacija bezbednosti i observabilnosti",
+    "koraci": [
+      "Primeni autentifikaciju i autorizaciju sa principom najmanjih privilegija",
+      "Enkriptuj podatke u mirovanju i tokom prenosa prema aktuelnim standardima",
+      "Uvedi strukturirane logove sa ID-jevima zahteva i stabilnim kodovima grešaka",
+      "Postavi distribuirano praćenje kroz sve komponente sistema",
+      "Definiši metrike i alarme fokusirane na uticaj na korisnike, ne samo na infrastrukturu"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-backend-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Konfigurisanje rutiranja i svičovanja na Huawei VRP i H3C Comware",
+    "koraci": [
+      "Uđi u system-view i podesi osnovne parametre uređaja (ime, VLAN-ovi, interfejsi).",
+      "Definiši VLAN interfejse sa IP adresama i trank portove sa dozvoljenim VLAN-ovima.",
+      "Konfiguriši agregaciju linkova (Eth-Trunk na VRP, Bridge-Aggregation na Comware) radi redundanse.",
+      "Podesi statičke rute i OSPF proces sa odgovarajućim router-id i oblastima.",
+      "Proveri stanje komandama display (current-configuration, ip routing-table, ospf peer, interface brief).",
+      "Obavezno sačuvaj konfiguraciju (save na VRP, save force na Comware) da ne bi nestala posle restarta."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-china-network-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Podešavanje Ruijie RGOS granice (branch gateway)",
+    "koraci": [
+      "Uđi u configure terminal i postavi hostname i opise interfejsa za WAN i LAN.",
+      "Konfiguriši IP adrese na WAN interfejsima (DHCP ili statički) i VLAN interfejs za lokalnu mrežu.",
+      "Dodaj podrazumevanu statičku rutu ka ISP gateway-u.",
+      "Napravi standardni access-list za lokalnu mrežu i primeni NAT (overload) na izlaznom interfejsu.",
+      "Sačuvaj konfiguraciju komandom write.",
+      "Po potrebi koristi port mirroring (monitor session) za hvatanje saobraćaja prilikom analize problema."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-china-network-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Izrada zonske bezbednosne politike na Hillstone StoneOS",
+    "koraci": [
+      "Uđi u configure mod i definiši zone (trust, untrust, dmz).",
+      "Dodeli interfejse odgovarajućim zonama sa IP adresama.",
+      "Napiši pravila u policy-global redosledom od užih ka širim, prvo deny pa permit po potrebi.",
+      "Proveri konfiguraciju komandom show configuration pre i posle promene radi poređenja.",
+      "Kontroliši SNAT i DNAT pravila da se izbegne situacija gde je saobraćaj dozvoljen ali povratna putanja ne radi.",
+      "Koristi show session za brzu dijagnozu da li problem leži u politici ili u ruti."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-china-network-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Priprema mrežne infrastrukture za MLPS 2.0 (等保) usklađenost",
+    "koraci": [
+      "Razdvoji mrežu na stvarne bezbednosne zone (trust/untrust/DMZ) umesto ravne VLAN strukture.",
+      "Primeni pristupnu kontrolu po principu podrazumevanog odbijanja uz eksplicitno dozvoljene servise.",
+      "Podesi centralizovano logovanje (syslog) i sinhronizaciju vremena (NTP) radi pouzdanih zapisa.",
+      "Onemogući telnet i koristi isključivo SSH, promeni podrazumevane kredencijale i podesi tajmaut sesija.",
+      "Prati bezbednosna obaveštenja proizvođača (Huawei PSIRT, H3C, Ruijie, Hillstone) i ažuriraj softver po rasporedu."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-china-network-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Modelovanje sadržaja pre razvoja",
+    "koraci": [
+      "Analiziraj brief i identifikuj tipove sadržaja, uloge urednika i potrebne integracije.",
+      "Odaberi CMS platformu prema složenosti modela i potrebama (Drupal ili WordPress).",
+      "Mapiraj sve entitete, polja, relacije i prikaze pre pisanja koda.",
+      "Proveri i odobri sve dodatne pluginove/module unapred, proveravajući bezbednost i održavanje.",
+      "Napravi spisak svih šablona, blokova i komponenti potrebnih za temu."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-cms-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Izrada prilagođene teme i dizajn sistema",
+    "koraci": [
+      "Kreiraj osnovnu strukturu teme (child tema u WordPress-u ili generisana tema u Drupalu).",
+      "Definiši dizajn tokene kroz CSS promenljive za boje, razmake i tipografiju.",
+      "Podesi pipeline za asset-e (Webpack/Vite ili @wordpress/scripts) i poveži ga sa bibliotekama.",
+      "Gradi slojeve layout-a od stranice ka regionima, blokovima i komponentama.",
+      "Omogući fleksibilan uređivački sadržaj kroz Gutenberg/ACF blokove ili Paragraphs/Layout Builder."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-cms-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Razvoj prilagođenih plugin-ova i modula",
+    "koraci": [
+      "Proveri šta već pokriva postojeći kontrib kod pre pisanja novog koda.",
+      "Piši kod prema standardima kodiranja za WordPress ili Drupal.",
+      "Registruj prilagođene tipove sadržaja, taksonomije i blokove isključivo kroz kod.",
+      "Koristi hook-ove i filtere umesto izmene core fajlova.",
+      "Dodaj testove (PHPUnit, Cypress/Playwright) za ključnu poslovnu logiku.",
+      "Dokumentuj javne hook-ove, filtere i servise komentarima u kodu."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-cms-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.94
+  },
+  {
+    "ime": "Provera pristupačnosti, performansi i lansiranja",
+    "koraci": [
+      "Pokreni alate poput axe-core ili WAVE i ispravi probleme sa pristupačnošću.",
+      "Analiziraj performanse pomoću Lighthouse-a i optimizuj slike, skripte i layout pomeraje.",
+      "Testiraj urednički tok rada iz perspektive ne-tehničkog korisnika.",
+      "Proveri da je sva konfiguracija u kodu, a ne samo u bazi ili administraciji.",
+      "Prođi kroz kontrolnu listu pred lansiranje (bezbednosni headeri, keširanje, sitemap, core web vitals)."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-cms-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Sistematski pregled koda po prioritetima",
+    "koraci": [
+      "Proveri ispravnost, bezbednost, održivost, performanse i testiranje koda redom.",
+      "Svaki problem označi kao blokirajući, predlog ili sitnicu.",
+      "Navedi tačan red i deo koda na koji se primedba odnosi.",
+      "Na kraju napravi sažetak sa opštim utiskom i ključnim zapažanjima."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-code-reviewer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Prepoznavanje bezbednosnih i kritičnih rizika",
+    "koraci": [
+      "Traži ranjivosti poput SQL injekcije, XSS-a ili zaobilaženja autentifikacije.",
+      "Proveri da li postoji rizik od gubitka ili korupcije podataka.",
+      "Identifikuj moguće race condition i deadlock situacije.",
+      "Oznaci ove nalaze kao blokirajuće i objasni konkretan scenario napada."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-code-reviewer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Davanje konstruktivne povratne informacije",
+    "koraci": [
+      "Objasni razlog iza svake primedbe, a ne samo šta treba promeniti.",
+      "Predloži rešenje umesto da nametne izmenu kao obavezu.",
+      "Pohvali dobre delove koda i elegantna rešenja.",
+      "Postavi pitanje kada namera autora nije jasna umesto da pretpostaviš grešku."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-code-reviewer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Formatiranje komentara u pregledu",
+    "koraci": [
+      "Koristi oznaku prioriteta na početku svakog komentara.",
+      "Navedi naslov problema i tačnu lokaciju u kodu.",
+      "Dodaj kratko objašnjenje zašto je to problem.",
+      "Priloži konkretan predlog izmene sa primerom koda."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-code-reviewer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.82
+  },
+  {
+    "ime": "Inventarizacija repozitorijuma i klasifikacija",
+    "koraci": [
+      "Pregledati manifeste, lock fajlove i konfiguraciju builda radi prepoznavanja tehnologija",
+      "Utvrditi tip projekta - aplikacija, biblioteka, monorepo ili servis",
+      "Identifikovati glavne direktorijume koji sadrže izvorni kod",
+      "Izdvojiti samo delove repozitorijuma relevantne za razumevanje strukture"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-codebase-onboarding-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Pronalaženje ulaznih tačaka sistema",
+    "koraci": [
+      "Pretražiti fajlove za pokretanje aplikacije, rutere, handlere i CLI komande",
+      "Pronaći najmanji skup fajlova koji opisuje kako se sistem pokreće",
+      "Navesti tačne putanje i objasniti zašto su ti fajlovi važni",
+      "Jasno naznačiti koji fajlovi nisu pregledani"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-codebase-onboarding-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Praćenje toka izvršavanja i podataka",
+    "koraci": [
+      "Pratiti kretanje zahteva, komande ili događaja kroz sistem korak po korak",
+      "Identifikovati gde ulazni podaci prolaze validaciju, obradu i perzistenciju",
+      "Zabeležiti uticaj asinhronih poslova, redova čekanja ili pozadinskih procesa",
+      "Navesti konkretne fajlove uključene u svaki deo toka",
+      "Zasnovati svaki zaključak isključivo na pregledanom kodu"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-codebase-onboarding-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada strukturisanog izveštaja za onboarding",
+    "koraci": [
+      "Formulisati jednorečeničnu definiciju šta kodna baza predstavlja",
+      "Napraviti petominutno objašnjenje sa ulazima, izlazima i ključnim fajlovima",
+      "Napraviti detaljnu analizu granica, odgovornosti modula i tokova izvršavanja",
+      "Navesti spisak svih pregledanih fajlova i jasno istaći ograničenja analize",
+      "Izbegavati predloge za izmenu koda ili preporuke za refaktorisanje"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-codebase-onboarding-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja medalion arhitekture (Bronze-Silver-Gold)",
+    "koraci": [
+      "Ucitaj sirove podatke u Bronze sloj bez ikakve transformacije, samo dodaj metapodatke o izvoru.",
+      "U Silver sloju deduplikuj zapise po kljucu i vremenu, standardizuj tipove i obradi null vrednosti eksplicitno.",
+      "U Gold sloju napravi poslovne agregacije optimizovane za upite potrosaca.",
+      "Obezbedi da Gold korisnici nikada ne citaju direktno iz Bronze ili Silver sloja."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-data-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Projektovanje idempotentnih i inkrementalnih pajplajna",
+    "koraci": [
+      "Dizajniraj pajplajn tako da ponovno pokretanje ne pravi duplikate podataka.",
+      "Implementiraj CDC ili inkrementalno ucitavanje umesto punog osvezavanja radi manjih troskova.",
+      "Koristi merge/upsert logiku na osnovu primarnog kljuca za azuriranje postojecih zapisa.",
+      "Testiraj ponasanje pri promeni seme podataka da se ne izgubi ili iskvari sadrzaj."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-data-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Uspostavljanje ugovora o podacima i kontrole kvaliteta",
+    "koraci": [
+      "Definisi ocekivanu semu, pravila i rok osvezavanja za svaku tabelu zajedno sa potrosacima.",
+      "Postavi automatske provere (not null, unique, opseg vrednosti) koje blokiraju lose podatke pre objavljivanja.",
+      "Pridodaj ocenu kvaliteta na nivou reda u gold sloju radi transparentnosti.",
+      "Redovno pregledaj rezultate provera sa timovima koji koriste podatke."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-data-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Implementacija streaming obrade podataka u realnom vremenu",
+    "koraci": [
+      "Poveži se na izvor dogadjaja poput Kafke ili Event Hubs-a i definisi semu poruka.",
+      "Parsiraj i obogati dogadjaje metapodacima o vremenu prijema i obrade.",
+      "Zapisuj rezultate u Bronze sloj uz checkpoint lokaciju radi oporavka od greske.",
+      "Podesi ucestalost obrade i rukovanje kasno pristiglim podacima prema potrebama latencije."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-data-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izbor tipa grafikona prema pitanju i podacima",
+    "koraci": [
+      "Prvo definisati koje pitanje ili odluku grafikon treba da podrži.",
+      "Utvrditi tip i strukturu podataka pre biranja vizuelnog oblika.",
+      "Povezati tip pitanja sa odgovarajućim grafikonom - poređenje, trend, distribucija, korelacija ili odnos deo-celina.",
+      "Izbegavati efektne oblike poput kružnog grafikona sa mnogo delova kada postoji preciznija alternativa."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-data-visualization-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Proveravanje perceptivne poštenosti grafikona",
+    "koraci": [
+      "Proveriti da baseline stubičastih grafikona počinje od nule.",
+      "Izbegavati dvostruku y-osu osim ako je jasno opravdana i naznačena čitaocu.",
+      "Voditi računa da razmera i odnos stranica ne preuveličavaju ili umanjuju trend.",
+      "Proveriti da agregacija ili uzorkovanje ne skrivaju bitne obrasce poput bimodalnosti ili autlajera.",
+      "Dodati oznake nesigurnosti gde podaci imaju stvarnu varijansu.",
+      "Osigurati jasne naslove i oznake osa koje iznose glavnu poruku grafikona."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-data-visualization-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Biranje boja prilagođenih strukturi podataka i daltonizmu",
+    "koraci": [
+      "Odabrati tip skale boja prema prirodi podataka - kategorijsku, sekvencijalnu ili divergentnu.",
+      "Koristiti palete bezbedne za daltoniste i izbegavati rainbow skale kod kontinuiranih podataka.",
+      "Nikada ne prenositi značenje isključivo kroz nijansu boje, već dodati oblik ili oznaku.",
+      "Testirati svaki grafikon u simulatoru daltonizma i proveriti čitljivost u sivim tonovima."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-data-visualization-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Optimizacija performansi renderovanja po obimu podataka",
+    "koraci": [
+      "Proceniti broj elemenata i odabrati tehnologiju renderovanja - SVG, canvas ili WebGL prema stvarnom obimu podataka.",
+      "Primeniti quadtree za detekciju hovera kod canvas renderovanja srednje veličine skupova.",
+      "Agregirati ili smanjiti uzorak podataka kada se tačke preklapaju i ne mogu se vizuelno razlikovati.",
+      "Koristiti tehnike poput heksbinovanja ili LTTB smanjenja uzorka kako bi se očuvao oblik podataka.",
+      "Meriti brzinu renderovanja na realnom broju redova, a ne na demo uzorku."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-data-visualization-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn optimizovane šeme baze",
+    "koraci": [
+      "Definiši tabele sa odgovarajućim tipovima podataka i ograničenjima",
+      "Dodaj indeks na svaki strani ključ radi bržih spajanja",
+      "Koristi parcijalne indekse za česte obrasce filtriranja",
+      "Kombinuj kolone u složene indekse kada se filtrira i sortira zajedno"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-database-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Optimizacija upita pomoću EXPLAIN ANALYZE",
+    "koraci": [
+      "Pokreni EXPLAIN ANALYZE pre puštanja upita u produkciju",
+      "Proveri da li plan koristi Index Scan umesto Seq Scan",
+      "Uporedi procenjen i stvaran broj redova i vreme izvršavanja",
+      "Prilagodi upit ili dodaj indeks na osnovu rezultata analize"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-database-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Otkrivanje i rešavanje N+1 problema",
+    "koraci": [
+      "Prepoznaj obrazac gde se za svaki red pokreće dodatni upit",
+      "Zameni petlju upita jednim JOIN upitom sa agregacijom",
+      "Koristi json_agg i FILTER za grupisanje povezanih podataka",
+      "Testiraj granične slučajeve kao što su prazni i višestruki rezultati"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-database-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Bezbedne migracije i upravljanje konekcijama",
+    "koraci": [
+      "Piši migracije koje se mogu vratiti unazad",
+      "Dodaj kolone sa podrazumevanom vrednošću bez zaključavanja tabele",
+      "Kreiraj indekse uz opciju CONCURRENTLY da izbegneš blokade",
+      "Koristi connection pooling umesto otvaranja nove konekcije po zahtevu",
+      "Podesi monitoring sporih upita radi praćenja performansi"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-database-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Validacija backup-a kroz probno obnavljanje",
+    "koraci": [
+      "Podesi kontinuirano arhiviranje WAL/binlog zapisa i periodične pune backup-e.",
+      "Automatizuj zakazano pokretanje obnove na privremenoj instanci.",
+      "Proveri integritet podataka posle obnove kroz provere suma i broja redova.",
+      "Izmeri stvarno vreme oporavka (RTO) i uporedi sa ciljanim vrednostima.",
+      "Pošalji alarm ako obnova ne uspe ili predugo traje."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-database-reliability-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Projektovanje i vežbanje automatskog failover-a",
+    "koraci": [
+      "Postavi topologiju replikacije sa sinhronim i asinhronim replikama i kvorumom.",
+      "Konfiguriši health-check i konsenzus mehanizam za detekciju pada primarnog čvora.",
+      "Promoviši isključivo najažurniju repliku, nikad onu koja kasni.",
+      "Preusmeri saobraćaj aplikacije preko stabilnog endpoint-a, ne direktne adrese.",
+      "Ogradi stari primarni čvor da spreči split-brain.",
+      "Redovno izvodi probni failover i otklanjaj uočene nedostatke."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-database-reliability-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Bezbedna migracija šeme bez prekida rada",
+    "koraci": [
+      "Primeni expand-contract pristup uz kratke tajm-aute za zaključavanje i izvršenje.",
+      "Dodaj novu kolonu ili strukturu u posebnoj kratkoj transakciji bez popunjavanja podataka.",
+      "Popunjavaj postojeće redove u manjim serijama van ekskluzivnih zaključavanja.",
+      "Uvedi ograničenje za nove podatke tek nakon što je popunjavanje završeno i validirano.",
+      "Koristi conccurrent izgradnju indeksa i proveri da nije ostao nevažeći indeks.",
+      "Pripremi plan povratka na prethodno stanje pre izvršenja svake izmene."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-database-reliability-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Zaštita sloja konekcija i praćenje replikacionog kašnjenja",
+    "koraci": [
+      "Uvedi pooler (poput PgBouncer ili ProxySQL) i ograniči broj konekcija po servisu.",
+      "Postavi alarme znatno ispod maksimalnog limita konekcija baze.",
+      "Prati kašnjenje replikacije u realnom vremenu kao pokazatelj tačnosti podataka.",
+      "Blokiraj čitanje sa replika koje previše kasne i spreči njihovo unapređenje u primarni čvor."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-database-reliability-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Zaključavanje procesnog modela (Electron/Tauri)",
+    "koraci": [
+      "Postaviti context isolation, bez node integration i sa sandbox opcijama za svaki prozor",
+      "U Tauri aplikacijama definisati dozvole po principu najmanjeg privilegija u capabilities fajlu",
+      "Tretirati sav sadržaj iz veb-pogleda kao nepouzdan bez obzira na poreklo koda",
+      "Udaljeni sadržaj učitavati samo u izolovanim prozorima bez IPC pristupa ili uz striktnu listu dozvola"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-desktop-app-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Projektovanje sigurnog IPC ugovora",
+    "koraci": [
+      "Definisati uske, imenovane komande umesto generičkih funkcija za fajl-sistem ili ljusku",
+      "Validirati svaki ulazni podatak na privilegovanoj strani pomoću šeme (npr. zod ili ručna provera u Rust-u)",
+      "Proveravati autorizaciju za svaku osetljivu operaciju pre izvršenja",
+      "Preload skriptu svesti na minimalni API koji renderer sme da vidi",
+      "Voditi evidenciju svih kanala/komandi na jednom mestu radi revizije"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-desktop-app-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izgradnja pipeline-a za potpisivanje i postepeno ažuriranje",
+    "koraci": [
+      "Prvo postaviti infrastrukturu za potpisivanje i notarizaciju pre razvoja funkcionalnosti",
+      "Potpisivati Windows pakete preko cloud HSM-a, a macOS pakete potpisivati i notarizovati sa hardened runtime",
+      "Objavljivati ažuriranja postepeno (1% pa 10% pa 100%) uz praćenje stope pada aplikacija",
+      "Pripremiti i redovno testirati plan za vraćanje na prethodnu verziju (rollback)",
+      "Automatski zaustaviti širenje izdanja ako metrika zdravlja padne ispod praga"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-desktop-app-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Kontrola potrošnje resursa i platformske usklađenosti",
+    "koraci": [
+      "Definisati budžete za vreme pokretanja, memoriju u mirovanju i veličinu instalera",
+      "Meriti ove metrike automatski u CI sistemu i blokirati izdanje pri prekoračenju",
+      "Testirati tray ikonice, prečice i ponašanje prozora posebno za svaku platformu (macOS, Windows, Linux)",
+      "Pratiti razlike u webview verzijama (WebView2, WKWebView, WebKitGTK) i testirati na realnim mašinama"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-desktop-app-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Dizajn komandnog interfejsa",
+    "koraci": [
+      "Prouči kako inženjeri danas rade zadatak pre dizajna alata",
+      "Definiši hijerarhiju komandi po principu glagol-imenica",
+      "Osiguraj da globalne zastavice imaju isto značenje u svim podkomandama",
+      "Napiši kvalitetan --help tekst sa primerima pre same implementacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-developer-tooling-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Dizajn izlaza za ljude i mašine",
+    "koraci": [
+      "Detektuj da li je izlaz terminal ili pipe i prilagodi format",
+      "Ponudi obojen i čitljiv prikaz za ljude kada je alat pokrenut interaktivno",
+      "Omogući --json ili čist izlaz bez ANSI kodova za skripte i automatizaciju",
+      "Definiši stabilnu šemu izlaznih kodova za uspeh i različite tipove grešaka"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-developer-tooling-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Pisanje akcionih poruka o greškama",
+    "koraci": [
+      "Opiši šta se tačno desilo kada komanda ne uspe",
+      "Objasni razlog nastanka greške jasnim jezikom",
+      "Navedi konkretan sledeći korak ili komandu za rešavanje problema",
+      "Sakrij tehnički stack trace iza --verbose opcije"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-developer-tooling-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Optimizacija brzine pokretanja i distribucije",
+    "koraci": [
+      "Izmeri vreme pokretanja alata i postavi budžet u CI proces",
+      "Ukloni mrežne pozive i teško učitavanje sa kritične putanje pokretanja",
+      "Uvedi lenjo učitavanje komandi i keširanje konfiguracije i kredencijala",
+      "Pripremi jednostavnu distribuciju kroz jedan binarni fajl i jasan proces nadogradnje"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-developer-tooling-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja CI/CD pipeline-a",
+    "koraci": [
+      "Poveži proveru koda sa automatskim bezbednosnim skeniranjem",
+      "Pokreni automatizovane testove jedinica i integracije",
+      "Izgradi i spakuj aplikaciju u kontejner i objavi je u registar",
+      "Primeni promene na produkciju koristeći strategiju bez prekida rada",
+      "Proveri zdravlje sistema nakon svakog koraka i omogući automatski povratak na prethodnu verziju"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-devops-automator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Definisanje infrastrukture kroz kod",
+    "koraci": [
+      "Opiši infrastrukturu pomoću alata poput Terraform-a ili CloudFormation-a",
+      "Podesi automatsko skaliranje i balansiranje opterećenja",
+      "Verzioniši infrastrukturne šablone radi ponovljivosti",
+      "Uključi osnovne bezbednosne grupe i mrežna podešavanja u kod"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-devops-automator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Postavljanje monitoringa i alarma",
+    "koraci": [
+      "Prikupljaj metrike aplikacije i infrastrukture pomoću alata poput Prometheus-a",
+      "Definiši pravila za upozorenja na osnovu stope grešaka i vremena odziva",
+      "Poveži alarme sa kanalima za obaveštavanje poput Slack-a ili PagerDuty-ja",
+      "Proveri da metrike i dimenzije alarma odgovaraju stvarnim podacima pre aktivacije",
+      "Tretiraj nedostajuće podatke kao nepoznato stanje, a ne kao znak zdravog sistema"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-devops-automator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Automatizacija bezbednosti i usklađenosti",
+    "koraci": [
+      "Ugradi skeniranje ranjivosti u svaku fazu pipeline-a",
+      "Automatizuj upravljanje i rotaciju tajnih podataka",
+      "Generiši izveštaje o usklađenosti i trag revizije automatski",
+      "Primeni mrežnu bezbednost i kontrolu pristupa kroz infrastrukturni kod"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-devops-automator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Uspostavljanje bazne linije performansi pre optimizacije",
+    "koraci": [
+      "Pokreni Lighthouse na ključnim šablonima sa ograničenom mobilnom mrežom i zabeleži LCP, INP, CLS i ukupnu ocenu",
+      "Uključi log baze podataka ili profiler da uhvatiš najsporije upite i broj pregledanih redova",
+      "Proveri status Internal i Dynamic Page Cache-a, BigPipe-a i pronađi module koji forsiraju max-age 0",
+      "Proveri keš zaglavlja uživo iza CDN-a kako bi potvrdio stvarno ponašanje keša",
+      "Sačuvaj sve izmerene vrednosti kao referentnu tačku za kasnije poređenje"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-drupal-performance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Popravka keš metapodataka umesto gašenja keša",
+    "koraci": [
+      "Pronađi svako mesto gde je max-age postavljen na 0 i utvrdi pravi uzrok problema",
+      "Dodaj ispravne cache tagove tako da se sadržaj osvežava kad se entitet ili konfiguracija promene",
+      "Postavi odgovarajuće cache kontekste da se sadržaj razlikuje samo po pravoj dimenziji (korisnik, url, uloga)",
+      "Izoluj zaista dinamički sadržaj iza lazy buildera da bi BigPipe strimovao samo taj deo",
+      "Ponovo uključi Internal i Dynamic Page Cache i proveri da li se postiže HIT pri ponovljenim zahtevima"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-drupal-performance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Optimizacija baze podataka i Views upita",
+    "koraci": [
+      "Identifikuj najsporije upite iz loga i utvrdi da li dolaze iz View-a, entity query-ja ili modula",
+      "Dodaj indekse na field kolone koje se koriste za filtriranje ili sortiranje",
+      "Ogranici svaki View pagerom ili opsegom i učitavaj samo neophodna polja umesto celih entiteta",
+      "Ukloni N+1 obrazac korišćenjem multi-load umesto učitavanja po jedan red",
+      "Keširaj renderovani izlaz sa ispravnim tagovima i ponovo izmeri vreme pre i posle izmene"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-drupal-performance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Optimizacija front-end isporuke i slika za Core Web Vitals",
+    "koraci": [
+      "Uključi CSS/JS agregaciju i proveri da stranica i dalje radi ispravno",
+      "Odloži nekritične skripte i stilove, a kritični CSS ubaci inline gde se isplati",
+      "Osiguraj da svaka slika koristi responzivni image style, moderni format i eksplicitne dimenzije",
+      "Prioritizuj LCP element preloadom i izbegavaj lenjo učitavanje za njega",
+      "Ponovo pokreni Lighthouse na mobilnom uređaju da potvrdiš poboljšanje LCP i CLS vrednosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-drupal-performance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Modelovanje proizvoda i varijacija",
+    "koraci": [
+      "Mapiraj katalog na tipove proizvoda i tipove varijacija prema stvarnim kategorijama",
+      "Definiši atribute poput veličine, boje i materijala pre generisanja SKU-ova",
+      "Odluči da li se zalihe prate i u kom koraku radnog toka se umanjuju",
+      "Odredi da li je prodavnica jedna ili multi-store sa multi-valutom na početku projekta",
+      "Postavi logiku poreza (uključen ili isključen u cenu) pre nego što se definišu prikazi cena"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-drupal-shopping-cart.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izgradnja korpe i checkout toka",
+    "koraci": [
+      "Koristi ugrađeni Commerce sistem korpe i checkouta umesto pisanja sopstvenog od nule",
+      "Gradi prilagođene checkout panele po jasnom ugovoru - validacija, logovanje, bezbedno otkazivanje",
+      "Sve cene računaj isključivo kroz price resolver, nikad direktno u šablonu",
+      "Testiraj checkout na realnim uređajima, sporim mrežama i sa auto-popunjavanjem",
+      "Prati tok kupaca kroz checkout da bi se uočilo gde odustaju"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-drupal-shopping-cart.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Integracija platnog sistema i obrada webhook-ova",
+    "koraci": [
+      "Pokreni integraciju prvo u test režimu sa pravim sandbox nalogom platnog provajdera",
+      "Implementiraj kompletan skup operacija - autorizacija, naplata, poništavanje, povraćaj",
+      "Postavi obradu webhook/IPN poziva da bude verifikovana potpisom, idempotentna i logovana",
+      "Čuvaj kredencijale isključivo u promenljivama okruženja ili menadžeru tajni, nikad u kodu",
+      "Pre lansiranja uporedi Drupal naloge sa izveštajima o poravnanju od platnog provajdera",
+      "Prođi kompletnu kontrolnu listu pre prelaska na produkciju (test transakcija, povraćaj, email potvrde)"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-drupal-shopping-cart.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.94
+  },
+  {
+    "ime": "Upravljanje porezima, promocijama i radnim tokom narudžbina",
+    "koraci": [
+      "Konfiguriši poreske stope kroz Commerce sistem, nikad hardkodovano u kodu",
+      "Definiši promocije i kupone kao konfiguraciju sa jasno dokumentovanim pravilima slaganja",
+      "Mapiraj radni tok narudžbine sa stvarnim stanjima ispunjenja, uključujući stanja neuspeha",
+      "Nikad ne brisati narudžbine ili plaćanja, već ih samo prevoditi kroz dozvoljene tranzicije",
+      "Testiraj granične slučajeve poput delimičnih povraćaja, otkazanih narudžbina i isteklih kupona",
+      "Izvrši raspoređivanje promena u tačnom redosledu - ažuriranje baze, uvoz konfiguracije, čišćenje keša"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-drupal-shopping-cart.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dimenzionisanje DC napajanja telekom sajta",
+    "koraci": [
+      "Prikupi povezano opterećenje po uređajima i izračunaj dizajn opterećenje sa faktorom rasta",
+      "Izračunaj struju na kraju pražnjenja baterije i prosečnu struju pražnjenja za dato napajanje",
+      "Primeni faktor starenja, temperaturnu korekciju i margine sigurnosti na potrebni kapacitet baterije",
+      "Odredi broj ispravljačkih modula po N+1 principu na osnovu struje opterećenja i punjenja",
+      "Označi nedostajuće podatke kao MISSING, a pretpostavljene vrednosti kao ASSUMED"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-electrical-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Proračun i izbor DC/AC kablova prema padu napona",
+    "koraci": [
+      "Proveri strujni kapacitet kabla prema tabelama standarda i korekcionim faktorima za temperaturu",
+      "Izračunaj pad napona na osnovu struje, dužine voda i otpornosti provodnika",
+      "Uporedi dobijeni pad napona sa projektnim limitom i poveća presek ako je potrebno",
+      "Proveri da zaštitni uređaj (osigurač/prekidač) odgovara strujnom kapacitetu i propusnoj energiji kabla",
+      "Navedi koji kriterijum (strujni kapacitet ili pad napona) je bio merodavan za finalni presek"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-electrical-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Dimenzionisanje rezervnog generatora i ATS sistema",
+    "koraci": [
+      "Sačini spisak AC opterećenja sa faktorom snage i izračunaj ukupno radno opterećenje",
+      "Proceni tranzijentno opterećenje pri startu najvećeg motora/kompresora",
+      "Primeni derating faktore za nadmorsku visinu i temperaturu okoline na nazivnu snagu generatora",
+      "Izaberi snagu generatora tako da radno opterećenje bude u opsegu 30-80% nazivne snage",
+      "Definiši vreme prebacivanja ATS uređaja u odnosu na mogućnost premošćavanja opterećenja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-electrical-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Pregled dokumentacije i izrada validacionih pravila za softver",
+    "koraci": [
+      "Unakrsno proveri jednopolnu šemu, specifikaciju kablova, BOQ i terenske izveštaje radi neslaganja",
+      "Zabeleži svako neslaganje u tabeli sa oba izvora podataka i predloženim rešenjem",
+      "Prevedi svaki inženjerski zahtev u pravilo sa identifikatorom, proverom, ozbiljnošću i referencom na standard",
+      "Definiši koja pravila blokiraju a koja samo upozoravaju, i ko može da odobri izuzetak",
+      "Pripremi test primere koji prolaze i koji ne prolaze svako pravilo radi provere softvera"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-electrical-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Rekonstrukcija email niti",
+    "koraci": [
+      "Prikupi sirove poruke preko IMAP/Gmail/Graph API-ja sa svim MIME zaglavljima.",
+      "Proveri da svaka poruka ima jedinstven Message-ID pre obrade.",
+      "Otkrij cikluse i nejasne identitete i izdvoji ih za ručnu proveru.",
+      "Poveži poruke u stablo razgovora preko In-Reply-To i References zaglavlja.",
+      "Reši slučajeve grananja niti kada više osoba odgovara na različite poruke u lancu."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-email-intelligence-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Deduplikacija citiranog sadržaja",
+    "koraci": [
+      "Prepoznaj različite stilove citiranja (prefiks, delimiter, Outlook XML).",
+      "Uporedi sadržaj poruke sa telima roditeljskih poruka u nizu.",
+      "Ukloni linije koje su identične već postojećem sadržaju iz ranijih poruka.",
+      "Zadrži samo jedinstveni, nov sadržaj svake poruke.",
+      "Proveri da je smanjenje broja tokena značajno bez gubitka informacija."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-email-intelligence-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Izvlačenje učesnika i akcionih stavki",
+    "koraci": [
+      "Izvuci From, To, CC i BCC podatke iz svake poruke i normalizuj imena.",
+      "Napravi mapu učesnika sa ulogama i obrascima komunikacije.",
+      "Pronađi eksplicitne obaveze i implicitne dogovore (odluke kroz ćutanje) u tekstu.",
+      "Poveži svaku akcionu stavku sa stvarnim pošiljaocem te poruke, a ne sa generičkim zamenicama.",
+      "Sastavi vremensku liniju odluka i zadataka za ceo razgovor."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-email-intelligence-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Sastavljanje konteksta za AI agente",
+    "koraci": [
+      "Izvrši hibridnu pretragu kombinujući semantičko podudaranje, pretragu po ključnim rečima i metapodatke.",
+      "Spoji rezultate pretrage i rangiraj ih po relevantnosti za upit.",
+      "Sastavi blokove konteksta poštujući budžet tokena bez sečenja poruka na pola.",
+      "Dodaj izvore i citate za svaku vraćenu informaciju radi proverljivosti.",
+      "Izloži rezultat kroz alat kompatibilan sa agent-frejmvorcima poput LangChain ili CrewAI."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-email-intelligence-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Projektovanje FreeRTOS arhitekture zadataka",
+    "koraci": [
+      "Analiziraj hardver i odredi memorijski budžet pre pisanja koda",
+      "Definiši zadatke, prioritete i veličine steka na osnovu stvarnih potreba",
+      "Koristi redove i semafore za komunikaciju između zadataka umesto deljenog stanja",
+      "Proveri povratne vrednosti pri kreiranju reda i zadatka i obradi grešku oslobađanjem resursa",
+      "Meri stvarnu potrošnju steka pomoću uxTaskGetStackHighWaterMark umesto nagađanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-embedded-firmware-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Implementacija periferijskih drajvera sa bezbednim rukovanjem greškama",
+    "koraci": [
+      "Uvek proveravaj povratne vrednosti funkcija ESP-IDF, STM32 HAL/LL i nRF SDK-a",
+      "Koristi vremenski ograničeno čekanje (timeout) umesto beskonačnog blokiranja u driverima",
+      "Pri neuspehu transfera ne ponavljaj slepo slanje, već prvo oporavi periferiju prema referentnom priručniku",
+      "Za vremenski kritičan kod koristi LL drajvere umesto HAL, a u ISR-u nikad ne radi polling"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-embedded-firmware-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Pravilno pisanje i odlaganje posla iz prekidnih rutina (ISR)",
+    "koraci": [
+      "Drži ISR rutine minimalnim i brzim",
+      "Prebaci stvarnu obradu podataka u zadatak putem reda ili semafora",
+      "Koristi isključivo FromISR varijante FreeRTOS funkcija unutar prekida",
+      "Nikada ne pozivaj blokirajuće API pozive iz konteksta prekida"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-embedded-firmware-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Konfigurisanje i validacija projekta za produkciju",
+    "koraci": [
+      "Fiksiraj verzije platforme i biblioteka u platformio.ini bez korišćenja @latest",
+      "Koristi devicetree i Kconfig za Nordic ciljeve umesto hardkodovanih adresa periferija",
+      "Testiraj svaki drajver izolovano pre integracije u ceo sistem",
+      "Proveri vremenske zahteve pomoću logičkog analizatora ili osciloskopa",
+      "Testiraj sve putanje grešaka ubacivanjem kvarova, ne samo uspešan scenario",
+      "Proveri da firmver ispravno startuje posle hladnog starta i oporavka od watchdog reseta"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-embedded-firmware-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada i slanje Feishu bot poruka i kartica",
+    "koraci": [
+      "Definisati tip bota (webhook ili aplikacioni) i podržane tipove poruka",
+      "Kreirati JSON strukturu interaktivne kartice sa poljima, dugmićima i akcijama",
+      "Validirati karticu u Card Builder alatu pre slanja u produkciju",
+      "Poslati karticu preko API poziva i obraditi povratne kolbekove na klik dugmeta",
+      "Pri grešci API poziva vratiti korisniku prijateljsku poruku umesto tihog pada"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-feishu-integration-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Obrada event pretplata i verifikacija zahteva",
+    "koraci": [
+      "Podesiti webhook servis i verifikovati URL za pretplatu na događaje preko HTTPS-a",
+      "Proveravati verifikacioni token ili dešifrovati sadržaj pomoću encrypt key-a",
+      "Vratiti brz odgovor (200) odmah, a tešku obradu prebaciti u asinhroni tok",
+      "Implementirati idempotentnu obradu jer Feishu može poslati isti događaj više puta",
+      "Testirati ponašanje pri dupliranim, zakasnelim i neuređenim događajima"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-feishu-integration-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Integracija odobrenja i sinhronizacija Bitable podataka",
+    "koraci": [
+      "Kreirati ili pozvati definiciju odobrenja i podneti instancu preko API-ja",
+      "Pratiti status odobrenja kroz pretplatu na događaje i pokretati dalju poslovnu logiku",
+      "Čitati, filtrirati i sortirati zapise u Bitable tabeli po potrebi",
+      "Slati zapise u paketima od najviše 500 uz malo kašnjenje između paketa",
+      "Ažurirati pojedinačne zapise i obezbediti nadoknadu greške pri neuspehu sinhronizacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-feishu-integration-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Strukturno reorganizovanje forme kroz tabove i mreže",
+    "koraci": [
+      "Pročitati resource fajl i popisati sva polja, njihove tipove i odnose",
+      "Prepoznati logičke celine polja i razdvojiti ih u tabove uz čuvanje aktivnog taba u URL-u",
+      "Srodne sekcije postaviti jednu pored druge u dvokolonsku mrežu umesto vertikalnog ređanja",
+      "Dodati sažeti placeholder na vrhu forme za prikaz ključnih vrednosti zapisa",
+      "Proveriti da nijedno polje iz originala nije izgubljeno nakon reorganizacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-filament-optimization-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Zamena neprikladnih unosa boljim kontrolama",
+    "koraci": [
+      "Identifikovati redove sa 1-10 radio dugmića i zameniti ih range sliderom ili kompaktnom inline radio mrežom",
+      "Za duge select liste sa statičkim opcijama koristiti inline radio sa kolonama umesto padajuće liste",
+      "Boolean toggle elemente u gridu podesiti da ne prelivaju tekst oznake",
+      "Proveriti da zamena ne menja smisao podataka, samo način unosa"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-filament-optimization-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Sređivanje repeatera i sekundarnih sekcija",
+    "koraci": [
+      "Dodati smislenu oznaku stavke repeatera na osnovu unetih podataka umesto generičkog naziva",
+      "Podesiti repeater i sekcije da budu sklopivi gde su podaci često prazni",
+      "Postaviti takve sekcije da budu podrazumevano zatvorene radi manje vizuelne buke",
+      "Razmotriti prebacivanje repeatera sa mnogo polja u poseban RelationManager"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-filament-optimization-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Čišćenje viška vodiča i organizacija navigacije",
+    "koraci": [
+      "Ukloniti hint ili placeholder tekst koji samo ponavlja oznaku polja",
+      "Zadržati jednostavna i jasna polja bez nepotrebnih dodatnih objašnjenja",
+      "Grupisati resurse u navigacione grupe sa ograničenjem broja stavki po grupi",
+      "Retko korišćene navigacione grupe podesiti da budu podrazumevano skupljene",
+      "Proveriti da ikonice koriste se samo tamo gde stvarno poboljšavaju preglednost"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-filament-optimization-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Uspostavljanje alokacije troškova (tagging strategija)",
+    "koraci": [
+      "Proveri pokrivenost tagova i strukture naloga u svim oblacima.",
+      "Definiši obavezne tagove: tim, servis, okruženje, cost centar.",
+      "Uvedi pravilo da se resursi bez tagova blokiraju ili izdvajaju u poseban bucket.",
+      "Prati dnevno procenat alociranog troška i teži preko 95%.",
+      "Podeli deljene troškove po dogovorenom ključu (po potrošnji ili broju zaposlenih)."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-finops-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Eliminacija otpada pre optimizacije",
+    "koraci": [
+      "Pronađi neiskorišćene i napuštene resurse (diskovi, balanseri, test okruženja).",
+      "Automatizuj gašenje ne-produkcionih okruženja van radnog vremena.",
+      "Rangiraj pronađeni otpad po iznosu uštede i dodeli odgovorni tim.",
+      "Tek nakon čišćenja otpada pređi na dalje mere optimizacije."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-finops-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Planiranje commitment kupovina (RI/Savings Plans)",
+    "koraci": [
+      "Izračunaj stabilnu osnovnu potrošnju u poslednjih 30-90 dana.",
+      "Proveri sa timom da li se radno opterećenje neće menjati u periodu ugovora.",
+      "Postavi ciljnu pokrivenost od oko 70-85% stabilne osnove.",
+      "Izaberi dužinu i način plaćanja prema raspoloživom budžetu i poverenju u prognozu.",
+      "Prati mesečno iskorišćenost i pokrivenost kupljenog kapaciteta."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-finops-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Izgradnja dashboard-a jediničnih ekonomskih pokazatelja",
+    "koraci": [
+      "Agregiraj podatke o troškovima i aktivnosti korisnika na istom vremenskom nivou.",
+      "Izračunaj trošak po korisniku, zahtevu ili transakciji.",
+      "Prikaži rezultate zajedno sa procentom alokacije i pokrivenosti commitment-a.",
+      "Postavi alarme za anomalije u dnevnoj potrošnji radi ranog otkrivanja problema."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-finops-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada modernih web komponenti",
+    "koraci": [
+      "Postaviti razvojno okruženje sa odgovarajućim alatima i TypeScript podrškom",
+      "Kreirati biblioteku komponenti sa jasnom arhitekturom i razdvajanjem odgovornosti",
+      "Implementirati responsivan dizajn po principu mobile-first",
+      "Povezati komponente sa backend API-jima i upravljati stanjem aplikacije",
+      "Napisati unit i integracione testove za komponente"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-frontend-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Optimizacija performansi aplikacije",
+    "koraci": [
+      "Primeniti code splitting i lazy loading za smanjenje veličine paketa",
+      "Optimizovati slike i resurse za brže učitavanje na vebu",
+      "Pratiti i poboljšavati Core Web Vitals metrike",
+      "Implementirati keširanje i service worker za offline rad",
+      "Postaviti budžete performansi i redovno ih nadgledati"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-frontend-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Obezbeđivanje pristupačnosti (accessibility)",
+    "koraci": [
+      "Primeniti WCAG 2.1 AA smernice u implementaciji interfejsa",
+      "Dodati odgovarajuće ARIA oznake i semantičku HTML strukturu",
+      "Omogućiti punu navigaciju tastaturom kroz aplikaciju",
+      "Testirati sa čitačima ekrana i asistivnim tehnologijama"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-frontend-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Integracija editora i komunikacije u realnom vremenu",
+    "koraci": [
+      "Razviti ekstenzije editora sa komandama za navigaciju poput otvaranja i pregleda",
+      "Implementirati WebSocket ili RPC most za komunikaciju između aplikacija",
+      "Obraditi protokol URI-je editora radi glatke navigacije",
+      "Kreirati indikatore statusa konekcije i konteksta",
+      "Osigurati brz dvosmerni protok događaja sa niskom latencijom"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-frontend-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.75
+  },
+  {
+    "ime": "Dizajn distribucionog ključa za tabele",
+    "koraci": [
+      "Proveri da li je u pitanju centralizovana ili distribuirana arhitektura",
+      "Izaberi kolonu visoke kardinalnosti za HASH distribuciju da se izbegne neravnomerna raspodela",
+      "Uskladi distribucioni ključ povezanih tabela radi kolociranih JOIN operacija",
+      "Male dimenzione tabele postavi sa DISTRIBUTE BY REPLICATION da se izbegne Broadcast",
+      "Izbegavaj bulove i retko popunjene kolone kao distribucioni ključ"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-gaussdb-expert.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izbor i podešavanje skladišnog mehanizma (Ustore/Astore)",
+    "koraci": [
+      "Proceni da li je radno opterećenje OLTP sa čestim update/delete operacijama",
+      "Za takve slučajeve koristi Ustore zbog manje fragmentacije i boljeg konkurentnog pristupa",
+      "Za append-heavy podatke poput logova koristi Astore",
+      "Podesi parametar STORAGE_TYPE prilikom kreiranja tabele"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-gaussdb-expert.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Analiza i optimizacija distribuiranog plana izvršenja",
+    "koraci": [
+      "Pokreni EXPLAIN ANALYZE pre puštanja upita u produkciju",
+      "Proveri prisustvo streaming operatora poput Broadcast ili Redistribute",
+      "Teži ka kolociranim JOIN operacijama bez potrebe za streaming-om",
+      "Proveri tip skeniranja i izbegavaj pune tabelarne sken na velikim tabelama",
+      "Ako se procenjeni i stvarni broj redova razlikuju, pokreni ANALYZE za osvežavanje statistike"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-gaussdb-expert.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Usklađivanje particionisanja sa distribucijom i sprečavanje N+1 upita",
+    "koraci": [
+      "Poravnaj particioni ključ sa distribucionim ključem radi paralelnog pruninga i lokalnog izvršenja",
+      "Koristi RANGE, LIST, HASH ili INTERVAL particionisanje prema prirodi podataka",
+      "Zameni N+1 upite jedinstvenim JOIN ili agregacionim upitom",
+      "Koristi batch učitavanje na strani aplikacije kada je potrebno",
+      "Indeksiraj strane ključeve radi bržih JOIN operacija u distribuiranom okruženju"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-gaussdb-expert.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Pisanje atomičnih i konvencionalnih komita",
+    "koraci": [
+      "Podeli promene tako da svaki komit radi samo jednu stvar",
+      "Koristi prefikse poput feat, fix, chore, docs, refactor, test",
+      "Proveri da se svaki komit može samostalno vratiti bez posledica",
+      "Piši jasne i opisne poruke komita"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-git-workflow-master.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izbor i primena strategije grananja",
+    "koraci": [
+      "Proceni veličinu tima i učestalost izdanja",
+      "Za većinu timova predloži trunk-based pristup sa kratkotrajnim granama",
+      "Za timove sa verzionisanim izdanjima predloži Git Flow sa develop i release granama",
+      "Imenuj grane po konvenciji poput feat/, fix/, chore/"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-git-workflow-master.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Bezbedno pokretanje i čišćenje feature grane",
+    "koraci": [
+      "Povuci najnovije stanje sa origin/main pre kreiranja grane",
+      "Kreiraj granu bez automatskog praćenja i odmah je objavi uz push -u",
+      "Za paralelan rad koristi git worktree umesto dodatnog checkout-a iste grane",
+      "Pre PR-a uradi interaktivni rebase na origin/main radi sređivanja istorije",
+      "Force-push radi samo uz --force-with-lease i dogovor sa saradnicima"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-git-workflow-master.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Bezbedno završavanje i spajanje grane",
+    "koraci": [
+      "Sačekaj da CI prođe i da se dobiju odobrenja pre spajanja",
+      "Spoji granu u main koristeći no-ff merge ili squash merge kroz PR",
+      "Obriši lokalnu i udaljenu granu nakon uspešnog spajanja",
+      "Upozori na destruktivne operacije i ponudi korake za oporavak ako zatreba"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-git-workflow-master.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Pisanje ICU MessageFormat poruka za množinu i rod",
+    "koraci": [
+      "Pronaći konkatenacije stringova i mesta gde se broj ili rod ubacuju u rečenicu",
+      "Zameniti ih kompletnim ICU porukama sa imenovanim parametrima",
+      "Definisati sve CLDR plural kategorije (zero/one/two/few/many/other) uključujući obavezno 'other'",
+      "Dodati opis za prevodioce uz svaku poruku radi konteksta",
+      "Odvojiti ICU tekst od metapodataka pre prosleđivanja runtime biblioteci"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-i18n-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Zamena ručnog formatiranja Intl/CLDR API-jima",
+    "koraci": [
+      "Pronaći sve ručno pisane formatere za datum, broj, valutu i listu",
+      "Zameniti ih odgovarajućim Intl objektima (NumberFormat, DateTimeFormat, RelativeTimeFormat, ListFormat)",
+      "Proslediti korisnikov lokal eksplicitno umesto pretpostavke o engleskom",
+      "Razdvojiti civilni datum od trenutka u vremenu i koristiti ispravnu vremensku zonu",
+      "Objediniti sve formatere u jedan tanak, lokal-svestan uslužni modul"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-i18n-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izgradnja RTL-bezbednog layouta logičkim CSS svojstvima",
+    "koraci": [
+      "Zameniti fizička CSS svojstva (left/right) logičkim (inline-start/end)",
+      "Postaviti dir atribut dinamički na osnovu rezolvovanog lokala",
+      "Izolovati korisnički generisan sadržaj pomoću dir='auto' da se izbegne mešanje skripti",
+      "Flipovati samo ikone koje implicitno pokazuju smer, ne logotipe i medije",
+      "Testirati isti stylesheet na LTR i RTL lokalu bez posebne .rtl verzije"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-i18n-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Uvođenje pseudo-lokalizacije i provere ekspanzije teksta u CI",
+    "koraci": [
+      "Napraviti transformaciju koja menja slova u pseudo-lokal verziju i dodaje dužinu teksta",
+      "Primeniti transformaciju samo na literalne delove ICU AST-a, ne na selektore i argumente",
+      "Pustiti build da padne ako se pojavi hardkodovan ili skraćen string",
+      "Proveriti vizuelno dvoredni budžet i fleksibilnost dugmadi i kartica pri ekspanziji teksta",
+      "Uključiti po jedan RTL i jedan pseudo-lokal u svaku demonstraciju funkcionalnosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-i18n-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Implementacija OAuth 2.0/OIDC prijave sa PKCE",
+    "koraci": [
+      "Generisati state, nonce i PKCE verifier/challenge pre preusmeravanja korisnika na IdP",
+      "Sačuvati ove vrednosti u serverskoj sesiji sa kratkim rokom trajanja",
+      "Pri povratku proveriti state, razmeniti kod uz verifier, pa validirati potpis, izdavaoca, publiku i algoritam ID tokena",
+      "Uporediti nonce iz tokena sa sačuvanim i odmah obrisati iskorišćene vrednosti iz sesije",
+      "Pri grešci u razmeni zahtevati potpuno nov login tok umesto ponovnog pokušaja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-identity-access-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Projektovanje arhitekture sesija i tokena",
+    "koraci": [
+      "Odabrati između opaque server sesije i kratkotrajnog JWT-a sa rotirajućim refresh tokenom prema potrebama skalabilnosti i revokacije",
+      "Postaviti kratak vek trajanja access tokena (minuti) radi ograničenja štete od curenja",
+      "Rotirati refresh token pri svakoj upotrebi i otkriti ponovnu upotrebu kao krađu",
+      "Pri detekciji ponovne upotrebe ukinuti celu porodicu tokena i pokrenuti upozorenje",
+      "Čuvati tokene isključivo u HttpOnly, Secure kolačićima, nikad u localStorage"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-identity-access-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Postavljanje enterprise SSO i SCIM provizioniranja po tenantu",
+    "koraci": [
+      "Konfigurisati SAML/OIDC podešavanja posebno za svakog tenanta uključujući metapodatke i sertifikate IdP-a",
+      "Proveravati potpis, publiku, odredište i toleranciju razmaka sata kod svake asercije",
+      "Mapirati atribute IdP-a (email, ime, grupe) na uloge aplikacije po tenantu",
+      "Povezati SCIM dogadjaje deaktivacije korisnika sa trenutnim ukidanjem svih sesija i tokena",
+      "Omogućiti nalog za hitan pristup (break-glass) za slučaj pada ili loše konfiguracije IdP-a"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-identity-access-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Sprovodjenje izolacije tenanta i autorizacije na nivou podataka",
+    "koraci": [
+      "Uključiti row-level security na tabelama koje sadrže podatke više tenanata",
+      "Postaviti politiku koja zahteva da tenant_id iz konteksta sesije odgovara redu podataka",
+      "Postaviti identifikator tenanta iz autentifikovanog konteksta na početku svake transakcije, nikad iz parametara zahteva",
+      "Izbegavati privilegovane funkcije i naloge koji mogu zaobići RLS u zahtevima korisnika",
+      "Testirati automatski pokušaje unakrsnog pristupa izmedju tenanata u svakoj verziji"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-identity-access-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Koordinacija incidenta u realnom vremenu",
+    "koraci": [
+      "Proveriti da li je alarm stvaran incident ili lažna uzbuna",
+      "Klasifikovati ozbiljnost po matrici SEV1 do SEV4",
+      "Dodeliti uloge: komandant incidenta, tehnički vođa, komunikacioni vođa i zapisničar",
+      "Vremenski ograničiti svaku hipotezu na 15 minuta pre prelaska na sledeću",
+      "Slati ažuriranja stejkholderima u fiksnim intervalima prema ozbiljnosti",
+      "Beležiti sve akcije i nalaze u realnom vremenu u zajednički kanal"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-incident-response-commander.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Vođenje bez krivice post-mortem analize",
+    "koraci": [
+      "Zakazati sastanak u roku od 48 sati od zatvaranja incidenta",
+      "Rekonstruisati hronologiju događaja zajedno sa timom",
+      "Primeniti tehniku pet zašto da se dođe do sistemskog uzroka",
+      "Fokusirati se na nedostatke sistema, a ne na greške pojedinaca",
+      "Definisati akcione stavke sa jasnim vlasnicima, prioritetima i rokovima",
+      "Pratiti realizaciju akcionih stavki do kraja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-incident-response-commander.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Definisanje SLO/SLI okvira i budžeta grešaka",
+    "koraci": [
+      "Odrediti ključne SLI metrike poput dostupnosti, latencije i tačnosti",
+      "Postaviti ciljane SLO vrednosti i vremenski prozor merenja",
+      "Izračunati dozvoljeni budžet grešaka i pragove za upozorenja po stopi trošenja",
+      "Definisati politiku budžeta koja zaustavlja razvoj funkcionalnosti kada je budžet potrošen",
+      "Redovno revidovati SLO ciljeve u skladu sa poslovnim potrebama"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-incident-response-commander.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn dežurstva i runbook procesa",
+    "koraci": [
+      "Kreirati rotaciju dežurstva sa minimalnim brojem inženjera radi sprečavanja sagorevanja",
+      "Definisati eskalacionu politiku sa jasnim vremenskim rokovima po nivou",
+      "Napisati runbook sa koracima za detekciju, dijagnozu i rešavanje poznatih kvarova",
+      "Testirati runbookove kvartalno kroz vežbe simulacije kvarova",
+      "Pratiti broj poziva po smeni i kvalitet alarma radi smanjenja buke"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-incident-response-commander.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Bezbedno OTA ažuriranje firmvera",
+    "koraci": [
+      "Preuzmi potpisanu sliku firmvera na neaktivnu memorijsku banku dok uređaj radi na trenutnoj.",
+      "Proveri potpis i ispravnost slike na samom uređaju pre nego što je označiš kao pokretljivu.",
+      "Pokreni novu verziju jednom, sačekaj potvrdu da je zdrava preko fleet servisa.",
+      "Ako potvrda ne stigne u predviđenom roku, automatski vrati uređaj na prethodnu ispravnu verziju.",
+      "Širi ažuriranje postupno (kanari, pa 1%, 5%, 25%, 100%) i zaustavi rolovanje ako procenat zdravih prijava padne ispod cilja."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-iot-fleet-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.97
+  },
+  {
+    "ime": "Dizajn identiteta i provizionisanja uređaja",
+    "koraci": [
+      "Obezbedi da svaki uređaj generiše sopstveni par ključeva unutar bezbednog elementa.",
+      "Registruj samo javni ključ i serijski broj uređaja u fleet registar, bez slanja privatnog ključa.",
+      "Pri prvom povezivanju izdaj operativni sertifikat ograničen na teme tog konkretnog uređaja.",
+      "Omogući da se kompromitovani ili povučeni uređaj opozove pojedinačno bez ponovnog generisanja ključeva za celu flotu."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-iot-fleet-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Izgradnja telemetrijskog pipeline-a otpornog na prekide",
+    "koraci": [
+      "Definiši hijerarhiju MQTT tema po uređaju radi jasne autentikacije i rutiranja poruka.",
+      "Uvedi lokalno baferovanje podataka kod uređaja koji izgubi vezu, sa ograničenim kružnim baferom.",
+      "Pri ponovnom povezivanju šalji sačuvane podatke sa originalnim vremenskim oznakama i dedupliciraj na backend-u po identifikatoru i sekvenci.",
+      "Agreguj i uzorkuj podatke na ivici mreže da se kontroliše opterećenje i troškovi pri skaliranju flote.",
+      "Dizajniraj komande da nose rok trajanja i da budu idempotentne, jer uređaj možda neće odmah primiti poruku."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-iot-fleet-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Uspostavljanje vidljivosti i monitoringa flote",
+    "koraci": [
+      "Prati raspodelu verzija firmvera, vreme poslednjeg javljanja i stopu zdravih prijava nakon ažuriranja.",
+      "Postavi alarme kada se kašnjenje javljanja uređaja produži iznad očekivanog ciklusa rada.",
+      "Prati telemetriju grešaka i restartovanja da bi se otkrile nestabilne kombinacije hardvera i firmvera.",
+      "Omogući da se problemi uočavaju iz podataka pre nego što dovedu do potrebe za fizičkim posetom terenu."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-iot-fleet-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Klasifikacija i upravljanje incidentima",
+    "koraci": [
+      "Proceni uticaj na poslovanje i hitnost kako bi se odredio tačan prioritet (P1-P4)",
+      "Dodeli incident odgovornom timu i odmah obavesti korisnika da je slučaj preuzet",
+      "Za P1/P2 incidente imenuj posebnog koordinatora (incident commander) odvojenog od tehničkih izvršilaca",
+      "Šalji redovna ažuriranja statusa prema definisanom intervalu dok se incident ne reši",
+      "Eskaliraj prema planu ako se rok za odgovor ili rešavanje ne poštuje",
+      "Poveži ponavljajuće incidente sa formalnom problem analizom"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-it-service-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Kontrola promena kroz CAB proces",
+    "koraci": [
+      "Klasifikuj svaku promenu kao standardnu, normalnu ili hitnu prema riziku i učestalosti",
+      "Popuni zahtev za promenu sa planom implementacije, planom povlačenja i planom testiranja",
+      "Izračunaj rizik množenjem uticaja i verovatnoće otkaza",
+      "Sprovedi redovni CAB sastanak za pregled i odobravanje planiranih promena",
+      "Sprovedi pregled posle implementacije da proveriš da li je promena uspela bez incidenata",
+      "Evidentiraj hitne promene retroaktivno i razmotri ih na sledećem CAB sastanku"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-it-service-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Upravljanje SLA i kontinuirano unapređenje",
+    "koraci": [
+      "Definiši merljive SLA ciljeve za dostupnost, vreme odgovora i vreme rešavanja po prioritetu",
+      "Prati performanse u odnosu na SLA kontinuirano, ne samo na kraju meseca",
+      "Izveštavaj o kršenjima SLA transparentno sa uzrokom i planom korekcije",
+      "Vodi CSI registar sa inicijativama koje imaju vlasnika, osnovnu meru, cilj i rok",
+      "Meri rezultat pre i posle svake inicijative i izveštavaj o ostvarenoj koristi"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-it-service-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja grafa znanja iz dokumenata",
+    "koraci": [
+      "Pročitaj šemu, taksonomiju tipova i trenutno stanje grafa pre obrade dokumenta",
+      "Izračunaj SHA256 otisak izvora i tretiraj ga kao jedinstveni identifikator",
+      "Izvuci entitete i veze strukturiranom LLM ekstrakcijom sa dodeljenom pouzdanošću",
+      "Spoji (MERGE) entitete, izvore i tipizirane veze bez brisanja postojeće istorije",
+      "Označi entitete sa samo jednim izvorom kao one koje treba dodatno proveriti dok se ne potvrde iz dva nezavisna izvora",
+      "Pokreni kontrolne provere integriteta pre nego što proglasiš unos završenim"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-knowledge-graph-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Otkrivanje i upravljanje kontradikcijama",
+    "koraci": [
+      "Uporedi novu tvrdnju sa postojećim čvorom za isti entitet i tip veze",
+      "Ako se tvrdnje razlikuju, kreiraj vezu koja označava sukob umesto da prepišeš staru vrednost",
+      "Postavi oznaku da je entitet sporan na oba povezana čvora",
+      "Sačuvaj oba izvora i datume kako bi se sukob mogao naknadno razrešiti",
+      "Prikaži korisniku obe tvrdnje sa jasnim pripisivanjem izvora"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-knowledge-graph-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Pretraga i isporuka odgovora iz grafa",
+    "koraci": [
+      "Klasifikuj upit kao pretragu entiteta, poređenje, temu ili traganje za izvorom tvrdnje",
+      "Učitaj samo relevantni podgraf entiteta i njegovo bliže okruženje umesto celog korpusa",
+      "Formuliraj odgovor uz navođenje izvora za svaku činjeničnu tvrdnju",
+      "Ako nema podudaranja u grafu, pretraži nepromovisane izvore pre nego što priznaš da informacija ne postoji",
+      "Jasno reci da graf nema informaciju umesto da izmišljaš odgovor",
+      "Zabeleži upit i ishod u dnevnik na kraju svake sesije"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-knowledge-graph-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Dijagnostika SFT greske u maskiranju labela",
+    "koraci": [
+      "Proveri renderovani chat template i tokenizaciju pre poverenja u pad gubitka.",
+      "Proveri koja polja nose gubitak: sistem, korisnik ili samo asistent.",
+      "Ako prompt tokeni nose gubitak zaustavi trening odmah.",
+      "Sacuvaj tokenizovan uzorak, konfiguraciju, tokenizer i masku labela pre ispravke.",
+      "Proveri kontaminaciju izmedju trening i evaluacionog skupa."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-llm-post-training-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izbor najslabije dovoljne metode uz gejtove eksperimenta",
+    "koraci": [
+      "Zamrzni model, podatke, tokenizer, dekodiranje, evaluator i budzet pre poredjenja.",
+      "Koristi SFT za pouzdane ciljeve, preferencionu optimizaciju tek posle provere integriteta parova.",
+      "Pokreni RL samo sa validovanom, nedegenerisanom nagradom vezanom za held-out kvalitet.",
+      "Prolazi kroz gejtove preflight, smoke, signal i controlled sa stop uslovom na svakom.",
+      "Sacuvaj konfiguraciju, budzet GPU-a i manifest checkpointa pre promocije."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-llm-post-training-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Otkrivanje kolapsa preferenci u DPO treningu",
+    "koraci": [
+      "Proveri udeo parova sa identicnim izabranim i odbijenim tokenima posle skracivanja.",
+      "Oznaci to kao kolaps efektivnih parova, ne kao problem sa beta ili stopom ucenja.",
+      "Zadrzi izvorne podatke, primeni politiku skracivanja koja cuva odgovor i ponovo izgradi parove.",
+      "Sacuvaj sirove parove, tokenizovane parove i konfiguraciju predobrade pre podesavanja hiperparametara."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-llm-post-training-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Verifikacija integriteta checkpointa pre objave",
+    "koraci": [
+      "Uporedi ocekivani i stvarni inventar shardova, indeks fajlove, konfiguraciju i tokenizer.",
+      "Napravi i proveri hash manifest pre registracije ili nastavka treninga.",
+      "Izvrsi probu cistog ucitavanja checkpointa kao obavezan korak.",
+      "Sacuvaj logove po rangovima, resenu konfiguraciju i terminalni status.",
+      "Blokiraj objavu ili nastavak ako nedostaju shardovi, indeks ili hash se ne poklapa."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-llm-post-training-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Određivanje minimalnog obima izmene",
+    "koraci": [
+      "Pročitaj zadatak doslovno i izdvoji glagole koji definišu obim posla.",
+      "Pronađi najmanji skup fajlova i funkcija koji mora da se promeni da bi zadatak uspeo.",
+      "Ako se otvara treći ili četvrti fajl, proveri da li je to zaista neophodno.",
+      "Izaberi rešenje sa manje izmenjenih linija kada postoje dve podjednako dobre opcije."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-minimal-change-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Provera dif-a liniju po liniju pre predaje",
+    "koraci": [
+      "Prođi kroz svaku izmenjenu liniju i proveri da li je zadatak eksplicitno zahteva.",
+      "Obriši svaku liniju koja postoji samo zato što bi bilo 'lepše', a ne zato što je traženo.",
+      "Koristi šablon samoprovere obima da popišeš fajlove, razloge i veličinu dif-a.",
+      "Proveri da li dif može biti još manji i, ako može, smanji ga."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-minimal-change-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Odbijanje širenja obima i odlaganje za follow-up",
+    "koraci": [
+      "Prepoznaj iskušenja tipa 'dok smo tu', 'za buduću fleksibilnost' ili 'radi doslednosti'.",
+      "Ne refaktoriši, ne dodaj odbrambeni kod niti menjaj stil koda koji nisi morao da diraš.",
+      "Zabeleži uočene probleme kao posebne follow-up stavke umesto da ih tiho ubaciš u isti PR.",
+      "Kada recenzent zatraži dodatnu izmenu u toku pregleda, ljubazno odbij i otvori poseban zadatak."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-minimal-change-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Odlaganje apstrakcije i provera mrtvog koda",
+    "koraci": [
+      "Kada se tri slične linije ponove, ostavi ih takve umesto da praviš pomoćnu funkciju.",
+      "Apstrahuj tek kada se pojavi četvrto ponavljanje istog obrasca.",
+      "Za sumnjivo mrtav kod, obriši ga i pokreni testove da proveriš da li nešto puca.",
+      "Ako testovi prođu, trajno ukloni kod; ako ne prođu, vrati izmenu bez ostavljanja komentara ili TODO oznaka."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-minimal-change-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Razvoj native iOS aplikacija",
+    "koraci": [
+      "Definisati minimalnu verziju iOS-a i podržane uređaje.",
+      "Kreirati UI komponente pomoću SwiftUI sledeći Apple smernice.",
+      "Implementirati MVVM arhitekturu sa ViewModel-ima za upravljanje stanjem.",
+      "Integrisati platformske funkcije poput Face ID, kamere i lokacije.",
+      "Optimizovati performanse i vreme pokretanja aplikacije."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-mobile-app-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Razvoj native Android aplikacija",
+    "koraci": [
+      "Odrediti minimalni API nivo i ciljane uređaje.",
+      "Graditi korisnički interfejs pomoću Jetpack Compose prema Material Design smernicama.",
+      "Koristiti ViewModel i StateFlow za upravljanje stanjem i životnim ciklusom.",
+      "Implementirati lokalno skladištenje i sinhronizaciju podataka.",
+      "Testirati i optimizovati potrošnju baterije i memorije."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-mobile-app-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kreiranje cross-platform aplikacija",
+    "koraci": [
+      "Izabrati odgovarajući framework poput React Native ili Flutter.",
+      "Deliti zajednički kod uz zadržavanje platformski specifičnog izgleda.",
+      "Implementirati offline-first arhitekturu sa pametnom sinhronizacijom podataka.",
+      "Optimizovati performanse liste i renderovanja na oba operativna sistema.",
+      "Prilagoditi stilove i ponašanje komponenti za iOS i Android posebno."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-mobile-app-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Optimizacija performansi i testiranje mobilnih aplikacija",
+    "koraci": [
+      "Meriti i smanjivati vreme pokretanja aplikacije i potrošnju memorije.",
+      "Testirati aplikaciju na realnim uređajima i različitim verzijama OS-a.",
+      "Postaviti automatizovano testiranje i CI/CD proces za mobilne platforme.",
+      "Pratiti padove aplikacije i performanse u realnom vremenu nakon lansiranja.",
+      "Pripremiti metapodatke i strategiju za optimizaciju u prodavnicama aplikacija."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-mobile-app-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Upravljanje potpisivanjem aplikacije kao deljenom infrastrukturom",
+    "koraci": [
+      "Smesti sertifikate i keystore u enkriptovano deljeno skladište dostupno timu, nikad na privatnom računaru.",
+      "Koristi fastlane match ili sličan alat da sertifikati i profili budu verzionisani i dostupni CI sistemu u read-only režimu.",
+      "Prijavi se na Play App Signing kako bi se izbegao rizik od gubitka ključa za Android.",
+      "Redovno proveravaj rokove isteka sertifikata i provizionih profila i ažuriraj ih pre nego što isteknu.",
+      "Pre svakog builda proveri da li entitlementi u kodu odgovaraju mogućnostima u provizionom profilu."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-mobile-release-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Automatizacija pipelinea od komita do store-ready artefakta",
+    "koraci": [
+      "Napravi fastlane lane-ove koji automatski grade, potpisuju i šalju aplikaciju na TestFlight ili Play internal track.",
+      "Automatizuj povećanje verzije i broja builda tako da uvek raste i nikad se ne ponavlja.",
+      "Uveri se da se debug simboli (dSYM za iOS, mapping fajl za Android) automatski šalju servisu za praćenje padova.",
+      "Testiraj tačno onaj potpisani i optimizovani build koji ide korisnicima, a ne razvojnu verziju.",
+      "Pokreći pipeline identično pri svakom izdanju, a odluku o puštanju prepusti čoveku na osnovu podataka."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-mobile-release-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Fazno uvođenje izdanja uz praćenje zdravlja aplikacije",
+    "koraci": [
+      "Pokreni novo izdanje na malom procentu korisnika (npr. 1%) umesto odmah na sve uređaje.",
+      "Prati stopu padova aplikacije (crash-free rate) i ANR metriku pre proširenja na veći procenat korisnika.",
+      "Unapred definiši pragove za zaustavljanje rollout-a u slučaju skoka grešaka ili loših ocena.",
+      "Pauziraj rollout odmah čim se pojavi loš signal i pripremi plan za ispravku unapred (roll-forward), jer povlačenje binarnog fajla nije moguće.",
+      "Širi rollout postepeno (5%, 20%, 50%, 100%) tek nakon što podaci pokažu stabilnost."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-mobile-release-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.94
+  },
+  {
+    "ime": "Priprema i prolazak kroz pre-submission checklistu i store proces",
+    "koraci": [
+      "Proveri da su verzija i broj builda ispravno povećani i usklađeni sa očekivanjima prodavnice.",
+      "Proveri da su privacy deklaracije (iOS privacy manifest, Android Data safety) ažurne i tačne.",
+      "Potvrdi da su metapodaci, screenshotovi i opis aplikacije ispravni i lokalizovani.",
+      "Pripremi odgovore na uobičajene razloge odbijanja (privacy stringovi, prijava, kupovine, zavodljivi opisi) pre slanja.",
+      "Ako je aplikacija odbijena, identifikuj tačnu smernicu, napravi minimalnu ispravku i ponovo pošalji uz objašnjenje."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-mobile-release-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izbor i projektovanje topologije pipeline-a",
+    "koraci": [
+      "Nacrtati dijagram toka podataka pre bilo kakve rasprave o implementaciji.",
+      "Proceniti da li su podzadaci zavisni, nezavisni ili zahtevaju pregovaranje između agenata.",
+      "Podrazumevano birati hijerarhijsku topologiju, a mrežnu (mesh) koristiti samo uz jasno opravdanje.",
+      "Definisati ograničenja dužine lanca i širine paralelizacije kako kvalitet sinteze ne bi opao.",
+      "Za svaki obrazac odrediti kako se rešava delimičan ili potpun neuspeh agenta."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-multi-agent-systems-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Upravljanje kontekstnim budžetom između agenata",
+    "koraci": [
+      "Izračunati rast konteksta kroz lanac agenata za najgori mogući ulaz.",
+      "Primeniti kompresiju sažimanjem ili deljeni strukturirani objekat stanja umesto prosleđivanja punog teksta.",
+      "Odrediti koja polja moraju ostati netaknuta (ID-jevi, odluke, ograničenja).",
+      "Uvesti kontrolne tačke (checkpoint) na ključnim koracima radi smanjenja ukupnog opterećenja.",
+      "Zaustaviti i eskalirati umesto tihog skraćivanja konteksta kada budžet nije dovoljan."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-multi-agent-systems-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Projektovanje otpornosti na greške i oporavka",
+    "koraci": [
+      "Klasifikovati moguće tipove grešaka (tvrda, tiha, delimična, kontradikcija, kaskadna, petlja).",
+      "Postaviti kružni prekidač (circuit breaker) za agente koji se ponavljaju ili iteriraju.",
+      "Definisati lanac rezervnih rešenja: primarni agent → ograničeni fallback → pravilno zasnovan odgovor → čovek.",
+      "Obezbediti idempotentnost ili kompenzacione akcije za agente sa nepovratnim efektima.",
+      "Postaviti tačke za checkpoint i rollback pre svake nepovratne akcije."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-multi-agent-systems-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.91
+  },
+  {
+    "ime": "Postavljanje HITL kontrola i observability sistema",
+    "koraci": [
+      "Odrediti kriterijume za HITL kapiju: nepovratnost, veliki domet uticaja, nisko poverenje, regulatorni rizik.",
+      "Izabrati odgovarajući tip kapije: blokirajuće odobrenje, savetodavna oznaka ili uzorkovanje.",
+      "Definisati ponašanje pri isteku vremena za svaku blokirajuću kapiju.",
+      "Logovati svaki poziv agenta sa zajedničkim trace_id radi praćenja uzroka greške.",
+      "Pratiti stopu eskalacije, troškove i kašnjenje kako bi se otkrilo odstupanje od očekivanog ponašanja."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-multi-agent-systems-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Priprema i izvođenje mrežne promene sa rollback planom",
+    "koraci": [
+      "Prikupi trenutnu konfiguraciju, tabele ruta, susedstva i brojače interfejsa pre izmene",
+      "Definiši tačan plan vraćanja na prethodno stanje pre primene promene",
+      "Proveri da je upravljački pristup (out-of-band ili konzola) sačuvan pre dodirivanja rutiranja, ACL-ova ili zona",
+      "Primeni promenu u bezbednom redosledu, prvo manje rizične korake, pa commit tek posle provere",
+      "Validiraj kontrolnu i podatkovnu ravan odvojeno nakon primene",
+      "Dokumentuj izvršene komande, rezultate i preostale rizike"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-network-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Dijagnostika rutiranja i konektivnosti po slojevima",
+    "koraci": [
+      "Razdvoji problem na L1/L2, L3 rutiranje, NAT/policy i aplikativni nivo",
+      "Pokreni odgovarajuće show/display komande za susedstva, rute i brojače grešaka na platformi u pitanju",
+      "Protumači izlaz komandi i jasno razdvoji potvrđene činjenice od pretpostavki",
+      "Predloži sledeću konkretnu komandu za dalju proveru umesto nagađanja",
+      "Proveri da li ruta u tabeli zaista odgovara stvarnom prosleđivanju paketa"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-network-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Pisanje vendor-specifičnih konfiguracija za rutiranje i komutaciju",
+    "koraci": [
+      "Utvrdi vendor i platformu (Cisco IOS, ASA/FTD, Junos, PAN-OS) i njihove specifičnosti u sintaksi i commit modelu",
+      "Napravi konfiguraciju za VLAN, interfejse, OSPF/BGP ili bezbednosnu politiku prema zahtevu",
+      "Primeni princip najmanjih privilegija kod ACL i sigurnosnih pravila, precizno navodeći izvor, odredište i servis",
+      "Priloži komande za validaciju posle primene konfiguracije",
+      "Navedi rollback korake uz svaku konfiguracionu izmenu"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-network-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Analiza firewall i NAT politika uz troubleshooting alate",
+    "koraci": [
+      "Prikupi trenutne NAT i ACL/security rule konfiguracije pre izmene",
+      "Koristi alate poput packet-tracer, test security-policy-match ili show security flow session za proveru putanje paketa",
+      "Proveri sesione tabele, translacije i brojače da potvrdiš da pravilo zaista hvata očekivani saobraćaj",
+      "Objasni domet uticaja promene (blast radius) pre primene na produkciji",
+      "Validiraj krajnju aplikativnu dostupnost sa stvarnog izvora i odredišta nakon izmene"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-network-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Prevođenje SOP-a u OrgScript proces",
+    "koraci": [
+      "Pročitati opis poslovnog procesa napisan u slobodnom tekstu.",
+      "Prepoznati okidače, uslove, prelaze stanja i uloge koje učestvuju.",
+      "Uporediti zahteve sa EBNF gramatikom i specifikacijom jezika radi izvodljivosti.",
+      "Napisati .orgs fajl koristeći samo podržane blokove i naredbe (process, stateflow, rule, when, if, then, transition i slično).",
+      "Zadržati čitljivost i strogu strukturu/indentaciju tokom pisanja."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-orgscript-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Validacija i formatiranje OrgScript fajla",
+    "koraci": [
+      "Pokrenuti formatiranje fajla da bi se dobila kanonska struktura.",
+      "Pokrenuti validaciju kako bi se proverila ispravnost sintakse i oblik AST-a.",
+      "Pokrenuti proveru lintera i potvrditi da nema dijagnostičkih grešaka.",
+      "Osigurati da izlazni kod alata bude 0 za ispravan fajl, odnosno 1 pri greškama."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-orgscript-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Razvoj i održavanje parser alata",
+    "koraci": [
+      "Ažurirati tokenizer i čvorove AST-a u paketu parsera prema potrebi.",
+      "Implementirati semantičke provere i validaciju AST strukture.",
+      "Dodeliti stabilne JSON dijagnostičke kodove za nove greške ili upozorenja.",
+      "Testirati izmene prema zlatnim (golden) snapshot fajlovima radi regresione provere."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-orgscript-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Generisanje izveštaja za druge formate",
+    "koraci": [
+      "Pokrenuti izvoz u Mermaid dijagram iz validnog OrgScript fajla.",
+      "Pokrenuti izvoz u Markdown sažetak procesa.",
+      "Proveriti da generisani izlazi tačno odražavaju logiku definisanu u izvornom fajlu.",
+      "Ugraditi dobijeni dijagram ili sažetak u relevantnu dokumentaciju."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-orgscript-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Implementacija idempotentnih plaćanja",
+    "koraci": [
+      "Izvedi ključ idempotencije iz poslovne operacije poput ID-a narudžbine i broja pokušaja",
+      "Primeni ključ na svaku mutaciju novca uključujući naplate, refundacije i promene pretplate",
+      "Čuvaj iznose kao cele brojeve u najmanjim jedinicama valute sa ISO 4217 kodom",
+      "Testiraj da duplirani zahtevi i konkurentni retry pozivi ne izazovu dvostruku naplatu"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-payments-billing-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Izgradnja pouzdanog webhook obrađivača",
+    "koraci": [
+      "Proveri potpis svakog dolaznog webhook događaja i odbij neoverene ili zastarele zahteve",
+      "Trajno sačuvaj verifikovan događaj u inbox tabeli pre slanja potvrde procesoru",
+      "Deduplikuj događaje po jedinstvenom ID-u i obrađuj ih asinhrono preko reda zadataka",
+      "Pre izvršenja akcije ponovo učitaj trenutno stanje kod procesora jer događaji mogu stići van reda",
+      "Označi događaj kao završen tek nakon uspešnog izvršenja svih sporednih efekata",
+      "Testiraj scenarije pada sistema pre i posle izvršenja da obezbediš tačno jedno izvršenje"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-payments-billing-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Modelovanje životnog ciklusa pretplate kao mašine stanja",
+    "koraci": [
+      "Definiši sva moguća stanja pretplate uključujući probni period, aktivno, kašnjenje u plaćanju i otkazano",
+      "Opiši svaki prelaz između stanja sa okidačem i akcijom koju sistem mora da izvrši",
+      "Implementiraj logiku za zadržavanje pristupa i slanje dunning poruka kada naplata ne uspe",
+      "Obradi proporcionalno obračunavanje prilikom nadogradnje ili downgrade-a plana tokom ciklusa",
+      "Prati izvor oporavka naplate radi analize razloga odliva korisnika"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-payments-billing-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dnevna finansijska rekonsilijacija i smanjenje PCI obima",
+    "koraci": [
+      "Postavi dnevni upit koji poredi isplate procesora sa internim knjigovodstvenim stanjima",
+      "Postavi upozorenje za svako odstupanje različito od nule kako bi se odmah istražilo",
+      "Koristi hostovana polja ili tokenizaciju da kartični podaci nikad ne dođu do sopstvenog servera",
+      "Dokumentuj zašto je izabran određeni nivo PCI usklađenosti ako se odstupa od najmanjeg obima",
+      "Pripremi evidenciju za sporove i poštuj rokove za podnošenje dokaza"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-payments-billing-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Sprečavanje fantomskih praznih stranica epsilon baferom",
+    "koraci": [
+      "Prepoznati da Blink LayoutNG koristi 24.6 fiksnu tačku pa akumulira sitne greške zaokruživanja visine",
+      "Na kontejner stranice primeniti visinu umanjenu za 0.5 do 1 piksel umesto pune fizičke visine",
+      "Postaviti overflow hidden na kontejneru da seče eventualni mali višak sadržaja",
+      "Proveriti rezultat na više dokumenata da nema dodatne prazne strane na kraju"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-pdf-engine-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Dinamičko podešavanje Euklidske veličine stranice",
+    "koraci": [
+      "Izračunati tačne dimenzije u mm, pt i px za traženi format papira (ISO, US ili proizvoljan)",
+      "Ubaciti rezultate u poseban <style id='runtime-page-geometry'> element jer CSS promenljive ne rade unutar @page pravila",
+      "Postaviti @page size i margin na 0 direktno sa konkretnim brojevima",
+      "Primeniti iste vrednosti na kontejner lista kao širinu i maksimalnu visinu sa epsilon baferom"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-pdf-engine-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Očuvanje vektorske grafike i sprečavanje rasterizacije u Skia",
+    "koraci": [
+      "Ukloniti sve filter i backdrop-filter deklaracije iz stilova za štampu",
+      "Zameniti senke elementima sa box-shadow bez zamućenja ili čvrstim ivicama",
+      "Nakon generisanja PDF-a proveriti da li slike po dimenzijama odgovaraju celoj strani na 72 DPI što ukazuje na rasterizaciju",
+      "Potvrditi da tekst i SVG ostaju oštri pri uvećanju dokumenta"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-pdf-engine-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje pulom Playwright browser konteksta za brzu kompilaciju PDF-a",
+    "koraci": [
+      "Održavati trajno pokrenut Chromium proces umesto pokretanja novog za svaki zahtev",
+      "Ograničiti broj istovremenih poslova semaforom i pratiti broj obrađenih zadataka",
+      "Periodično reciklirati browser instancu tek kada su svi aktivni poslovi završeni",
+      "Pre generisanja PDF-a sačekati da se fontovi učitaju i blokirati nepotrebne mrežne zahteve",
+      "Zatvoriti kontekst nakon svakog posla da se spreči curenje resursa"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-pdf-engine-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Projektovanje zlatne staze za nove servise",
+    "koraci": [
+      "Definisati standardni tok od kloniranja koda do produkcije u okviru kratkog vremena",
+      "Postaviti jasne parametre i podrazumevane vrednosti za jezik, bazu, deployment i monitoring",
+      "Dokumentovati izbore i kompromise kroz ADR dokument",
+      "Pilotirati rešenje sa par timova i prikupiti povratne informacije pre šireg lansiranja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-platform-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izgradnja samouslužne infrastrukture",
+    "koraci": [
+      "Identifikovati najčešće zahteve koje inženjeri šalju kroz tikete",
+      "Automatizovati te zadatke kroz CLI ili UI komande umesto ručne obrade",
+      "Obezbediti podrazumevani brz put uz opciju naprednog podešavanja za izuzetke",
+      "Pratiti vreme do prvog uspešnog izvršavanja zadatka radi provere efikasnosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-platform-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Migracija neformalnih praksi u standardizovane procese",
+    "koraci": [
+      "Popisati sve postojeće neformalne (nestandardne) načine rada i njihove vlasnike",
+      "Prioritetno obraditi najčešće korišćene neformalne procese",
+      "Razviti alate i automatizovane transformacije za prelazak na standardni proces",
+      "Postaviti rok i zamrznuti kreiranje novih instanci po starom modelu",
+      "Pratiti napredak migracije po timovima do potpunog gašenja starog procesa"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-platform-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Merenje i praćenje usvajanja platforme",
+    "koraci": [
+      "Definisati ključne metrike poput učestalosti isporuke, vremena do prve izmene i zadovoljstva inženjera",
+      "Sprovoditi redovne ankete o zadovoljstvu razvojnim iskustvom",
+      "Pratiti procenat timova koji koriste preporučene standardne tokove rada",
+      "Ako usvajanje padne ispod praga, istražiti uzroke i prilagoditi ili ukinuti funkcionalnost"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-platform-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Otkrivanje i klasifikacija ličnih podataka",
+    "koraci": [
+      "Skeniraj sve sisteme za skladištenje podataka, uključujući baze, logove, keševe, indekse i trećestrane servise.",
+      "Razvrstaj svako polje po osetljivosti: direktni identifikatori, kvazi-identifikatori i posebne kategorije podataka.",
+      "Napravi mapu podataka koja povezuje polje sa lokacijom, svrhom, pravnim osnovom, rokom čuvanja i putem brisanja.",
+      "Ponavljaj skeniranje periodično jer slobodan tekst i logovi vremenom počnu da sadrže neklasifikovane podatke."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-privacy-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Sprovođenje pristanka na nivou pisanja podataka",
+    "koraci": [
+      "Postavi proveru pristanka tačno na mestu gde se podatak upisuje ili koristi, a ne samo u evidenciji.",
+      "Razdvoji saglasnosti po nameni, poput analitike, marketinga i personalizacije, svaku sa sopstvenom verzijom i vremenskom oznakom.",
+      "Pre slanja podataka trećoj strani, primeni pseudonimizaciju kako bi se smanjio rizik.",
+      "Testiraj da li odjava zaista blokira operaciju, a ne da samo menja zastavicu u bazi."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-privacy-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Automatizacija brisanja na zahtev (pravo na zaborav)",
+    "koraci": [
+      "Na osnovu mape podataka pronađi sve lokacije gde se nalaze podaci korisnika.",
+      "Pokreni idempotentne zadatke brisanja za svaki sistem: baze, replike, magacine podataka, indekse, keševe i trećestrane servise.",
+      "Prati potvrde izvršenja iz svakog sistema i rukuj izuzecima koji imaju pravni osnov za zadržavanje.",
+      "Nakon brisanja, ponovo pretraži sisteme da potvrdiš da podaci zaista više ne postoje.",
+      "Generiši revizijski zapis sa detaljima šta je obrisano, odakle i kada."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-privacy-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Provera anonimizacije i minimizacija podataka",
+    "koraci": [
+      "Preispitaj svrhu i pravni osnov za svako prikupljeno polje pre nego što se ono skladišti.",
+      "Izbegavaj prikupljanje polja bez jasne namene već u fazi projektovanja sistema.",
+      "Testiraj rizik ponovne identifikacije kombinovanjem kvazi-identifikatora pre nego što skup podataka nazoveš anonimizovanim.",
+      "Primeni odgovarajuću tehniku zaštite poput agregacije, k-anonimnosti ili diferencijalne privatnosti u zavisnosti od upotrebe podataka.",
+      "Postavi automatske poslove za isticanje roka čuvanja kako bi se podaci brisali ili arhivirali bez ljudske intervencije."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-privacy-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Prevođenje zahteva u precizan spec prompta",
+    "koraci": [
+      "Utvrdi tačan format izlaza koji se očekuje od modela",
+      "Identifikuj tri najčešća tipa ulaza za pozitivne primere",
+      "Definiši koje ulaze model treba da odbije ili preusmeri",
+      "Zapiši sve zahteve u dokument spec pre pisanja promta"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-prompt-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada sistemskog prompta po strukturi",
+    "koraci": [
+      "Napiši ulogu, ograničenja, način rezonovanja i primere u jasnoj strukturi",
+      "Postavi temperaturu na nulu radi predvidivog testiranja",
+      "Izbegavaj neodređene reči i zameni ih konkretnim merljivim pravilima",
+      "Dodaj few-shot primere za tipične i granične slučajeve"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-prompt-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Testiranje i iterativno poboljšanje prompta",
+    "koraci": [
+      "Napravi test skup sa uobičajenim, graničnim i neuspešnim scenarijima",
+      "Pokreni ručne testove i beleži svako iznenađujuće ponašanje modela",
+      "Menjaj samo jednu stvar odjednom kako bi se znao uzrok promene",
+      "Ponovo pokreni sve ranije testove da bi se uhvatile regresije",
+      "Zamrzni verziju prompta tek kada tri uzastopna testiranja prođu uspešno"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-prompt-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Verzionisanje i priprema za produkciju",
+    "koraci": [
+      "Sačuvaj finalni prompt kao poseban fajl u sistemu za verzionisanje",
+      "Vodi changelog sa izmenama i izmerenim efektima svake verzije",
+      "Dokumentuj model, temperaturu i ograničenja korišćena pri testiranju",
+      "Opiši poznata ograničenja i podesi automatske regresione testove"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-prompt-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Dizajn strategije chunkovanja",
+    "koraci": [
+      "Analiziraj tip i strukturu dokumenta pre izbora metode deljenja teksta",
+      "Koristi deljenje po strukturi (naslovima) za dokumente sa jasnom hijerarhijom",
+      "Primeni semantičko deljenje za nestrukturisan tekst uz podešavanje veličine i preklapanja",
+      "Testiraj veličinu chunk-ova na realnim upitima umesto da se oslanjaš na podrazumevane vrednosti",
+      "Proveri da li chunk veličina preko 1000 tokena smanjuje preciznost pretrage"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-rag-pipeline-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja hibridne pretrage i re-rankinga",
+    "koraci": [
+      "Kombinuj semantičku (vektorsku) i ključnu (BM25/full-text) pretragu sa podesivom težinom",
+      "Fino podesi parametar alfa prema domenu upita kroz testiranje više vrednosti",
+      "Primeni metapodatke za filtriranje opsega pre semantičke pretrage",
+      "Dodaj cross-encoder re-ranking samo kada je preciznost pretrage usko grlo",
+      "Izmeri dobitak u preciznosti naspram dodatne latencije pre uvođenja re-rankera u produkciju"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-rag-pipeline-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Postavljanje async pipeline-a za ingestiju",
+    "koraci": [
+      "Obradi dokumente, chunkuj ih i generiši embeddinge asinhrono u paketima",
+      "Koristi masovno ubacivanje podataka u bazu umesto pojedinačnog unosa",
+      "Podesi vektorski indeks (npr. HNSW) prema ciljanom odnosu latencije i preciznosti",
+      "Validiraj kvalitet chunk-ova pre pokretanja pune ingestije",
+      "Prati propusnost i vreme izgradnje indeksa kao meru performansi"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-rag-pipeline-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Eval-vođena iteracija kvaliteta pretrage",
+    "koraci": [
+      "Napravi zlatni skup pitanja i očekivanih odgovora za merenje kvaliteta",
+      "Pokreni eval harness (npr. RAGAS) za preciznost, odziv i vernost odgovora",
+      "Identifikuj metriku sa najlošijim rezultatom i postavi hipotezu uzroka",
+      "Menjaj jednu promenljivu odjednom i ponovo pokreni evaluaciju",
+      "Zadrži samo izmene koje poboljšavaju ciljnu metriku bez degradacije drugih",
+      "Prati produkcijski kvalitet pretrage kroz logovanje upita i detekciju drifta"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-rag-pipeline-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Brzo postavljanje tehnoloskog stabla za prototip",
+    "koraci": [
+      "Odabrati Next.js i sličan moderan okvir radi minimalnog vremena podešavanja",
+      "Konfigurisati autentifikaciju preko gotovog servisa poput Clerk-a",
+      "Postaviti bazu podataka uz Prisma i Supabase za trenutnu skalabilnost",
+      "Deplojovati projekat na Vercel radi instant hostinga i pregleda"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-rapid-prototyper.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Definisanje hipoteze i minimalnog seta funkcija",
+    "koraci": [
+      "Jasno formulisati osnovnu pretpostavku koja se testira prototipom",
+      "Odrediti metrike uspeha pre početka razvoja",
+      "Izabrati najviše pet ključnih funkcija neophodnih za validaciju",
+      "Fokusirati se na glavni korisnički tok umesto na sporedne detalje"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-rapid-prototyper.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Implementacija osnovnih korisničkih tokova i formi",
+    "koraci": [
+      "Koristiti gotove UI komponente poput shadcn/ui za brzu izradu interfejsa",
+      "Napraviti formulare sa validacijom pomoću react-hook-form i sheme podataka",
+      "Povezati formu sa API endpointom za slanje i čuvanje podataka",
+      "Dodati osnovno rukovanje greškama i poruke korisniku"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-rapid-prototyper.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Postavljanje analitike, A/B testiranja i prikupljanja povratnih informacija",
+    "koraci": [
+      "Ugraditi praćenje događaja od prvog dana razvoja",
+      "Implementirati jednostavan sistem A/B testiranja za ključne elemente",
+      "Dodati mehanizam za prikupljanje korisničkih povratnih informacija unutar aplikacije",
+      "Pratiti metrike dnevno i planirati iteracije na osnovu rezultata",
+      "Definisati prag uspeha za prelazak sa prototipa na produkciju"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-rapid-prototyper.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Projektovanje reconnect-safe protokola",
+    "koraci": [
+      "Klijent pamti poslednji primenjeni redni broj operacije i traži nastavak od tog mesta",
+      "Svaka operacija dobija jedinstveni identifikator da bi bila bezbedna za ponovno slanje",
+      "Server dodeljuje redosled operacija, dok klijentski časovnici ne određuju poredak",
+      "Pri gubitku konekcije koristi se eksponencijalni backoff sa nasumičnim zakašnjenjem"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-realtime-collaboration-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Izbor modela konvergencije po tipu podataka",
+    "koraci": [
+      "Analiziraj svako polje podataka i označi da li je trajno ili privremeno",
+      "Za tekst i slična polja gde se izmene preklapaju koristi CRDT ili OT pristup",
+      "Za pojedinačne vrednosti kao status koristi server-arbitrisani last-writer-wins",
+      "Za brojače koristi CRDT brojač ili server inkrement operaciju umesto izračunate vrednosti",
+      "Za liste sa redosledom primeni frakciono indeksiranje uz server razrešavanje sukoba"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-realtime-collaboration-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Implementacija ephemeralnog sistema prisustva",
+    "koraci": [
+      "Čuvaj podatke o prisustvu odvojeno od trajnog dokumenta kroz poseban kanal",
+      "Osveži TTL za svakog korisnika pri svakom heartbeat signalu",
+      "Objavljuj promene prisustva drugim pretplatnicima preko pub/sub mehanizma",
+      "Ograniči broj emitovanja na oko deset puta u sekundi po sobi radi performansi",
+      "Prikazuj samo korisnike čiji je poslednji signal svež, ostale postepeno ukloni"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-realtime-collaboration-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Testiranje i skaliranje u neprijateljskim mrežnim uslovima",
+    "koraci": [
+      "Simuliraj prekid konekcije usred operacije i proveri da li se primenjuje tačno jednom",
+      "Testiraj dugotrajan offline rad sa gomilom operacija u redu čekanja pre ponovnog povezivanja",
+      "Proveri da dva klijenta koja istovremeno menjaju isti deo podataka konvergiraju ka istom rezultatu",
+      "Uvedi backpressure i spajanje ažuriranja da server memorija ne naraste neograničeno",
+      "Osiguraj da deploy postepeno ispražnjava konekcije uz nasumično kašnjenje da izbegneš talas ponovnih povezivanja",
+      "Automatizuj sve ove scenarije u kontinuiranoj integraciji pre svakog spajanja koda"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-realtime-collaboration-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Audit prilika za refaktorisanje u celom opsegu",
+    "koraci": [
+      "Pregledati sve navedene krate, module, fajlove i feature-gated kod u traženom obimu",
+      "Pronaći dokazane probleme i potkrepiti ih konkretnim dokazima iz koda",
+      "Razdvojiti nalaze koji se mogu samostalno primeniti od onih koji moraju ići zajedno",
+      "Prijaviti delove koda koji nisu bili dostupni ili pokriveni analizom",
+      "Sastaviti strukturisan izveštaj sa lokacijom, dokazom, krajnjim stanjem i rizikom za svaki nalaz"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-rust-refactoring-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Implementacija celovitog refaktorisanja kroz repozitorijum",
+    "koraci": [
+      "Grupisati međuzavisne izmene u celovite logičke celine pre primene",
+      "Ažurirati sve definicije, pozive, importe, re-eksporte, testove i dokumentaciju vezane za promenu",
+      "Kreirati, spojiti, razdvojiti ili ukloniti fajlove i module kada to stvarno poboljšava strukturu",
+      "Ukloniti stare aliase, duplirane putanje i zakomentarisan kod nakon migracije",
+      "Dodati regresione testove za svaki ispravljen dokazani defekt"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-rust-refactoring-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Očuvanje spoljašnjeg ugovora i bezbedno ponašanje",
+    "koraci": [
+      "Prepoznati javni API, redosled, greške, panike i vreme oslobađanja resursa kao vidljivo ponašanje",
+      "Tražiti eksplicitno odobrenje pre bilo kakve promene koja utiče na spoljašnju kompatibilnost",
+      "Izbegavati uvođenje unsafe bloka ili tihog gubitka podataka radi lakšeg refaktorisanja",
+      "Jasno razdvojiti strukturne dokaze od izmerenih tvrdnji o performansama"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-rust-refactoring-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Verifikacija izmena pre zaključenja posla",
+    "koraci": [
+      "Pokrenuti formatiranje koda prema konfigurisanim pravilima projekta",
+      "Izvršiti ciljane testove, zatim šire testove na nivou krate ili radnog prostora",
+      "Pokrenuti proveru kompajlera i Clippy bez korišćenja lint supresije kao prečice",
+      "Proveriti pokrivenost feature kombinacija i ciljnih platformi relevantnih za promenu",
+      "Pregledati konačnu razliku koda kako bi se potvrdilo da su sve izmene neophodne i kompletne"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-rust-refactoring-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Dizajn mapiranja i analizatora po poljima",
+    "koraci": [
+      "Definisati zasebne analizatore za indeksiranje i za pretragu po jeziku i tipu polja",
+      "Dodati nestemovano podpolje za precizne fraze i keyword podpolje za identifikatore poput SKU",
+      "Proveriti analyze API na stvarnim terminima da se potvrdi poklapanje indeks/upit strane",
+      "Koristiti sinonime na nivou upita kako bi mogli da se ažuriraju bez reindeksiranja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-search-relevance-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Strukturiranje upita za recall pa precision",
+    "koraci": [
+      "Prvo proveriti da li ispravan dokument uopšte može da se poklopi pomoću explain API-ja",
+      "Koristiti filter klauzule za binarne uslove koje se keširaju i ne utiču na skor",
+      "Postaviti must deo sa težinama po poljima i podesivim minimum_should_match za recall",
+      "Dodati should signale poput popularnosti i svežine koji blago utiču na rangiranje",
+      "Tek nakon obezbeđenog recall-a fino podešavati boostove za preciznost"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-search-relevance-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Hibridno pretraživanje sa rank fusion",
+    "koraci": [
+      "Kombinovati leksičku BM25 pretragu i vektorsku kNN pretragu u istom upitu",
+      "Primeniti recipročnu fuziju rangova da se izbegne problem neuporedivih skorova",
+      "Zadržati filtere i tačne termine na leksičkoj strani, a semantiku za parafraze i nameru",
+      "Validirati hibridni pristup naspram isključivo leksičkog i isključivo semantičkog na setu ocena"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-search-relevance-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Ocenjivanje relevantnosti i operativno praćenje",
+    "koraci": [
+      "Izvući upite iz logova po segmentima glava/torzo/rep i identifikovati upite bez rezultata",
+      "Sastaviti i verzionisati set ocenjenih upita pored šablona upita u repozitorijumu",
+      "Meriti nDCG, MRR, recall i stopu upita bez rezultata pre i posle svake izmene",
+      "Pokrenuti offline evaluaciju u CI i blokirati spajanje ako skor padne ispod praga",
+      "Pustiti pobedničke promene kroz online eksperiment pre potpunog uvođenja",
+      "Reindeksirati kroz novu verzionisanu kolekciju iza alijasa radi nulte vremena zastoja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-search-relevance-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Audit pristupačnosti po WCAG/508 standardu",
+    "koraci": [
+      "Utvrdi koji standard pravno važi i koji je zakonski osnov za sistem.",
+      "Definiši reprezentativne stranice, tokove i tipove dokumenata za testiranje.",
+      "Pokreni automatske skenere radi prvog brzog pregleda problema.",
+      "Sprovedi ručno testiranje tastaturom i sa čitačima ekrana (JAWS, NVDA, VoiceOver).",
+      "Zabeleži nalaze po ozbiljnosti i poveži ih sa konkretnim kriterijumima uspeha.",
+      "Sačini izveštaj sa verdiktom o usklađenosti i planom sanacije."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-section-508-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Implementacija ARIA obrazaca za prilagođene vidžete",
+    "koraci": [
+      "Proveri da li postoji nativni HTML element koji može zameniti prilagođeni vidžet.",
+      "Primeni ispravne role, stanja i svojstva prema ARIA Authoring Practices obrascu.",
+      "Definiši i implementiraj očekivano ponašanje tastature za dati vidžet.",
+      "Upravljaj fokusom pri otvaranju i zatvaranju (bez zarobljavanja fokusa).",
+      "Proveri najavu uloge, imena i stanja kroz sve glavne čitače ekrana."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-section-508-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada pristupačnih formulara i obrade grešaka",
+    "koraci": [
+      "Poveži svaki kontrolni element sa odgovarajućom labelom, ne koristeći samo placeholder.",
+      "Grupiši povezane kontrole i programski poveži uputstva sa poljima.",
+      "Osiguraj da se greške prikazuju tekstualno i programski povezuju sa poljem.",
+      "Omogući da se status i greške najavljuju kroz live regione asistivnoj tehnologiji.",
+      "Proveri logičan redosled tabulacije i vidljivost fokusa na svim poljima."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-section-508-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Sanacija i izrada VPAT/ACR izveštaja",
+    "koraci": [
+      "Prioritizuj nađene probleme po ozbiljnosti od kritičnih do manjih.",
+      "Za svaki nalaz definiši uzrok i konkretnu izmenu izvornog koda, bez upotrebe overlay rešenja.",
+      "Ponovo testiraj tastaturom i sa više čitača ekrana nakon izmena.",
+      "Ažuriraj VPAT/ACR dokument tako da svaka tvrdnja o usklađenosti bude potkrepljena stvarnim testiranjem.",
+      "Uspostavi proveru u razvojnom procesu (CI alati, pregled pre objavljivanja) radi sprečavanja regresije."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-section-508-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Implementacija Laravel/Livewire komponenti",
+    "koraci": [
+      "Analiziraj listu zadataka i specifikaciju bez dodavanja nezatraženih funkcija",
+      "Kreiraj Livewire komponente sa jasno definisanim stanjem i metodama",
+      "Poveži komponente sa odgovarajućim Blade prikazima",
+      "Testiraj svaki interaktivni element odmah nakon izrade"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-senior-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Premium UI dizajn sa FluxUI i CSS efektima",
+    "koraci": [
+      "Koristi FluxUI komponente prema zvaničnoj dokumentaciji i internom indeksu",
+      "Primeni efekte stakla, organske oblike i sofisticiranu tipografiju",
+      "Dodaj magnetne efekte i mikro-interakcije na dugmad i kartice",
+      "Obavezno implementiraj prekidač za svetlu/tamnu/sistemsku temu",
+      "Osiguraj glatke i trenutne prelaze teme"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-senior-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Integracija Three.js naprednih efekata",
+    "koraci": [
+      "Identifikuj delove sajta pogodne za 3D ili čestice u pozadini",
+      "Implementiraj WebGL scene optimizovane za performanse",
+      "Dodaj paralaks i glatko skrolovanje gde poboljšava doživljaj",
+      "Proveri da animacije rade na 60 frejmova u sekundi"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-senior-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Optimizacija performansi i kvaliteta",
+    "koraci": [
+      "Ugradi kritičan CSS direktno u stranicu radi bržeg učitavanja",
+      "Primeni lenjo učitavanje slika uz intersection observer",
+      "Koristi WebP ili AVIF format za optimizaciju slika",
+      "Testiraj responzivnost na više veličina ekrana",
+      "Proveri da vreme učitavanja bude ispod 1.5 sekunde",
+      "Proveri usklađenost sa WCAG 2.1 AA standardom pristupačnosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-senior-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Metodično resavanje problema u ServiceNow-u",
+    "koraci": [
+      "Reprodukuj problem na sub-prod instanci sa konkretnim zapisom i korisnikom",
+      "Prikupi dokaze iz loga, gs.log izlaza, Script Debugger-a ili Background Script-a",
+      "Izoluj da li je problem OOTB ili posledica custom koda gasenjem prilagodjenih skripti jednu po jednu",
+      "Potvrdi uzrok uz konkretan dokaz pre nego sto predlozis bilo kakvu izmenu",
+      "Primeni ispravku i proveri rezultat na originalnom i na jednom nepovezanom zapisu",
+      "Zabelezi plan povratka na prethodno stanje pre nego sto menjas podatke"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-servicenow-developer-mentor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Pisanje reusable server logike preko Script Include i GlideAjax",
+    "koraci": [
+      "Smesti server logiku u Script Include umesto u Business Rule",
+      "Obezbedi da klijentski skript poziva server iskljucivo preko GlideAjax-a",
+      "Koristi getParameter na serveru da preuzmes vrednosti poslate sa klijenta",
+      "Vrati samo neophodan rezultat klijentu i prikazi ga u formi"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-servicenow-developer-mentor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Optimizacija upita i izbegavanje performansih problema",
+    "koraci": [
+      "Koristi GlideAggregate za brojanje i grupisanje umesto GlideRecord petlje",
+      "Ogranici upite pomocu setLimit, indeksiranih polja i addActiveQuery",
+      "Proveri broj redova koje upit pogadja pre nego sto ga pustis u petlju",
+      "Izbegavaj neogranicene upite i velike liste bez optimizovanih prikaza"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-servicenow-developer-mentor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Primena bezbednosne i razvojne higijene",
+    "koraci": [
+      "Postavi Business Rule da bude async ili display gde god je moguce radi performansi",
+      "Pisi defanzivne canRead i canWrite provere umesto zaobilazenja ACL-a",
+      "Cuvaj konfiguraciju u sys_properties ili referentnim zapisima umesto hardkodovanih sys_id vrednosti",
+      "Dokumentuj u zaglavlju skripte tabelu, okidac i namenu koda",
+      "Objasni korisniku svaku odluku i posledice skripte kako bi sledeci put sam resio slican problem"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-servicenow-developer-mentor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Otkrivanje domena kroz event storming",
+    "koraci": [
+      "Sprovesti event storming da bi se identifikovali ograničeni konteksti",
+      "Mapirati domenske događaje i komande koje pokreću promene stanja",
+      "Definisati granice agregata i njihove invarijante",
+      "Napraviti mapu konteksta sa odnosima uzvodno/nizvodno i anti-korupcionim slojevima",
+      "Proceniti da li domen zahteva bogato modelovanje ili je dovoljan jednostavan CRUD pristup"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-software-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izbor arhitekturnog obrasca prema kontekstu",
+    "koraci": [
+      "Analizirati prirodu problema i potrebe za izolacijom domena od infrastrukture",
+      "Uporediti opcije poput slojevite, heksagonalne, onion, modularnog monolita, mikroservisa i event-driven arhitekture",
+      "Proveriti veličinu tima, potrebu za nezavisnim skaliranjem i jasnoću granica",
+      "Izabrati obrazac koji rešava stvaran problem kuplovanja ili složenosti, a ne dodaje nepotrebnu ceremoniju"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-software-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Pisanje arhitekturnih odluka (ADR)",
+    "koraci": [
+      "Opisati kontekst i problem koji motiviše odluku",
+      "Navesti najmanje dve moguće opcije sa njihovim prednostima i manama",
+      "Jasno formulisati samu odluku i razlog izbora",
+      "Dokumentovati posledice odluke - šta postaje lakše a šta teže",
+      "Označiti status odluke i ažurirati ga kada se odluka zameni ili zastari"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-software-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Očuvanje pravca zavisnosti i granica slojeva",
+    "koraci": [
+      "Proveriti da domenska logika ne zavisi od frejmvorka, baze, mreže ili transportnih mehanizama",
+      "Razdvojiti aplikativne servise koji koordinišu tokove rada od domenskih pravila",
+      "Usmeriti adaptere da prevode između spoljašnjih mehanizama i aplikativnih portova",
+      "Obezbediti da komunikacija između konteksta ide kroz eksplicitne ugovore, događaje ili API-je",
+      "Označiti direktno pozivanje repozitorijuma iz kontrolera kao arhitekturni smrad osim ako je namerno"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-software-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Bezbedno pisanje pametnih ugovora",
+    "koraci": [
+      "Primeni obrazac checks-effects-interactions pre svakog spoljnog poziva",
+      "Koristi call sa reentrancy zaštitom umesto transfer ili send",
+      "Baziraj implementaciju na proverenim OpenZeppelin bibliotekama",
+      "Izbegavaj tx.origin za autorizaciju i ukloni selfdestruct funkcionalnost",
+      "Validiraj povratne vrednosti spoljnih poziva pre nastavka izvršavanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-solidity-smart-contract-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Optimizacija potrošnje gasa",
+    "koraci": [
+      "Pakuj promenljive u strukturama da bi stale u manji broj storage slotova",
+      "Koristi calldata umesto memory za parametre koji se samo čitaju",
+      "Zameni require poruke prilagođenim greškama radi manje potrošnje",
+      "Keširaj vrednosti iz storage-a u memoriju pre ponovljene upotrebe",
+      "Meri potrošnju gasa alatom forge snapshot i optimizuj kritične putanje"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-solidity-smart-contract-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn nadogradivih ugovora",
+    "koraci": [
+      "Izaberi odgovarajući proxy obrazac (UUPS, transparentni ili beacon)",
+      "Razdvoji logiku, skladište i kontrolu pristupa u posebne module",
+      "Planiraj raspored storage promenljivih tako da bude kompatibilan s budućim nadogradnjama",
+      "Testiraj proces nadogradnje od verzije 1 do verzije 2 uz proveru očuvanja stanja",
+      "Ugradi mehanizme za hitne slučajeve poput pauze i vremenske brave"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-solidity-smart-contract-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Testiranje i priprema za reviziju",
+    "koraci": [
+      "Napiši jedinične i fuzz testove sa pokrivenošću grana preko 95 posto koristeći Foundry",
+      "Dodaj invarijantne testove koji proveravaju pravila protokola kroz nasumične pozive",
+      "Pokreni statičku analizu alatima poput Slither i Mythril i reši sve nalaze",
+      "Pripremi dokumentaciju za audit sa dijagramima arhitekture i poznatim rizicima",
+      "Izvrši probni deploy na testnet mreži pre finalnog puštanja na glavnu mrežu"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-solidity-smart-contract-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Definisanje SLO-a i budžeta grešaka",
+    "koraci": [
+      "Identifikuj ključne korisničke tokove i definiši SLI koji odražava iskustvo korisnika",
+      "Postavi ciljani SLO i vremenski prozor merenja",
+      "Izračunaj preostali budžet grešaka na osnovu trenutne potrošnje",
+      "Koristi budžet kao kriterijum za odluku da li se šalju nove funkcije ili se radi na pouzdanosti",
+      "Podesi alarme na osnovu stope trošenja budžeta sa kratkim i dugim prozorom"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-sre.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izgradnja observabilnosti kroz tri stuba",
+    "koraci": [
+      "Prikupljaj metrike za praćenje trendova i zdravlja sistema",
+      "Čuvaj detaljne logove za rekonstrukciju dešavanja u određenom trenutku",
+      "Implementiraj distribuirano praćenje zahteva kroz servise radi lociranja kašnjenja",
+      "Prati zlatne signale: kašnjenje, saobraćaj, greške i zasićenost resursa",
+      "Postavi dashboard koji omogućava brzo odgovaranje na pitanje zašto nešto ne radi"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-sre.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Smanjenje operativnog opterećenja automatizacijom",
+    "koraci": [
+      "Uoči ponavljajuće ručne zadatke koji se obavljaju više od jednom",
+      "Napravi automatizovani runbook za poznate scenarije kvarova",
+      "Izmeri uštedu vremena koju automatizacija donosi timu",
+      "Postepeno zameni ručne intervencije automatizovanim rešenjima"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-sre.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Bezbedno uvođenje promena i chaos testiranje",
+    "koraci": [
+      "Primeni postepeno uvođenje izmena kroz kanarinca pa procenat pa potpuno puštanje",
+      "Prati metrike tokom svake faze rolauta radi ranog otkrivanja problema",
+      "Sprovodi kontrolisane eksperimente otkazivanja da bi se otkrile slabe tačke sistema",
+      "Analiziraj incidente bez okrivljivanja pojedinaca i fokusiraj se na sistemske popravke",
+      "Prati MTTR kao ključnu meru uspešnosti odgovora na incidente"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-sre.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Pisanje README fajlova koji odmah privlače",
+    "koraci": [
+      "Napiši kratak opis šta projekat radi i zašto je bitan",
+      "Dodaj najkraći mogući put do prvog uspešnog pokretanja",
+      "Prikaži osnovnu i naprednu upotrebu kroz radne primere koda",
+      "Uključi tabelu konfiguracionih opcija i link na punu API dokumentaciju",
+      "Proveri da dokument prolazi test od pet sekundi razumljivosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-technical-writer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Kreiranje API referentne dokumentacije",
+    "koraci": [
+      "Opiši autentifikaciju, limite zahteva i verzionisanje na početku specifikacije",
+      "Dokumentuj svaki endpoint sa opisom, primerima zahteva i odgovora",
+      "Navedi moguće greške i njihove kodove za svaki poziv",
+      "Generiši referencu automatski iz OpenAPI ili docstring specifikacija",
+      "Testiraj sve primere koda pre objavljivanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-technical-writer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada tutorijala korak-po-korak",
+    "koraci": [
+      "Definiši šta će čitalac izgraditi i koliko vremena je potrebno",
+      "Navedi preduslove i potrebno predznanje pre početka",
+      "Podeli uputstvo na atomske korake sa objašnjenjem razloga pre akcije",
+      "Prikaži očekivani izlaz i uobičajene greške sa rešenjima",
+      "Završi rezimeom naučenog i predlozima sledećih koraka"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-technical-writer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Održavanje i revizija dokumentacije",
+    "koraci": [
+      "Intervjuiši inženjere i pregledaj tikete podrške da pronađeš nejasnoće",
+      "Testiraj sopstvena uputstva u čistom okruženju da proveriš tačnost",
+      "Organizuj reviziju tehničke tačnosti i jasnoće sadržaja",
+      "Prati analitiku stranica da identifikuješ delove koji zbunjuju čitaoce",
+      "Ažuriraj dokumentaciju paralelno sa svakom izmenom softvera",
+      "Vodi evidenciju o poslednjoj proveri i tačnosti svakog dokumenta"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-technical-writer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Klasifikacija oblika podataka za izbor arhetipa izgleda",
+    "koraci": [
+      "Učitaj ulazni podatak i proveri da li je skalar, niz ili mapiranje.",
+      "Za nizove mapiranja izračunaj Jaccard sličnost ključeva da proceniš uniformnost.",
+      "Pretraži ključeve na vremenske i numeričke oznake radi razlikovanja vremenske linije od tabele.",
+      "Na osnovu dobijenih mera dodeli jedan od pet arhetipova izgleda (kartice, vremenska linija, bedževi, tabela, prozni tok).",
+      "Vrati ceo podatak bez odbacivanja nepoznatih polja, čak i ako ne odgovaraju poznatoj šemi."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-universal-document-compiler.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Parsiranje YAML u CST i očuvanje izvornih tokena",
+    "koraci": [
+      "Učitaj YAML izvor uz čuvanje izvornih tokena, komentara i razmaka.",
+      "Poveži svaki čvor sa tačnim rasponom karaktera u tekstu.",
+      "Izgradi mapiranje između linija, pozicija i granica čvorova radi kasnije sinhronizacije.",
+      "Obezbedi da se nijedna izmena ne vrši preko običnog serijalizovanja koje briše komentare."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-universal-document-compiler.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Bezbedna izmena redosleda elemenata u nizu (CST mutacija)",
+    "koraci": [
+      "Prepoznaj izvorni i ciljni pokazivač elementa koji se premešta unutar niza.",
+      "Proveri validnost putanja i indeksa pre izvođenja izmene.",
+      "Izvrši hirurško premeštanje čvora unutar niza bez ponovnog parsiranja celog dokumenta.",
+      "Sačuvaj izmenjeni YAML tekst uz očuvanje komentara i formatiranja.",
+      "Vrati opseg izmenjenog teksta radi ciljanog osvežavanja prikaza."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-universal-document-compiler.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Paginacija i poštovanje granica fizičke stranice",
+    "koraci": [
+      "Odredi pravila prelamanja za naslove, kartice i redove tabele (izbegavanje preloma unutar elementa).",
+      "Proveri da sadržaj po koloni ne prelazi budžet visine stranice (npr. A4 format).",
+      "Primeni automatsko binarno deljenje sadržaja kada dođe do prekoračenja granice.",
+      "Ukloni prazne stranice i obezbedi da tipografija ne bude presečena preko granice stranice."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-universal-document-compiler.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Temiranje preko dizajn tokena i Sass podešavanja",
+    "koraci": [
+      "Otvoriti _uswds-theme.scss i podesiti $theme-* promenljive za boje, razmak, tipografiju i fontove",
+      "Koristiti sistemske tokene boja umesto heks vrednosti i proveriti kontrast posle izmena",
+      "Razmak definisati preko units() sistema, a tipografiju preko skale fontova bez proizvoljnih brojeva",
+      "Kompajlirati promene i proveriti da nijedan fajl unutar node_modules/@uswds nije menjan",
+      "Izolovati prilagođeni kod od osnovnog paketa radi lakšeg ažuriranja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-uswds-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Implementacija komponenti po USWDS specifikaciji",
+    "koraci": [
+      "Za svaku potrebu prvo proveriti postoji li zvanična USWDS komponenta pre pravljenja nove",
+      "Koristiti propisanu markup strukturu, klase i JS inicijalizaciju komponente",
+      "Prilagođavanja raditi samo kroz tokene, utility klase ili kompoziciju, nikad kroz forkovanje izvora",
+      "Testirati tastaturu, čitač ekrana i kontrast posle svake prilagodbe da se ne naruši pristupačnost",
+      "Dokumentovati razlog ako je neka komponenta napravljena po meri umesto zvanične"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-uswds-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Postavljanje obaveznih federalnih elemenata i usklađenosti",
+    "koraci": [
+      "Dodati zvanični .gov baner sa objašnjenjem 'Here's how you know'",
+      "Implementirati USWDS Identifier sa obaveznim linkovima (About, Accessibility, FOIA, Privacy, itd.)",
+      "Proveriti da je sajt na HTTPS i da zadovoljava zahteve 21st Century IDEA zakona",
+      "Potvrditi usklađenost sa Section 508 / WCAG 2.1 AA kroz testiranje asistivnim tehnologijama",
+      "Pregledati header i footer šablone da odgovaraju federalnom dizajn jeziku"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-uswds-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Integracija USWDS u CMS i responsive raspored",
+    "koraci": [
+      "Postaviti build pipeline preko npm i uswds-compile za kompajliranje tokena u CSS i JS",
+      "Uključiti USWDS resurse kao teme biblioteke u Drupalu (SDC/Twig) ili WordPress-u (wp_enqueue)",
+      "Mapirati komponente na šablone tako da markup odgovara USWDS strukturi",
+      "Graditi layout mobile-first koristeći USWDS grid i tokenizovane prelomne tačke",
+      "Testirati prikaz od 320px naviše i uvećanje do 400% bez horizontalnog skrola na pravom uređaju"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-uswds-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Projektovanje bitrate lestvice po sadržaju",
+    "koraci": [
+      "Analiziraj kompleksnost sadržaja, ciljne uređaje i distribuciju mreže pre izrade lestvice.",
+      "Definiši rungove razmaknute otprilike 1.5 do 2 puta po bitrejtu kako ABR ne bi bio zbunjen.",
+      "Uvek uključi nizak startni rung radi brzog prvog frejma na slabim mrežama.",
+      "Primeni per-title ili per-scene analizu da izbegneš trošenje bita na lak sadržaj ili gladovanje teškog.",
+      "Dodaj rungove samo tamo gde uređaji i mreže publike mogu da ih iskoriste."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-video-streaming-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Transkodovanje i pakovanje u CMAF (jednom, isporuka svuda)",
+    "koraci": [
+      "Enkoduj više rungova pomoću ffmpeg sa poravnatim keyframe-ovima i zatvorenim GOP-om.",
+      "Podesi fiksni frame rate pre GOP-a da ABR može čisto da prebacuje rungove na granicama segmenata.",
+      "Upakuj enkodovane rendicije jednom u CMAF format, generišući i HLS i DASH manifest iz istog izvora.",
+      "Validiraj oba manifesta i testiraj reprodukciju na realnoj matrici uređaja, posebno Safari/iOS.",
+      "Podesi dužinu segmenta svesno prema slučaju upotrebe (VOD, live ili low-latency), nikad podrazumevano."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-video-streaming-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "DRM zaštita bez ugrožavanja startnog puta",
+    "koraci": [
+      "Implementiraj multi-DRM (FairPlay, Widevine, PlayReady) paralelno sa učitavanjem sadržaja.",
+      "Pokreni preuzimanje licence paralelno sa startom plejbeka, ne sekvencijalno.",
+      "Unapred preuzmi ključeve gde je to moguće da se izbegne kašnjenje.",
+      "Testiraj rotaciju ključeva i zaštićenu reprodukciju na realnim uređajima pre lansiranja.",
+      "Proveri da rotacija ključeva ne izazove crni ekran tokom reprodukcije."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-video-streaming-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Merenje i optimizacija QoE na realnim mrežama",
+    "koraci": [
+      "Instrumentiši sesije da prate vreme do prvog frejma, odnos rebuferovanja i stopu neuspešnog starta.",
+      "Testiraj performanse na usporenoj 3G mreži i mobilnim mrežama visoke latencije, ne samo na brzoj kancelarijskoj konekciji.",
+      "Segmentiraj analizu po mrežnoj grupi i fokusiraj se na najgoru kohortu, ne na prosek.",
+      "Podesi keš ključeve i TTL vrednosti (duži za segmente, kraći za manifeste) i prati odnos pogodaka u kešu.",
+      "Prilagodi lestvicu, startni rung i ABR podešavanja plejbeka na osnovu izmerenih podataka, ne jednog brzog testa."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-video-streaming-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Validacija i predobrada audio zapisa",
+    "koraci": [
+      "Proveriti pravi format, kodek, broj kanala i trajanje fajla pomoću ffprobe umesto oslanjanja na ekstenziju.",
+      "Konvertovati audio na 16kHz mono i izdvojiti zvučni zapis iz video fajlova putem ffmpeg-a.",
+      "Normalizovati glasnoću po EBU R128 standardu i ukloniti tišinu ili šum.",
+      "Podeliti duge snimke na preklapajuće delove kako bi se izbeglo sečenje reči na granicama."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-voice-ai-integration-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Transkripcija govora pomoću Whisper modela",
+    "koraci": [
+      "Izabrati odgovarajuću veličinu lokalnog ili cloud modela prema zahtevima tačnosti, brzine i privatnosti.",
+      "Pokrenuti transkripciju uz detekciju govora kako bi se preskočila tišina.",
+      "Sačuvati vremenske oznake na nivou reči i segmenta za dalju upotrebu.",
+      "Spojiti rezultate iz svih delova snimka u jedinstvenu vremensku liniju, uklanjajući duplikate iz preklapanja."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-voice-ai-integration-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Prepoznavanje i dodela govornika (dijarizacija)",
+    "koraci": [
+      "Pokrenuti model za dijarizaciju kako bi se identifikovali segmenti po govornicima.",
+      "Uporediti vremenske intervale transkripta i dijarizacije radi preciznog pripisivanja govornika.",
+      "Zadržati oznake govornika kroz sve naredne faze obrade.",
+      "Označiti segmente sa preklapajućim govorom za dodatnu proveru."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-voice-ai-integration-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Generisanje strukturisanog izlaza i integracija",
+    "koraci": [
+      "Očistiti transkript od grešaka u interpunkciji i velikim slovima nastalim usled modela.",
+      "Izvesti transkript u formate poput SRT, VTT ili strukturisanog JSON-a sa vremenskim oznakama.",
+      "Pripremiti podatke za predaju LLM agentima, CMS sistemima ili API servisima uz jasnu šemu polja.",
+      "Primeniti pravila privatnosti poput redakcije ličnih podataka i poštovanja rokova čuvanja."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-voice-ai-integration-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Procena isplativosti prelaska na Wasm",
+    "koraci": [
+      "Proveri da li je zadatak računski intenzivan ili je samo sporo lepljivi kod oko DOM-a.",
+      "Izmeri postojeću JS ili nativnu implementaciju kao referentnu osnovu.",
+      "Uporedi rezultat sa tabelom odluke pre pisanja Rust/C++ koda.",
+      "Donesi odluku na osnovu konkretnih brojeva, ne pretpostavki."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-webassembly-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn granice JS-Wasm bez čestih poziva",
+    "koraci": [
+      "Grupiši podatke u velike bafere umesto poziva po elementu.",
+      "Premesti petlju unutar Wasm modula da se izbegnu skupi prelasci granice.",
+      "Koristi numeričke handle-ove ili deljenu memoriju umesto slanja čitavih objekata.",
+      "Minimizuj broj prelazaka granice i proveri profilisanjem da li dominira računanje."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-webassembly-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Bezbedno pokretanje nepouzdanog koda preko WASI",
+    "koraci": [
+      "Definiši tačno koje resurse (fajlovi, mreža) modul sme da koristi.",
+      "Konfiguriši Wasmtime/Wasmer kontekst sa minimalnim dozvolama po principu zabrani-po-podrazumevanom.",
+      "Testiraj da modul ne može da pristupi resursima van dodeljenih kapaciteta.",
+      "Koristi component model za tipizirane interfejse između modula različitih jezika."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-webassembly-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Smanjenje veličine i brzo učitavanje modula",
+    "koraci": [
+      "Primeni wasm-opt sa uklanjanjem mrtvog koda i debug informacija.",
+      "Podesi kompajlerske opcije za manju veličinu binarnog fajla (lto, strip, opt-level).",
+      "Koristi streaming kompilaciju da se modul učitava dok se preuzima.",
+      "Prati veličinu modula u CI kao budžet, slično ostalim resursima."
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-webassembly-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja unifikovanog request sloja sa autentifikacijom",
+    "koraci": [
+      "Napraviti wrapper funkciju koja umotava wx.request u Promise",
+      "Dodati token u header i rukovati isteklim tokenom kroz osvežavanje sesije",
+      "Obraditi različite tipove grešaka servera bez prekida toka",
+      "Centralizovati baznu URL adresu i zajedničke zaglavlja za sve pozive"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-wechat-mini-program-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Integracija WeChat Pay i pretplatničkih poruka",
+    "koraci": [
+      "Kreirati porudžbinu na serveru i dobiti parametre za plaćanje",
+      "Pozvati wx.requestPayment sa prosleđenim parametrima i obraditi otkazivanje ili grešku",
+      "Zatražiti dozvolu za pretplatničke poruke u trenutku najveće konverzije korisnika",
+      "Vratiti jasan rezultat uspeha, otkazivanja ili neuspeha plaćanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-wechat-mini-program-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Optimizacija performansi stranice i setData poziva",
+    "koraci": [
+      "Učitati osnovne podatke prvo, a tek zatim dodatne resurse poput slika",
+      "Smanjiti broj i veličinu setData poziva grupisanjem izmena",
+      "Unapred učitati podatke za verovatnu sledeću stranicu korisnika",
+      "Omogućiti deljenje sadržaja putem onShareAppMessage i onShareTimeline funkcija"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-wechat-mini-program-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Planiranje arhitekture i podpaketa radi usklađenosti sa WeChat pravilima",
+    "koraci": [
+      "Definisati rute stranica, tab bar i dozvole u app.json konfiguraciji",
+      "Podeliti funkcionalnosti na glavni paket i podpakete prema prioritetu korisničkog puta",
+      "Registrovati sve API, upload i download domene u WeChat administraciji unapred",
+      "Proveriti usklađenost sa pravilima privatnosti i pripremiti materijale za pregled aplikacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-wechat-mini-program-developer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Profilisanje performansi pre optimizacije",
+    "koraci": [
+      "Pokreni Query Monitor na ključnim šablonima i zabeleži broj upita, vreme izvršavanja i spore upite",
+      "Uradi Lighthouse test na usporenoj mobilnoj konekciji i zabeleži LCP, INP i CLS vrednosti",
+      "Proveri veličinu autoload opcija i identifikuj plagine koji je opterećuju",
+      "Popiši keš slojeve - da li object cache pogađa, da li je page cache podešen i da li su dinamičke stranice isključene",
+      "Sačuvaj sve podatke kao osnovu za poređenje pre i posle izmena"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-wordpress-performance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Optimizacija baze podataka i WP_Query upita",
+    "koraci": [
+      "Ograniči broj rezultata po upitu i izbegavaj posts_per_page=-1 na stranicama vidljivim korisnicima",
+      "Postavi no_found_rows na true kada paginacija nije potrebna i indeksiraj kolone korišćene u meta_query i tax_query",
+      "Pronađi i ukloni N+1 obrasce zamenom više upita jednim objedinjenim upitom",
+      "Prebaci velike nekeširane opcije na autoload=no i obriši napuštene opcije iz baze",
+      "Obmotaj skupe proračune u transients sa odgovarajućim vremenom isteka, oslonjene na object cache",
+      "Ponovo izmeri broj i vreme upita pomoću Query Monitor-a radi potvrde poboljšanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-wordpress-performance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Uspostavljanje slojevite keš arhitekture",
+    "koraci": [
+      "Instaliraj i proveri rad persistent object cache-a (Redis ili Memcached) kroz object-cache.php drop-in",
+      "Konfiguriši page caching za anonimni saobraćaj uz eksplicitno isključenje korpe, naplate, naloga i ulogovanih korisnika",
+      "Dodaj CDN za statičke resurse sa dugim TTL i edge HTML keš samo za anonimne korisnike",
+      "Proveri na edge nivou da se dinamičke i ulogovane stranice nikada javno ne keširaju",
+      "Izmeri stvarnu stopu pogodaka keša umesto da se pretpostavlja da radi"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-wordpress-performance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Optimizacija front-enda i slika za Core Web Vitals",
+    "koraci": [
+      "Minifikuj i kombinuj CSS i JS, ubaci kritični CSS inline, odloži nekritični JS i proveri da sve i dalje radi",
+      "Isključi (dequeue) resurse plagina na stranicama gde nisu potrebni, posebno kod page builder-a",
+      "Obezbedi da svaka slika ima odgovarajuću veličinu, moderni format (WebP/AVIF) i eksplicitne dimenzije radi sprečavanja CLS",
+      "Primeni lazy loading za slike ispod vidljivog dela ekrana, a LCP sliku učitaj odmah uz preload",
+      "Podesi opcache i PHP-FPM parametre prema veličini koda i hostingu",
+      "Ponovo izmeri LCP, INP i CLS na mobilnom uređaju i uporedi sa početnim stanjem"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-wordpress-performance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Bezbedno prilagođavanje WooCommerce sajta kroz child temu i hook-ove",
+    "koraci": [
+      "Kreiraj izmene isključivo u child temi ili posebnom plaginu, nikad u WooCommerce jezgru ili roditeljskoj temi",
+      "Koristi add_action i add_filter umesto prepisivanja template fajlova kad god postoji odgovarajuća kuka",
+      "Template override koristi samo kad je zaista neophodna izmena markupa i dokumentuj je",
+      "Testiraj svaku izmenu na realnoj korpi i checkout-u, uključujući mobilni prikaz, pre postavljanja uživo"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-wordpress-shopping-cart.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Upravljanje životnim ciklusom porudžbina i zalihama",
+    "koraci": [
+      "Nikada ne briši porudžbine – koristi promenu statusa, otkazivanje ili povraćaj novca",
+      "Definiši jasne statuse porudžbina koji odgovaraju stvarnom procesu ispunjenja, uključujući stanja neuspeha",
+      "Smanjuj zalihe tek u odgovarajućem statusu (npr. processing) koristeći WooCommerce API funkcije za zalihe",
+      "Poveži svaku promenu statusa sa email obaveštenjima, ispunjenjem, ERP/3PL sinhronizacijom i analitikom",
+      "Testiraj granične slučajeve poput delimičnih povraćaja, otkazanih porudžbina i isteklih kupona"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-wordpress-shopping-cart.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Konfiguracija poreza, kupona i checkout optimizacije",
+    "koraci": [
+      "Podesi poreski režim (uključen/isključen u cenu) i poreske klase kroz WooCommerce podešavanja, bez hardkodiranja stopa",
+      "Definiši pravila kupona sa jasnim ograničenjima i pravilima slaganja (stacking) sa drugim popustima",
+      "Testiraj kombinaciju popusta, akcijske cene i poreza da bi se proverila tačnost ukupnog iznosa",
+      "Dodaj prilagođena polja na checkout preko dokumentovanih metoda (Store API ili filter za klasičan checkout) uz serversku validaciju",
+      "Isključi stranice korpe, checkout-a i naloga iz full-page keširanja kako bi se izbegao prikaz zastarelih podataka"
+    ],
+    "napomene": "Destilovano iz agency-agents/engineering/engineering-wordpress-shopping-cart.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  }
+]

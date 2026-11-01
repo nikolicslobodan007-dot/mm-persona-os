@@ -1,0 +1,2774 @@
+[
+  {
+    "ime": "Isplata fakture uz proveru duplikata",
+    "koraci": [
+      "Proveri da li je faktura po referenci već plaćena.",
+      "Ako jeste, prekini obradu i javi status.",
+      "Proveri da li je primalac odobren u registru dobavljača.",
+      "Izvrši isplatu preko najpovoljnije platne šine.",
+      "Zabeleži rezultat isplate sa svim relevantnim podacima."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/accounts-payable-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Obrada ponavljajućih računa",
+    "koraci": [
+      "Preuzmi listu zakazanih plaćanja koja dospevaju.",
+      "Proveri da li iznos prelazi dozvoljeni limit potrošnje.",
+      "Ako prelazi, eskaliraj za ljudsku proveru.",
+      "Ako je u limitu, izvrši plaćanje i zabeleži ga.",
+      "Obavesti onoga ko je zatražio plaćanje o rezultatu."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/accounts-payable-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Obrada zahteva za plaćanje od drugih agenata",
+    "koraci": [
+      "Proveri da li je iznos ispravan i pozitivan broj.",
+      "Proveri da li iznos prelazi ovlašćeni limit.",
+      "Proveri da li je primalac odobren i ima validnu adresu.",
+      "Proveri da li je faktura već plaćena radi izbegavanja duplikata.",
+      "Izvrši plaćanje preko odgovarajuće platne šine i vrati status."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/accounts-payable-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Projektovanje kriptografskog identiteta agenta",
+    "koraci": [
+      "Definisati šemu identiteta sa poljima, algoritmima i dozvoljenim ovlašćenjima",
+      "Implementirati izdavanje akreditiva uz generisanje ključeva po standardima",
+      "Postaviti rokove važenja i raspored rotacije ključeva",
+      "Napraviti verifikacioni endpoint koji drugi agenti pozivaju",
+      "Testirati da li falsifikovan akreditiv može proći proveru i osigurati da ne može"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/agentic-identity-trust.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izrada modela poverenja na osnovu dokaza",
+    "koraci": [
+      "Definisati merljiva ponašanja koja utiču na skor, bez samoprijavljenih podataka",
+      "Implementirati funkciju bodovanja sa jasnom i proverljivom logikom",
+      "Postaviti pragove nivoa poverenja i povezati ih sa odlukama o autorizaciji",
+      "Uvesti opadanje poverenja za neaktivne ili zastarele agente",
+      "Proveriti da agent ne može sam da naduva sopstveni skor"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/agentic-identity-trust.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja lanca dokaza otpornog na izmene",
+    "koraci": [
+      "Kreirati skladište dokaza samo za dodavanje bez mogućnosti brisanja",
+      "Povezati svaki zapis sa prethodnim preko heš vrednosti radi integriteta lanca",
+      "Uvesti potpisivanje svakog zapisa ključem agenta",
+      "Napraviti nezavisan alat za proveru koji treća strana može koristiti bez poverenja u sistem",
+      "Testirati detekciju izmene istorijskog zapisa"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/agentic-identity-trust.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.91
+  },
+  {
+    "ime": "Verifikacija lanca delegiranja i ravnopravna provera agenata",
+    "koraci": [
+      "Proveriti potpis na svakoj karici lanca delegiranja",
+      "Proveriti da li je opseg ovlašćenja sužen ili jednak prethodnom nivou",
+      "Proveriti vremensku važnost delegacije i odbaciti istekle",
+      "Pre prihvatanja posla od drugog agenta proveriti identitet, akreditiv, opseg i skor poverenja",
+      "Primeniti princip odbijanja po defaultu ako bilo koja provera ne prođe"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/agentic-identity-trust.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.89
+  },
+  {
+    "ime": "Upravljanje razvojnim pipelineom",
+    "koraci": [
+      "Proveri da li postoji specifikacija projekta pre pokretanja",
+      "Pokreni agenta za izradu liste zadataka na osnovu specifikacije",
+      "Prosledi listu zadataka arhitekti za izradu tehničke osnove",
+      "Nadgledaj prelazak kroz faze i potvrdi da je svaka faza završena pre nastavka"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/agents-orchestrator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kontinuirana dev-QA petlja po zadatku",
+    "koraci": [
+      "Dodeli po jedan zadatak odgovarajućem razvojnom agentu za implementaciju",
+      "Pošalji završen zadatak QA agentu na proveru sa vizuelnim dokazima",
+      "Ako zadatak prođe proveru, pređi na sledeći zadatak",
+      "Ako zadatak ne prođe, vrati ga razvojnom agentu sa konkretnim povratnim informacijama",
+      "Ponavljaj do maksimalno tri pokušaja, nakon čega eskaliraj problem"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/agents-orchestrator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje greškama i eskalacija",
+    "koraci": [
+      "Prati broj pokušaja po zadatku i poredi sa dozvoljenim limitom",
+      "Ponovo pokušaj pokretanje agenta ako dođe do greške u pozivanju",
+      "Ako dokazi nisu ubedljivi, podrazumevano označi zadatak kao neuspešan",
+      "Dokumentuj blokirane zadatke i nastavi sa ostatkom pipelinea"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/agents-orchestrator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izveštavanje o napretku i finalna integracija",
+    "koraci": [
+      "Prikupi status svih zadataka i izračunaj procenat završenosti",
+      "Generiši periodične izveštaje o napretku sa ključnim metrikama",
+      "Pokreni finalnu integracionu proveru kada svi zadaci prođu QA",
+      "Sastavi završni izveštaj o spremnosti za produkciju"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/agents-orchestrator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Procena vrednosti i rizika automatizacije",
+    "koraci": [
+      "Proveri koliko vremena mesečno automatizacija realno štedi i da li se proces dovoljno često ponavlja.",
+      "Oceni kritičnost podataka koji se obrađuju, posebno finansijskih, ugovornih ili podataka o klijentima.",
+      "Analiziraj broj i stabilnost spoljnih servisa i API-ja uključenih u lanac.",
+      "Proveri da li rešenje izdržava rast opterećenja od jednostrukog do stostrukog obima.",
+      "Na osnovu sve četiri dimenzije donesi jedan jasan verdikt (odobri, pilot, delimično, odloži ili odbij)."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/automation-governance-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Projektovanje standardne n8n arhitekture",
+    "koraci": [
+      "Definiši tok kroz obavezne faze: okidač, validacija ulaza, normalizacija, poslovna logika, spoljne akcije.",
+      "Dodaj proveru rezultata, logovanje, granu za greške i mehanizam ručnog oporavka.",
+      "Osiguraj da workflow ima status završetka i upis rezultata nazad u sistem.",
+      "Izbegavaj nekontrolisano gomilanje čvorova i drži strukturu jednostavnom."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/automation-governance-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Uvođenje standarda imenovanja i verzionisanja",
+    "koraci": [
+      "Imenuj svaki workflow po šablonu okruženje-sistem-proces-akcija-verzija.",
+      "Koristi glavnu verziju za promene koje ruše postojeću logiku.",
+      "Koristi sporednu verziju za kompatibilna poboljšanja.",
+      "Izbegavaj nejasne nazive poput 'final' ili 'test2'."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/automation-governance-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Uspostavljanje pouzdanosti i testiranja pre produkcije",
+    "koraci": [
+      "Definiši obavezne elemente pouzdanosti: retry sa stop uslovima, timeout, alarmiranje i fallback putanju.",
+      "Postavi minimalni set logova: naziv, verziju, vreme, izvor, entitet, status i uzrok greške.",
+      "Sprovedi testove za ispravan tok, neispravan unos, pad spoljne zavisnosti, duplikate i ponovljeno opterećenje.",
+      "Za svaki povezani sistem definiši vlasnika, metod autentikacije, mapiranje polja i prava upisa.",
+      "Ne proglašavaj zadatak završenim bez dokumentacije i dokaza o testiranju."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/automation-governance-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Analiza konkurentskog pejzaža",
+    "koraci": [
+      "Definisati ciljni segment kupaca i posao koji proizvod obavlja za njih",
+      "Identifikovati direktne, indirektne konkurente i supstitute",
+      "Izraditi profile ključnih konkurenata sa snagama, slabostima i pravcem razvoja",
+      "Primeniti Porterovih pet sila za procenu atraktivnosti industrije",
+      "Proceniti da li je tvrđena konkurentska prednost stvarna i odbranjiva"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/business-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Procena strategije ulaska na tržište",
+    "koraci": [
+      "Izračunati veličinu tržišta kroz TAM, SAM i SOM sa jasnom metodologijom",
+      "Oceniti atraktivnost tržišta preko rasta, profitabilnosti, konkurencije i regulative",
+      "Uporediti opcije ulaska (organski razvoj, akviziija, partnerstvo) po investiciji, riziku i vremenu do prihoda",
+      "Preporučiti konkretan model ulaska i početni segment (beachhead)",
+      "Definisati ključne prekretnice i kriterijume za nastavak ulaganja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/business-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Dizajn poslovnog modela",
+    "koraci": [
+      "Definisati segmente kupaca i prioritizovati ih na osnovu konkretnog obrazloženja",
+      "Formulisati jasnu vrednosnu ponudu i proveriti je dokazima",
+      "Mapirati kanale, odnose sa kupcima i tokove prihoda uz jedinične ekonomske pokazatelje (CAC, LTV)",
+      "Analizirati ključne resurse, aktivnosti, partnerstva i strukturu troškova",
+      "Odrediti put do profitabilnosti na osnovu jediničnih ekonomija"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/business-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Izrada scenarija i poslovnog slučaja za odluku",
+    "koraci": [
+      "Identifikovati dve najneizvesnije i najuticajnije varijable za analizu",
+      "Kreirati matricu scenarija (bazni, optimistički, pesimistički) sa verovatnoćama i implikacijama",
+      "Prepoznati strategije koje funkcionišu u svim scenarijima nasuprot onima zavisnim od uslova",
+      "Izraditi finansijsku analizu poslovnog slučaja (NPV, IRR, period povraćaja) i proceniti rizike",
+      "Zaključiti konkretnom preporukom, vlasnicima zadataka i rokovima"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/business-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Procena ADKAR spremnosti i intervencije",
+    "koraci": [
+      "Proveri da li zaposleni razumeju zašto se promena dešava",
+      "Oceni da li žele da podrže i učestvuju u promeni",
+      "Utvrdi da li imaju potrebno znanje i veštine za novo ponašanje",
+      "Prati da li mogu dosledno da primenjuju novo ponašanje u praksi",
+      "Planiraj podsticaje i priznanja da se promena održi posle uvođenja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/change-management-consultant.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Mapiranje zainteresovanih strana i upravljanje otporom",
+    "koraci": [
+      "Identifikuj sve grupe pogođene promenom i njihov nivo uticaja",
+      "Oceni trenutno stanje svake grupe od neinformisanosti do podrške",
+      "Dijagnostikuj uzrok otpora pre nego što predložiš intervenciju",
+      "Prilagodi pristup svakoj grupi prema njenim konkretnim brigama",
+      "Eskaliraj slučajeve organizovanog ili upornog otpora ka sponzoru ili HR-u"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/change-management-consultant.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Izrada plana komunikacije o promeni",
+    "koraci": [
+      "Definiši osnovnu poruku - šta se menja, zašto sada i šta ostaje isto",
+      "Napravi kalendar komunikacija po fazama, publici i kanalu",
+      "Izaberi odgovarajući kanal zavisno od poruke i ciljne grupe",
+      "Osiguraj da menadžeri budu informisani pre zaposlenih",
+      "Uključi mehanizam za povratne informacije u svaku komunikaciju"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/change-management-consultant.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Merenje usvajanja i održavanje promene posle uvođenja",
+    "koraci": [
+      "Definiši metrike usvajanja pre samog lansiranja promene",
+      "Prati korišćenje novog sistema i ponašanje zaposlenih nakon starta",
+      "Organizuj proveru stanja na 30, 60 i 90 dana od uvođenja",
+      "Prepoznaj znakove vraćanja na stare navike i reaguj brzo",
+      "Slavi uspehe i rane primere dobre prakse radi održavanja motivacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/change-management-consultant.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada i konsolidacija godišnjeg finansijskog plana",
+    "koraci": [
+      "Definisati top-down ciljeve za prihod, EBITDA i kapitalne izdatke",
+      "Prikupiti bottom-up budžete od rukovodilaca poslovnih jedinica",
+      "Konsolidovati i preispitati predloge budžeta u FP&A timu",
+      "Proći izvršnu reviziju i dobiti odobrenje odbora",
+      "Zaključati budžet i uneti ga u ERP sistem",
+      "Pratiti mesečna odstupanja stvarnih rezultata od plana"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/chief-financial-officer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje likvidnošću i strukturom kapitala",
+    "koraci": [
+      "Održavati minimalnu gotovinsku rezervu prema politici kompanije",
+      "Praviti 13-nedeljnu, 6-mesečnu i 12-mesečnu prognozu gotovine",
+      "Pratiti bankarske odnose i limite koncentracije rizika",
+      "Analizirati odnos duga i kapitala kroz poreske, kovenantske i rizične faktore",
+      "Pratiti ključne pokazatelje zaduženosti poput neto dug/EBITDA i pokrića kamata"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/chief-financial-officer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Procena investicija i alokacija kapitala",
+    "koraci": [
+      "Kategorisati investicije po nivoima prioriteta od održavanja do transformacije",
+      "Izračunati WACC i uporediti očekivani IRR sa pragom prinosa",
+      "Modelovati scenarije najboljeg, osnovnog i najgoreg ishoda",
+      "Doneti odluku o ulaganju na osnovu rizično prilagođenog prinosa"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/chief-financial-officer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Priprema finansijskog izveštavanja za odbor i investitore",
+    "koraci": [
+      "Sastaviti mesečni paket upravljačkih izveštaja sa ključnim sekcijama",
+      "Uskladiti i proveriti sve brojke pre uključivanja u izveštaj",
+      "Pripremiti usklađivanje non-GAAP metrika sa GAAP rezultatima",
+      "Izraditi narativ za objavu rezultata i pripremiti odgovore na pitanja analitičara",
+      "Predstaviti rizike, prilike i ažuriranu prognozu odboru i investitorima"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/chief-financial-officer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.86
+  },
+  {
+    "ime": "Analiza potreba za obukom",
+    "koraci": [
+      "Razgovaraj sa rukovodiocima poslovnih jedinica da razjasniš ciljeve i bolne tačke",
+      "Analiziraj podatke o učinku i procene kompetencija da pronađeš nedostatke veština",
+      "Koristi ankete, fokus grupe i intervjue o ponašanju za dublje razumevanje potreba",
+      "Rangiraj potrebe po matrici hitnost-važnost i proceni povraćaj investicije u obuku",
+      "Definiši merljive ciljeve obuke izražene kroz konkretna ponašanja na poslu"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/corporate-training-designer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn kurikuluma i obrazovnog iskustva",
+    "koraci": [
+      "Izaberi model razvoja obuke poput ADDIE ili SAM u zavisnosti od brzine potrebne iteracije",
+      "Napravi progresivnu mapu učenja prema nivou pozicije zaposlenog",
+      "Rasporedi ciljeve učenja po Blumovoj taksonomiji i poveži ih sa modulima i proverama znanja",
+      "Kombinuj onlajn i offline formate po OMO principu i uključi elemente gejmifikacije",
+      "Planiraj kognitivno opterećenje uvođenjem pauza i interaktivnih aktivnosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/corporate-training-designer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Razvoj sadržaja i ekstrakcija znanja",
+    "koraci": [
+      "Intervjuiši stručnjake iz prakse da izvučeš prećutno znanje i iskustvo",
+      "Pretvori prikupljeno znanje u strukturisane mikro-kurseve ili studije slučaja",
+      "Izradi kompletan paket materijala uključujući slajdove, vežbe i test pitanja",
+      "Sprovedi internu reviziju i probno održavanje obuke pre zvaničnog lansiranja",
+      "Ažuriraj sadržaj najmanje jednom godišnje i ukloni zastarele materijale"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/corporate-training-designer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Evaluacija efekata obuke i kontinuirano unapređenje",
+    "koraci": [
+      "Prikupi podatke o zadovoljstvu polaznika i rezultatima testova znanja",
+      "Prati promene u ponašanju zaposlenih 30, 60 i 90 dana nakon obuke",
+      "Poveži rezultate obuke sa poslovnim pokazateljima poput prihoda ili zadržavanja zaposlenih",
+      "Izradi izveštaj o efektima obuke sa preporukama za poboljšanje",
+      "Dokumentuj dobre prakse i ažuriraj biblioteku resursa za buduće programe"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/corporate-training-designer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Obrada žalbi kroz empatiju i rešenje",
+    "koraci": [
+      "Prvo priznaj emociju i izvini se za neprijatnost pre nego što pređeš na rešenje",
+      "Potvrdi klijentu da njegova povratna informacija ima značaj i da ćeš situaciju ispraviti",
+      "Postavi pitanja da bi tačno razumeo šta se dogodilo",
+      "Odaberi konkretno rešenje - popravku, kredit, zamenu ili eskalaciju - i jasno ga saopšti",
+      "Zatvori razgovor konkretnim obećanjem sa tačnim rokom izvršenja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/customer-service.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Vođenje kroz FAQ i opšta pitanja",
+    "koraci": [
+      "Ponovi pitanje svojim rečima da potvrdiš da si ga dobro razumeo",
+      "Daj jasan i direktan odgovor bez stručnog žargona",
+      "Proveri da li je odgovor zadovoljio klijenta ili je potrebno dodatno objašnjenje",
+      "Ponudi pomoć oko dodatnih pitanja pre završetka razgovora",
+      "Ako pitanje zahteva proveru naloga ili stručno znanje van tvog domena, eskaliraj umesto nagađanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/customer-service.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Podrška za naloge i narudžbine",
+    "koraci": [
+      "Pre pristupa nalogu proveri identitet kroz ime, email i dodatni podatak",
+      "Jasno saopšti koju radnju ćeš preduzeti - reset lozinke, izmenu pretplate ili profila",
+      "Potvrdi detalje izmene sa klijentom pre nego što je sprovedeš",
+      "Za narudžbine proveri status porudžbine i saopšti tačne informacije o isporuci ili povraćaju novca",
+      "U slučaju oštećenog ili pogrešnog proizvoda, odmah ponudi rešenje poput zamene, refundacije ili kredita"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/customer-service.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Zadržavanje klijenata i eskalacija",
+    "koraci": [
+      "Pre obrade otkazivanja, pitaj šta je dovelo do te odluke",
+      "Ponudi alternativu u zavisnosti od uzroka - popust, pauzu naloga ili niži plan",
+      "Ako klijent i dalje želi da otkaže, poštuj odluku i obradi je profesionalno",
+      "Prepoznaj znakove eskalacije poput pretnje napuštanjem ili pravnim koracima i reaguj pre nego što frustracija eskalira",
+      "Pri prebacivanju na drugog saradnika, prvo ga upoznaj sa situacijom kako klijent ne bi ponavljao priču",
+      "Dokumentuj sve dogovore i obaveze radi kontinuiteta podrške"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/customer-service.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Strukturisano onboarding vođenje korisnika",
+    "koraci": [
+      "Definisati sa klijentom jasne ciljeve i kriterijume uspeha na početku saradnje",
+      "Identifikovati sve ključne učesnike, od ekonomskog kupca do tehničkih kontakata",
+      "Napraviti plan implementacije sa rokovima, vlasnicima zadataka i prekretnicama",
+      "Obezbediti da korisnik dobije prvu merljivu vrednost u roku od 30 dana",
+      "Dokumentovati prvi uspeh kao dokaz vrednosti za izvršnog sponzora"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/customer-success-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Kontinuirano praćenje zdravlja naloga i rano otkrivanje rizika",
+    "koraci": [
+      "Nedeljno pregledati skor zdravlja naloga i obeležiti one koji klize ka žutom ili crvenom",
+      "Analizirati podatke o korišćenju proizvoda, učestalost prijava i usvajanje funkcija",
+      "Pratiti obim i ozbiljnost tiketa podrške kao signal rizika",
+      "Meriti kvalitet odnosa kroz vreme odgovora, prisustvo sastancima i NPS",
+      "Reagovati odmah na rane signale, ne čekajući da skor postane crven",
+      "Tretirati odlazak glavnog kontakta kao hitan rizik i odmah pokrenuti protokol oporavka"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/customer-success-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Vođenje kvartalnih poslovnih pregleda (QBR) fokusiranih na strategiju",
+    "koraci": [
+      "Pripremiti podatke o ROI, korišćenju i napretku ka ciljevima pre sastanka",
+      "Obezbediti prisustvo izvršnog sponzora kao obavezan uslov",
+      "Prezentovati postignute rezultate i vrednost, a ne samo pregled aktivnosti",
+      "Postaviti pitanja o prioritetima klijenta za naredni period umesto nametanja agende",
+      "Predložiti konkretne naredne korake usklađene sa planom proizvoda",
+      "Zatvoriti sastanak jasno definisanim sledećim koracima i vlasnicima zadataka"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/customer-success-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Upravljanje obnovama i identifikacija proširenja",
+    "koraci": [
+      "Započeti proces obnove najkasnije 90 dana pre isteka ugovora",
+      "Pripremiti dokumentovan prikaz ostvarenog ROI pre pregovora",
+      "Proceniti rizik obnove i po potrebi pokrenuti plan spasavanja naloga",
+      "Prepoznati priliku za proširenje tek kada je klijent ostvario dokazanu vrednost",
+      "Izraditi poslovni slučaj za proširenje sa jasnim ROI projekcijama",
+      "Direktno uključiti ekonomskog kupca u pregovore o obnovi i proširenju"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/customer-success-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Agregacija podataka po teritorijama",
+    "koraci": [
+      "Prikupi metrike prodaje za sve teritorije, predstavnike i vremenske periode.",
+      "Grupiši podatke po teritoriji radi regionalnog uvida.",
+      "Izračunaj zbirne pokazatelje kao što su prihod i broj predstavnika po teritoriji.",
+      "Pripremi strukturirani izveštaj spreman za prikaz na dashboard-u."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/data-consolidation-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Obracun ostvarenja kvote",
+    "koraci": [
+      "Uzmi najnoviji unos metrike po tipu podatka za svakog predstavnika.",
+      "Izracunaj procenat ostvarenja kao odnos prihoda i kvote pomnozen sa sto.",
+      "Obradi slucajeve kada je kvota nula kako bi se izbegla greska deljenja.",
+      "Rangiraj predstavnike po ostvarenim rezultatima."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/data-consolidation-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kreiranje pregleda prodajnog levka",
+    "koraci": [
+      "Spoji podatke o prodajnom levku sa metrikama prodaje.",
+      "Prikazi broj, vrednost i ponderisanu vrednost po fazama levka.",
+      "Dodaj ove podatke u celokupan dashboard izvestaj."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/data-consolidation-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada dashboard i teritorijalnih izvestaja",
+    "koraci": [
+      "Primi zahtev za dashboard ili detaljan izvestaj po teritoriji.",
+      "Pokreni paralelne upite za sve dimenzije podataka radi brzine.",
+      "Izracunaj izvedene metrike i trend podatke za poslednjih sest meseci.",
+      "Izdvoji top pet najboljih predstavnika po godisnjem prihodu.",
+      "Formatiraj rezultat u JSON pogodan za dashboard prikaz.",
+      "Dodaj vremensku oznaku generisanja radi provere azurnosti podataka."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/data-consolidation-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Mapiranje podataka i vođenje Article 30 registra",
+    "koraci": [
+      "Intervjuisati vlasnike poslovnih procesa i pregledati ugovore sa dobavljačima",
+      "Dokumentovati tok podataka od tačke prikupljanja do internih i eksternih primalaca",
+      "Klasifikovati podatke prema osetljivosti i potrebnim kontrolama",
+      "Uporediti trenutno stanje sa zahtevanim kontrolama i identifikovati nedostatke",
+      "Ažurirati registar obrade sa svrhom, pravnim osnovom, rokom čuvanja i merama bezbednosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/data-privacy-officer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Sprovođenje procene uticaja na zaštitu podataka (DPIA)",
+    "koraci": [
+      "Proveriti da li obrada ispunjava kriterijume visokog rizika koji zahtevaju DPIA",
+      "Opisati svrhu, obim i vrste podataka koji se obrađuju",
+      "Proceniti neophodnost i proporcionalnost obrade u odnosu na manje invazivne alternative",
+      "Oceniti rizike po verovatnoći i težini i predložiti mere ublažavanja",
+      "Pribaviti mišljenje DPO-a i, ako rizik ostaje visok, konsultovati nadzorni organ pre lansiranja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/data-privacy-officer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Upravljanje zahtevima subjekata podataka (DSR)",
+    "koraci": [
+      "Zaprimiti zahtev i evidentirati ga sa datumom, identitetom podnosioca i vrstom prava",
+      "Verifikovati identitet podnosioca na proporcionalan i ne prekomeran način",
+      "Pretražiti sve sisteme (CRM, ERP, analitika, treće strane) gde se podaci nalaze",
+      "Primeniti izuzetke i redakcije gde je potrebno i sastaviti odgovor",
+      "Poslati odgovor u propisanom zakonskom roku na jasnom jeziku"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/data-privacy-officer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Odgovor na proboj podataka u roku od 72 sata",
+    "koraci": [
+      "Otkriti proboj, izolovati pogođene sisteme i oduzeti kompromitovane pristupe",
+      "Obavestiti DPO i tim za bezbednost odmah i sačuvati dokaze",
+      "Proceniti prirodu, obim i verovatne posledice proboja po pojedince",
+      "Odlučiti da li je potrebna prijava nadzornom telu u roku od 72 sata na osnovu procene rizika",
+      "Obavestiti pogođene pojedince bez odlaganja ako postoji visok rizik po njih"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/data-privacy-officer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Sprovođenje dvostruke materijalnosti",
+    "koraci": [
+      "Sastaviti spisak mogućih ESG tema iz GRI, SASB, TCFD i regulatornih izvora",
+      "Prikupiti stavove ključnih grupa zainteresovanih strana kroz ankete i intervjue",
+      "Oceniti svaku temu po finansijskom uticaju, značaju za stejkholdere i regulatornoj verovatnoći",
+      "Mapirati teme na matricu uticaja i finansijske materijalnosti",
+      "Dobiti validaciju matrice od strane upravnog odbora ili ESG komiteta"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/esg-sustainability-officer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izrada inventara emisija gasova staklene bašte",
+    "koraci": [
+      "Definisati granice obuhvata 1, 2 i 3 prema GHG protokolu",
+      "Prikupiti podatke po kategorijama scope 3 iz relevantnih izvora (fakture, ankete, evidencije)",
+      "Primeniti odgovarajuće faktore emisije za svaki izvor podataka",
+      "Izračunati emisije po lokaciji i po tržištu za scope 2",
+      "Obezbediti eksternu verifikaciju izveštaja o emisijama"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/esg-sustainability-officer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Postavljanje naučno zasnovanih ciljeva (SBTi)",
+    "koraci": [
+      "Podneti pismo obaveze SBTi inicijativi i odrediti baznu godinu",
+      "Izabrati obim ciljeva (scope 1, 2 i po potrebi scope 3)",
+      "Odabrati putanju smanjenja emisija u skladu sa 1.5°C scenarijom",
+      "Podneti ciljeve na validaciju i objaviti javnu obavezu",
+      "Pratiti i godišnje izveštavati o napretku prema ciljevima",
+      "Primeniti strategiju smanji-zameni-ukloni za postizanje neto nule"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/esg-sustainability-officer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Priprema izveštaja o održivosti prema okvirima",
+    "koraci": [
+      "Prikupiti podatke o emisijama, radnoj snazi, bezbednosti i zajednici",
+      "Uskladiti sadržaj sa odabranim okvirima poput GRI, SASB, TCFD ili CSRD",
+      "Sprovesti internu reviziju sa pravnim, finansijskim i komunikacionim timovima",
+      "Obezbediti eksternu asuranciju odabranih podataka",
+      "Dobiti odobrenje ESG komiteta upravnog odbora pre objavljivanja",
+      "Objaviti izveštaj i distribuirati ga investitorima i regulatorima"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/esg-sustainability-officer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Praćenje politika i identifikacija prilika",
+    "koraci": [
+      "Prati nacionalne, pokrajinske i lokalne dokumente o digitalizaciji vlasti",
+      "Izdvoji ključne signale poput povećanja ulaganja ili prelaska na obaveznu primenu",
+      "Prepoznaj obavezne zahteve kao što su klasifikovana zaštita, kriptografska provera i Xinchuang",
+      "Izradi matricu praćenja prilika sa budžetom, rokovima i konkurencijom",
+      "Napravi Go/No-Go procenu za svaku priliku pre ulaganja resursa"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/government-digital-presales-consultant.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn rešenja usmerenog na potrebe klijenta",
+    "koraci": [
+      "Pođi od poslovnih scenarija klijenta, a ne od tehnologije same po sebi",
+      "Prevedi tehničke karakteristike u jezik koji razume rukovodstvo i korisnici",
+      "Istakni referentne projekte i dokazane rezultate kao glavni argument",
+      "Uskladi terminologiju rešenja sa aktuelnim političkim formulacijama",
+      "Prođi kroz najmanje tri kruga usavršavanja na osnovu povratnih informacija klijenta"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/government-digital-presales-consultant.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Priprema i kontrola tenderske dokumentacije",
+    "koraci": [
+      "Analiziraj tendersku dokumentaciju klauzulu po klauzulu i otkrij uslove koji favorizuju konkurenciju",
+      "Prilagodi strategiju prema kriterijumima bodovanja - tehnička ili komercijalna ponuda",
+      "Proveri sve kvalifikacione dokumente kako bi se izbegla diskvalifikacija",
+      "Uporedo pripremi tehnički predlog, cenovnu ponudu i prateću dokumentaciju",
+      "Sprovedi unakrsnu proveru dokumentacije sa najmanje dve osobe pre predaje",
+      "Uvežbaj prezentaciju i odbranu pitanja najmanje dva puta uz jasnu podelu uloga"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/government-digital-presales-consultant.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Provera usklađenosti i Xinchuang adaptacije",
+    "koraci": [
+      "Proveri da li sistem zahteva treći ili četvrti nivo klasifikovane zaštite i planiraj vreme za otklanjanje nedostataka",
+      "Osiguraj primenu nacionalnih kriptografskih algoritama za autentifikaciju, prenos i skladištenje podataka",
+      "Napravi matricu kompatibilnosti domaćih procesora, operativnih sistema, baza i middleware-a",
+      "Primeni fazno zamenjivanje komponenti umesto trenutne potpune zamene",
+      "Klasifikuj podatke prema propisima o bezbednosti podataka i koristi zvaničnu platformu za razmenu"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/government-digital-presales-consultant.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Istraživanje i procena potencijalnih donatora",
+    "koraci": [
+      "Pronađi fondacije i agencije čiji se prioriteti poklapaju sa misijom organizacije",
+      "Proveri istoriju davanja, prosečan iznos granta i geografski/populacioni fokus donatora",
+      "Oceni usklađenost misije, programa i organizacionog kapaciteta sa zahtevima donatora",
+      "Rangiraj prilike prema verovatnoći uspeha, veličini granta i postojećem odnosu",
+      "Napravi kalendar rokova i označi koje donatore treba prvo kultivisati pre prijave"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/grant-writer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Pisanje pisma namere i pune prijave za grant",
+    "koraci": [
+      "Pažljivo pročitaj sve smernice i zahteve konkursa pre pisanja",
+      "Otvori tekst problemom i podacima koji pokazuju hitnost, povezujući ga sa prioritetima donatora",
+      "Opiši rešenje, pristup organizacije i dokaze o njegovoj efikasnosti",
+      "Predstavi kredibilitet organizacije kroz dosadašnje rezultate i iskustvo tima",
+      "Jasno iznesi traženi iznos, period finansiranja i očekivane merljive ishode",
+      "Prilagodi jezik i terminologiju specifično datom donatoru, izbegavajući generički tekst"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/grant-writer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada budžeta i narativnog obrazloženja troškova",
+    "koraci": [
+      "Razvijaj budžet zajedno sa programskim rukovodstvom, a ne nakon pisanja narativa",
+      "Za svaku budžetsku stavku napiši jasno obrazloženje zašto je neophodna za program",
+      "Proveri da li donator ograničava indirektne troškove i primeni ispravnu stopu",
+      "Uskladi brojke iz budžeta sa opisima aktivnosti u narativnom delu prijave",
+      "Isključi nedozvoljene troškove i izbegavaj naduvavanje stavki",
+      "Dokumentuj sufinansiranje ili doprinos u naturi ako je zahtevano"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/grant-writer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Upravljanje izveštavanjem i usklađenošću nakon dobijanja granta",
+    "koraci": [
+      "Pažljivo pročitaj pismo o dodeli granta i zabeleži posebne uslove i rokove izveštavanja",
+      "Uspostavi dosije granta sa svom dokumentacijom i prepiskom",
+      "Prati napredak prema ciljevima iz prijave i beleži ostvarene i planirane rezultate",
+      "Izradi finansijski izveštaj koji se tačno poklapa sa stvarnim troškovima",
+      "Podnesi izveštaj na vreme i budi transparentan u vezi sa izazovima i prilagođavanjima",
+      "Održavaj redovan kontakt sa programskim službenikom i van perioda izveštavanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/grant-writer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Vođenje profila nege i evidencije lekova",
+    "koraci": [
+      "Beleži ime korisnika nege, alergije i hronična stanja relevantna za svakodnevnu negu.",
+      "Ažuriraj listu lekova sa dozom, učestalošću, lekarom i statusom ponavljanja recepta.",
+      "Proveri da li se dva leka mogu sudarati i predloži proveru kod farmaceuta umesto sopstvene procene.",
+      "Upozori unapred kada lek uskoro ističe i predloži naručivanje ponovnog recepta.",
+      "Drži profil minimalan i ukloni podatke koji više nisu potrebni za trenutne odluke."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/healthcare-aging-parent-care-companion.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Priprema i praćenje zakazanih pregleda",
+    "koraci": [
+      "Pre pregleda pomozi sastaviti kratku listu pitanja na osnovu promena od poslednje posete.",
+      "Beleži svrhu pregleda, potrebnu pripremu i ko prisustvuje.",
+      "Posle pregleda pitaj šta je dogovoreno i da li nešto treba preneti ostatku tima za negu.",
+      "Upiši ishod i otvorene obaveze u listu stvari koje treba pratiti."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/healthcare-aging-parent-care-companion.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Odlučivanje ko iz tima za negu treba da zna informaciju",
+    "koraci": [
+      "Proceni da li informacija utiče na bezbednost i da li treba odmah podeliti.",
+      "Proveri koja uloga u timu je direktno povezana sa tom temom.",
+      "Svedi informaciju na najnužniji sadržaj pre prosleđivanja.",
+      "Ako nije jasno kome preneti, predloži da se prvo obavesti lekar opšte prakse."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/healthcare-aging-parent-care-companion.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Prepoznavanje hitnih stanja i podrška staratelju",
+    "koraci": [
+      "Prepoznaj znake hitnog stanja poput pada sa udarcem u glavu, zbunjenosti, bola u grudima ili otežanog disanja.",
+      "Odmah uputi staratelja da pozove hitnu pomoć i prekine trenutnu temu razgovora.",
+      "Prati znake iscrpljenosti, izolovanosti ili krivice kod staratelja kroz više razgovora.",
+      "Kada se uoči obrazac sagorevanja, blago ga imenuj i ponudi konkretne resurse poput predaha ili grupa podrške.",
+      "Kod izjava o beznađu ili samopovređivanju, uputi odmah na liniju za krizne situacije."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/healthcare-aging-parent-care-companion.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Prepoznavanje i reagovanje na hitne slučajeve",
+    "koraci": [
+      "Pažljivo slušaj opis simptoma i odmah prepoznaj znake hitnog medicinskog stanja",
+      "Prekini uobičajeni tok razgovora čim posumnjaš na hitnost",
+      "Uputi pacijenta da odmah pozove hitnu pomoć ili ode u urgentni centar",
+      "Ostani na liniji dok se ne potvrdi da je pacijent bezbedan ili da je pomoć pozvana",
+      "Za slučajeve mentalnog zdravlja uputi na krizni telefon i odmah povezati sa kliničkim osobljem"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/healthcare-customer-service.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.97
+  },
+  {
+    "ime": "Empatično rešavanje žalbi pacijenata",
+    "koraci": [
+      "Prvo priznaj i izrazi razumevanje za neprijatnost koju je pacijent doživeo",
+      "Potvrdi da je njegova briga validna i važna",
+      "Postavi pitanja da razjasniš šta se tačno dogodilo",
+      "Dokumentuj žalbu i odredi dalji pravac rešavanja, uz jasan rok",
+      "Zatvori razgovor konkretnim obećanjem i rokom za rešenje",
+      "Eskaliraj odmah supervizoru ako se pominje pravna pretnja, povreda ili klinički radnik"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/healthcare-customer-service.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Vođenje kroz naplatu i finansijska pitanja",
+    "koraci": [
+      "Smiri pacijenta i objasni da ćete zajedno proći kroz račun",
+      "Proveri identitet kroz ime, datum rođenja i broj naloga, bez traženja viška podataka",
+      "Objasni svaku stavku računa jednostavnim jezikom i uporedi šta je pokrilo osiguranje",
+      "Ponudi plan plaćanja ili finansijsku pomoć ako je iznos veći od praga",
+      "Stavi nalog na privremeno zadržavanje tokom spora i prosledi specijalisti za naplatu",
+      "Javi se pacijentu u dogovorenom roku sa ažuriranjem"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/healthcare-customer-service.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Toplo usmeravanje i eskalacija ka specijalistima",
+    "koraci": [
+      "Proceni da li pitanje prevazilazi tvoju nadležnost (kliničko, pravno ili emotivno)",
+      "Obavesti pacijenta kome ga prosleđuješ i zašto je ta osoba pravi izbor",
+      "Prenesi kontekst primaocu pre nego što povežeš poziv",
+      "Ostani na liniji dok se ne potvrdi da je pacijent uspešno povezan",
+      "Daj pacijentu broj za povratni poziv u slučaju prekida veze"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/healthcare-customer-service.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Provera usaglašenosti marketinškog sadržaja pre objave",
+    "koraci": [
+      "Prikupi osnovne podatke o sadržaju: tip, kanal objave, proizvod i nadležnog recenzenta",
+      "Proveri da li postoje validne dozvole, odobrenja i sertifikati izdavača i lekara",
+      "Pretraži tekst na zabranjene izraze poput apsolutnih tvrdnji, garancija ishoda i poređenja efikasnosti",
+      "Proveri usklađenost sa deklaracijama i upozorenjima koja su zakonski obavezna",
+      "Oceni rizik po matrici ozbiljnosti i dodeli nivo odobravanja prema riziku",
+      "Izdaj pisano mišljenje o odobrenju, izmeni ili odbijanju sadržaja i sačuvaj zapis"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/healthcare-marketing-compliance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Zamena rizičnih izraza usaglašenim formulacijama",
+    "koraci": [
+      "Identifikuj spornu frazu u marketinškom materijalu koja krši propise",
+      "Utvrdi razlog kršenja, na primer apsolutnu tvrdnju ili lažno obećanje izlečenja",
+      "Predloži alternativnu formulaciju koja zadržava marketinšku poruku bez pravnog rizika",
+      "Uskladi predlog sa odobrenim opsegom indikacija ili funkcija proizvoda",
+      "Dokumentuj izmenu u evidenciji revizije radi buduće provere"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/healthcare-marketing-compliance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje incidentom kršenja propisa",
+    "koraci": [
+      "Odmah ukloni sporan sadržaj u roku od nekoliko sati od otkrivanja",
+      "Pripremi izveštaj o korektivnim merama u roku od 24 sata",
+      "Sprovedi sveobuhvatnu internu reviziju u roku od 72 sata",
+      "Koordiniraj pravni tim, odnose s javnošću i komplajns funkciju za jedinstvenu komunikaciju",
+      "Analiziraj uzrok problema i ažuriraj interne kontrolne liste i procedure",
+      "Obavesti sve relevantne timove o novim pravilima proisteklim iz incidenta"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/healthcare-marketing-compliance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Praćenje regulatornih promena i platformskih pravila",
+    "koraci": [
+      "Prati zvanična saopštenja nadležnih regulatornih tela i platformi",
+      "Analiziraj značajne slučajeve kažnjavanja u industriji radi uočavanja trendova",
+      "Proceni uticaj novih pravila na postojeće marketinške materijale",
+      "Obavesti relevantne timove o promenama u kratkom roku nakon objave",
+      "Ažuriraj internu bazu slučajeva i politike usaglašenosti na osnovu novih saznanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/healthcare-marketing-compliance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Priprema i doček gosta pri dolasku",
+    "koraci": [
+      "Pre dolaska pregledati rezervaciju, istoriju boravka i posebne zahteve gosta.",
+      "Obeležiti posebne prilike i proveriti status lojalnosti pre nego što gost stigne",
+      "Pozdraviti gosta u roku od 30 sekundi, toplo i uz korišćenje imena",
+      "Prepoznati status lojalnosti i zahvaliti se na vernosti svaki put",
+      "Dodeliti najbolju dostupnu sobu i ponuditi nadogradnju ako je moguće",
+      "Potvrditi posebne zahteve i kratko objasniti ključne informacije o boravku"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/hospitality-guest-services.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Rešavanje pritužbi gostiju metodom HEARD",
+    "koraci": [
+      "Saslušati gosta do kraja bez prekidanja",
+      "Iskreno izraziti razumevanje i izviniti se konkretno za problem",
+      "Preuzeti ličnu odgovornost za rešavanje situacije",
+      "Rešiti problem odmah, u skladu sa ozbiljnošću situacije",
+      "Ponuditi dodatni gest dobre volje iznad očekivanog nadoknađivanja",
+      "Naknadno proveriti sa gostom da li je zadovoljan ishodom i sve dokumentovati"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/hospitality-guest-services.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Konsijerž usluge i personalizovane preporuke",
+    "koraci": [
+      "Pitati gosta za preferencije u vezi kuhinje, atmosfere i posebnih prilika",
+      "Predložiti restorane, aktivnosti ili prevoz na osnovu aktuelnog lokalnog znanja",
+      "Zabeležiti alergije i dijetetska ograničenja pri svakoj rezervaciji za ručavanje",
+      "Organizovati dodatne usluge za posebne prilike poput cveća, torte ili iznenađenja",
+      "Potvrditi rezervaciju gostu i obavestiti relevantne timove unapred"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/hospitality-guest-services.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Post-boravak praćenje i upravljanje lojalnošću",
+    "koraci": [
+      "Poslati zahvalnicu i anketu o zadovoljstvu u roku od 24 sata od odjave",
+      "Pratiti platforme sa recenzijama i odgovoriti na svaku u roku od 24 sata",
+      "Lično kontaktirati nezadovoljne goste radi dodatnog rešavanja problema",
+      "Proveriti da li su bodovi lojalnosti ispravno knjiženi i rešiti eventualne greške",
+      "Sprovesti akcije za povratak gostiju koji su imali loše iskustvo, uz personalizovanu ponudu"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/hospitality-guest-services.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Priprema pre prvog radnog dana",
+    "koraci": [
+      "Potvrdi datum starta i detalje uloge sa menadžerom i HR-om.",
+      "Pokreni proveru podataka i prati da bude završena na vreme.",
+      "Zatraži IT opremu i pristupe sistemima najmanje pet radnih dana unapred.",
+      "Dodeli buddy-ja i pošalji dobrodošlicu sa logistikom za prvi dan.",
+      "Pošalji menadžeru vodič za onboarding i proveri spremnost tima.",
+      "Pripremi svu dokumentaciju za usklađenost pre dolaska zaposlenog."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/hr-onboarding.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Vođenje prvog radnog dana",
+    "koraci": [
+      "Lično dočekaj novog zaposlenog i izbegavaj zabunu oko prostora.",
+      "Sprovedi I-9 proveru i ostale obavezne obrasce istog dana.",
+      "Prođi kroz raspored dana bez žurbe i iznenađenja.",
+      "Proveri da li IT pristupi i oprema rade pre nego što zatrebaju.",
+      "Organizuj neformalno upoznavanje sa buddy-jem i timom.",
+      "Završi dan kratkim razgovorom o utiscima i otvorenim pitanjima."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/hr-onboarding.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Praćenje 30-60-90 dana i zadržavanje",
+    "koraci": [
+      "Postavi nedeljne, pa kasnije dvonedeljne sastanke sa menadžerom.",
+      "Proveri na 14. i 30. dan napredak, usklađenost i prijavu beneficija.",
+      "Na 60. dan proveri samostalnost u radu i povratnu informaciju.",
+      "Na 90. dan sprovedi formalnu evaluaciju i postavi dalje razvojne ciljeve.",
+      "Prepoznaj rane signale nezadovoljstva i odmah eskaliraj riziku od odlaska."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/hr-onboarding.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Prijava beneficija i usklađenost sa propisima",
+    "koraci": [
+      "Objasni rokove za prijavu beneficija jasno i više puta u prvih 30 dana.",
+      "Pomozi zaposlenom da uporedi opcije zdravstvenog i penzionog osiguranja.",
+      "Prati obavezne obuke i rokove za potpisivanje politika kompanije.",
+      "Čuvaj svu dokumentaciju uredno i spremnu za eventualnu reviziju.",
+      "Odmah i poverljivo prosledi zahteve za prilagođavanjem HR rukovodstvu."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/hr-onboarding.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Resolucija zapisa prema kanonskom entitetu",
+    "koraci": [
+      "Normalizuj sva polja zapisa, kao što su mejl, telefon i imena.",
+      "Pronađi kandidate za poklapanje pomoću ključeva za blokiranje, poput domena mejla ili prefiksa telefona.",
+      "Izračunaj skor poklapanja po poljima koristeći definisana pravila i težine.",
+      "Na osnovu praga pouzdanosti odluči da li povezati sa postojećim entitetom, kreirati novi ili predložiti pregled."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/identity-graph-operator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Predlaganje spajanja entiteta sa dokazima",
+    "koraci": [
+      "Uporedi dva entiteta po svakom polju i izračunaj pojedinačne skorove.",
+      "Sastavi strukturu dokaza sa objašnjenjem za svako poklapanje polja.",
+      "Formuliraj predlog spajanja sa ukupnom pouzdanošću umesto direktne izmene.",
+      "Prosledi predlog drugim agentima ili ljudima na proveru pre izvršenja."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/identity-graph-operator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Otkrivanje i rešavanje sukoba između agenata",
+    "koraci": [
+      "Prati predloge spajanja i razdvajanja koje su podneli različiti agenti.",
+      "Uoči slučajeve kada se dva predloga sukobljavaju nad istim entitetima.",
+      "Označi sukob i omogući razmenu kontra-dokaza između agenata.",
+      "Pusti da jači dokaz odluči ishod umesto nasilnog pregazivanja tuđe odluke."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/identity-graph-operator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Održavanje integriteta grafa identiteta",
+    "koraci": [
+      "Propusti svaku izmenu kroz jedinstveni mehanizam sa optimističkim zaključavanjem.",
+      "Simuliraj ishod mutacije pre nego što se ona stvarno izvrši.",
+      "Beleži istoriju događaja poput kreiranja, spajanja, razdvajanja i ažuriranja entiteta.",
+      "Omogući povratak na prethodno stanje ako se otkrije loše spajanje ili razdvajanje."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/identity-graph-operator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Prevođenje po smislu, ne doslovno",
+    "koraci": [
+      "Prepoznaj idiom ili izraz koji ne sme da se prevede bukvalno",
+      "Pronađi kulturni ekvivalent koji prenosi isto značenje",
+      "Proveri da ton i namera ostanu isti kao u originalu",
+      "Pročitaj rezultat kao da ga izgovara izvorni govornik"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/language-translator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Prilagođavanje formalnosti i regionalnog dijalekta",
+    "koraci": [
+      "Utvrdi da li situacija traži formalno ili neformalno obraćanje",
+      "Proveri iz kog je regiona korisnik ili sagovornik radi izbora reči",
+      "Istakni razlike u rečniku između Meksika, Španije i Južne Amerike",
+      "Ponudi i tekstualnu i prirodnu govornu varijantu fraze"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/language-translator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada hitnih i specijalizovanih prevoda",
+    "koraci": [
+      "Prvo isporuči prevod hitne fraze, bez uvoda",
+      "Dodaj fonetski izgovor jednostavnim engleskim zapisom",
+      "Upozori kada je u pitanju medicinski ili pravni kontekst da je potreban stručni prevodilac",
+      "Priloži dodatne korisne fraze vezane za istu situaciju"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/language-translator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kulturno i gramatičko upozoravanje",
+    "koraci": [
+      "Prepoznaj lažne prijatelje i gramatičke zamke poput subjunktiva ili ser/estar",
+      "Objasni grešku jednostavnim jezikom sa primerom",
+      "Upozori na kulturne norme koje utiču na prijem poruke",
+      "Predloži jednostavniju alternativu ako je fraza previše komplikovana za korisnika"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/language-translator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Evidentiranje i provera vremenskih unosa",
+    "koraci": [
+      "Podsetiti advokate da unose vreme isti dan kada je rad obavljen",
+      "Proveriti da svaki unos ima konkretan i jasan opis zadatka",
+      "Odbaciti nejasne formulacije poput 'pregled predmeta' ili 'pravne usluge'",
+      "Uskladiti minimalne jedinice vremena i format sa pravilima klijenta",
+      "Označiti sumnjive ili nepotpune unose za doradu pre fakturisanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/legal-billing-time-tracking.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Priprema i kontrola faktura",
+    "koraci": [
+      "Prikupiti nefakturisano radno vreme po predmetima",
+      "Proveriti usklađenost stavki sa smernicama klijenta i ugovorom o naknadi",
+      "Izračunati ukupan iznos uključujući troškove i sredstva sa escrow računa",
+      "Tražiti odobrenje odgovornog advokata pre slanja fakture",
+      "Dostaviti fakturu klijentu u preferiranom formatu i roku",
+      "Ažurirati evidenciju potraživanja u sistemu"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/legal-billing-time-tracking.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Upravljanje naplatom potraživanja",
+    "koraci": [
+      "Pratiti starost nenaplaćenih faktura na nedeljnom nivou",
+      "Slati podsetnike klijentima po definisanom rasporedu (35, 60, 90 dana)",
+      "Eskalirati slučaj odgovornom advokatu nakon 90 dana kašnjenja",
+      "Dokumentovati svaku komunikaciju sa klijentom o dugovanju",
+      "Predložiti plan otplate kada je to prikladno",
+      "Evidentirati uplate i raspodeliti ih na najstarije fakture prvo"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/legal-billing-time-tracking.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Nadzor escrow (trust) računa i izveštavanje o učinku",
+    "koraci": [
+      "Beležiti svaki depozit i isplatu sa potpunom dokumentacijom",
+      "Sprovoditi mesečno trostruko usklađivanje banke, kartice klijenta i dnevnika",
+      "Upozoriti nadzornog advokata odmah pri uočenom neslaganju",
+      "Pratiti prag za dopunu sredstava i obavestiti klijenta na vreme",
+      "Izračunati stopu realizacije i naplate i sastaviti mesečni izveštaj"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/legal-billing-time-tracking.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Prvi kontakt i procena hitnosti",
+    "koraci": [
+      "Toplo pozdravi stranku i predstavi se u ime kancelarije",
+      "Zatraži ime i koristi ga tokom razgovora radi ličnog pristupa",
+      "Postavi pitanje o rokovima, ročištima ili hitnim bezbednosnim rizicima",
+      "Pusti stranku da prvo opiše situaciju svojim rečima pre strukturiranih pitanja",
+      "Iskaži empatiju i razumevanje pre prelaska na proceduru",
+      "Ako postoji vremenska osetljivost, odmah eskaliraj advokatu"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/legal-client-intake.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Kvalifikacija predmeta po pravnoj oblasti",
+    "koraci": [
+      "Utvrdi kojoj oblasti prava predmet pripada na osnovu opisa",
+      "Postavi ciljana pitanja specifična za tu oblast kako bi proverio relevantne činjenice",
+      "Proveri da li kancelarija pokriva tu oblast i nadležnost",
+      "Proveri da li predmet ispunjava minimalne kriterijume kancelarije",
+      "Ako ne odgovara profilu kancelarije, uputi stranku na drugu kancelariju ili advokatsku komoru",
+      "Jasno saopšti sledeći korak bez obzira na ishod kvalifikacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/legal-client-intake.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Provera sukoba interesa pre zakazivanja",
+    "koraci": [
+      "Prikupi puno pravno ime stranke i eventualne alijase ili naziv firme",
+      "Zatraži imena svih suprotnih strana uključenih u spor",
+      "Proveri da li je stranka ili suprotna strana ranije sarađivala sa kancelarijom",
+      "Dokumentuj status provere kao na čekanju, rešeno ili sukob utvrđen",
+      "Nikada ne zakazuj konsultaciju pre nego što je provera sukoba potvrđena"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/legal-client-intake.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Priprema sažetka za advokata pre konsultacije",
+    "koraci": [
+      "Sakupi sve ključne činjenice, strane, datume i dostupnu dokumentaciju",
+      "Istakni upozorenja o rokovima zastarelosti ili predstojećim ročištima",
+      "Napiši kratak sažetak predmeta rečima same stranke",
+      "Dodaj ciljeve stranke i informacije o dogovoru oko naknade",
+      "Dostavi kompletan sažetak advokatu najmanje pola sata pre zakazanog termina",
+      "Navedi preporučene sledeće korake za advokata"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/legal-client-intake.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada sažetka dokumenta",
+    "koraci": [
+      "Identifikuj tip dokumenta, strane i koju stranu zastupamo",
+      "Utvrdi nadležno pravo i svrhu pregleda",
+      "Izdvoji ključne ekonomske uslove poput plaćanja, trajanja, raskida i odgovornosti",
+      "Proveri da li nedostaju standardne odredbe kao ograničenje odgovornosti ili obeštećenje",
+      "Oceni ukupan nivo rizika i broj prioritetnih problema",
+      "Sastavi strukturiran sažetak spreman za advokata"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/legal-document-review.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Obeležavanje rizičnih klauzula",
+    "koraci": [
+      "Pročitaj dokument i identifikuj sumnjive ili neuobičajene klauzule",
+      "Uporedi pronađene formulacije sa tržišnim standardom",
+      "Oceni svaku klauzulu kao visok, srednji ili nizak rizik",
+      "Navedi tačnu lokaciju, formulaciju i mogući uticaj za svaku stavku",
+      "Predloži moguću reviziju ili pregovaračku poziciju",
+      "Sačini zbirnu tabelu broja rizika po kategorijama"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/legal-document-review.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Poređenje verzija ugovora",
+    "koraci": [
+      "Uporedi staru i novu verziju dokumenta rečenicu po rečenicu",
+      "Razvrstaj izmene na suštinske, administrativne, dodate i brisane",
+      "Oceni da li je svaka izmena povoljna, nepovoljna ili neutralna za klijenta",
+      "Detaljno opiši suštinske izmene sa citatom originalnog i novog teksta",
+      "Sastavi pregovaračku ocenu sa ukupnim bilansom promena"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/legal-document-review.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Provera usklađenosti sa propisima",
+    "koraci": [
+      "Utvrdi primenljivo zakonodavstvo i jurisdikciju za dokument",
+      "Napravi kontrolnu listu regulatornih zahteva relevantnih za oblast",
+      "Oceni svaku stavku kao usklađenu, potencijalno neusklađenu ili neusklađenu",
+      "Istakni odredbe koje mogu biti neprimenjive u datoj jurisdikciji",
+      "Predloži korektivne mere za svaku neusklađenu stavku",
+      "Sumiraj ukupan status usklađenosti dokumenta"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/legal-document-review.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Prijem i preliminarna kvalifikacija zajmotražioca",
+    "koraci": [
+      "Odgovoriti na upit novog klijenta u roku od nekoliko minuta",
+      "Utvrditi svrhu kredita - kupovina, refinansiranje, izgradnja ili komercijalni zajam",
+      "Prikupiti osnovne podatke o prihodima, imovini, kreditnom skoru i roku zatvaranja",
+      "Izračunati DTI i LTV radi procene mogućnosti odobrenja",
+      "Uparčiti klijenta sa odgovarajućim kreditnim programom",
+      "Jasno predstaviti dalje korake i okvirni vremenski rok"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/loan-officer-assistant.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Prikupljanje i praćenje dokumentacije",
+    "koraci": [
+      "Dostaviti prilagođenu listu potrebnih dokumenata prema tipu kredita",
+      "Pratiti status pristiglih i nedostajućih dokumenata svaka 48 sata",
+      "Proveriti kompletnost i ispravnost dokumenata pre slanja na obradu",
+      "Pratiti rokove važenja dokumenata (izvodi, platni listići, procena vrednosti)",
+      "Blagovremeno upozoriti na dokumenta koja ističu pre zatvaranja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/loan-officer-assistant.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Praćenje regulatornih rokova (TRID) i zaključavanja kamatne stope",
+    "koraci": [
+      "Izračunati rok za dostavljanje procene kredita u roku od 3 radna dana od prijave",
+      "Izračunati rok za dostavljanje zaključne izjave najmanje 3 radna dana pre zatvaranja",
+      "Pratiti datum isteka zaključane kamatne stope i poslati upozorenja na 7 i 3 dana",
+      "Dokumentovati tačne datume isporuke i potvrde prijema svih obaveznih obaveštenja",
+      "Eskalirati odmah svako kašnjenje koje bi moglo da predstavlja kršenje propisa"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/loan-officer-assistant.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Koordinacija uslova pokroviteljstva i zatvaranja kredita",
+    "koraci": [
+      "Voditi evidenciju svih uslova koje je izdao pokrovitelj sa rokovima i statusom",
+      "Pratiti i prikupljati dokumentaciju potrebnu za ispunjenje svakog uslova",
+      "Odgovarati na upite pokrovitelja istog dana kada stignu",
+      "Potvrditi datum, vreme i lokaciju zatvaranja sa svim učesnicima",
+      "Izračunati iznos gotovine potrebne za zatvaranje i proveriti instrukcije za uplatu",
+      "Poslati podsetnik klijentu dan pre zatvaranja sa svim potrebnim detaljima"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/loan-officer-assistant.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Orkestracija LSP klijenata za više jezika",
+    "koraci": [
+      "Instaliraj i pokreni jezičke servere za TypeScript, PHP, Go, Rust i Python",
+      "Inicijalizuj klijente paralelno i proveri njihove deklarisane mogućnosti",
+      "Mapiraj ekstenzije fajlova na odgovarajući jezički server",
+      "Poštuj životni ciklus LSP protokola od inicijalizacije do gašenja",
+      "Obradi više root direktorijuma i monorepo strukture",
+      "Grupiši zahteve ka serverima radi smanjenja mrežnog opterećenja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/lsp-index-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja jedinstvenog semantičkog grafa koda",
+    "koraci": [
+      "Pretvori odgovore LSP servera u jedinstvenu šemu čvorova i grana",
+      "Napravi čvorove za fajlove pre nego što dodaš simbole koje sadrže",
+      "Poveži simbole granama tipa sadrži, uvozi, poziva i referenca",
+      "Osiguraj da svaki simbol ima tačno jednu definiciju i validne reference",
+      "Proveri da sve grane upućuju na postojeće čvorove radi konzistentnosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/lsp-index-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Real-time inkrementalno ažuriranje indeksa",
+    "koraci": [
+      "Postavi praćenje izmena fajlova i git kuke za detekciju promena",
+      "Izračunaj minimalnu razliku (diff) grafa nakon svake izmene",
+      "Pošalji promene klijentima preko WebSocket konekcije",
+      "Primeni atomske izmene kako graf nikad ne bi ostao u nekonzistentnom stanju"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/lsp-index-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Optimizacija performansi za velike baze koda",
+    "koraci": [
+      "Profiliši sistem i identifikuj usko grlo u obradi",
+      "Uvedi progresivno učitavanje i lenjivo izračunavanje simbola",
+      "Koristi memorijski mapirane fajlove i tehnike bez kopiranja podataka",
+      "Keširaj agresivno, ali precizno invalidiraj zastarele podatke",
+      "Testiraj sistem na skupovima od preko 25.000 simbola radi provere brzine"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/lsp-index-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Definisanje integracione teze i pristupa",
+    "koraci": [
+      "Utvrditi razlog akvizicije i šta tačno treba da ostane nepromenjeno.",
+      "Izabrati pristup integracije - potpuno spajanje, očuvanje, simbiozu ili holding model.",
+      "Definisati ciljani operativni model i prioritete redosleda integracije.",
+      "Uskladiti tezu sa planom sinergija i kulturnom ambicijom pre zatvaranja posla."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/ma-integration-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Priprema spremnosti za Dan 1",
+    "koraci": [
+      "Sastaviti kontrolnu listu po oblastima - pravo, HR, finansije, IT, prodaja i komunikacije.",
+      "Proveriti kontinuitet ključnih procesa poput plata, pristupa sistemima i korisničke podrške.",
+      "Dodeliti jednog vlasnika i rok za svaku stavku kontrolne liste.",
+      "Sprovesti generalnu probu scenarija Dana 1 pre zvaničnog zatvaranja.",
+      "Pripremiti komunikaciju za zaposlene, klijente i partnere unapred.",
+      "Potvrditi da nijedan kritičan proces nije u statusu neizvesnosti pre proglašenja spremnosti."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/ma-integration-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Praćenje realizacije sinergija",
+    "koraci": [
+      "Postaviti osnovnu liniju i ciljeve za troškovne i prihodne sinergije.",
+      "Pratiti stvarno ostvarene rezultate naspram plana po inicijativama i vlasnicima.",
+      "Izveštavati transparentno o odstupanjima, curenju vrednosti i jednokratnim troškovima.",
+      "Identifikovati top rizike po sinergijski plan i definisati mere ublažavanja."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/ma-integration-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Upravljanje kulturnom integracijom i zadržavanjem talenata",
+    "koraci": [
+      "Proceniti kulturne razlike obe organizacije kroz ankete i intervjue.",
+      "Identifikovati tačke sudara i komplementarne snage dve kulture.",
+      "Definisati ciljanu kombinovanu kulturu i ključne rituale koji je oslikavaju.",
+      "Kategorizovati ključne talente po nivou rizika i sklopiti ugovore o zadržavanju za najkritičnije.",
+      "Sprovesti radionice i periodična merenja kulturnog pulsa radi praćenja napretka."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/ma-integration-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Kodiranje dijagnoza i procedura (ICD-10/CPT/HCPCS)",
+    "koraci": [
+      "Pregledati medicinsku dokumentaciju da se utvrdi razlog posete ili procedure",
+      "Dodeliti dijagnostičke kodove sa najvišim nivoom specifičnosti koji dokumentacija dozvoljava",
+      "Dodeliti kodove procedura i proveriti da li su modifikatori klinički opravdani",
+      "Proveriti da dijagnoza medicinski opravdava svaku naplaćenu uslugu",
+      "Primeniti pravila sekvenciranja i proveriti usklađenost sa smernicama za datum usluge"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/medical-billing-coding-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Provera i čišćenje naloga pre slanja (claim scrubbing)",
+    "koraci": [
+      "Proveriti tačnost podataka pacijenta i osiguravajućeg društva",
+      "Potvrditi da su NPI, poreski broj i kredencijali lekara važeći kod datog osiguravača",
+      "Proveriti validnost kodova, povezanost dijagnoze i procedure i ispravnost modifikatora",
+      "Potvrditi prethodna odobrenja, upute i rok za blagovremenu prijavu",
+      "Poslati elektronski zahtev i potvrditi prihvatanje od strane klirinške kuće"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/medical-billing-coding-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje odbijenim zahtevima i žalbama",
+    "koraci": [
+      "Evidentirati svaki odbijeni zahtev sa razlogom, iznosom i rokom za žalbu",
+      "Kategorisati uzrok odbijanja kao administrativni, klinički, autorizacioni ili kodni",
+      "Sastaviti žalbu sa kliničkim i kodnim obrazloženjem i priloženom dokumentacijom",
+      "Podneti žalbu pre isteka roka i pratiti ishod po nivoima žalbe",
+      "Otkloniti osnovni uzrok problema u radnom procesu da se spreči ponavljanje"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/medical-billing-coding-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Praćenje potraživanja i KPI izveštavanje o prihodnom ciklusu",
+    "koraci": [
+      "Pratiti stara potraživanja po starosnim grupama i prioritetno obrađivati najstarije",
+      "Kontaktirati osiguravače direktno za zahteve starije od 45 dana bez uplate",
+      "Izračunati ključne pokazatelje poput stope čistih zahteva, stope odbijanja i dana u potraživanjima",
+      "Otkriti i prijaviti preplate u skladu sa rokom od 60 dana",
+      "Pripremiti mesečni izveštaj sa preporukama za poboljšanje performansi po osiguravaču"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/medical-billing-coding-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Mapiranje toka vrednosti i identifikacija otpada",
+    "koraci": [
+      "Izaberi jedan proizvod ili uslugu i mapiraj trenutno stanje procesa pre bilo kakvih promena.",
+      "Prođi kroz svaki korak procesa i zabeleži vreme ciklusa, vreme čekanja i broj izvršilaca.",
+      "Izračunaj udeo vremena koje dodaje vrednost u odnosu na ukupno vreme trajanja procesa.",
+      "Prepoznaj osam vrsta otpada (transport, zalihe, pokret, čekanje, prekomerna proizvodnja, prekomerna obrada, defekti, neiskorišćene veštine).",
+      "Dizajniraj buduće stanje procesa sa ujednačenim tokom i uklonjenim koracima bez vrednosti."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/operations-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Planiranje kapaciteta i analiza uskog grla",
+    "koraci": [
+      "Prikupi istorijske podatke o obimu posla i proceni sezonske i razvojne trendove.",
+      "Izračunaj dostupne i produktivne kapacitete zaposlenih prema ciljanom nivou iskorišćenosti.",
+      "Uporedi prognoziranu potražnju sa raspoloživim kapacitetom i utvrdi razlike po periodima.",
+      "Identifikuj korak procesa koji ograničava ukupan protok i prvo ga rasteretiti unutrašnjim poboljšanjima.",
+      "Primeni mere povećanja kapaciteta po redosledu prioriteta, od efikasnosti do zapošljavanja."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/operations-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Upravljanje dobavljačima i kontinuitetom poslovanja",
+    "koraci": [
+      "Definiši merljive SLA pokazatelje i kriterijume za kvartalnu ocenu dobavljača.",
+      "Prati učinak dobavljača redovno i izveštavaj putem mesečnog izveštaja o performansama.",
+      "Organizuj kvartalni poslovni pregled i pokreni plan korektivnih mera kod ponovljenih odstupanja.",
+      "Izradi analizu uticaja na poslovanje sa definisanim ciljnim vremenima oporavka za kritične procese.",
+      "Napravi registar rizika i plan odgovora za scenarije poput ispada ključnog dobavljača ili sistema."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/operations-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Dijagnostika psihološke sigurnosti tima",
+    "koraci": [
+      "Sprovesti anketu od sedam stavki sa obrnutim bodovanjem negativnih tvrdnji.",
+      "Izračunati prosečan skor i proglasiti intervenciju neophodnom ako je ispod 4.5.",
+      "Prepoznati na kom od četiri nivoa sigurnosti (pripadnost, učenje, doprinos, izazivanje) tim zastaje.",
+      "Predložiti ponašanja lidera koja treba pojačati, a koja prekinuti na osnovu nalaza."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/organizational-psychologist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Procena rizika od sagorevanja tima",
+    "koraci": [
+      "Prikupiti pokazatelje poput fluktuacije, bolovanja, korišćenja godišnjeg odmora i prekovremenog rada.",
+      "Uporediti podatke sa tabelom rizika da se odredi nivo nizak, srednji ili visok.",
+      "Proveriti balans zahteva i resursa posla po JD-R modelu da se nađe uzrok.",
+      "Predložiti intervencije na nivou pojedinca, tima i organizacije prema identifikovanom riziku."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/organizational-psychologist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Procena organizacione kulture i plan promene",
+    "koraci": [
+      "Analizirati vidljive artefakte poput prostora, komunikacije i načina donošenja odluka.",
+      "Uporediti deklarisane vrednosti sa stvarnim ponašanjem u organizaciji.",
+      "Intervjuisati zaposlene o tome šta se nagrađuje, kažnjava i ceni da se otkriju skrivene pretpostavke.",
+      "Odrediti dominantan i sekundarni tip kulture prema modelu konkurentskih vrednosti.",
+      "Napraviti analizu jaza između trenutne i željene kulture i definisati ključne promene.",
+      "Postaviti realan vremenski okvir jer duboka kulturna promena traje nekoliko godina."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/organizational-psychologist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Vođenje tima kroz faze razvoja i otklanjanje disfunkcija",
+    "koraci": [
+      "Prepoznati u kojoj Takmenovoj fazi razvoja se tim trenutno nalazi.",
+      "Prilagoditi stil liderstva fazi, od direktivnog ka delegirajućem.",
+      "Dijagnostikovati disfunkcije tima po Lencionijevoj piramidi počev od poverenja.",
+      "Intervenisati redom od osnove ka vrhu, izgrađujući poverenje pre zahtevanja zdravog sukoba i posvećenosti."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/organizational-psychologist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Dijagnostika stvarnog cilja i uskog grla",
+    "koraci": [
+      "Uporedi izjavljeni cilj korisnika sa onim što ponašanje zapravo pokazuje da želi",
+      "Identifikuj trenutni sistem navika, okruženja i podsticaja koji održava stanje",
+      "Pronađi glavno ograničenje koje najviše koči napredak",
+      "Prepoznaj skrivenu pretpostavku koja može biti pogrešna",
+      "Odredi tačku poluge sa najmanjom promenom i najvećim efektom"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/personal-growth-mentor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Kreiranje 30-dnevnog izvršnog plana",
+    "koraci": [
+      "Definiši dugoročni pravac i merljiv ishod za 30 dana",
+      "Rasporedi nedeljne akcije kroz faze: temelj, praksa, povratna informacija, učvršćivanje",
+      "Odredi jednu malu dnevnu naviku koja se lako ponavlja",
+      "Postavi metriku za praćenje napretka i signal koji ukazuje da plan klizi"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/personal-growth-mentor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izrada matrice odlučivanja",
+    "koraci": [
+      "Izlistaj opcije i proceni za svaku korist, cenu, rizik i reverzibilnost",
+      "Oceni koliko svaka opcija odgovara postavljenom cilju",
+      "Izaberi preporuku na osnovu poluge, jednostavnosti i izvodljivosti",
+      "Definiši konkretnu sledeću akciju u roku od 24 do 48 sati"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/personal-growth-mentor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Nedeljni pregled odgovornosti",
+    "koraci": [
+      "Zabeleži šta je korisnik obećao da će uraditi",
+      "Uporedi obećano sa onim što je stvarno izvršeno i šta je izostalo",
+      "Utvrdi pravi uzrok zašto je obaveza propuštena",
+      "Definiši prilagođavanje za narednu nedelju i novu konkretnu obavezu"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/personal-growth-mentor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Izrada komparativne tržišne analize (CMA)",
+    "koraci": [
+      "Prikupiti podatke o nekretnini i njenim karakteristikama.",
+      "Pronaći aktivne, zaključene i realizovane uporedive nekretnine u okolini.",
+      "Izračunati prosečne cene i odnos prodajne i tražene cene.",
+      "Proceniti stanje tržišta i pravac kretanja cena.",
+      "Predložiti preporučenu prodajnu cenu i strategiju formiranja cene.",
+      "Dostaviti klijentu analizu u roku od 24 sata od dogovora."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/real-estate-buyer-seller.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Priprema i pregovaranje ponude za kupovinu",
+    "koraci": [
+      "Proceniti nekretninu i tržišni kontekst pre pravljenja ponude.",
+      "Definisati cenu, kapare, rokove i uslove ponude na osnovu strategije.",
+      "Sastaviti pisanu ponudu sa svim potrebnim prilozima i dostaviti je agentu prodavca.",
+      "Predstaviti ponudu uz argumentaciju koja je čini konkurentnom.",
+      "Voditi pregovore kroz kontraponude i po potrebi koristiti klauzulu eskalacije cene.",
+      "Dokumentovati svaki dogovoreni uslov pisanim putem."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/real-estate-buyer-seller.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Koordinacija transakcije do zatvaranja",
+    "koraci": [
+      "Otvoriti depozit i potvrditi uplatu kapare.",
+      "Zakazati i pratiti inspekciju nekretnine i rešavati nalaze sa drugom stranom.",
+      "Pratiti rokove za finansiranje, procenu vrednosti i uklanjanje uslova iz ugovora.",
+      "Koordinisati rad inspektora, banke, advokata i agencije za overu.",
+      "Sprovesti završni obilazak nekretnine pred zatvaranje.",
+      "Poslati upozorenje o prevari putem transfera sredstava pre zatvaranja."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/real-estate-buyer-seller.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Priprema nekretnine za izlistavanje",
+    "koraci": [
+      "Dogovoriti cenu i strategiju izlistavanja na osnovu CMA analize.",
+      "Preporučiti popravke, čišćenje i uređenje prostora pre fotografisanja.",
+      "Organizovati profesionalno fotografisanje i izradu virtuelne ture.",
+      "Pripremiti sve potrebne izjave i dokumentaciju o nekretnini.",
+      "Objaviti oglas na MLS platformi i drugim kanalima marketinga.",
+      "Pratiti povratne informacije sa razgledanja i po potrebi predložiti korekciju cene."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/real-estate-buyer-seller.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Optimizacija kanala regrutacije i analiza ROI",
+    "koraci": [
+      "Izaberi platforme za oglašavanje prema tipu i nivou pozicije (Boss Zhipin, Lagou, Liepin, Zhaopin, 51job, Maimai, LinkedIn).",
+      "Optimizuj profil kompanije i oglas za posao da poveća vidljivost i konverziju prijava.",
+      "Prati trošak po prijavi, po zaposlenom i po uspešno zadržanom kandidatu za svaki kanal.",
+      "Redovno upoređuj učinak kanala i preraspodeli budžet ka onima sa boljim rezultatima."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/recruitment-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Pisanje i testiranje oglasa za posao (JD)",
+    "koraci": [
+      "Definiši profil posla na osnovu potreba tima - ključne odgovornosti, obavezne i poželjne veštine.",
+      "Napravi jasnu razliku između obaveznih zahteva i poželjnih kvalifikacija, izbegavajući nerealne kombinacije.",
+      "Uporedi konkurentnost plate koristeći podatke sa platformi za benchmarking zarada.",
+      "Napiši opis iz perspektive kandidata, ističući kulturu tima i mogućnosti razvoja.",
+      "Testiraj različite verzije naslova i opisa da vidiš uticaj na broj prijava."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/recruitment-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Strukturirani proces intervjuisanja i procene kandidata",
+    "koraci": [
+      "Napravi standardizovane obrasce za ocenjivanje sa jasnim kriterijumima za svaku dimenziju.",
+      "Pripremi bazu pitanja po STAR metodi za procenu konkretnog ponašanja kandidata.",
+      "Organizuj tehničke provere u saradnji sa menadžerima zaduženim za zapošljavanje.",
+      "Koordiniši grupne intervjue za procenu liderstva i timskog rada kod masovnijih selekcija.",
+      "Kalibriši ocene među intervjuerima radi doslednosti rezultata."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/recruitment-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Usklađenost sa radnim zakonodavstvom i upravljanje onboardingom",
+    "koraci": [
+      "Proveri rokove za potpisivanje ugovora o radu i trajanje probnog rada prema zakonskim ograničenjima.",
+      "Obezbedi prijavu socijalnog osiguranja i doprinosa u zakonskom roku od zaposlenja.",
+      "Pripremi standardizovanu ponudu za posao i sprovedi proveru porekla uz pismenu saglasnost kandidata.",
+      "Primeni kontrolnu listu za uvođenje u posao od pripreme pre dolaska do praćenja tokom prvog meseca.",
+      "Prati pokazatelje probnog rada i reaguj rano na znake nezadovoljstva ili lošeg učinka."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/recruitment-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Teritorijalna distribucija izveštaja",
+    "koraci": [
+      "Prikupi sve teritorije i njihove aktivne predstavnike.",
+      "Generiši izveštaj specifičan za svaku teritoriju.",
+      "Proveri da predstavnik dobija samo podatke svoje teritorije.",
+      "Pošalji izveštaj isključivo dodeljenim primaocima."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/report-distribution-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Kreiranje i slanje HTML izveštaja",
+    "koraci": [
+      "Preuzmi konsolidovane podatke od agenta za konsolidaciju podataka.",
+      "Formatiraj izveštaj kao HTML sa tabelama performansi.",
+      "Primeni standardni vizuelni stil kompanije.",
+      "Pošalji email putem SMTP servisa."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/report-distribution-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Poštovanje rasporeda slanja",
+    "koraci": [
+      "Pokreni dnevno slanje teritorijalnih izveštaja radnim danima u 8 časova.",
+      "Pokreni nedeljno slanje zbirnog izveštaja ponedeljkom u 7 časova.",
+      "Omogući ručno pokretanje slanja preko administratorske table.",
+      "Proveri da je slanje izvršeno u predviđeno vreme."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/report-distribution-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Evidencija i obrada grešaka pri slanju",
+    "koraci": [
+      "Zabeleži status svakog pokušaja slanja (uspešno ili neuspešno).",
+      "Sačuvaj poruku o grešci za neuspele isporuke.",
+      "Nastavi slanje ostalim primaocima i pored pojedinačnih grešaka.",
+      "Učini istoriju distribucije dostupnom za proveru i izveštavanje."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/report-distribution-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Analiza usklađenosti sa oglasom za posao",
+    "koraci": [
+      "Pročitaj opis posla i izdvoji obavezne i poželjne zahteve.",
+      "Rangiraj zahteve po važnosti umesto da ih tretiraš jednako.",
+      "Uporedi postojeći CV sa svakim zahtevom i oceni jačinu dokaza.",
+      "Označi koje delove CV-ja treba pojačati, skratiti ili ukloniti."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/resume-tailor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Izrada mape ATS ključnih reči",
+    "koraci": [
+      "Izvuci tačne termine, alate i veštine iz oglasa.",
+      "Proveri koji od njih već postoje i imaju pokriće u iskustvu kandidata.",
+      "Predloži gde dodati termine koji su istiniti ali nedostaju u tekstu.",
+      "Jasno označi termine koje ne treba koristiti jer nema dokaza za njih."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/resume-tailor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Preoblikovanje stavki u merljiva dostignuća",
+    "koraci": [
+      "Pronađi stavke opisane kroz odgovornosti umesto rezultata.",
+      "Dodaj akciju, obim posla i kontekst poslovnog uticaja.",
+      "Uključi broj ili metriku ako je dostupna, ili postavi pitanje kandidatu za podatak.",
+      "Proveri da nova formulacija ostaje istinita i proverljiva na intervjuu."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/resume-tailor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Procena prihvatljivosti povraćaja",
+    "koraci": [
+      "Proveriti datum kupovine i uporediti sa dozvoljenim rokom za povraćaj",
+      "Proveriti stanje artikla i da li postoji priznanica ili digitalni dokaz kupovine",
+      "Proveriti da li kategorija proizvoda ima posebna ograničenja za povraćaj",
+      "Doneti odluku o prihvatljivosti i odrediti način refundacije i iznos",
+      "Označiti izuzetke poput isteklog roka, nepostojanja računa ili sumnje na prevaru"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/retail-customer-returns.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Obrada povraćaja korak po korak",
+    "koraci": [
+      "Pozdraviti kupca i preuzeti podatke o kupovini kroz račun ili sistem",
+      "Pregledati artikal radi utvrđivanja stanja, kompletnosti i autentičnosti",
+      "Uneti tačan šifarnik razloga povraćaja u sistem",
+      "Obraditi refundaciju na originalni način plaćanja ili izdati kredit prodavnice",
+      "Odrediti dalju sudbinu artikla - vraćanje na zalihe, povraćaj dobavljaču ili uništenje",
+      "Zahvaliti kupcu i pozvati ga da ponovo poseti prodavnicu"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/retail-customer-returns.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Prepoznavanje i eskalacija sumnje na prevaru",
+    "koraci": [
+      "Uočiti crvene zastavice poput izmenjenih računa, zamenjenih cenovnih nalepnica ili nervoznog ponašanja",
+      "Nikada direktno ne optuživati kupca za prevaru",
+      "Obavestiti kupca da je potrebna pomoć menadžera bez otkrivanja sumnje",
+      "Kontaktirati menadžera ili službu za sprečavanje gubitaka odmah",
+      "Dokumentovati interakciju i razlog eskalacije",
+      "Prepustiti dalje rešavanje menadžeru i prioritizovati bezbednost"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/retail-customer-returns.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Zadržavanje kupca kroz iskustvo povraćaja",
+    "koraci": [
+      "Prvo iskazati empatiju pre objašnjavanja politike povraćaja",
+      "Ponuditi zamenu artikla pre finalizovanja refundacije",
+      "Predstaviti pogodnosti kredita prodavnice kao pozitivnu opciju",
+      "Ako povraćaj nije moguć, ponuditi barem jednu alternativu umesto odbijanja bez rešenja",
+      "Završiti razgovor zahvalnošću i pozivom da se kupac ponovo vrati"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/retail-customer-returns.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Nadzor direktorijuma za Excel fajlove",
+    "koraci": [
+      "Prati fascikle radi pojave novih ili izmenjenih .xlsx i .xls fajlova",
+      "Ignoriši privremene zaključane fajlove koji počinju sa ~$",
+      "Sačekaj da se upis fajla potpuno završi pre obrade",
+      "Pokreni obradu čim je fajl spreman"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/sales-data-extraction-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Ekstrakcija prodajnih metrika iz radnih listova",
+    "koraci": [
+      "Otvori radnu svesku i prođi kroz sve listove",
+      "Prepoznaj tip metrike (MTD, YTD, Year End) na osnovu naziva lista",
+      "Fleksibilno mapiraj kolone za prihod, broj jedinica, dogovore i kvotu",
+      "Obradi format valute i uklonii znakove poput dolara i zareza iz brojeva",
+      "Izračunaj ostvarenje kvote kada su dostupni i prihod i kvota"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/sales-data-extraction-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Povezivanje podataka sa predstavnicima prodaje",
+    "koraci": [
+      "Pronađi predstavnika po email adresi ili punom imenu",
+      "Preskoči redove bez poklapanja i zabeleži upozorenje",
+      "Osiguraj da se postojeći podaci ne prepisuju bez jasnog signala za ažuriranje"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/sales-data-extraction-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Čuvanje podataka i vođenje evidencije uvoza",
+    "koraci": [
+      "Unesi validirane metrike u bazu putem grupnog umetanja unutar transakcije",
+      "Zabeleži izvorni fajl uz svaki red metrike radi revizije",
+      "Ažuriraj log uvoza sa brojem obrađenih i neuspelih redova i vremenskim oznakama",
+      "Pošalji signal o završetku obrade drugim agentima"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/sales-data-extraction-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Definisanje ICP i istraživanje prospekata",
+    "koraci": [
+      "Utvrditi firmografske i personalne kriterijume idealnog klijenta.",
+      "Sastaviti kraću ali kvalitetniju listu prospekata umesto masovne liste.",
+      "Istražiti svaku kompaniju — vesti, zapošljavanja, tehnologiju i konkurenciju.",
+      "Prepoznati okidače poput finansiranja, novog rukovodioca ili širenja.",
+      "Mapirati ko je u firmi donosilac odluke, šampion i blokator."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/sales-outreach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Pisanje personalizovanog hladnog maila",
+    "koraci": [
+      "Otvoriti poruku konkretnim detaljem o prospektu ili kompaniji.",
+      "Povezati taj detalj sa problemom koji prospekt ima.",
+      "Predstaviti vrednost ponude kratko, uz jedan dokaz ili rezultat.",
+      "Postaviti samo jedan jasan i lak poziv na akciju.",
+      "Proveriti da poruka ima manje od 150 reči i da nema suvišnih fraza."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/sales-outreach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Sprovođenje višestepene sekvence praćenja",
+    "koraci": [
+      "Poslati prvi email, zatim LinkedIn zahtev za povezivanje bez prodaje.",
+      "Nastaviti sa dodatnim email-om koji donosi novu vrednost ili uvid.",
+      "Dodati poziv telefonom i kratku govornu poruku na sredini sekvence.",
+      "Poslati koristan sadržaj poput članka ili izveštaja u kasnijem koraku.",
+      "Završiti iskrenim 'breakup' mailom koji ostavlja vrata otvorena.",
+      "Beležiti svaki kontakt i odgovor radi urednog praćenja pipeline-a."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/sales-outreach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Obrada prigovora i vođenje kroz pipeline",
+    "koraci": [
+      "Na svaki prigovor odgovoriti pitanjem, a ne odbranom.",
+      "Istražiti da li je prigovor stvaran ili samo učtivo odbijanje.",
+      "Kvalifikovati potrebu pre slanja ponude ili dodatnih materijala.",
+      "Pripremiti predlog tek nakon usmenog dogovora o vrednosti i budžetu.",
+      "Pomeriti priliku kroz faze pipeline-a uz jasno definisanu sledeću akciju.",
+      "Za izgubljene prilike zabeležiti razlog i zakazati ponovni kontakt za šest meseci."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/sales-outreach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Filtriranje informacija prema šefu",
+    "koraci": [
+      "Proceni da li informacija može da iznenadi ili ugrozi šefa ako se ne javi odmah",
+      "Ako je stvar rutinska i niskog rizika, reši je sam i izvesti na narednom sastanku",
+      "Ako je stvar bez roka i manjeg značaja, odloži je dok se ne zatraži",
+      "Vremenom pomeraj granicu eskalacije na osnovu poverenja i prethodnih reakcija šefa"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-chief-of-staff.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Održavanje procesa i standarda",
+    "koraci": [
+      "Prati da se svaki izlaz pridržava utvrđenog formata, imenovanja i tona bez odstupanja",
+      "Čuvaj i sprovodi definisane sekvence koraka (checkliste, SOP) bez preskakanja",
+      "Kada uočiš nedostatak procesa, predloži konkretno rešenje umesto da čekaš da neko primeti",
+      "Redovno (mesečno) proveravaj koji se procesi poštuju, a koji su skrenuli s kursa"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-chief-of-staff.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kaskadno ažuriranje povezanih dokumenata",
+    "koraci": [
+      "Kada se desi promena odluke, roka ili termina, identifikuj sve dokumente koji na nju referenciraju",
+      "Ažuriraj sve te dokumente bez čekanja da te neko pita",
+      "Vodi živu mapu zavisnosti dokumenata radi lakšeg praćenja budućih izmena",
+      "Proveri da nijedan dokument ne ostane sa zastarelim podatkom"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-chief-of-staff.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Pozicioniranje izlaza za stvarni uticaj",
+    "koraci": [
+      "Za svaki gotov materijal odredi ko treba da ga vidi i čije ponašanje treba da promeni",
+      "Odredi tačan trenutak kada je isporuka najkorisnija, ne samo kada je gotova",
+      "Izaberi kanal isporuke (mejl, sastanak, aplikacija) koji odgovara svrsi dokumenta",
+      "Potvrdi da je dokument dostupan i spreman za neposrednu upotrebu, a ne samo arhiviran"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-chief-of-staff.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Proračun nosivosti konstrukcionih elemenata",
+    "koraci": [
+      "Utvrditi merodavni kod, njegovo izdanje i nacionalni aneks na početku proračuna",
+      "Sprovesti analizu gravitacionih, bočnih, seizmičkih i opterećenja vetrom prema primenljivim propisima",
+      "Proračunati noseće elemente od čelika, armiranog betona, drveta, zidanih ili kompozitnih sistema",
+      "Proveriti granično stanje nosivosti (ULS) i upotrebljivosti (SLS), uključujući ugib i vibracije",
+      "Ako presek ne zadovoljava zahteve, predložiti veći ili drugačiji profil/presek i ponoviti proveru",
+      "Sastaviti kompletan proračunski paket sa ulazima, pretpostavkama i rezultatima"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-civil-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Geotehnička procena i projektovanje fundiranja",
+    "koraci": [
+      "Analizirati izveštaje o ispitivanju tla (bušotine, CPT, SPT, laboratorijski rezultati)",
+      "Izračunati nosivost tla i sleganje za plitko i duboko fundiranje",
+      "Projektovati potporne konstrukcije, podrumske zidove i sisteme za stabilnost kosina",
+      "Primeniti odgovarajuće parcijalne faktore sigurnosti prema primenjivom geotehničkom standardu",
+      "Konsultovati se sa geotehničkim specijalistom kod složenih uslova tla",
+      "Dokumentovati sve pretpostavke o parametrima tla korišćene u proračunu"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-civil-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada tehničke dokumentacije i specifikacija",
+    "koraci": [
+      "Izraditi crteže konstrukcije sa planovima, presecima, detaljima i šemama armature",
+      "Napisati tehničku specifikaciju materijala, izrade i zahteva za testiranje",
+      "Pregledati radioničke crteže i odgovoriti na zahteve za dodatne informacije (RFI) uz pozivanje na konkretan crtež ili klauzulu",
+      "Pripremiti BIM model i sprovesti proveru kolizija sa ostalim strukama",
+      "Uključiti istoriju revizija, oznaku severa, razmeru i spisak crteža u svaku dokumentaciju"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-civil-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Usklađivanje sa više međunarodnih standarda",
+    "koraci": [
+      "Identifikovati koji standard važi za svaki element projekta kada postoji više zahtevanih kodova",
+      "Uporediti zahteve različitih standarda i uočiti tačke sukoba",
+      "Predložiti rešenje sukoba, po pravilu primenom strožeg zahteva osim ako nadležni organ ne odluči drugačije",
+      "Voditi izveštaj o osnovi projektovanja koji beleži sve odluke o primenjenim kodovima",
+      "Pripremiti matricu usaglašenosti sa propisima za potrebe odobrenja nadležnog organa"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-civil-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Rekonstrukcija istorijskih slojeva koda",
+    "koraci": [
+      "Grupiši komitove po gustini i vremenskim periodima da bi se prepoznale faze razvoja",
+      "Uporedi fajlove istog tipa iz različitih faza da bi se videlo kako se pristup menjao",
+      "Pretraži kod za ponavljajuće koncepte koji su različito imenovani kroz vreme",
+      "Označi gde dominantan obrazac prelazi iz jedne faze u drugu"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-codebase-archaeologist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Praćenje fallback i default-vrednosti logike",
+    "koraci": [
+      "Pronađi sve lance fallback/default vrednosti u poljima kritičnim za novac, stanje ili identitet",
+      "Proveri redosled fallback logike u svakom fajlu koji tu vrednost koristi",
+      "Uporedi redosled između fajlova koji rešavaju istu vrednost",
+      "Prijavi slučajeve gde je redosled obrnut jer to može tiho propustiti pogrešnu default vrednost"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-codebase-archaeologist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Provera pretpostavki o postojanju stanja u event handlerima",
+    "koraci": [
+      "Za svaki event, webhook ili asinhroni handler popiši koje stanje čita a nije sam kreirao",
+      "Utvrdi koji proces treba da kreira to stanje i da li postoji stvarna garancija redosleda",
+      "Ako ne postoji eksplicitna provera, upsert ili transakcija, označi to kao nalaz rizika",
+      "Eksplicitno zabeleži i handlere koji su proverjeni i bezbedni, ne samo problematične"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-codebase-archaeologist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Izgradnja i održavanje registra nalaza o odstupanjima",
+    "koraci": [
+      "Za svaki nalaz zapiši fajlove, tip problema, rizik i status u centralnu tabelu",
+      "Organizuj nalaze kroz četiri pogleda: po nalazu, po eri, po odgovornosti i po riziku",
+      "Pre označavanja nalaza kao rešenog proveri da li je ispravka obuhvatila obe strane neslaganja",
+      "Redovno ažuriraj prioritet rizika kada se okolnosti promene i nikada ne briši stare nalaze"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-codebase-archaeologist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Audit nevidljive isključenosti u UI toku",
+    "koraci": [
+      "Pregledati radni tok, formu ili dizajn i uočiti krute pretpostavke prilagođene jednoj kulturi.",
+      "Postaviti pitanje ko je isključen - neurodivergentni, slepi, korisnici drugih kalendara ili kultura.",
+      "Označiti problematične elemente sa nivoom ozbiljnosti i kratkim opisom rizika.",
+      "Predložiti konkretnu, kopi-pejst alternativu koja rešava problem strukturno."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-cultural-intelligence-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Istraživanje kulturnog konteksta pre izrade sadržaja",
+    "koraci": [
+      "Pre generisanja sadržaja istražiti aktuelne standarde predstavljanja za ciljnu grupu.",
+      "Proveriti lokalne norme boja, simbola i metafora u ciljnom tržištu.",
+      "Izbegavati oslanjanje na zastarelo ili nepotpuno znanje o grupi.",
+      "Uključiti nalaze istraživanja u finalnu preporuku ili ispravku."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-cultural-intelligence-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Kreiranje negativnih prompt biblioteka protiv stereotipa",
+    "koraci": [
+      "Prepoznati poznate štetne stereotipe vezane za traženu demografsku grupu.",
+      "Formulisati eksplicitne negativne instrukcije koje zabranjuju te stereotipe u generisanju slika ili teksta.",
+      "Uneti anti-bias ograničenja u prompt kako bi prikaz bio dostojanstven i autentičan.",
+      "Proveriti finalni rezultat da ne sadrži tokenizam ili klišee."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-cultural-intelligence-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada checklist-e za globalno inkluzivan dizajn",
+    "koraci": [
+      "Proveriti polja forme poput imena, datuma i adrese na usklađenost sa globalnim konvencijama.",
+      "Analizirati upotrebu boja i ikonografije u kontekstu različitih tržišta.",
+      "Dokumentovati pronađene probleme i predložena rešenja u pregledan izveštaj.",
+      "Objasniti timu zašto je originalni pristup bio isključiv radi dugoročnog učenja."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-cultural-intelligence-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Audit razvojnog iskustva (DX)",
+    "koraci": [
+      "Okupiti grupu razvojnih programera i posmatrati ih dok prolaze kroz onboarding proces.",
+      "Beležiti svaku tačku zastoja i meriti vreme za svaku fazu.",
+      "Oceniti svaku fazu bojom prema brzini izvršenja zadatka.",
+      "Napraviti listu top 5 problema rangiranih po uticaju.",
+      "Predložiti konkretne popravke po prioritetu uticaja na korisnike."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-developer-advocate.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kreiranje tehničkog tutorijala",
+    "koraci": [
+      "Započeti sadržaj prikazom gotovog rezultata umesto uvoda o temi.",
+      "Objasniti arhitektonsku odluku pre nego što se prikaže kod.",
+      "Podeliti uputstvo na jasne, testirane korake sa očekivanim izlazom.",
+      "Dodati napomene za specifične probleme kod različitih okruženja (npr. Windows).",
+      "Završiti sa pregledom naučenih koncepata i predlogom sledećih koraka."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-developer-advocate.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje zajednicom i podrška",
+    "koraci": [
+      "Pratiti GitHub issue-e, Stack Overflow i Discord kanale radi uočavanja čestih problema.",
+      "Odgovarati na pitanja u roku od 24 sata uz iskreno i tehnički tačno objašnjenje.",
+      "Ponuditi privremeno rešenje i uputiti na praćenje zvaničnog tiketa za trajnu popravku.",
+      "Pratiti metrike zdravlja zajednice poput vremena odgovora i stope rešavanja problema.",
+      "Organizovati hakatone i časove konsultacija radi jačanja angažovanja zajednice."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-developer-advocate.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Povratna sprega ka proizvodu",
+    "koraci": [
+      "Sakupiti dokaze o problemima programera iz više izvora (GitHub, forumi, konferencije).",
+      "Pretvoriti uočene probleme u jasne predloge za proizvod sa korisničkim pričama.",
+      "Predstaviti podatke timu za proizvod umesto pojedinačnih utisaka.",
+      "Sastaviti mesečni izveštaj o najvažnijim problemima i njihovom uticaju.",
+      "Javno obavestiti zajednicu kada se neki zahtev implementira i dati im zasluge."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-developer-advocate.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Generisanje PDF dokumenata",
+    "koraci": [
+      "Odrediti da li je potreban kompleksan layout ili prost izveštaj podataka",
+      "Za kompleksne izglede koristiti pristup HTML i CSS pa konverziju u PDF",
+      "Za direktne izveštaje koristiti biblioteke poput reportlab ili pdfkit",
+      "Obezbediti pristupačnost dodavanjem alt teksta i oznaka u PDF-u"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-document-generator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada prezentacija (PPTX)",
+    "koraci": [
+      "Kreirati šablon prezentacije sa doslednim brendiranjem",
+      "Popuniti slajdove na osnovu ulaznih podataka",
+      "Koristiti biblioteke kao python-pptx ili pptxgenjs za generisanje fajla",
+      "Proveriti konzistentnost fontova i boja kroz sve slajdove"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-document-generator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kreiranje radnih tabela (XLSX)",
+    "koraci": [
+      "Strukturirati ulazne podatke u tabelarni format",
+      "Primeniti formatiranje, formule i grafikone preko odgovarajuće biblioteke",
+      "Organizovati podatke tako da budu spremni za pivot analize",
+      "Proveriti ispravnost formula pre izvoza fajla"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-document-generator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Generisanje Word dokumenata (DOCX)",
+    "koraci": [
+      "Definisati šablon dokumenta sa stilovima i zaglavljima",
+      "Dodati sadržaj uz doslednu hijerarhiju naslova",
+      "Ugraditi automatski sadržaj (TOC) i brendirane elemente",
+      "Generisati fajl koristeći biblioteke poput python-docx ili docx"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-document-generator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "FIPS 199 kategorizacija sistema",
+    "koraci": [
+      "Popisati tipove informacija koje sistem obrađuje prema NIST SP 800-60",
+      "Proceniti uticaj gubitka poverljivosti, integriteta i dostupnosti za svaki tip podataka",
+      "Uzeti najvišu vrednost (high-water mark) kao ukupnu kategorizaciju sistema",
+      "Povezati kategorizaciju sa odgovarajućim FedRAMP baseline nivoom (Low/Moderate/High)",
+      "Dokumentovati obrazloženje zasnovano na stvarnim podacima i misiji, bez potcenjivanja radi izbegavanja kontrola"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-fedramp-rmf-compliance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Definisanje granice ovlašćenja i mapiranje odgovornosti",
+    "koraci": [
+      "Nacrtati dijagram granice ovlašćenja pre pisanja SSP dokumenta",
+      "Prikazati sve komponente, tokove podataka i spoljne konekcije unutar i van opsega",
+      "Razdvojiti nasleđene, deljene i korisničke kontrole kroz Customer Responsibility Matrix",
+      "Proveriti da dijagram tačno odgovara stvarnom sistemu pre nastavka rada",
+      "Ažurirati granicu i matricu odgovornosti kad god dođe do značajne promene sistema"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-fedramp-rmf-compliance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Pisanje proverljivih SSP izjava i prikupljanje dokaza",
+    "koraci": [
+      "Za svaku kontrolu opisati konkretan mehanizam, konfiguraciju i odgovornu ulogu u sistemu",
+      "Izbegavati generičko prepisivanje teksta kontrole, pisati samo ono što se stvarno radi",
+      "Prikupiti datiran i vlasnički dokaz (konfiguracija, log, tiket) koji potvrđuje izjavu",
+      "Proveriti da li bi 3PAO mogao da testira izjavu tačno onako kako je napisana",
+      "Označiti status kontrole kao implementiranu, delimičnu, planiranu, nasleđenu ili korisničku"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-fedramp-rmf-compliance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Upravljanje POA&M i kontinuirano praćenje (ConMon)",
+    "koraci": [
+      "Uneti svaki nalaz u POA&M sa nivoom rizika, vlasnikom i realnim rokom otklanjanja",
+      "Zatvarati stavke tek kada postoji dokaz o stvarnom rešavanju problema",
+      "Sprovoditi mesečne skenove ranjivosti i redovno ažurirati POA&M prema AO/PMO",
+      "Proceniti bezbednosni uticaj svake značajne promene pre implementacije, ne posle",
+      "Organizovati godišnju proveru podskupa kontrola i revidirati kategorizaciju ako je sistem promenjen"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-fedramp-rmf-compliance.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dijagnostikovanje kognitivnog stanja i izbor zvučnog profila",
+    "koraci": [
+      "Identifikuj tip zadatka korisnika - analitički rad, kodiranje, sprint ili oporavak od preopterećenja.",
+      "Proceni toleranciju na ritam - da li je potreban puls (90-120 BPM) ili potpuna tišina bez bita.",
+      "Pridruži zadatak odgovarajućem žanru i opsegu BPM-a (npr. felt piano za duboku analizu, lo-fi za kodiranje).",
+      "Potvrdi izbor pre nego što pređeš na kreiranje zvučne arhitekture."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-focus-music-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kreiranje generativnih audio promptova za muzičke modele",
+    "koraci": [
+      "Odaberi instrumentalnu paletu i tonalitet prema cilju fokusa.",
+      "Napiši strukturirani prompt sa oznakama poput [Instrumental], [Intro], [Main Loop], [Outro].",
+      "Dodaj obavezan negativni prompt koji isključuje vokale, govor i oštre tonove.",
+      "Prilagodi format i osetljivost oznaka ciljnoj platformi (Suno, Udio, Stable Audio).",
+      "Proveri da prompt omogućava neprekidno, petljasto reprodukovanje bez naglih prelaza."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-focus-music-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Primena psihoakustičkih i dinamičkih standarda",
+    "koraci": [
+      "Ograniči visoke frekvencije iznad 8 kHz korišćenjem opisa poput prigušenog klavira ili analognog filtera.",
+      "Izbegavaj nagle promene jačine zvuka i oštre prelaze u aranžmanu.",
+      "Koristi jednostavne modalne skale i ponavljajuće harmonske obrasce od najviše 2-4 akorda.",
+      "Osmisli postepen uvod i otvoren, ambijentalan završetak radi neprekidnog slušanja."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-focus-music-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Dizajn binauralnih i neuroakustičkih zvučnih tokova",
+    "koraci": [
+      "Odredi ciljnu moždanu frekvenciju (npr. 10 Hz za alfa talase) i izračunaj razliku frekvencija nosača za levo i desno uvo.",
+      "Postavi nosače tona (npr. 200 Hz i 210 Hz) i primeni stereo panoramu za svako uvo posebno.",
+      "Omogući pokretanje zvuka tek nakon korisničke interakcije zbog ograničenja pregledača za automatsko puštanje.",
+      "Proveri da li kombinacija frekvencija izaziva neprijatno harmonijsko lupanje i prilagodi po potrebi."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-focus-music-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Izračunavanje neto stope po tipu ugovora",
+    "koraci": [
+      "Uzmi TJM brut kao polaznu vrednost dnevne stope.",
+      "Primeni odgovarajuće stope troškova za portage salarial, mikro-preduzeće ili SASU/EURL.",
+      "Izračunaj neto mesečni prihod i efektivnu neto dnevnu stopu nakon svih nameta.",
+      "Prikaži korisniku jasno poređenje bruto i neto iznosa pre donošenja odluke."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-french-consulting-market.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Pregovaranje tarife sa ESN klijentom",
+    "koraci": [
+      "Odredi minimalnu prihvatljivu dnevnu stopu na osnovu mesečnih troškova i broja naplativih dana.",
+      "Proceni prodajnu cenu koju ESN naplaćuje klijentu množenjem TJM sa faktorom 1.4-1.7.",
+      "Ponudi početnu cenu 15-20% iznad ciljane kako bi ostavio prostor za pregovore.",
+      "Ustupke daj samo u zamenu za dužinu angažmana, dane rada na daljinu ili uslove obnove ugovora.",
+      "Naglasi usku specijalizaciju umesto generičke titule kako bi opravdao premium cenu."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-french-consulting-market.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izbor i pozicioniranje na platformama",
+    "koraci": [
+      "Uporedi platforme po proviziji, tipičnom rasponu TJM i tipu misija koje nude.",
+      "Odaberi platformu u skladu sa profilom i ciljem (portfolio, premium klijenti, volumen).",
+      "Postavi javnu cenu pažljivo jer ona postaje referentna tržišna stopa.",
+      "Prati ocene i reputaciju na platformi kako bi ostao iznad praga od 4.5/5."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-french-consulting-market.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Upravljanje sezonskim ciklusima i rizikom plaćanja",
+    "koraci": [
+      "Prilagodi strategiju ponude prema sezonskom kalendaru (januar, septembar kao vrhunci).",
+      "Planiraj novčani tok uzimajući u obzir da standardni NET-30 u praksi znači 60-90 dana čekanja.",
+      "Označi i reaguj na kašnjenja u plaćanju duža od 15 dana od roka.",
+      "Diverzifikuj klijente tako da nijedan ne prelazi 60% godišnjeg prihoda radi smanjenja rizika."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-french-consulting-market.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Dekodiranje nunchi signala u razgovoru",
+    "koraci": [
+      "Slušaj doslovnu izjavu sagovornika i uporedi je sa uobičajenim skrivenim značenjem u korejskom poslovnom kontekstu.",
+      "Prepoznaj fraze poput 'razmotrićemo' kao verovatno odbijanje i ne insistiraj dalje.",
+      "Ako čuješ 'moram da prijavim nadređenima', tretiraj to kao pozitivan znak i pripremi materijale za internu prezentaciju.",
+      "Na pitanje tipa 'jeste li zauzeti' odgovori da si slobodan i pusti sagovornika da iznese pravi zahtev.",
+      "Ćutanje od 3 do 7 dana posle sastanka tumači kao interno usaglašavanje, ne kao odbijanje."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-korean-business-navigator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Vođenje kroz 품의 proces odobravanja",
+    "koraci": [
+      "Mapiraj trenutnu fazu dogovora u lancu: uvod, sastanak, interna revizija, dokument odobrenja, lanac odobravanja, ugovor.",
+      "Prilagodi očekivani rok prema tipu kompanije - 6 do 10 nedelja za MSP, 8 do 12 za srednje, 12 do 16 za čebol.",
+      "Ne traži vremenski okvir odluke na prvom sastanku i ne zaobilazi kontakt da bi stigao do nadređenog.",
+      "Pošalji materijale koje kontakt može interno da deli, posebno kad zatraže reference ili studije slučaja.",
+      "Ograniči učestalost praćenja statusa na najviše jednom nedeljno, prilagođeno veličini kompanije."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-korean-business-navigator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Pisanje poruka na KakaoTalk prema fazi odnosa",
+    "koraci": [
+      "Za prvi kontakt koristi formalan ton, pomeni ko je izvršio predstavljanje i predloži kratak sastanak uz kafu.",
+      "U grupnim ćaskanjima uvek piši na korejskom, čak i uz greške, jer engleski signalizira očekivanje prilagođavanja.",
+      "Postepeno prelazi na manje formalan stil i emotikone tek kada je poverenje izgrađeno.",
+      "Odgovaraj u roku od istog radnog dana i izbegavaj da ostaviš poruku pročitanu bez odgovora duže od 24 sata."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-korean-business-navigator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Upravljanje poslovnom večerom i hijerarhijom oslovljavanja",
+    "koraci": [
+      "Sedi prema statusu - najudaljenije mesto od vrata rezerviši za najstarijeg po rangu.",
+      "Sipaj piće drugima pre sebe i prihvati prvu turu alkohola iz poštovanja.",
+      "Sačekaj da najstariji po rangu počne da jede pre nego što i sam počneš.",
+      "Oslovljavaj sagovornike titulom plus 님, nikad imenom dok te sami na to ne pozovu.",
+      "Ako želiš da platiš, ponudi da platiš drugu turu ili kafu sledećeg dana umesto glavnog računa."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-korean-business-navigator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Konceptualni masterklas pre implementacije",
+    "koraci": [
+      "Objasni fundamentalni problem i teorijske osnove pre nego što se predlaže arhitektura",
+      "Prikaži prvobitne principe i istorijski kontekst problema",
+      "Uporedi predlog sa proverenim rešenjima iz poznatih open-source sistema",
+      "Pokaži kako dizajn optimizuje efikasnost i smanjuje kognitivno opterećenje"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-master-plan-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Red Teaming i kritika rizika",
+    "koraci": [
+      "Preispitaj sopstveni plan tražeći skrivene tačke otkaza i pretpostavke",
+      "Identifikuj rizike od regresije i uticaj na postojeće funkcionalnosti",
+      "Primeni filter protiv širenja obima i nepotrebnih apstrakcija",
+      "Definiši bezbednosne granice i tačke gde je potrebna ljudska potvrda",
+      "Navedi najmanje tri konkretna rizika ili ivična slučaja za svaki plan"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-master-plan-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada implementacionog plana u Markdown formatu",
+    "koraci": [
+      "Istraži postojeću strukturu repozitorijuma i konvencije pre planiranja",
+      "Napravi mapu fajlova sa oznakama novo, izmena ili brisanje i obrazloženjem",
+      "Definiši dijagram arhitekture i tokove podataka",
+      "Opiši protokol validacije sa testovima i ivičnim slučajevima",
+      "Dodaj strategiju vraćanja unazad i mehanizme zaustavljanja kvara",
+      "Strukturiraj ceo dokument prema petodelnoj šemi bez pisanja koda"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-master-plan-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn upravljanja i tačaka ljudske kontrole",
+    "koraci": [
+      "Ugradi tačke za ljudsku saglasnost pre osetljivih automatizovanih akcija",
+      "Osiguraj transparentnost i mogućnost revizije svake sistemske odluke",
+      "Formalizuj stanja sistema kroz tabele prelaza stanja",
+      "Dizajniraj mehanizme idempotentnosti i kontrole konkurentnosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-master-plan-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Dizajn alata prilagođenih agentu",
+    "koraci": [
+      "Odrediti koji agent ne može da uradi i koju spoljnu uslugu treba integrisati",
+      "Imenovati alat jasnim parom glagol_imenica koji opisuje tačnu radnju",
+      "Napisati opis koji objašnjava kada alat treba pozvati, ne samo šta radi",
+      "Definisati tipizirane parametre sa podrazumevanim vrednostima pomoću Zod ili Pydantic",
+      "Ako jedan alat radi više stvari, podeliti ga na više alata sa jednom odgovornošću"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-mcp-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Implementacija MCP servera sa obradom grešaka",
+    "koraci": [
+      "Izgraditi server koristeći zvaničan MCP SDK za TypeScript ili Python",
+      "Obaviti svaki spoljni poziv unutar try/catch bloka",
+      "Vratiti strukturiranu grešku sa isError: true umesto da server padne",
+      "Validirati ulazne podatke pre slanja ka spoljnom API-ju",
+      "Čuvati tajne podatke isključivo u promenljivama okruženja, nikad u kodu"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-mcp-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izlaganje resursa i promptova",
+    "koraci": [
+      "Prepoznati izvore podataka koje agent treba da pročita pre akcije",
+      "Kreirati MCP resurse sa predvidivim i samoobjašnjivim URI adresama",
+      "Napraviti prompt šablone za česte radne tokove koji usmeravaju agenta",
+      "Vratiti podatke u JSON formatu za mašinsku obradu, a markdown za čitljiv sadržaj"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-mcp-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Testiranje sa stvarnim agentima i iteracija",
+    "koraci": [
+      "Povezati server sa pravim agentom i testirati ceo tok poziva alata",
+      "Pratiti da li agent bira pogrešan alat ili šalje neispravne parametre",
+      "Doraditi nazive i opise alata na osnovu ponašanja agenta",
+      "Testirati putanje grešaka poput nedostupnog API-ja, ograničenja brzine i praznih rezultata",
+      "Proveriti brzinu pokretanja servera i vreme odziva na pozive alata"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-mcp-builder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Provera dokumentacije i upravljanja modelom",
+    "koraci": [
+      "Prikupiti svu metodološku i tehničku dokumentaciju modela.",
+      "Proveriti da li dokumentacija omogućava potpunu replikaciju modela.",
+      "Proveriti usklađenost procesa odobravanja i izmena sa pravilima upravljanja.",
+      "Potvrditi postojanje i adekvatnost okvira za monitoring.",
+      "Proveriti da li je model uredno evidentiran u inventaru modela."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-model-qa.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Rekonstrukcija podataka i analiza obeležja",
+    "koraci": [
+      "Rekonstruisati populaciju na kojoj je model treniran iz sirovih podataka.",
+      "Proveriti definiciju i stabilnost ciljne varijable kroz vreme.",
+      "Analizirati distribucije obeležja, nedostajuće vrednosti i izuzetke.",
+      "Izračunati indeks stabilnosti populacije (PSI) za svako obeležje.",
+      "Validirati logiku transformacije, enkodiranja i segmentacije podataka."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-model-qa.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Replikacija modela i testiranje kalibracije i performansi",
+    "koraci": [
+      "Ponovo podeliti uzorke na trening, validaciju i test skup prema dokumentaciji.",
+      "Ponovo istrenirati model i uporediti rezultate sa originalnim.",
+      "Sprovesti statističke testove kalibracije poput Hosmer-Lemeshow i Brier skora.",
+      "Izmeriti metrike diskriminacije poput Gini, KS i AUC na svim podskupovima.",
+      "Uporediti predloženi model sa postojećim produkcionim modelom."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-model-qa.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Interpretabilnost, pravičnost i izveštavanje o nalazima",
+    "koraci": [
+      "Sprovesti globalnu SHAP analizu i generisati grafike važnosti obeležja.",
+      "Napraviti lokalna objašnjenja pojedinačnih predikcija kroz waterfall prikaze.",
+      "Generisati Partial Dependence Plots radi provere očekivanih odnosa.",
+      "Proveriti pravičnost modela prema zaštićenim karakteristikama.",
+      "Sastaviti izveštaj sa ocenjenim nalazima, uticajem i preporukama za ispravke."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-model-qa.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Analiza strukture troškova",
+    "koraci": [
+      "Popiši sve direktne troškove poput materijala, proizvodnje i isporuke",
+      "Dodaj indirektne troškove kao što su podrška, infrastruktura i marketing po jedinici",
+      "Razdvoji fiksne i varijabilne troškove u zavisnosti od obima",
+      "Izračunaj potpuno opterećeni trošak po jedinici i minimalnu maržu",
+      "Identifikuj prilike za smanjenje troškova kroz pregovore ili obim"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-pricing-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Istraživanje tržišta i konkurencije",
+    "koraci": [
+      "Prikupi podatke o cenama direktnih i indirektnih konkurenata",
+      "Napravi mapu pozicioniranja cena naspram percipirane vrednosti",
+      "Proceni osetljivost kupaca na cenu po segmentima metodama poput Van Westendorp",
+      "Uporedi normative industrije i regulatorna ograničenja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-pricing-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Određivanje cene na osnovu vrednosti",
+    "koraci": [
+      "Utvrdi koji ishod kupac zapravo plaća i kako meri uspeh",
+      "Proceni ekonomsku vrednost tog ishoda za kupca",
+      "Primeni odgovarajući odnos zahvatanja vrednosti u zavisnosti od tipa tržišta",
+      "Postavi cenu kao proizvod vrednosti i odnosa zahvatanja",
+      "Izradi analizu osetljivosti u rasponu od plus-minus dvadeset posto"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-pricing-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada strategije i politike popusta",
+    "koraci": [
+      "Izaberi model cenovanja koji odgovara proizvodu i tržišnoj strategiji",
+      "Dizajniraj pakete i nivoe cena koji hvataju različite segmente kupaca",
+      "Definiši nivoe odobrenja popusta i obavezno poslovno obrazloženje",
+      "Predloži alternative popustima poput produženih rokova plaćanja ili dodatnih usluga",
+      "Postavi plan implementacije sa pravilima za postojeće korisnike i praćenjem rezultata"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-pricing-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Projektovanje arhitekture u skladu sa governor limitima",
+    "koraci": [
+      "Proveri trenutnu potrošnju SOQL, DML, CPU i heap resursa u transakciji",
+      "Dizajniraj logiku tako da obavezno radi bulkovano, nikad red po red",
+      "Izračunaj i dokumentuj preostali budžet limita za svaku ključnu operaciju",
+      "Prevedi tehnička ograničenja u poslovni uticaj za zainteresovane strane",
+      "Odbij rešenja koja zavise od naknadne optimizacije limita"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-salesforce-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Izrada Architecture Decision Record dokumentacije",
+    "koraci": [
+      "Opiši poslovni i tehnički kontekst koji je doveo do odluke",
+      "Navedi usvojenu odluku i obrazloženje izbora",
+      "Uporedi alternative kroz prednosti, mane i uticaj na governor limite",
+      "Zabeleži pozitivne i negativne posledice odluke",
+      "Odredi datum revizije i prati promene kroz vreme"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-salesforce-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn integracionih šablona otpornih na greške",
+    "koraci": [
+      "Odaberi odgovarajući pattern (sinhroni, asinhroni, push ili pull) za svaki eksterni sistem",
+      "Definiši retry logiku sa eksponencijalnim zastojem i circuit breaker mehanizam",
+      "Uvedi dead letter queue za poruke koje ne uspeju da se obrade",
+      "Dizajniraj šemu platformskih događaja i upravljanje replay ID-jem",
+      "Proveri da li Platform Events ili Change Data Capture bolje odgovara slučaju upotrebe"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-salesforce-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje i revizija podatkovnog modela",
+    "koraci": [
+      "Mapiraj postojeće objekte, automatizacije i integracije u org-u",
+      "Dokumentuj odluke o master-detail i lookup relacijama sa obrazloženjem",
+      "Definiši model deljenja podataka i strategiju za velike količine podataka",
+      "Proveri usklađenost polja i sigurnosti sa profilima i setovima dozvola",
+      "Primeni enkripciju za osetljive i lične podatke pre čuvanja u poljima"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-salesforce-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Postavljanje parametara dvoboja",
+    "koraci": [
+      "Prikupi podatke o situaciji, ulozi korisnika, tipu protivnika i cilju duela.",
+      "Odredi broj rundi i klasifikuj scenario pomoću teorije igara.",
+      "Objavi parametre duela jasnim i strukturiranim formatom."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-strategy-duel-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Simulacija poteza agenata",
+    "koraci": [
+      "Za svaku rundu simuliraj potez korisničkog agenta birajući stratagem i koncept iz teorije igara.",
+      "Simuliraj potez protivnika na isti način, uzimajući u obzir istoriju duela.",
+      "Objasni rezonovanje iza svakog poteza u jednoj do dve rečenice.",
+      "Dodeli bodove za svaki potez i ažuriraj ukupan skor."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-strategy-duel-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Formatiranje i prezentacija izlaza",
+    "koraci": [
+      "Koristi jasne ASCII razdelnike i oznake rundi za preglednost.",
+      "Prikaži svaki potez strukturirano sa stratagemom, konceptom i obrazloženjem.",
+      "Održavaj dramatičan i energičan ton tokom celog izveštaja."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-strategy-duel-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Donošenje konačne presude",
+    "koraci": [
+      "Analiziraj tok duela i proveri da li je postignuta Nash ravnoteža.",
+      "Proglasi pobednika ili nerešen ishod na osnovu ukupnih poena.",
+      "Daj konkretnu preporuku za buduće strategije ili pregovore.",
+      "Zabeleži ishod radi učenja i poboljšanja budućih duela."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-strategy-duel-agent.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Otkrivanje skrivenih workflow-ova u kodu",
+    "koraci": [
+      "Pregledati sve rute, endpointe, worker i job fajlove kao potencijalne ulazne tačke workflow-a",
+      "Proći kroz migracije baze, konfiguracije orkestracije i infrastrukturni kod da se nađu implicitni procesi",
+      "Pretražiti cron zadatke, event listenere i webhook-ove",
+      "Svaki pronađeni proces bez specifikacije označiti kao 'Missing' i prijaviti kao rizik",
+      "Zapisati šta pokreće proces, šta sledi, kako se oporavlja i ko čisti posledice"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-workflow-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Vođenje registra workflow-ova sa četiri prikaza",
+    "koraci": [
+      "Voditi glavnu listu svih workflow-ova sa statusom, okidačem i datumom pregleda",
+      "Mapirati svaku komponentu koda na workflow-ove u kojima učestvuje",
+      "Povezati korisnička i operaterska iskustva sa odgovarajućim workflow-ovima",
+      "Napraviti mapu stanja entiteta i workflow-ova koji menjaju ta stanja",
+      "Ažurirati registar odmah nakon svakog otkrića ili izmene statusa",
+      "Nikada ne brisati stare unose, već ih označiti kao zastarele"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-workflow-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izrada detaljne specifikacije stabla workflow-a",
+    "koraci": [
+      "Opisati akterte, preduslove i tačan okidač procesa",
+      "Mapirati srećan put korak po korak sa ulazima, izlazima i rokovima",
+      "Za svaki korak definisati sve vrste grešaka: validacione, vremenske, privremene, trajne i konfliktne",
+      "Opisati šta vidi korisnik, operater, baza i logovi u svakom stanju",
+      "Napraviti popis resursa za čišćenje i tačan redosled vraćanja u prethodno stanje",
+      "Izvesti test slučajeve direktno iz svake grane procesa"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-workflow-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.94
+  },
+  {
+    "ime": "Definisanje ugovora na granicama sistema i provera realnosti",
+    "koraci": [
+      "Za svaku razmenu podataka između servisa definisati tačan format poruke i odgovora",
+      "Odrediti vreme isteka i akciju oporavka za svaki neuspeli handoff",
+      "Proveriti stvarni kod da se utvrdi da li odgovara napisanoj specifikaciji",
+      "Zapisati sve nepotvrđene pretpostavke u tabelu pretpostavki",
+      "Predati specifikaciju na proveru pre nego što se označi kao odobrena"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/specialized-workflow-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada liste škola po nivoima (reach/target/safety)",
+    "koraci": [
+      "Prikupi kompletan profil studenta – ocene, testove, iskustva i ciljeve",
+      "Uporedi profil sa prosečnim prihvaćenim kandidatima na ciljanim programima",
+      "Podeli škole u tri kategorije prema šansi za upis",
+      "Analiziraj šta svaki program posebno vrednuje kod kandidata",
+      "Proveri troškove, rokove i stipendije za svaku školu",
+      "Sastavi izveštaj sa jasnim obrazloženjem izbora i rizicima"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/study-abroad-advisor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Strateško planiranje zemalja i kombinovanih prijava",
+    "koraci": [
+      "Uporedi karakteristike sistema prijave u različitim zemljama",
+      "Uskladi izbor zemalja sa budžetom, ciljevima karijere i preferencijama studenta",
+      "Definiši kombinaciju zemalja za paralelnu prijavu (npr. SAD i UK)",
+      "Napravi vremenski plan koji usklađuje rokove različitih zemalja",
+      "Rasporedi resurse i energiju prema prioritetnim destinacijama"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/study-abroad-advisor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Vođenje kroz pisanje eseja i motivacionih pisama",
+    "koraci": [
+      "Pronađi centralnu ličnu priču i nit koja povezuje iskustva i ciljeve",
+      "Prilagodi strategiju pisanja tipu eseja (lični esej, why-school, istraživački predlog)",
+      "Proveri da li je uvod upečatljiv i da li esej izbegava hronološko nabrajanje",
+      "Daj povratnu informaciju kroz dijagnostičku proveru sadržaja i strukture",
+      "Pomozi u koordinaciji sa preporučiocima da pisma budu usklađena sa pričom",
+      "Osiguraj da sav sadržaj ostane autentično studentov rad"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/study-abroad-advisor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Planiranje standardizovanih testova i unapređenje profila",
+    "koraci": [
+      "Proceni koji testovi su obavezni, opcioni ili nepotrebni za ciljane programe",
+      "Napravi vremenski raspored polaganja i mogućeg ponavljanja testova",
+      "Identifikuj najveće praznine u profilu i predloži prioritetne aktivnosti (istraživanje, praksa, projekti)",
+      "Pomozi u planiranju kontaktiranja profesora i traženja istraživačkih prilika",
+      "Proceni vrednost takmičenja, sertifikata i publikacija za prijavu",
+      "Prati napredak i prilagođavaj plan prema preostalom vremenu do roka"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/study-abroad-advisor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Kvalifikacija i razvoj dobavljača",
+    "koraci": [
+      "Proveri kredencijale i finansijsko stanje potencijalnog dobavljača",
+      "Sprovedi teren obilazak i proveru proizvodnih kapaciteta",
+      "Organizuj probnu proizvodnju pre pune saradnje",
+      "Klasifikuj dobavljače po ABC sistemu i definiši strategiju za svaku grupu",
+      "Prati učinak kroz QCD pokazatelje i radi kvartalno ocenjivanje",
+      "Isključi dobavljače koji godinama ne ispunjavaju standarde"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/supply-chain-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje zalihama i tačkom ponovne nabavke",
+    "koraci": [
+      "Izračunaj ekonomičnu količinu narudžbine na osnovu potražnje i troškova",
+      "Odredi sigurnosnu zalihu prema željenom nivou usluge i varijabilnosti potražnje",
+      "Postavi tačku ponovne narudžbine kombinujući dnevnu potrošnju, rok isporuke i sigurnosnu zalihu",
+      "Analiziraj zastarele zalihe i predloži otpis, rasprodaju ili povraćaj dobavljaču",
+      "Redovno revidiraj parametre na osnovu stvarnih podataka o prodaji i isporuci"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/supply-chain-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Kontrola kvaliteta i rešavanje problema",
+    "koraci": [
+      "Uspostavi ulaznu, međufaznu i izlaznu kontrolu kvaliteta",
+      "Primeni AQL standarde uzorkovanja za prijem robe",
+      "Angažuj nezavisne inspekcijske kuće za reviziju fabrika i sertifikaciju proizvoda",
+      "Pri identifikovanom problemu pokreni 8D izveštaj i CAPA plan za koreni uzrok",
+      "Prati sprovođenje korektivnih mera kod dobavljača do zatvaranja slučaja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/supply-chain-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Procena i ublažavanje rizika u lancu snabdevanja",
+    "koraci": [
+      "Identifikuj koncentraciju nabavke i zavisnost od jednog dobavljača",
+      "Oceni finansijsko zdravlje i kreditni rejting ključnih dobavljača",
+      "Dodeli nivo rizika (nizak/srednji/visok) za svaku kritičnu sirovinu ili komponentu",
+      "Razvij alternativne dobavljače za materijale sa visokim rizikom u zadatom roku",
+      "Definiši raspodelu obima nabavke između primarnog, rezervnog i razvojnog dobavljača",
+      "Redovno ažuriraj plan za vanredne situacije na osnovu novih upozorenja"
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/supply-chain-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.86
+  },
+  {
+    "ime": "Validacija beleški po Luhmanovim principima",
+    "koraci": [
+      "Proveri da li se beleška razume samostalno bez dodatnog konteksta.",
+      "Proveri da li postoje bar dve smislene veze ka drugim beleškama.",
+      "Proveri da je struktura organska, bez preterane klasifikacije.",
+      "Proveri da li beleška podstiče dalje razmišljanje i dijalog.",
+      "Prikaži rezultat provere kroz tabelu ili listu na kraju zadatka."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/zk-steward.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Arhiviranje i umrežavanje beleški",
+    "koraci": [
+      "Odaberi putanju za arhiviranje prema vremenskoj šemi foldera.",
+      "Poveži novu belešku sa bar dve postojeće beleške.",
+      "Dodaj barem jedan unos u indeks ili MOC za lakše pronalaženje.",
+      "Upiši povratne linkove na dnu beleške.",
+      "Izbegni smeštanje u zastarele ili isključivo arhivske foldere."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/zk-steward.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Predlaganje veza i protivpitanja",
+    "koraci": [
+      "Analiziraj novu belešku i pronađi kandidate za povezivanje.",
+      "Predloži ključne reči i indeksne unose za lakše pretraživanje.",
+      "Postavi jedno protivpitanje iz druge discipline radi podsticanja dijaloga.",
+      "Proceni da li je sadržaj vredan deljenja i predloži gde da se arhivira."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/zk-steward.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Biranje stručne perspektive po domenu zadatka",
+    "koraci": [
+      "Odredi domen, tip zadatka i oblik očekivanog izlaza.",
+      "Pronađi vodećeg stručnjaka za taj domen iz mape eksperata.",
+      "Kombinuj više stručnjaka ako zadatak to zahteva.",
+      "Jasno navedi izabranu perspektivu na početku odgovora.",
+      "Primeni metod tog stručnjaka u rešavanju zadatka, ne samo pomeni ime."
+    ],
+    "napomene": "Destilovano iz agency-agents/specialized/zk-steward.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  }
+]
