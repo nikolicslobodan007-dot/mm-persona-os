@@ -1,0 +1,407 @@
+[
+  {
+    "ime": "Automatizovano skeniranje pristupačnosti",
+    "koraci": [
+      "Pokreni alate poput axe-core i Lighthouse na svim relevantnim URL-ovima i stanjima interfejsa",
+      "Proveri kontrast boja kroz ceo dizajn sistem",
+      "Pregledaj hijerarhiju naslova i strukturu landmark regiona",
+      "Identifikuj sve prilagođene interaktivne komponente za dalje ručno testiranje",
+      "Dokumentuj da automatski rezultati pokrivaju samo deo WCAG kriterijuma"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-accessibility-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Ručno testiranje sa asistivnim tehnologijama",
+    "koraci": [
+      "Prođi kroz sve korisničke tokove isključivo pomoću tastature, bez miša",
+      "Testiraj ključne tokove uz čitač ekrana poput VoiceOver ili NVDA",
+      "Proveri prikaz pri uvećanju od 200% i 400% i pojavu horizontalnog skrolovanja",
+      "Uključi režim smanjenog pokreta i proveri poštovanje te postavke",
+      "Testiraj u režimu visokog kontrasta i proveri vidljivost sadržaja"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-accessibility-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dubinska provera komponenti i dinamičkog sadržaja",
+    "koraci": [
+      "Proveri svaku prilagođenu komponentu prema WAI-ARIA praksama",
+      "Proveri da li se greške u formularima najavljuju čitačima ekrana",
+      "Testiraj fokus i najavu kod modalnih prozora, obaveštenja i live regiona",
+      "Proveri tekstualne alternative za slike, ikone i medijski sadržaj",
+      "Proveri povezanost zaglavlja i ćelija u tabelama podataka"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-accessibility-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Izrada izveštaja i plana popravki",
+    "koraci": [
+      "Za svaki problem navedi konkretan WCAG kriterijum, ozbiljnost i dokaz",
+      "Rangiraj probleme prema stvarnom uticaju na korisnike, ne samo prema usklađenosti",
+      "Ponudi konkretne primere koda ili rešenja za svaki nalaz",
+      "Istakni dobre prakse koje treba sačuvati",
+      "Predloži rok i plan za ponovnu proveru nakon ispravki"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-accessibility-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Funkcionalno testiranje API endpointa",
+    "koraci": [
+      "Napraviti popis svih API endpointa i njihovih funkcionalnosti",
+      "Kreirati automatizovane test slučajeve za validne i nevalidne ulaze",
+      "Proveriti ispravnost odgovora, statusnih kodova i strukture podataka",
+      "Osigurati pokrivenost testovima od najmanje 95% endpointa"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-api-tester.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Bezbednosno testiranje API-ja",
+    "koraci": [
+      "Testirati mehanizme autentifikacije i autorizacije",
+      "Proveriti otpornost na SQL injekciju i druge napade po OWASP API Top 10 listi",
+      "Validirati enkripciju podataka i sigurnu transmisiju",
+      "Testirati rate limiting i zaštitu od zloupotrebe"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-api-tester.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Testiranje performansi i opterećenja",
+    "koraci": [
+      "Izmeriti vreme odgovora API-ja i uporediti sa SLA zahtevima",
+      "Sprovesti load i stress testiranje za proveru skalabilnosti pod povećanim opterećenjem",
+      "Analizirati propusnost i iskorišćenje resursa pod paralelnim zahtevima",
+      "Identifikovati uska grla i predložiti optimizacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-api-tester.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Integracija testiranja u CI/CD i izveštavanje",
+    "koraci": [
+      "Uključiti automatizovane API testove u kontinuirani razvojni proces",
+      "Postaviti kvalitetne kapije koje blokiraju isporuku pri neuspehu testova",
+      "Pratiti stanje API-ja u produkciji uz automatsko upozoravanje",
+      "Sastaviti izveštaj sa nalazima, rizicima i preporukama za poboljšanje"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-api-tester.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Prikupljanje vizuelnih dokaza",
+    "koraci": [
+      "Pokreni skriptu za automatsko snimanje ekrana alatom Playwright",
+      "Proveri šta je stvarno implementirano u fajlovima projekta",
+      "Pretraži kod za pominjanje luksuznih ili premium elemenata radi provere istinitosti",
+      "Pregledaj rezultate testova iz JSON fajla sa podacima o uređajima i režimima prikaza"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-evidence-collector.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Testiranje interaktivnih elemenata",
+    "koraci": [
+      "Proveri da li se akordeoni zaista otvaraju i zatvaraju klikom",
+      "Testiraj forme za slanje, validaciju i prikaz grešaka",
+      "Proveri rad navigacije i glatkog skrolovanja do sekcija",
+      "Testiraj mobilni meni i prekidač za svetlu/tamnu temu"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-evidence-collector.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Poređenje specifikacije i stvarnog stanja",
+    "koraci": [
+      "Citiraj tačan tekst iz originalne specifikacije",
+      "Uporedi navode iz specifikacije sa onim što se vidi na snimcima ekrana",
+      "Označi šta nedostaje ili ne odgovara zahtevima",
+      "Izbegavaj dodavanje zahteva koji nisu bili u originalnoj specifikaciji"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-evidence-collector.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Pisanje izveštaja zasnovanog na dokazima",
+    "koraci": [
+      "Dokumentuj svaki pronađeni problem uz konkretan dokaz i prioritet",
+      "Označi delove koji nisu testirani kao 'nije testirano' umesto da se tretiraju kao greška",
+      "Daj iskrenu ocenu kvaliteta (osnovno, dobro, odlično) na osnovu dokaza",
+      "Navedi jasne sledeće korake i da li je potrebno ponovno testiranje"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-evidence-collector.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Opterećenje i testiranje performansi sistema",
+    "koraci": [
+      "Uspostaviti osnovne pokazatelje performansi pre bilo kakve optimizacije",
+      "Dizajnirati scenarije testiranja opterećenja, stresa, skokova i izdržljivosti",
+      "Izvršiti testove koristeći realistične podatke i simulaciju ponašanja korisnika",
+      "Analizirati rezultate statistički uz intervale pouzdanosti",
+      "Uporediti rezultate pre i posle optimizacije da se potvrdi poboljšanje"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-performance-benchmarker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Optimizacija Core Web Vitals pokazatelja",
+    "koraci": [
+      "Izmeriti LCP, FID i CLS vrednosti na realnim i sintetičkim testovima",
+      "Primeniti podelu koda i lenjo učitavanje za brže renderovanje",
+      "Podesiti CDN i strategiju isporuke resursa za globalnu brzinu",
+      "Pratiti podatke stvarnih korisnika (RUM) i uporediti sa ciljnim pragovima",
+      "Prilagoditi optimizacije za mobilne uređaje i različite mreže"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-performance-benchmarker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Otkrivanje uskih grla i preporuke za optimizaciju",
+    "koraci": [
+      "Analizirati performanse baze podataka, aplikacije, infrastrukture i trećih servisa",
+      "Identifikovati tačke usporenja kroz sistematsku analizu metrika",
+      "Proceniti odnos troškova i koristi za svaku predloženu optimizaciju",
+      "Sačiniti prioritizovanu listu preporuka po uticaju i hitnosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-performance-benchmarker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Planiranje kapaciteta i praćenje performansi",
+    "koraci": [
+      "Proceniti buduće potrebe za resursima na osnovu projekcija rasta",
+      "Testirati horizontalno i vertikalno skaliranje pod opterećenjem",
+      "Postaviti sisteme za kontinuirano praćenje performansi sa upozorenjima",
+      "Uvesti budžete performansi i kontrolne tačke u CI/CD proces",
+      "Redovno ažurirati preporuke na osnovu podataka iz produkcije"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-performance-benchmarker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Prikupljanje dokaza pre procene",
+    "koraci": [
+      "Proveri šta je zaista implementirano pregledom fajlova i struktura projekta.",
+      "Pretraži kod po ključnim rečima da potvrdi tvrdnje o funkcijama.",
+      "Pokreni automatizovano snimanje ekrana za sve uređaje i scenarije.",
+      "Pregledaj generisane rezultate testova i podatke o performansama."
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-reality-checker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Unakrsna provera QA nalaza",
+    "koraci": [
+      "Uporedi prethodne QA izveštaje sa stvarnim snimcima ekrana.",
+      "Proveri da li su prijavljeni problemi zaista rešeni na snimcima.",
+      "Posumnjaj u izveštaje koji tvrde da nema nijednog problema.",
+      "Potvrdi ili ospori QA ocenu na osnovu dodatnih dokaza."
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-reality-checker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Testiranje korisničkog putovanja od početka do kraja",
+    "koraci": [
+      "Prati ceo tok korisnika kroz snimke pre i posle interakcije.",
+      "Proveri konzistentnost izgleda na desktopu, tabletu i mobilnom.",
+      "Analiziraj da li navigacija, forme i interaktivni elementi zaista rade.",
+      "Oceni putovanje kao uspešno ili neuspešno uz konkretne dokaze."
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-reality-checker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Realistična sertifikacija spremnosti za produkciju",
+    "koraci": [
+      "Podrazumevano postavi status na 'potrebna dorada' dok se ne dokaže suprotno.",
+      "Uporedi originalnu specifikaciju sa stvarnim rezultatom implementacije.",
+      "Identifikuj kritične i srednje probleme koji sprečavaju lansiranje.",
+      "Daj realnu ocenu kvaliteta i konkretne korake za poboljšanje."
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-reality-checker.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Eliminacija nestabilnih (flaky) testova",
+    "koraci": [
+      "Ukloni sve fiksne pauze i zameni ih čekanjem na konkretno stanje, odgovor mreže ili promenu URL-a.",
+      "Koristi asertacije koje same ponavljaju proveru dok ne prođu ili ne istekne vreme.",
+      "Pokreni novi test deset puta uzastopno lokalno i u CI pre spajanja koda.",
+      "Kada test postane nestabilan, izmesti ga iz glavnog paketa u roku od 24 sata i otvori tiket za koren problema.",
+      "Prati stopu prolaska na ponovljeni pokušaj kao signal skrivene nestabilnosti."
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-test-automation-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Izolovanje test podataka kroz API",
+    "koraci": [
+      "Svaki test kreira sopstvenog korisnika i podatke preko API poziva, nikad preko UI-ja.",
+      "Izbegavaj oslanjanje na zajednički seed nalog ili podatke iz prethodnih testova.",
+      "Koristi fixture sa autentifikacijom po radniku (worker) da se prijava obavlja samo jednom po paralelnoj niti.",
+      "Proveri da test ne pada kada se pokreće paralelno sa drugim testovima."
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-test-automation-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Biranje otpornih selektora",
+    "koraci": [
+      "Prvo koristi selektore zasnovane na ulozi i vidljivom tekstu elementa, kao što korisnik vidi stranicu.",
+      "Ako semantika ne može da dohvati element, koristi poseban data-testid atribut.",
+      "Izbegavaj duge i krhke CSS lance koji zavise od strukture DOM-a.",
+      "Proveri da selektor preživljava redizajn interfejsa pre nego što se test smatra završenim."
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-test-automation-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Podešavanje CI pajplajna za pouzdano testiranje",
+    "koraci": [
+      "Podeli test paket na više paralelnih delova (šardova) radi brzine izvršavanja.",
+      "Uključi snimanje trag-fajlova, snimaka ekrana i video zapisa samo pri neuspehu testa.",
+      "Postavi da stabilan paket blokira spajanje koda već pri prvom neuspehu, bez automatskog ponavljanja.",
+      "Napravi odvojenu, neblokirajuću liniju za testove u karantinu.",
+      "Nedeljno prati prolaznost, trajanje i stopu nestabilnosti kao proizvodne metrike."
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-test-automation-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Analiza pokrivenosti testovima",
+    "koraci": [
+      "Učitaj izveštaj o pokrivenosti i proveri da sadrži validne procente za linije, grane, funkcije i izjave",
+      "Proveri da su svi procenti validni brojevi u opsegu od 0 do 100, u suprotnom prijavi grešku",
+      "Prođi kroz pokrivenost svakog fajla i izdvoj one ispod praga od 80 posto",
+      "Napravi listu rizičnih delova koda koji nisu dovoljno testirani"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-test-results-analyzer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Analiza obrazaca neuspeha testova",
+    "koraci": [
+      "Prikupi sve zabeležene neuspehe testova iz izveštaja",
+      "Razvrstaj neuspehe po kategorijama kao što su funkcionalni, performansni, bezbednosni i integracioni",
+      "Primeni statističke metode da uočiš trendove i učestalost pojedinih tipova grešaka",
+      "Identifikuj osnovne uzroke ponavljajućih problema radi prevencije"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-test-results-analyzer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Procena spremnosti za objavljivanje",
+    "koraci": [
+      "Sakupi ključne kriterijume kvaliteta poput stope prolaska testova, pokrivenosti, performansi i bezbednosti",
+      "Izračunaj gustinu defekata i ukupan rizik na osnovu prikupljenih podataka",
+      "Odredi nivo pouzdanosti procene koristeći statističke metode",
+      "Formuliši preporuku za objavljivanje (da ili ne) uz jasno obrazloženje"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-test-results-analyzer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.75
+  },
+  {
+    "ime": "Izrada izveštaja za zainteresovane strane",
+    "koraci": [
+      "Sastavi izvršni sažetak sa ukupnom ocenom kvaliteta i ključnim rizicima",
+      "Prikaži trendove kvaliteta i poređenje sa prethodnim periodima",
+      "Dodaj konkretne preporuke za poboljšanje rangirane po prioritetu i povratu ulaganja",
+      "Prilagodi nivo detalja izveštaja u zavisnosti od toga da li je namenjen tehničkom timu ili rukovodstvu"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-test-results-analyzer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Sveobuhvatna evaluacija alata",
+    "koraci": [
+      "Definisati kriterijume ocenjivanja sa ponderisanom važnošću za svaku kategoriju.",
+      "Testirati funkcionalnost, upotrebljivost, performanse, bezbednost i integraciju na realnim scenarijima.",
+      "Dokumentovati rezultate kvantitativnim metrikama i kvalitativnim zapažanjima.",
+      "Izračunati ukupnu i ponderisanu ocenu za poređenje alata."
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-tool-evaluator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Finansijska analiza i procena troškova",
+    "koraci": [
+      "Izračunati ukupan trošak vlasništva uključujući licenciranje, implementaciju, obuku i održavanje.",
+      "Sprovesti analizu povrata ulaganja sa različitim scenarijima usvajanja.",
+      "Uzeti u obzir skrivene troškove i troškove skaliranja po korisniku.",
+      "Uporediti troškove i performanse između kandidata za alat."
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-tool-evaluator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Procena rizika i dobavljača",
+    "koraci": [
+      "Oceniti stabilnost dobavljača i usklađenost sa strateškim planovima.",
+      "Proveriti bezbednost, usklađenost sa propisima i zaštitu podataka.",
+      "Identifikovati implementacione i organizacione rizike.",
+      "Pripremiti planove ublažavanja rizika i izlazne klauzule u ugovoru."
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-tool-evaluator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Planiranje implementacije i usvajanja",
+    "koraci": [
+      "Kreirati fazni plan uvođenja alata sa pilot programom pre pune implementacije.",
+      "Razviti strategiju upravljanja promenama i obuke korisnika.",
+      "Postaviti metrike uspeha i sisteme praćenja usvajanja.",
+      "Pregovarati uslove ugovora i nivoa usluge sa dobavljačem."
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-tool-evaluator.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Analiza trenutnog stanja procesa",
+    "koraci": [
+      "Mapirati postojeći tok rada kroz razgovore sa učesnicima i dokumentaciju koraka",
+      "Izmeriti osnovne pokazatelje kao što su vreme, trošak, greške i zadovoljstvo",
+      "Identifikovati uska grla i tačke zastoja na osnovu prikupljenih podataka",
+      "Utvrditi uzroke problema sistematskom analizom umesto površnih zaključaka"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-workflow-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn optimizovanog procesa",
+    "koraci": [
+      "Primeniti Lean i Six Sigma principe za uklanjanje nepotrebnih koraka",
+      "Predložiti novi tok rada sa jasnim vlasništvom i odgovornostima",
+      "Oceniti svaki korak po mogućnosti automatizacije, grešci i zadovoljstvu korisnika",
+      "Izraditi standardne operativne procedure sa jasnim uputstvima za obuku"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-workflow-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Identifikacija i uvođenje automatizacije",
+    "koraci": [
+      "Pronaći rutinske i pravilima vođene zadatke pogodne za automatizaciju",
+      "Odabrati odgovarajuću alatku ili platformu za automatizaciju procesa",
+      "Uključiti mehanizme za obradu grešaka i izuzetaka u automatizovani tok",
+      "Pratiti učinak automatizacije i kontinuirano je prilagođavati za pouzdanost"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-workflow-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Planiranje implementacije i upravljanje promenama",
+    "koraci": [
+      "Rangirati prilike za poboljšanje prema uticaju i potrebnom naporu",
+      "Podeliti sprovođenje na brze pobede, srednjoročne i strateške faze",
+      "Pripremiti plan obuke i komunikacije radi lakšeg prihvatanja promena",
+      "Definisati mere uspeha i sisteme praćenja za svaku fazu uvođenja"
+    ],
+    "napomene": "Destilovano iz agency-agents/testing/testing-workflow-optimizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  }
+]

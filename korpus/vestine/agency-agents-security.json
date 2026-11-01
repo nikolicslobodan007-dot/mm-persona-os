@@ -1,0 +1,553 @@
+[
+  {
+    "ime": "Otkrivanje hardkodovanih tajni u klijentskom kodu",
+    "koraci": [
+      "Pretraži kod koji dospeva do pregledača ili je upakovan u bandl radi API ključeva, tokena i lozinki.",
+      "Posebno proveri promenljive okruženja sa javnim prefiksima jer se one direktno ugrađuju u klijentski bandl.",
+      "Razlikuj stvarno opasne tajne od namerno javnih ključeva poput anon ili publishable ključeva.",
+      "Za svaki pronađeni curenje navedi tačnu lokaciju, konkretan napad i jednokomitni popravak.",
+      "Uvek zahtevaj rotaciju tajne kod provajdera jer uklanjanje iz koda ne poništava već izloženu vrednost.",
+      "Nikada ne ispisuj pravu vrednost tajne u izveštaju, već samo tip, lokaciju i redigovan pregled."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-ai-generated-code-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.97
+  },
+  {
+    "ime": "Provera stvarne primene row-level security",
+    "koraci": [
+      "Proveri da li je RLS zaista uključen na svakoj javnoj tabeli, a ne samo deklarativno naveden.",
+      "Pronađi politike tipa USING (true) koje dozvoljavaju pristup svima uprkos uključenom RLS-u.",
+      "Proveri da li su storage bucket-i slučajno ostavljeni javno čitljivi.",
+      "Otkrij politike koje proveravaju rolu iz podataka koje korisnik kontroliše umesto auth.uid().",
+      "Označi autorizaciju zasnovanu na user_metadata jer korisnik može sam sebi izmeniti tu vrednost.",
+      "Predloži politiku vezanu za identitet autentifikovanog korisnika kao bezbedan popravak."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-ai-generated-code-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Praćenje toka nepouzdanog unosa do LLM poziva",
+    "koraci": [
+      "Prati ulazne podatke iz zahteva od izvora do mesta gde ulaze u poziv modela.",
+      "Oceni ozbiljnost po poziciji unosa – korisnička poruka je bezbedna, sistemski prompt je rizičniji, a poziv sa alatima je najkritičniji.",
+      "Ne prijavljuj slučajeve gde je nepouzdan sadržaj ispravno smešten u korisničku poruku bez alata.",
+      "Za svaki nalaz jasno naznači da je detekcija heuristička i da zahteva ručnu proveru.",
+      "Predloži razdvajanje podataka od instrukcija i uvođenje potvrde pre pokretanja osetljivih alata."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-ai-generated-code-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada threat modela po STRIDE metodologiji",
+    "koraci": [
+      "Opisati sistem, podatke i granice poverenja pre početka razvoja",
+      "Mapirati tokove podataka i komponente na arhitekturnom dijagramu",
+      "Analizirati pretnje kroz šest kategorija: lažno predstavljanje, izmena, poricanje, otkrivanje, uskraćivanje usluge i eskalacija prava",
+      "Za svaku pretnju definisati konkretnu i merljivu meru zaštite",
+      "Pretvoriti nalaze u listu bezbednosnih zahteva koji se mogu testirati u kodu"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-appsec-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Bezbednosni pregled koda",
+    "koraci": [
+      "Usmeriti pažnju na kritične delove: autentifikaciju, autorizaciju, unos podataka i kriptografiju",
+      "Prepoznati ranjivosti poput injekcija, slabe autorizacije i lošeg rukovanja tajnama",
+      "Predložiti konkretan ispravljen kod u istom jeziku i okviru koji programer koristi",
+      "Razdvojiti nalaze na one koji moraju biti ispravljeni pre spajanja i one koji su poboljšanja",
+      "Proveriti da li primenjena ispravka zaista uklanja ranjivost pre odobravanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-appsec-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Integracija bezbednosnog skeniranja u CI/CD",
+    "koraci": [
+      "Uključiti SAST, DAST, SCA i skeniranje tajni u razvojni cevovod",
+      "Podesiti pragove ozbiljnosti i smanjiti lažne pozitivne nalaze ispod 20 posto",
+      "Napraviti prilagođena pravila za ranjivosti specifične za aplikaciju",
+      "Dodati regresione testove koji proveravaju da se otklonjena ranjivost ne vraća",
+      "Pratiti nalaze do zatvaranja uz rokove prema ozbiljnosti (kritično 7 dana, visoko 30 dana)"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-appsec-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Edukacija programera o bezbednom kodiranju",
+    "koraci": [
+      "Kreirati smernice za bezbedno kodiranje prilagođene tehnologijama organizacije",
+      "Organizovati radionice gde programeri sami pronalaze i popravljaju ranjivosti",
+      "Identifikovati i mentorisati bezbednosne šampione u svakom timu",
+      "Pripremiti kratke referentne kartice za česte obrasce poput autentifikacije i enkripcije",
+      "Pratiti koje greške se najčešće ponavljaju i prilagoditi obuku tim obrascima"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-appsec-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada modela pretnji (threat modeling)",
+    "koraci": [
+      "Proučiti arhitekturu, kod i infrastrukturu da se razume sistem",
+      "Identifikovati tok osetljivih podataka kroz sistem",
+      "Popisati granice poverenja gde se menja nivo privilegija ili kontrole",
+      "Sprovesti STRIDE analizu po komponentama",
+      "Rangirati rizike prema verovatnoći i uticaju"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Bezbednosna procena i testiranje ranjivosti",
+    "koraci": [
+      "Pregledati autentikaciju, autorizaciju i obradu ulaza u kodu",
+      "Proveriti zavisnosti trećih strana na poznate CVE ranjivosti",
+      "Analizirati konfiguraciju bezbednosnih zaglavlja, CORS, TLS i IAM politika",
+      "Testirati autentikaciju i autorizaciju na slabosti poput IDOR i eskalacije privilegija",
+      "Klasifikovati nalaze po ozbiljnosti koristeći CVSS i poslovni uticaj"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Projektovanje bezbedne arhitekture i hardening",
+    "koraci": [
+      "Dizajnirati zero-trust model sa najmanjim potrebnim privilegijama",
+      "Primeniti slojevitu odbranu (WAF, rate limiting, validacija ulaza, enkripcija)",
+      "Uspostaviti bezbedne mehanizme autentikacije poput OAuth2, OIDC i MFA",
+      "Definisati model autorizacije (RBAC, ABAC ili ReBAC) prema potrebama sistema",
+      "Uvesti upravljanje tajnama sa rotacijom i enkripciju podataka u mirovanju i prenosu"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Bezbednost lanca snabdevanja i CI/CD integracija",
+    "koraci": [
+      "Proveriti pakete trećih strana na ranjivosti i status održavanja",
+      "Generisati i pratiti SBOM dokumentaciju",
+      "Overiti integritet paketa putem checksum-ova i potpisa",
+      "Uvesti SAST, SCA i detekciju tajni u CI/CD pipeline",
+      "Pratiti dependency confusion i typosquatting napade"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Otkrivanje ranjivosti u pametnim ugovorima",
+    "koraci": [
+      "Mapiraj sve ulazne tačke i putanje izvršavanja kroz ugovor",
+      "Proveri obrasce reentrancy napada, pristupnu kontrolu i aritmetičke greške",
+      "Analiziraj tokove tokena i prelaze stanja radi pronalaženja narušenih invarijanti",
+      "Proceni rizike povezane sa spoljnim protokolima i njihovom kompozabilnošću",
+      "Za svaki nalaz napravi konkretan dokaz koncepta napada sa procenom uticaja"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-blockchain-security-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Automatizovana i formalna analiza koda",
+    "koraci": [
+      "Pokreni Slither sa detektorima visoke pouzdanosti i filtriraj lažne nalaze",
+      "Izvrši Mythril simboličku analizu na kritičnim ugovorima",
+      "Pokreni Echidna ili Foundry fuzzing testove nad definisanim invarijantama protokola",
+      "Proveri usaglašenost sa ERC standardima i verzije korišćenih biblioteka",
+      "Dopuni automatske nalaze ručnim pregledom koda linija po linija"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-blockchain-security-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Analiza manipulacije orakulima i flash loan napada",
+    "koraci": [
+      "Identifikuj sve izvore cena i proveri da li se koristi trenutna ili vremenski usrednjena vrednost",
+      "Proveri da li se stanje, cena ili bilans mogu manipulisati unutar jedne transakcije",
+      "Simuliraj ekstremne tržišne uslove poput naglog pada cene ili nestanka likvidnosti",
+      "Modeluj ekonomske podsticaje da bi se utvrdilo da li je napad profitabilan",
+      "Predloži zamenu spot cene sa TWAP ili Chainlink orakulom uz proveru valjanosti podataka"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-blockchain-security-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Pisanje bezbednosnog izveštaja i preporuka za ispravku",
+    "koraci": [
+      "Klasifikuj svaki nalaz prema jasno definisanim nivoima ozbiljnosti",
+      "Opiši ranjivost, uticaj i priloži dokaz koncepta za svaki nalaz",
+      "Daj konkretnu i primenljivu preporuku za ispravku koda",
+      "Dokumentuj pretpostavke, obim pregleda i oblasti koje zahtevaju dalju proveru",
+      "Proveri da li implementirane ispravke zaista rešavaju problem bez novih grešaka"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-blockchain-security-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn zero trust arhitekture",
+    "koraci": [
+      "Mapiraj mrežnu topologiju, identitete i tokove podataka u postojećem okruženju",
+      "Definiši da se svaki zahtev autentifikuje, autorizuje i šifruje bez obzira na izvor",
+      "Segmentiraj okruženja pomoću VPC-ova, bezbednosnih grupa i privatnih endpointa",
+      "Implementiraj identitet kao osnovu pristupa: mTLS, workload identity i privremene dozvole",
+      "Uvedi šifrovanje podataka u mirovanju i tranzitu sa upravljanim ključevima"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-cloud-security-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Uspostavljanje IAM kontrola sa najmanjim privilegijama",
+    "koraci": [
+      "Popiši sve naloge, uloge i dozvole kroz sve cloud naloge i projekte",
+      "Zameni dugotrajne kredencijale radnim identitetima i OIDC federacijom",
+      "Definiši centralizovanu strategiju identiteta sa federisanim pristupom po nalozima",
+      "Prati i uklanjaj suvišne dozvole, neaktivne naloge i IAM drift kroz kontinuirani nadzor"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-cloud-security-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Bezbednosno osiguranje infrastructure-as-code i CI/CD pipelina",
+    "koraci": [
+      "Ugradi skeniranje IaC koda i kontejnera pre svakog deploymenta",
+      "Definiši bezbednosne smernice kao kod koristeći OPA/Rego, SCP ili organizacione politike",
+      "Zahtevaj code review i automatske provere politika pre produkcijskih izmena",
+      "Osiguraj sam pipeline: zaštićene grane, potpisani komitovi i OIDC kredencijali za deployment",
+      "Blokiraj deployment ako skeniranje pronađe kritične ranjivosti ili procurele tajne"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-cloud-security-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Detekcija i odgovor na bezbednosne incidente u oblaku",
+    "koraci": [
+      "Dizajniraj logovanje koje hvata sve bezbednosno relevantne događaje (API pozivi, mrežni tok, pristup podacima)",
+      "Postavi detekciona pravila za uobičajene napade: krađu kredencijala, eskalaciju privilegija, eksfiltraciju podataka",
+      "Automatizuj odgovor na pouzdane detekcije: izolacija kompromitovanih resursa i opoziv tokena",
+      "Napravi dashboard koji prikazuje bezbednosno stanje i istorijske trendove za rukovodstvo",
+      "Sprovodi tabletop vežbe i testove penetracije radi provere spremnosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-cloud-security-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Procena spremnosti i analiza nedostataka",
+    "koraci": [
+      "Definisati obim audita i granice sistema koji se procenjuju",
+      "Uporediti postojeće kontrole sa zahtevima ciljanog okvira",
+      "Oceniti svaki nedostatak po riziku i složenosti otklanjanja",
+      "Izraditi izveštaj sa trenutnim i ciljnim stanjem, koracima i procenom napora",
+      "Sastaviti scorecard spremnosti za vođstvo sa realnim rokovima"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-compliance-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Projektovanje i implementacija kontrola",
+    "koraci": [
+      "Kreirati kontrole koje se uklapaju u postojeće tehničke procese tima",
+      "Prioritetno koristiti tehnička rešenja umesto administrativnih pravila",
+      "Mapirati zajedničke kontrole kroz više okvira radi smanjenja dupliranja",
+      "Pisati kratke i konkretne politike koje zaposleni mogu realno da prate",
+      "Uspostaviti monitoring i alarme koji otkrivaju kvarove kontrola pre audita"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-compliance-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Prikupljanje i organizacija dokaza",
+    "koraci": [
+      "Automatizovati prikupljanje dokaza iz izvora poput Okta, Jira i Datadog",
+      "Organizovati dokaze po kontrolnim ciljevima, a ne po internoj strukturi tima",
+      "Proveriti da dokazi pokazuju da je kontrola delovala tokom celog perioda",
+      "Voditi matricu dokaza sa učestalošću i metodom prikupljanja za svaku kontrolu"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-compliance-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Podrška tokom eksternog audita",
+    "koraci": [
+      "Sprovesti interni audit radi otkrivanja problema pre eksternih revizora",
+      "Pripremiti skripte za sastanke vlasnika kontrola sa revizorima",
+      "Voditi centralnu evidenciju zahteva i nalaza revizora",
+      "Pratiti otklanjanje nalaza do zatvoretog statusa uz ponovno testiranje",
+      "Komunicirati sa revizorima jasno, činjenično i striktno u okviru postavljenog pitanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-compliance-auditor.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Sanacija i eliminacija pretnje",
+    "koraci": [
+      "Izoluj pogođene sisteme mrežnom segmentacijom, blokiranjem naloga i firewall pravilima bez brisanja dokaza.",
+      "Pre preduzimanja mera sanacije, sačuvaj memoriju, mrežni saobraćaj i snimke virtuelnih mašina.",
+      "Pronađi sve mehanizme perzistencije poput zakazanih zadataka, registri ključeva, web školjki i skrivenih naloga.",
+      "Blokiraj poznate indikatore kompromitacije (IP adrese, domene, heš vrednosti) u celom okruženju.",
+      "Proveri da li je sanacija uspešna tako što tražiš alternativne kanale komande i kontrole ili bočno kretanje."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-incident-responder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Digitalna forenzika i očuvanje dokaza",
+    "koraci": [
+      "Napravi forenzičku kopiju sistema koristeći write-blocker alate pre bilo kakve analize.",
+      "Analiziraj memorijske dampove radi otkrivanja sumnjivih procesa, ubrizganog koda i mrežnih konekcija.",
+      "Rekonstruiši vremensku liniju napada na osnovu logova, fajl sistema i mrežnih tokova.",
+      "Vodi evidenciju lanca čuvanja dokaza - ko je prikupio, kada, kako i gde se čuva.",
+      "Koreliraj indikatore kompromitacije kroz ceo sistem da utvrdiš pun obim proboja."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-incident-responder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izveštavanje i sprečavanje ponavljanja",
+    "koraci": [
+      "Napiši post-mortem izveštaj sa jasno razdvojenim uzrokom, doprinosećim faktorima i okidačima.",
+      "Organizuj neosuđujuću retrospektivu fokusiranu na sisteme i procese, ne na pojedince.",
+      "Predloži 3 do 5 konkretnih i prioritetnih mera umesto obimne liste želja.",
+      "Dodeli vlasnike i rokove za svaku preporučenu meru i prati njihovo sprovođenje.",
+      "Ažuriraj pravila detekcije, priručnike i scenarije na osnovu naučenih lekcija."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-incident-responder.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izviđanje spoljašnje napadne površine",
+    "koraci": [
+      "Prikupiti poddomene i javno dostupne resurse kroz pasivne i aktivne izvore.",
+      "Proveriti koji hostovi su aktivni i koje HTTP servise izlažu.",
+      "Skenirati otvorene portove i identifikovati tehnologije i okvire u upotrebi.",
+      "Snimiti screenshotove web servisa i proveriti baze procurelih kredencijala.",
+      "Objediniti rezultate u pregledan izveštaj o napadnoj površini."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-penetration-tester.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Testiranje SQL injekcije u web aplikacijama",
+    "koraci": [
+      "Poslati kontrolisane payload-e da se uporede odgovori i otkrije boolean-based ranjivost.",
+      "Izazvati greške baze podataka kako bi se potvrdila injekcija i prepoznao tip sistema.",
+      "Koristiti vremenski zasnovane payload-e kada nema vidljive promene u odgovoru.",
+      "Odrediti broj kolona pomoću ORDER BY tehnike radi pripreme UNION napada.",
+      "Ručno potvrditi svaki nalaz pre nego što se prijavi kao ranjivost."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-penetration-tester.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Sprovođenje napada na Active Directory okruženje",
+    "koraci": [
+      "Dobiti početni pristup presretanjem mrežnog saobraćaja ili pogađanjem lozinki.",
+      "Mapirati odnose i poverenja u domenu pomoću alata za enumeraciju.",
+      "Iskoristiti loše konfigurisane dozvole i servisne naloge za eskalaciju privilegija.",
+      "Kretati se bočno kroz mrežu koristeći ukradene hešove i tokene.",
+      "Ostvariti potpunu kompromitaciju domena i prikupiti dokaze za svaki korak."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-penetration-tester.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izveštavanje o nalazima i preporuke za otklanjanje",
+    "koraci": [
+      "Opisati celokupan lanac napada od početnog pristupa do poslovnog uticaja.",
+      "Oceniti ozbiljnost svakog nalaza na osnovu stvarnog rizika, ne samo tehničkog skora.",
+      "Napisati konkretne i sprovodive preporuke za svaku ranjivost.",
+      "Sastaviti sažetak razumljiv i netehničkim učesnicima.",
+      "Pripremiti plan za proveru ispravljenih nalaza nakon implementacije mera."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-penetration-tester.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Postavljanje skeniranja tajni na pre-commit i CI kapiji",
+    "koraci": [
+      "Dodaj pre-commit hook koji skenira izmene i blokira komit ako nađe tajnu.",
+      "Dodaj paralelnu proveru u CI pipeline koja skenira celu istoriju repozitorijuma.",
+      "Podesi pravila za prepoznavanje ključeva provajdera, privatnih ključeva i generičkih visoko-entropijskih vrednosti.",
+      "Napravi listu dozvoljenih javnih vrednosti (npr. publishable/anon ključevi) da se izbegnu lažne uzbune.",
+      "Prati stopu lažno pozitivnih rezultata i podešavaj pravila da tim ne zaobilazi proveru."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-secrets-credential-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Migracija statičkih kredencijala u broker sa dinamičkim, kratkotrajnim pristupom",
+    "koraci": [
+      "Pronađi sve postojeće tajne u kodu, env fajlovima, CI promenljivama i Docker slikama.",
+      "Premesti ih u sistem za upravljanje tajnama (Vault, cloud KMS ili menadžer tajni) sa politikama pristupa i audit zapisima.",
+      "Zameni statičke ključeve dinamičkim kredencijalima koji se izdaju na zahtev i ističu za nekoliko minuta.",
+      "Ograniči svaki kredencijal na minimalna ovlašćenja i najkraći mogući vek trajanja za konkretan zadatak."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-secrets-credential-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Uspostavljanje rotacije kredencijala bez prekida rada",
+    "koraci": [
+      "Automatizuj rotaciju tamo gde je to tehnički moguće, a za ostalo napiši jasan priručnik za ručnu rotaciju.",
+      "Omogući preklapanje starog i novog kredencijala tokom rotacije da se izbegne ispad sistema.",
+      "Dodeli svakom kredencijalu vlasnika, rok trajanja ili raspored rotacije i jasan put za opoziv.",
+      "Postavi pravilo da se svaki otkriveni (procureli) kredencijal odmah rotira, bez čekanja na raspored."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-secrets-credential-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Sprovođenje procedure reagovanja na procurele tajne",
+    "koraci": [
+      "Tretiraj trenutak komitovanja tajne kao trenutak kompromitacije, ne trenutak otkrivanja.",
+      "Prvo odmah opozovi i rotiraj kredencijal kod provajdera, tek onda ukloni vrednost iz koda.",
+      "Očisti istoriju git repozitorijuma od tajne i koordiniši prepisivanje istorije sa timom.",
+      "Proveri da li je kredencijal korišćen tokom perioda izloženosti i po potrebi proširi istragu.",
+      "Nakon incidenta, analiziraj zašto ga je skener propustio i unapredi pravila detekcije."
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-secrets-credential-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Automatsko skeniranje bezbednosti koda",
+    "koraci": [
+      "Pre bilo kakvog odgovora pregledaj sav dostavljeni kod na svim jezicima",
+      "Proveri prisustvo hardkodovanih lozinki, kljuceva, tokena i konekcionih stringova sa kredencijalima",
+      "Proveri nebezbedne podrazumevane vrednosti za tajne promenljive i izlaganje osetljivih podataka u logovima, URL-ovima ili odgovorima",
+      "Prepoznaj ranjivosti vezane za JWT algoritme, SQL injekcije, CORS i skladistenje tokena",
+      "Prikazi rezultat skeniranja u jasnom formatu sa oznacenom ozbiljnoscu pre nastavka rada",
+      "Ako kod nije dostavljen, eksplicitno navedi da je skeniranje preskoceno"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-senior-secops.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.97
+  },
+  {
+    "ime": "Bezbednosna revizija koda prema standardu",
+    "koraci": [
+      "Uporedi kod sa svakom relevantnom sekcijom internog bezbednosnog standarda",
+      "Grupisi nalaze po ozbiljnosti od kriticnih ka niskim",
+      "Za svaki nalaz navedi sekciju standarda, konkretan problem, poslovni rizik i predlog ispravke",
+      "Odredi rok za resavanje na osnovu ozbiljnosti nalaza",
+      "Nikada ne prijavljuj problem bez konkretnog resenja"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-senior-secops.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Implementacija bezbednih kontrola po defaultu",
+    "koraci": [
+      "Piši kod koji vec ispunjava bezbednosni standard bez odlaganja kontrola za kasnije",
+      "Primeni fail-fast ucitavanje tajni koje zaustavlja aplikaciju ako nedostaju kredencijali",
+      "Konfigurisi autentifikaciju, kolacice, CORS, rate limiting i CSP prema bezbednim podrazumevanim podesavanjima",
+      "Validiraj sve ulazne podatke na granici poverenja pre nego sto stignu do poslovne logike",
+      "Oznaci i objasni svaki bezbednosni kompromis koji je napravljen zbog specificnog konteksta"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-senior-secops.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.94
+  },
+  {
+    "ime": "Validacija spremnosti faze razvoja kroz kontrolnu listu",
+    "koraci": [
+      "Koristi odgovarajucu kontrolnu listu za fazu dizajna, razvoja, review-a ili produkcije",
+      "Oznaci svaku stavku kao ispunjenu, neuspesnu ili neprimenljivu uz dokaz",
+      "Blokiraj prelazak u sledecu fazu ako postoji neuspesna kriticna ili visoka stavka",
+      "Sumiraj sve blokirajuce nalaze na jednom mestu za tim"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-senior-secops.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Pisanje i testiranje detekcionih pravila",
+    "koraci": [
+      "Napiši pravilo u Sigma formatu nezavisno od konkretnog SIEM-a",
+      "Proveri da li su potrebni log izvori stvarno prikupljeni i kompletni",
+      "Testiraj pravilo na istorijskim podacima da vidiš da li prepoznaje pretnju bez lažnih alarma",
+      "Dokumentuj poznate scenarije lažnih pozitiva i napravi listu izuzetaka pre puštanja u rad",
+      "Kompajliraj pravilo u ciljani SIEM jezik (SPL, KQL, EQL) i objavi kroz CI/CD proces",
+      "Prati prvih 72 sata rada pravila i podesi ga na osnovu stvarnih rezultata"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-threat-detection-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Mapiranje pokrivenosti MITRE ATT&CK matrice",
+    "koraci": [
+      "Proceni trenutnu pokrivenost detekcija po taktikama i tehnikama za svaku platformu",
+      "Identifikuj kritične praznine na osnovu tehnika koje stvarno koriste napadači u tvojoj industriji",
+      "Napravi plan razvoja detekcija koji prvo zatvara rizične praznine",
+      "Proveri atomskim testovima ili purple team vežbama da detekcije zaista rade kako treba"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-threat-detection-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Sprovođenje lova na pretnje i pretvaranje u detekcije",
+    "koraci": [
+      "Postavi hipotezu za lov na osnovu obaveštajnih podataka ili uočenih anomalija",
+      "Izvrši strukturiran lov koristeći SIEM upite i telemetriju sa EDR i mrežnih izvora",
+      "Razlikuj stvarno zlonamernu aktivnost od uobičajenog ponašanja u okruženju",
+      "Dokumentuj postupak lova kao priručnik koji može ponoviti bilo koji analitičar",
+      "Pretvori svako uspešno otkriće u automatizovano pravilo detekcije"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-threat-detection-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Podešavanje i optimizacija alarma",
+    "koraci": [
+      "Izmeri stopu lažnih pozitiva i stvarnu efikasnost svakog pravila",
+      "Smanji buku dodavanjem izuzetaka, pragova i dodatnog konteksta oko korisnika i procesa",
+      "Ukloni ili deaktiviraj pravila koja stalno proizvode lažne alarme bez ispravke",
+      "Redovno revaliduj pravila kroz purple team vežbe jer se ponašanje napadača menja",
+      "Prati metrike poput stope tačnih pozitiva i vremena do otkrivanja pretnje"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-threat-detection-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada profila napadačke grupe i mapiranje na MITRE ATT&CK",
+    "koraci": [
+      "Prikupi podatke o kampanjama, alatima i infrastrukturi grupe iz više nezavisnih izvora",
+      "Poveži uočeno ponašanje sa konkretnim MITRE ATT&CK tehnikama i navedi dokaze za svako mapiranje",
+      "Proceni pouzdanost atribucije koristeći više indikatora, nikad samo jedan podatak",
+      "Napravi ATT&CK Navigator mapu koja prikazuje pokrivenost detekcije u odnosu na tehnike protivnika",
+      "Dokumentuj profil u standardizovanom izveštaju sa preporučenim odbrambenim merama"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-threat-intelligence-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Razvoj i podešavanje pravila za detekciju",
+    "koraci": [
+      "Na osnovu nalaza threat intelligence-a napiši Sigma, YARA ili Suricata pravilo",
+      "Testiraj pravilo na poznatim malver uzorcima i simulacijama napada pre puštanja u produkciju",
+      "Podesi osetljivost pravila da se smanji broj lažnih pozitiva uz zadržavanje pokrivenosti",
+      "Prati učinak pravila u produkciji i razlikuj pravila koja hvataju prave pretnje od onih koja samo prave šum",
+      "Ažuriraj pravilo kada se pojave nove varijante pretnje"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-threat-intelligence-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Obogaćivanje i korelacija indikatora kompromitacije",
+    "koraci": [
+      "Prikupi sirove indikatore iz feedova, dark web izvora i izveštaja",
+      "Klasifikuj i validiraj svaki indikator po tipu (IP, domen, hash, email)",
+      "Dedupliciraj i poveži indikatore iz više izvora kao potvrdu jedne pretnje",
+      "Obogati indikatore kontekstom poput geolokacije, WHOIS podataka i istorije pasivnog DNS-a",
+      "Izvezi obrađene indikatore u STIX ili CSV format za deljenje i SIEM integraciju"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-threat-intelligence-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Produkcija i distribucija obaveštajnih izveštaja prema publici",
+    "koraci": [
+      "Definiši obaveštajne potrebe stejkholdera i koju odluku izveštaj treba da podrži",
+      "Odvoji jasno opservaciju (šta podaci pokazuju) od procene (šta to znači)",
+      "Prilagodi sadržaj izveštaja publici - tehnički IOC-ovi za SOC, TTP analiza za IR tim, strateški pregled za rukovodstvo",
+      "Dodaj eksplicitnu ocenu pouzdanosti i konkretnu preporučenu odbrambenu akciju",
+      "Sanitizuj izveštaj od osetljivih izvora i podataka o žrtvama pre distribucije uz odgovarajuću TLP oznaku",
+      "Prikupi povratne informacije od korisnika o pravovremenosti i korisnosti izveštaja"
+    ],
+    "napomene": "Destilovano iz agency-agents/security/security-threat-intelligence-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  }
+]

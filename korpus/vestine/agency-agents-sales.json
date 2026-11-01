@@ -1,0 +1,437 @@
+[
+  {
+    "ime": "Mapiranje zainteresovanih strana i multi-threading",
+    "koraci": [
+      "Napravi i redovno ažuriraj mapu svih ključnih ljudi u nalogu, od donosilaca odluka do krajnjih korisnika.",
+      "Identifikuj najmanje tri nezavisne niti odnosa na različitim nivoima organizacije.",
+      "Prati i detektanta i šampione podjednako pažljivo kako bi se izbegla iznenađenja.",
+      "Obnavljaj mapu kad god dođe do promena uloga, odlaska ili promene prioriteta kod klijenta."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-account-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Priprema i vođenje kvartalnih poslovnih pregleda (QBR)",
+    "koraci": [
+      "Pripremi podatke o korišćenju proizvoda, istoriji podrške i konkretnom ostvarenom ROI pre sastanka.",
+      "Otvori sastanak kvantifikovanim dokazima vrednosti pre bilo kakvog razgovora o proširenju.",
+      "Postavljaj pitanja o budućim poslovnim prioritetima klijenta i uskladi proizvod sa njima.",
+      "Zatvori sastanak zajedničkim akcionim planom sa jasnim vlasnicima i rokovima."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-account-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Identifikacija i kvalifikacija prilika za proširenje",
+    "koraci": [
+      "Prati signale poput visoke iskorišćenosti licenci i asimetrije korišćenja među timovima.",
+      "Svaki signal poveži sa kontekstom, vremenskim okvirom i zainteresovanim stranama pre nego što ga proglasiš prilikom.",
+      "Proveri da li je klijent već uspešan sa postojećim rešenjem pre nuđenja dodatnog proizvoda.",
+      "Napravi poslovni slučaj iz perspektive klijenta, a ne iz perspektive prodaje.",
+      "Uskladi akciju sa timovima prodaje, uspeha korisnika i proizvoda pre kontakta sa klijentom."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-account-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Procena zdravlja naloga i sprečavanje odliva",
+    "koraci": [
+      "Izračunaj skor zdravlja naloga na osnovu korišćenja, sentimenta podrške, angažovanja i roka ugovora.",
+      "Primeni odgovarajuću strategiju prema boji skora: zeleno širenje, žuto stabilizacija, crveno spašavanje.",
+      "Prati rane signale odliva poput pada korišćenja ili odlaska šampiona i reaguj odmah.",
+      "Napravi konkretan plan intervencije sa kratkoročnim i srednjoročnim koracima za rizične naloge."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-account-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Vođenje pregleda prodajnog levka kao prilike za koučing",
+    "koraci": [
+      "Proveri svaki posao pojedinačno, ne samo zbirni iznos levka",
+      "Zameni pitanje o datumu zatvaranja pitanjem šta se ne zna o poslu",
+      "Identifikuj obrasce na nivou portfolija, npr. slabost u zatvaranju ili izbegavanje teških razgovora",
+      "Oceni kvalitet poslova kroz poslovni slučaj, nosioca odluke i proces odlučivanja",
+      "Izdvoji zastoje i rizike i definiši konkretan sledeći korak sa rokom i vlasnikom"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Koučing poziva kroz bihejvioralnu povratnu informaciju",
+    "koraci": [
+      "Analiziraj snimak poziva i uoči konkretne obrasce ponašanja poput odnosa govora i slušanja",
+      "Pronađi tačan trenutak u razgovoru gde je reakcija prodavca bila promašena",
+      "Daj konkretan predlog alternativnog pitanja ili pristupa umesto uopštene primedbe",
+      "Poveži zapažanje sa fokus oblašću iz plana razvoja prodavca",
+      "Zadaj vežbu za sledeći poziv i zakaži proveru napretka"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izrada i sprovođenje plana razvoja prodavca",
+    "koraci": [
+      "Proceni veštine prodavca kroz pokazatelje poput procenta ostvarenja kvote i dužine ciklusa",
+      "Razlikuj da li je problem u veštini, volji ili sistemu/okruženju",
+      "Odaberi najviše tri fokus oblasti sa jasnim ponašanjem i rokom",
+      "Izaberi odgovarajući metod koučinga - analiza poziva, uloge, priprema za sastanak",
+      "Prati napredak kroz ponovljeno posmatranje i prilagodi fokus kada ponašanje postane navika"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Disciplina u izradi tačne prognoze prodaje",
+    "koraci": [
+      "Traži dokaze, ne osećaj, za svaki posao koji je u prognozi",
+      "Definiši kriterijume koji moraju biti ispunjeni da bi posao bio u svakoj fazi i u konačnoj proceni",
+      "Prati istorijsku tačnost prognoze pojedinačnog prodavca kroz vreme",
+      "Pohvali prodavca koji povuče posao iz prognoze zbog poštene procene",
+      "Razgraniči jasno kategorije mogućeg, izvesnog i zatvorenog posla"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "MEDDPICC kvalifikacija prilike",
+    "koraci": [
+      "Oceni priliku na svih osam elemenata MEDDPICC okvira ocenom od 1 do 5.",
+      "Za svaki element zapiši konkretan dokaz iz razgovora sa kupcem.",
+      "Identifikuj najveće rupe i rizike po elementu i rangiraj ih po hitnosti.",
+      "Definiši konkretnu sledeću akciju, vlasnika i rok za zatvaranje svake rupe.",
+      "Donesi verdikt o prilici (dobijamo, borimo se, gubimo) na osnovu ukupnog skora."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-deal-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Konkurentsko pozicioniranje i battlecard",
+    "koraci": [
+      "Podeli kriterijume odlučivanja na zone pobede, borbe i gubitka u odnosu na konkurenta.",
+      "Za zonu pobede pojačaj isticanje diferencijacije koja je bitna kupcu.",
+      "Za zonu borbe pomeri razgovor na susedne faktore gde se može napraviti razlika.",
+      "Za zonu gubitka ne napadaj konkurenta nego umanji značaj tog kriterijuma repozicioniranjem.",
+      "Pripremi pitanja-mine koja tokom otkrivanja ističu slabosti konkurentskog pristupa.",
+      "Sastavi battlecard sa talk-track rečenicama za svaku zonu i tipične primedbe kupca."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-deal-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Challenger komercijalno podučavanje",
+    "koraci": [
+      "Otvori razgovor pokazivanjem razumevanja industrije ili segmenta kupca.",
+      "Predstavi uvid koji dovodi u pitanje postojeće pretpostavke kupca.",
+      "Potkrepi uvid podacima i primerima dok trenutni pristup ne deluje neodrživo.",
+      "Poveži problem sa ličnim uticajem na konkretne ljude u timu kupca.",
+      "Predstavi novi način razmišljanja o rešavanju problema pre pominjanja proizvoda.",
+      "Na kraju poveži sopstveno rešenje kao prirodan zaključak izloženog razmišljanja."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-deal-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Inspekcija pipeline-a i plan pobede",
+    "koraci": [
+      "Postavi sistematska pitanja o promenama, pristupu ekonomskom kupcu i aktivnostima šampiona.",
+      "Proveri da li postoji jasan povod i posledica nedelovanja koja gura rok.",
+      "Mapiraj paper proces (pravna, nabavka, bezbednost) i proveri da li je već pokrenut.",
+      "Prepoznaj crvene zastavice poput jednog kontakta ili nejasnog procesa nabavke.",
+      "Napravi plan po fazama sa jasnim vlasnicima, rokovima i izlaznim kriterijumima za svaku fazu."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-deal-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Vođenje SPIN sekvence pitanja",
+    "koraci": [
+      "Postavi 2-3 pitanja o situaciji oslanjajući se na prethodno istraženo znanje o kupcu.",
+      "Postavi problemska pitanja da otkriješ gde proces ili rešenje ne funkcioniše.",
+      "Produbi kroz implikaciona pitanja koja povezuju problem sa širim posledicama i troškovima.",
+      "Pusti kupca da kroz pitanja o koristi sam formuliše vrednost rešenja.",
+      "Zapamti kupčeve formulacije jer ih kasnije koristiš u fazi zatvaranja."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-discovery-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Mapiranje jaza trenutnog i željenog stanja",
+    "koraci": [
+      "Detaljno opiši trenutno okruženje, alate, procese i probleme kupca.",
+      "Izmeri uticaj problema kroz prihod, troškove, rizik i ljude.",
+      "Istraži koren problema umesto da staneš na površnom opisu simptoma.",
+      "Definiši željeno buduće stanje sa konkretnim merljivim pokazateljima.",
+      "Proceni veličinu jaza između trenutnog i budućeg stanja i proveri da li kupac to može sam da reši."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-discovery-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Strukturiranje otkrivačkog poziva od 30 minuta",
+    "koraci": [
+      "Na početku postavi jasan dogovor o agendi, trajanju i mogućim ishodima razgovora.",
+      "Posveti većinu vremena istraživanju trenutnog stanja i bola, prateći signale kroz SPIN, Gap ili Sandler pristup.",
+      "Tek nakon razumevanja situacije predstavi rešenje usko povezano sa iznetim problemima.",
+      "Na kraju jasno definiši sledeće korake, uključene osobe i rokove.",
+      "Tokom celog poziva pusti kupca da govori većinu vremena i koristi tišinu nakon teških pitanja."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-discovery-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Obrada prigovora metodom AECR",
+    "koraci": [
+      "Prihvati prigovor bez slaganja ili raspravljanja da pokažeš da ga razumeš.",
+      "Pokaži empatiju objašnjavajući zašto je takav stav razumljiv.",
+      "Postavi pitanje koje razjašnjava pravi uzrok prigovora iza izgovorene reči.",
+      "Ponudi novu perspektivu zasnovanu na onome što si saznao kroz razgovor."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-discovery-coach.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn demonstracije usmerene na uticaj",
+    "koraci": [
+      "Pre demonstracije prikupi iz discovery razgovora konkretne bolne tačke kupca i njihove brojke.",
+      "Na početku demonstracije rečima opiši problem kupca pre nego što pokažeš proizvod.",
+      "Prvo pokaži krajnji rezultat (dashboard, izveštaj, tok rada), a tek onda objasni kako funkcioniše.",
+      "Pripremi dva toka demonstracije - planiranu priču i fleksibilan deo za dublje tehničko zaranjanje.",
+      "Završi primerom ili referencom klijenta koji liči na situaciju kupca.",
+      "Planiraj tačno koji momenat treba da izazove reakciju 'ovo nam tačno treba'."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Strukturirano skoliranje i izvođenje POC-a",
+    "koraci": [
+      "Definiši jasnu rečenicu šta POC treba da dokaže, u kom okruženju i u kom roku.",
+      "Dogovori pisane kriterijume uspeha sa kupcem pre početka rada.",
+      "Ograniči obim POC-a na jedan ključni slučaj upotrebe i odbij širenje obima tokom izvođenja.",
+      "Postavi strog rok od dve do tri nedelje i ugradi kontrolnu tačku na sredini.",
+      "Na finalnom sastanku donesi jasnu odluku 'ide/ne ide' na osnovu dogovorenih kriterijuma."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Izrada konkurentskih tehničkih battlecard-ova",
+    "koraci": [
+      "Za svakog konkurenta zabeleži objektivnu, proverenu činjenicu bez preterivanja.",
+      "Objasni zašto ta činjenica ima poslovni uticaj na kupca.",
+      "Pripremi konkretan govor ili demo trenutak koji tu poruku čini ubedljivom.",
+      "Umesto napada, priznaj snage konkurenta i jasno pozicioniraj razliku u pristupu.",
+      "Pripremi pitanja za discovery koja prirodno otkrivaju zahteve gde tvoj proizvod blista.",
+      "Kategorizuj kriterijume ocenjivanja kao pobedničke, borbene ili gubitničke zone i prilagodi strategiju."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Rešavanje tehničkih prigovora dekodiranjem stvarnog pitanja",
+    "koraci": [
+      "Prepoznaj da izjavljeni prigovor često krije drugačiju, dublju brigu kupca.",
+      "Postavi dodatna pitanja da razjasniš da li je u pitanju bezbednost, poverenje ili trošak.",
+      "Odgovori na suštinsku brigu konkretnim podacima, arhitekturom ili benčmarkom, a ne samo na površno pitanje.",
+      "Budi iskren kada mogućnost ne postoji i ponudi alternativno rešenje ili plan sa mape puta.",
+      "Vodi evidenciju otkrivenih zahteva i rizika u beleškama o evaluaciji za dalju upotrebu."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Konstrukcija grand-slam ponude po vrednosnoj jednačini",
+    "koraci": [
+      "Oceni postojeću ponudu po četiri poluge: željeni ishod, verovatnoća uspeha, vreme do rezultata i trud kupca",
+      "Prepoznaj najslabiju polugu i tu usmeri sledećih nekoliko sati rada",
+      "Podigni percepciju uspeha kroz dokaze, studije slučaja i garancije pre nego što diraš cenu",
+      "Skrati vreme do prvog vidljivog rezultata uvođenjem elemenata tipa uradi-za-tebe",
+      "Ukloni korake, odluke i napore koje kupac mora da uloži",
+      "Tek kada su sve poluge maksimizirane, razmotri promenu cene"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-offer-lead-gen-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Dizajn lead magneta sa samostalnom vrednošću",
+    "koraci": [
+      "Intervjuiši ciljnu personu da bi otkrio uzak problem koji bi odmah platili da im se reši",
+      "Odaberi arhetip magneta - rešavanje problema, edukacija ili uzorak - prema tipu ponude i nivou sofisticiranosti kupca",
+      "Dizajniraj magnet tako da samostalno pruži realnu vrednost, bez prodajnog pritiska",
+      "Napravi samo jedan magnet po personi i fazi svesnosti kako ne bi bio previše generički",
+      "Pre lansiranja, pripremi kompletan niz za negovanje - dobrodošlicu, sadržaj i sledeći korak ponude",
+      "Testiraj više koncepata magneta na istom izvoru saobraćaja i zadrži onaj sa najboljom stopom konzumacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-offer-lead-gen-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Selekcija i dominacija kanala za generisanje lidova",
+    "koraci": [
+      "Izaberi jedan od četiri osnovna kanala - topli kontakt, besplatan sadržaj, hladan kontakt ili plaćene oglase - prema fazi i prirodi ponude",
+      "Validiraj ponudu kroz topli kontakt pre skaliranja na plaćene kanale",
+      "Primeni pravilo stotke - sto ključnih aktivnosti dnevno tokom sto dana bez izuzetka",
+      "Prati nedeljno ključne metrike poput stope konverzije i troška akvizicije kupca",
+      "Dominiraj jednim kanalom pre dodavanja drugog, prateći redosled više-bolje-novo",
+      "Dodaj plaćene oglase tek kada postoje dokazi da ponuda konvertuje uz prihvatljiv odnos LTV i CAC"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-offer-lead-gen-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Aktivacija amplifikatora dometa",
+    "koraci": [
+      "Ugradi mehanizam preporuke u trenutak isporuke proizvoda kupcima i nagradi obe strane",
+      "Obuči zaposlene da promovišu i uvode nove klijente uz adekvatnu kompenzaciju",
+      "Uključi partnere i afilijate tek nakon što je ponuda dokazano konvertovala, sa jasnom proviziom od dvadeset do pedeset posto",
+      "Angažuj agencije isključivo za kanale koje je tim već samostalno dokazao da funkcionišu",
+      "Prati koje preporuke i strukture provizija zaista donose promociju, a koje ostaju neaktivne"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-offer-lead-gen-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Prepoznavanje i rutiranje signala kupovine",
+    "koraci": [
+      "Rangiraj signale po jačini namere, od poseta cenovniku do promena u rukovodstvu",
+      "Uspostavi pravilo da se svaki signal dodeli predstavniku u roku od 30 minuta",
+      "Poveži tip signala sa odgovarajućom ekspertizom i teritorijom predstavnika",
+      "Izbegavaj da signali stoje u zajedničkom redu čekanja jer brzo gube vrednost"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-outbound-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Definisanje falsifikabilnog ICP-a i podela naloga po nivoima",
+    "koraci": [
+      "Odredi firmografske filtere poput industrije, veličine prihoda i tehnologije koju koriste",
+      "Opiši poslovni događaj i bol koji čini nekoga kupcem upravo sada",
+      "Jasno navedi diskvalifikatore, odnosno naloge koji izgledaju dobro ali retko zatvaraju posao",
+      "Podeli naloge u tri nivoa prema dubini personalizacije i broju kontakata po nalogu",
+      "Preispituj i prebacuj naloge između nivoa na osnovu angažovanosti"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-outbound-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada višekanalne sekvence prospektiranja",
+    "koraci": [
+      "Izaberi primarni, sekundarni i tercijarni kanal prema persona tipu kupca",
+      "Planiraj 8 do 12 dodira tokom 3 do 4 nedelje kroz različite kanale",
+      "Svakom dodiru dodaj novi ugao vrednosti umesto ponavljanja iste poruke",
+      "Kombinuj email, LinkedIn, poziv i video poruku prema ponašanju kupca",
+      "Završi sekvencu iskrenom 'breakup' porukom koja ostavlja vrata otvorena"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-outbound-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Pisanje hladnih email poruka zasnovanih na signalu",
+    "koraci": [
+      "Napravi kratak naslov koji podseća na interni email i referira na konkretan signal",
+      "Otvori poruku personalizovanom rečenicom vezanom za stvarnu situaciju primaoca",
+      "Formuliši vrednost u jednoj rečenici koristeći jezik kupca, ne marketinški žargon",
+      "Dodaj društveni dokaz samo ako je stvarno relevantan za njihovu situaciju",
+      "Zatvori jasnim i niskorizičnim pozivom na akciju",
+      "Testiraj samo jednu promenljivu po eksperimentu da bi se znalo šta je uticalo na rezultat"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-outbound-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Analiza brzine pipeline-a",
+    "koraci": [
+      "Prikupi podatke o kvalifikovanim prilikama, proseçnoj velicini posla, stopi pobede i duzini ciklusa prodaje.",
+      "Izracunaj brzinu pipeline-a kao proizvod broja prilika, velicine posla i stope pobede podeljen duzinom ciklusa.",
+      "Segmentiraj svaki pokazatelj po regionu, prodavcu i izvoru umesto koriscenja proseka u celini.",
+      "Uporedi trenutne vrednosti sa istorijskim benchmarkom da bi identifikovao odstupanja.",
+      "Oznaci pad broja kvalifikovanih prilika kao rani signal upozorenja za buduce prihode."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-pipeline-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Procena pokrivenosti i kvaliteta pipeline-a",
+    "koraci": [
+      "Izracunaj odnos ponderisanog pipeline-a prema preostaloj kvoti za period.",
+      "Primeni ciljne odnose pokrivenosti u zavisnosti od zrelosti poslovanja ili novog predstavnika.",
+      "Prilagodi vrednost pipeline-a na osnovu zdravlja poslova, starosti faze i signala angazovanja.",
+      "Oznaci zastarele poslove bez promene vise od 30 dana za preispitivanje bez obzira na fazu.",
+      "Uporedi kvalitetom prilagodjenu pokrivenost sa sirovom da bi otkrio skrivene rizike."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-pipeline-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Skoring zdravlja poslova po MEDDPICC",
+    "koraci": [
+      "Oceni svaki posao po osam MEDDPICC kriterijuma i utvrdi koliko je polja popunjeno.",
+      "Oznaci poslove sa manje od pet od osam popunjenih polja kao nedovoljno kvalifikovane.",
+      "Proveri intenzitet angazovanja preko ucestalosti sastanaka, broja kontakata i reakcija na sadrzaj.",
+      "Izracunaj brzinu napredovanja kroz faze u odnosu na medijalno trajanje faze.",
+      "Preporuci konkretnu akciju za poslove koji stoje u istoj fazi duze od 1.5 puta proseka."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-pipeline-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.94
+  },
+  {
+    "ime": "Izrada prognoze prihoda sa intervalima poverenja",
+    "koraci": [
+      "Izracunaj istorijsku stopu konverzije po fazi, segmentu i periodu kao osnovnu stopu.",
+      "Prilagodi verovatnocu faze na osnovu brzine napredovanja i signala angazovanja poslova.",
+      "Uzmi u obzir sezonske i ciklicne obrasce prilikom modelovanja prognoze.",
+      "Podeli rezultat na kategorije Commit, Best Case i Upside sa jasnim pretpostavkama za svaku.",
+      "Uporedi dobijenu prognozu sa standardnom prognozom po fazama da bi otkrio odstupanja kao signal rizika."
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-pipeline-analyst.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Razvoj pobedničkih tema (win themes)",
+    "koraci": [
+      "Izdvoji ključne izazove i prioritete kupca iz RFP-a i dodatnog istraživanja",
+      "Formuliši 3 do 5 tvrdnji koje povezuju konkretnu sposobnost ponuđača sa merljivim ishodom za kupca",
+      "Proveri da li je svaka tema specifična, dokaziva i teško ponovljiva od strane konkurencije",
+      "Mapiraj odabrane teme na sve ključne sekcije ponude radi doslednog ponavljanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-proposal-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Izrada rezimea za rukovodstvo (executive summary)",
+    "koraci": [
+      "Opiši situaciju kupca njegovim sopstvenim jezikom u par rečenica",
+      "Uvedi centralnu tenziju - cenu nerešavanja problema ili propuštenu priliku",
+      "Predstavi tezu rešenja u kojoj se prirodno pojavljuju pobedničke teme",
+      "Dodaj konkretan dokaz poput metrike ili sličnog projekta",
+      "Zatvori opisom transformisanog stanja kupca nakon primene rešenja",
+      "Ograniči tekst na jednu stranicu i ukloni sve nepotrebne rečenice"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-proposal-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.92
+  },
+  {
+    "ime": "Izgradnja naracije u tri čina kroz ponudu",
+    "koraci": [
+      "U prvom delu pokaži duboko razumevanje izazova i konteksta kupca",
+      "U drugom delu vodi ocenjivača kroz rešenje kao niz logičnih odluka povezanih sa izazovima",
+      "U trećem delu prikaži konkretnu i izmerenu sliku budućeg stanja kupca",
+      "Uklopi mikro-priče i dokaze unutar tehničkih sekcija radi pamtljivosti",
+      "Proveri da svaka sekcija doprinosi jedinstvenom argumentu ponude"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-proposal-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Strateško preklapanje usklađenosti i konkurentsko pozicioniranje",
+    "koraci": [
+      "Mapiraj sve zahteve iz RFP-a i potvrdi da je svaki potpuno ispunjen",
+      "Dodaj strateški kontekst uz svaki usklađen odgovor koji podržava pobedničke teme",
+      "Analiziraj verovatne pristupe konkurencije i identifikuj sopstvene prednosti",
+      "Formuliši prednosti kao direktne koristi bez otvorene kritike konkurenata",
+      "Postavi cenovnu argumentaciju tek nakon što je izgrađena vrednost rešenja"
+    ],
+    "napomene": "Destilovano iz agency-agents/sales/sales-proposal-strategist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  }
+]

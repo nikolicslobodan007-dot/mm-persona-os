@@ -1,0 +1,463 @@
+[
+  {
+    "ime": "Razvoj brend strategije i temelja",
+    "koraci": [
+      "Analiziraj poslovne ciljeve, konkurenciju i ciljnu publiku.",
+      "Definiši svrhu, viziju, misiju i vrednosti brenda.",
+      "Odredi personalnost i obećanje brenda prema korisnicima.",
+      "Formuliši pozicioniranje i ključne diferencijatore na tržištu."
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-brand-guardian.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada vizuelnog identiteta",
+    "koraci": [
+      "Dizajniraj logotip i njegove varijante za različite primene.",
+      "Definiši paletu boja uključujući primarne, sekundarne i neutralne tonove.",
+      "Odredi tipografsku hijerarhiju i pravila korišćenja fontova.",
+      "Postavi standarde razmaka, veličina i pravila upotrebe elemenata.",
+      "Proveri pristupačnost boja i kontrasta prema standardima."
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-brand-guardian.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Definisanje glasa i poruka brenda",
+    "koraci": [
+      "Opiši ključne karakteristike tona i glasa brenda.",
+      "Napravi smernice za različite kontekste komunikacije.",
+      "Kreiraj slogan, vrednosnu ponudu i ključne poruke.",
+      "Postavi pravila pisanja uključujući rečnik i kulturnu osetljivost."
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-brand-guardian.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Zaštita i praćenje konzistentnosti brenda",
+    "koraci": [
+      "Prati primenu brenda na svim kanalima i dodirnim tačkama.",
+      "Proveravaj usklađenost sa smernicama i daj korektivne preporuke.",
+      "Razvij strategiju zaštite žiga i intelektualne svojine.",
+      "Pripremi plan za upravljanje kriznim situacijama i reputacijom.",
+      "Edukuj zainteresovane strane o pravilnoj primeni brenda."
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-brand-guardian.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.86
+  },
+  {
+    "ime": "Struktuiranje slojevitog prompta za fotografiju",
+    "koraci": [
+      "Definisati glavni subjekat i njegove ključne detalje poput izraza, odeće i poze",
+      "Opisati okruženje, pozadinu i atmosferske uslove scene",
+      "Dodati specifikaciju osvetljenja uključujući izvor, pravac i kvalitet svetla",
+      "Uneti tehničke fotografske parametre kao što su objektiv, ugao i dubina polja",
+      "Zaokružiti prompt stilskim i estetskim smernicama uz referencu na fotografa ili žanr"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-image-prompt-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Prilagođavanje prompta specifičnoj AI platformi",
+    "koraci": [
+      "Prepoznati ciljnu platformu za generisanje slika i njena pravila sintakse",
+      "Za Midjourney koristiti parametre poput odnosa stranica, verzije i stila",
+      "Za Stable Diffusion primeniti ponderisanje termina i reference na embedinge",
+      "Za DALL-E i Flux koristiti prirodniji, opisniji jezik orijentisan ka fotorealizmu",
+      "Testirati varijante prompta i beležiti koje forme daju najbolje rezultate"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-image-prompt-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Prevođenje fotografske tehnike u jezik prompta",
+    "koraci": [
+      "Prepoznati željeni fotografski efekat poput zamućene pozadine ili dramatičnog osvetljenja",
+      "Zameniti uopštene opise preciznim fotografskim terminima, na primer plitka dubina polja umesto zamućeno",
+      "Uskladiti opis senki sa pravcem svetla radi fizičke verodostojnosti",
+      "Dodati referencu na film ili post-produkcijski stil ako je potrebno za autentičan izgled"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-image-prompt-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Analiza vizuelne reference i izrada negativnog prompta",
+    "koraci": [
+      "Analizirati moodboard ili referentnu sliku radi izdvajanja boja, teksture i kompozicije",
+      "Identifikovati fotografe ili pokrete čiji se stil može iskoristiti kao referenca",
+      "Uočiti elemente koje treba izbeći i formulisati negativni prompt",
+      "Proveriti prompt na dvosmislenost pre finalne primene"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-image-prompt-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izrada strukturisanog prompta za autentičnu reprezentaciju",
+    "koraci": [
+      "Analiziraj kreativni brief i prepoznaj koje stereotipe bi model mogao automatski da primeni",
+      "Raščlani prompt po delovima: subjekat, radnja, kontekst, kamera i stil",
+      "Dodaj precizne odrednice o kulturnom kontekstu, arhitekturi i osvetljenju prilagođenom tonu kože",
+      "Proveri da li je ljudski trenutak u fokusu, a ne preuveličan kulturni simbol"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-inclusive-visuals-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kreiranje biblioteke negativnih promptova",
+    "koraci": [
+      "Identifikuj tipične AI greške poput kloniranih lica, nepostojećeg teksta ili lažnih simbola",
+      "Sastavi listu eksplicitnih negativnih ograničenja za slike i video",
+      "Primeni ograničenja koja sprečavaju tokenizam i preteranu 'egzotizaciju' prizora",
+      "Redovno ažuriraj listu na osnovu novih grešaka uočenih u generisanim sadržajima"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-inclusive-visuals-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Definisanje fizike pokreta za video generisanje",
+    "koraci": [
+      "Opiši kako se odeća, kosa i pomagala za kretanje prirodno ponašaju tokom pokreta",
+      "Eksplicitno navedi kontinuitet osvetljenja i teksture kroz vreme",
+      "Proveri da pomagala poput invalidskih kolica ili proteza ne glituju niti krše fiziku",
+      "Testiraj konzistentnost izgleda subjekta kroz više frejmova ili platformi"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-inclusive-visuals-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Sprovođenje kontrolne provere nakon generisanja",
+    "koraci": [
+      "Pregledaj generisani materijal pomoću liste od sedam tačaka za proveru kvaliteta",
+      "Proveri sociološku tačnost, a ne samo tehničku ispravnost prikaza",
+      "Konsultuj se sa predstavnicima zajednice radi potvrde autentičnosti",
+      "Dokumentuj uočene probleme i prosledi ih timu za doradu pre objave"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-inclusive-visuals-specialist.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.82
+  },
+  {
+    "ime": "Izrada psihološkog profila persone",
+    "koraci": [
+      "Prikupi osnovne podatke o personi: ime, godine, nacionalnost i trenutnu životnu situaciju",
+      "Definiši kontekst pretrage: tačan google upit, izvor dolaska i sajtove koje je persona ranije videla",
+      "Utvrdi psihološke crte: nivo poznavanja teme, hitnost, strahove, okidače poverenja i stil odlučivanja",
+      "Odredi tip privrženosti persone (anksiozan, siguran ili izbegavajući) jer on oblikuje celu emocionalnu reakciju",
+      "Zapiši šta za personu znači uspeh i šta bi je navelo da odmah kontaktira"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-persona-walkthrough.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Simulacija skrol šetnje kroz stranicu",
+    "koraci": [
+      "Opiši mentalno stanje persone pre nego što stranica uopšte bude učitana",
+      "Primeni test od pet sekundi na prvi vidljivi deo stranice i proveri da li persona razume šta je sajt, da li je za nju i šta treba da uradi",
+      "Pomeraj se kroz stranicu u koracima i za svaki deo zapiši sirovi unutrašnji monolog persone, bez stručnog žargona",
+      "Uz svaki monolog dodaj odvojenu analitičku procenu zasnovanu na frameworcima, nikad mešajući dva glasa",
+      "Uoči trenutke promene emocije, trenutak kada persona ima dovoljno informacija da nastavi ili kada odustaje",
+      "Uporedi utiske sa konkurentskim sajtovima koje je persona ranije videla, ako je relevantno"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-persona-walkthrough.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Procena stranice kroz LIFT, Cialdini i Fogg modele",
+    "koraci": [
+      "Za svaki segment stranice oceni koji LIFT faktor je najviše pogođen: vrednost, relevantnost, jasnoća, hitnost, anksioznost ili ometanje",
+      "Identifikuj koji Cialdinijevi principi su aktivni, a koji nedostaju iako bi trebalo da budu prisutni",
+      "Mapiraj poziciju persone u Fogg modelu ponašanja proveravajući nivo motivacije, sposobnosti i vidljivost podsticaja",
+      "Proveri na svakom segmentu da li je poziv na akciju dostupan bez dodatnog skrolovanja",
+      "Zabeleži tehničke probleme poput sporog učitavanja, nejasnih slika ili nečitkih tabela ako su uočeni"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-persona-walkthrough.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada zaključka i prioritizovanih preporuka",
+    "koraci": [
+      "Napiši završni monolog persone koji sumira ukupan utisak nakon celog pregleda",
+      "Oceni poverenje, jasnoću i relevantnost stranice na skali i navedi da li bi persona kontaktirala firmu",
+      "Izdvoj po tri najjače i najslabije tačke stranice, povezujući ih sa konkretnim frameworkom",
+      "Označi tačan trenutak kada je persona skoro napustila stranicu i trenutak najvećeg angažovanja",
+      "Formuliši preporuke podeljene po prioritetu (brze pobede, veća unapređenja, strateške prilike), svaku vezanu za konkretan deo stranice i reakciju persone",
+      "Naglasi da su nalazi kvalitativna simulacija i hipoteze za dalju proveru, a ne statistički dokaz"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-persona-walkthrough.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada sistema dizajn tokena",
+    "koraci": [
+      "Definisati paletu boja uključujući primarne, sekundarne i semantičke tonove",
+      "Postaviti tipografsku skalu sa veličinama, težinama i visinama linija",
+      "Odrediti sistem razmaka baziran na doslednoj matematičkoj jedinici",
+      "Dodati tokene za senke i tranzicije radi vizuelne dubine",
+      "Pripremiti varijante tokena za tamnu temu i brend prilagođavanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ui-designer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.95
+  },
+  {
+    "ime": "Kreiranje biblioteke komponenti",
+    "koraci": [
+      "Dizajnirati osnovne komponente poput dugmadi, polja i kartica",
+      "Definisati sva stanja komponenti: hover, aktivno, fokus i onemogućeno",
+      "Uskladiti interakcione obrasce i mikro-animacije kroz ceo sistem",
+      "Obezbediti responzivno ponašanje komponenti na svim rezolucijama"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ui-designer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Obezbeđivanje pristupačnosti interfejsa",
+    "koraci": [
+      "Proveriti kontrast boja prema WCAG AA standardu",
+      "Omogućiti punu navigaciju tastaturom i jasne fokus indikatore",
+      "Dodati semantički HTML i ARIA oznake za čitače ekrana",
+      "Definisati minimalnu veličinu dodirnih zona i podršku za uvećanje teksta"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ui-designer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Priprema specifikacija za predaju razvojnom timu",
+    "koraci": [
+      "Izraditi detaljne specifikacije dizajna sa merama i vrednostima",
+      "Sačiniti dokumentaciju komponenti sa uputstvima za korišćenje",
+      "Pripremiti i optimizovati asete u više formata za implementaciju",
+      "Uspostaviti proces provere kvaliteta dizajna nakon implementacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ui-designer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Definisanje proizvodnog ugla pre kritike",
+    "koraci": [
+      "Utvrdi ko koristi ekran i koji zadatak mora da završi",
+      "Identifikuj koji objekat ili odluka mora prvo da se razume",
+      "Razlikuj svakodnevne zadatke od retkih ali rizičnih",
+      "Popiši postojeća tehnička i brend ograničenja",
+      "Napiši kratak pasus koji opisuje ovaj ugao pre nego što se komentarišu detalji dizajna"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ui-finish-gate-reviewer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Prikupljanje uporedivih referenci",
+    "koraci": [
+      "Pronađi tri do pet relevantnih primera iz srodnih proizvoda",
+      "Za svaki primer zabeleži obrazac, svrhu i pouku koja se može preneti",
+      "Izbegavaj doslovno kopiranje izgleda, već izvuci princip koji odgovara proizvodu",
+      "Koristi javne izvore ili katalog samo kao istraživačku podlogu"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ui-finish-gate-reviewer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Sastavljanje dizajn ugovora",
+    "koraci": [
+      "Opiši korisnika, posao, prvi objekat za čitanje i glavnu akciju",
+      "Odredi gustinu prikaza, hijerarhiju i model interakcije",
+      "Definiši prioritete za responzivno ponašanje ekrana",
+      "Navedi zabranjene generičke obrasce specifične za ovaj proizvod",
+      "Pripremi listu dokaza koji će potvrditi završenost implementacije"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ui-finish-gate-reviewer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Sprovođenje finalne provere i odluke",
+    "koraci": [
+      "Proveri da li novi korisnik odmah prepoznaje glavni objekat i tok rada",
+      "Proveri da li vizuelna težina prati korisničke odluke, a ne podrazumevane komponente",
+      "Oceni stanja učitavanja, praznine, greške, fokusa i uskog ekrana",
+      "Uporedi implementaciju sa tokenima i komponentama ostatka proizvoda",
+      "Donesi odluku PASS ili HOLD uz konkretne dokaze i neophodne izmene"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ui-finish-gate-reviewer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Kreiranje CSS dizajn sistema",
+    "koraci": [
+      "Definisati promenljive za boje, tipografiju i razmake",
+      "Postaviti svetlu i tamnu temu prema specifikaciji projekta",
+      "Uspostaviti skalu tipografije i sistem razmaka na mreži od 4px",
+      "Dodati prekidač za svetlu/tamnu/sistemsku temu na svaki sajt",
+      "Dokumentovati tokene radi ponovne upotrebe u komponentama"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ux-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.93
+  },
+  {
+    "ime": "Projektovanje layout arhitekture",
+    "koraci": [
+      "Definisati sistem kontejnera za mobilne, tablet i desktop prikaze",
+      "Kreirati grid i flexbox obrasce za uobičajene rasporede sadržaja",
+      "Postaviti strategiju responzivnih prelomnih tačaka mobile-first pristupom",
+      "Odrediti hijerarhiju komponenti da bi se izbegli CSS konflikti"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ux-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Planiranje UX strukture i informacione arhitekture",
+    "koraci": [
+      "Mapirati hijerarhiju stranica i tok sadržaja",
+      "Definisati obrasce interakcije i korisničke tokove",
+      "Odrediti vizuelnu težinu naslova, tela teksta i poziva na akciju",
+      "Uključiti pristupačnost kroz tastaturnu navigaciju i kontrast boja"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ux-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Priprema predaje developeru",
+    "koraci": [
+      "Analizirati specifikaciju projekta i listu zadataka od projekt menadžera",
+      "Sastaviti vodič za implementaciju sa jasnim prioritetima koraka",
+      "Pripremiti CSS fajlove sa dokumentovanim obrascima i strukturom foldera",
+      "Specifikovati zahteve komponenti i responzivno ponašanje",
+      "Predati temelj dizajna kao osnovu pre dodavanja finalnog polisha"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ux-architect.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Planiranje korisničkog istraživanja",
+    "koraci": [
+      "Definisati ključna istraživačka pitanja i poslovne ciljeve",
+      "Izabrati odgovarajuću metodologiju i potreban uzorak učesnika",
+      "Postaviti kriterijume za regrutaciju i sprečavanje pristrasnosti",
+      "Pripremiti protokole, materijale i raspored sprovođenja studije"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ux-researcher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Testiranje upotrebljivosti proizvoda",
+    "koraci": [
+      "Pripremiti scenarije zadataka i kriterijume uspeha",
+      "Sprovesti sesije sa korisnicima uz tehniku razmišljanja naglas",
+      "Prikupiti kvantitativne i kvalitativne podatke tokom testa",
+      "Analizirati stope završetka zadataka, greške i vreme izvršenja",
+      "Sprovesti post-test intervju za dodatne uvide"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ux-researcher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izrada persona i mapiranje korisničkog putovanja",
+    "koraci": [
+      "Sintetizovati podatke iz intervjua i anketa u obrasce ponašanja",
+      "Kreirati detaljne persone zasnovane na empirijskim podacima",
+      "Mapirati korake, tačke kontakta i emocije kroz korisničko putovanje",
+      "Identifikovati bolne tačke i prilike za poboljšanje"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ux-researcher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Pretvaranje nalaza u preporuke za dizajn",
+    "koraci": [
+      "Grupisati nalaze kroz tematsku i statističku analizu",
+      "Validirati zaključke kroz trijangulaciju više izvora podataka",
+      "Formulisati konkretne, prioritizovane preporuke za tim",
+      "Definisati metrike uspeha za praćenje uticaja preporuka",
+      "Prezentovati nalaze zainteresovanim stranama uz jasne sledeće korake"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-ux-researcher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Razvoj vizuelne naracije",
+    "koraci": [
+      "Analiziraj brend smernice i istraživanje publike iz dostupne dokumentacije",
+      "Definiši strukturu priče kroz uvod, sukob i razrešenje",
+      "Identifikuj glavnog protagonistu, obično korisnika ili kupca",
+      "Mapiraj emotivnu putanju sa usponima i padovima tokom priče",
+      "Odredi vizuelni ritam i tempo za optimalnu angažovanost publike"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-visual-storyteller.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Kreiranje multimedijalnog sadržaja",
+    "koraci": [
+      "Razvij storyboard i izbor kadrova za video sadržaj",
+      "Osmisli animacije, mikro-interakcije i objašnjavajuće animacije",
+      "Pripremi smernice za fotografiju, mud borde i stil fotografisanja",
+      "Dizajniraj interaktivne elemente poput skrol narativa i veb iskustava"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-visual-storyteller.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Dizajn informacija i vizualizacija podataka",
+    "koraci": [
+      "Analiziraj podatke i odredi vizuelnu hijerarhiju za jasan narativni tok",
+      "Kreiraj infografike koristeći vizuelne metafore i preglednu strukturu",
+      "Izaberi odgovarajući tip grafikona ili dijagrama za date podatke",
+      "Primeni postepeno otkrivanje informacija radi lakšeg razumevanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-visual-storyteller.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Prilagođavanje sadržaja platformama",
+    "koraci": [
+      "Prilagodi format i stil sadržaja svakoj platformi posebno",
+      "Održavaj doslednost brenda kroz sve kanale komunikacije",
+      "Proveri pristupačnost sadržaja prema standardima za sve korisnike",
+      "Uzmi u obzir kulturnu osetljivost i inkluzivno predstavljanje",
+      "Testiraj performanse vizuelnog sadržaja na različitim uređajima"
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-visual-storyteller.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Kreiranje strategije brend ličnosti",
+    "koraci": [
+      "Analiziraj smernice brenda i ciljnu publiku.",
+      "Istraži kako konkurencija koristi ličnost i duhovitost.",
+      "Definiši spektar ličnosti od formalnog do igrivog konteksta.",
+      "Napravi taksonomiju elemenata igrivosti po tipovima interakcija.",
+      "Postavi smernice za kulturnu osetljivost i pristupačnost."
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-whimsy-injector.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Dizajn mikro-interakcija i animacija",
+    "koraci": [
+      "Osmisli dugmad, animacije učitavanja i vizuelne efekte sa karakterom.",
+      "Dodaj suptilne animacije za potvrdu uspešne akcije korisnika.",
+      "Obezbedi da animacije poštuju podešavanje smanjenog pokreta.",
+      "Testiraj da li elementi usporavaju performanse ili ometaju pristupačnost."
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-whimsy-injector.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Pisanje igrivog mikrotekstova",
+    "koraci": [
+      "Napiši poruke o greškama koje smanjuju frustraciju korisnika.",
+      "Kreiraj tekstove za stanja učitavanja i prazna stanja sa duhom brenda.",
+      "Formuliši poruke uspeha koje slave korisnička dostignuća.",
+      "Proveri da ton ostane dosledan glasu brenda i razumljiv svima."
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-whimsy-injector.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Razvoj sistema gejmifikacije i iznenađenja",
+    "koraci": [
+      "Dizajniraj sistem dostignuća koji nagrađuje korisničko istraživanje.",
+      "Ugradi skrivene funkcije i tajne interakcije za radoznale korisnike.",
+      "Postavi praćenje napretka i proslavu završenih zadataka.",
+      "Izmeri uticaj na angažovanje i prilagodi na osnovu ponašanja korisnika."
+    ],
+    "napomene": "Destilovano iz agency-agents/design/design-whimsy-injector.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.75
+  }
+]

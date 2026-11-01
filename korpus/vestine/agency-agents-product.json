@@ -1,0 +1,283 @@
+[
+  {
+    "ime": "Otkrivanje korisničkih preferenci interakcije",
+    "koraci": [
+      "Prilikom onboardinga pitati korisnika za željeni ton, učestalost i kanal komunikacije.",
+      "Zabeležiti preference u šemu korisničkog profila radi kasnije personalizacije.",
+      "Pratiti angažovanje korisnika i prilagođavati kanal ako reakcije izostanu.",
+      "Ako korisnik prestane da odgovara na dnevne poruke, ponuditi prelazak na nedeljni pregled putem drugog kanala."
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-behavioral-nudge-engine.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Rastavljanje zadataka na mikro-korake",
+    "koraci": [
+      "Analizirati kompletan spisak zaostalih zadataka korisnika.",
+      "Izabrati samo jedan najvažniji zadatak umesto prikazivanja celog spiska.",
+      "Pretvoriti taj zadatak u kratak, vremenski ograničen mikro-sprint (npr. 5 minuta).",
+      "Ponuditi gotov predlog akcije kako bi korisnik samo odobrio ili izmenio."
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-behavioral-nudge-engine.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Slanje fokusiranog podsticaja (nudge)",
+    "koraci": [
+      "Odabrati optimalno vreme i preferirani kanal za slanje poruke.",
+      "Formulisati poruku kao jednu jasnu i nisko-frikcionu akciju, nikad listu notifikacija.",
+      "Prilagoditi stil poruke profilu korisnika (npr. kraća i direktnija za preopterećene korisnike).",
+      "Izbegavati generičke obaveštenja tipa broja nepročitanih stavki."
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-behavioral-nudge-engine.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Proslavljanje napretka i nuđenje izlaza",
+    "koraci": [
+      "Odmah po završetku zadatka pružiti pozitivnu i konkretnu povratnu informaciju.",
+      "Istaknuti ostvareni napredak umesto preostalog obima posla.",
+      "Ponuditi jasnu opciju za nastavak ili prekid aktivnosti (opt-out).",
+      "Pratiti koji stil formulacije donosi najveću stopu završavanja zadataka kod tog korisnika."
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-behavioral-nudge-engine.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.87
+  },
+  {
+    "ime": "Audit onboarding toka",
+    "koraci": [
+      "Postaviti osnovne metrike pre bilo kakve promene, poput vremena do prvog poziva API-ja",
+      "Pozvati nekoliko programera koji nikada nisu koristili proizvod i dati im jedan zadatak bez pomoći",
+      "Beležiti svaku tačku zastoja, zbunjenosti ili vraćanja unazad tokom sesije",
+      "Rangirati uočene probleme po ozbiljnosti i učestalosti pojavljivanja",
+      "Za svaki problem predložiti konkretno i sprovodivo rešenje",
+      "Nakon implementacije ponovo izmeriti metrike i uporediti sa početnim stanjem"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-dx-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Dizajn SDK primera i dokumentacije",
+    "koraci": [
+      "Proveriti da li je ispravna upotreba metode očigledna iz njenog potpisa i autocomplete prikaza",
+      "Napisati primere koji pokrivaju realne slučajeve upotrebe, ne samo osnovni primer",
+      "Dodati tipove i napomene koji hvataju greške u pisanju koda pre pokretanja",
+      "Omogućiti da prvi primer koda vrati vrednu rezultatsku informaciju bez potrebe za nalogom ili prijavom"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-dx-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.88
+  },
+  {
+    "ime": "Prepravka poruka o greškama",
+    "koraci": [
+      "Identifikovati poruke o greškama koje samo opisuju kod umesto da objašnjavaju uzrok",
+      "Prepisati poruku tako da sadrži šta se desilo, zašto i šta korisnik treba sledeće da uradi",
+      "Dodati konkretne primere, linkove ka dokumentaciji i predloge za rešavanje problema",
+      "Testirati novu poruku sa stvarnim korisnicima da bi se proverilo da li smanjuje konfuziju"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-dx-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Izgradnja sistema za usmeravanje povratnih informacija programera",
+    "koraci": [
+      "Definisati kategorije povratnih informacija prema izvoru, ozbiljnosti i pogođenom delu proizvoda",
+      "Automatski usmeriti svaku prijavu ka odgovarajućem timu u zavisnosti od kategorije",
+      "Pratiti koliko se prijavljenih problema zaista rešava i za koliko vremena",
+      "Sastavljati periodične izveštaje o najčešćim izvorima frustracije i deliti ih sa proizvodnim timovima"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-dx-engineer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Prikupljanje povratnih informacija iz više kanala",
+    "koraci": [
+      "Postaviti automatsko prikupljanje podataka iz anketa, tiketa podrške, recenzija i društvenih mreža.",
+      "Objediniti proaktivne, reaktivne, pasivne i kanale zajednice u jedan sistem.",
+      "Očistiti i normalizovati podatke uklanjanjem duplikata i standardizacijom formata.",
+      "Proveriti kvalitet podataka pre dalje analize."
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-feedback-synthesizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Analiza sentimenta i kategorizacija tema",
+    "koraci": [
+      "Primeniti NLP alate za prepoznavanje emocija i ocenu zadovoljstva korisnika.",
+      "Označiti povratne informacije prema temama i uticaju na proizvod.",
+      "Identifikovati trendove i promene u raspoloženju korisnika tokom vremena.",
+      "Proveriti tačnost kategorizacije uz pomoć ljudske revizije radi smanjenja pristrasnosti."
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-feedback-synthesizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Prioritizacija zahteva za funkcionalnostima",
+    "koraci": [
+      "Grupisati slične zahteve korisnika u zajedničke teme.",
+      "Primeniti okvire kao što su RICE, MoSCoW ili Kano za rangiranje prioriteta.",
+      "Proceniti poslovnu vrednost i potreban napor za svaku stavku.",
+      "Sastaviti preporuke za razvojni tim sa jasnim obrazloženjem prioriteta."
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-feedback-synthesizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Izrada izveštaja i uvida za zainteresovane strane",
+    "koraci": [
+      "Kreirati kontrolne table sa trendovima sentimenta i obima povratnih informacija.",
+      "Izvući reprezentativne citate korisnika po temama uz očuvanje konteksta.",
+      "Mapirati korisničko putovanje sa identifikovanim tačkama frustracije.",
+      "Prilagoditi format izveštaja različitim timovima (izvršni, produktni, korisnička podrška).",
+      "Pratiti da li uvidi dovode do konkretnih odluka i mera."
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-feedback-synthesizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  },
+  {
+    "ime": "Otkrivanje problema i validacija pre gradnje",
+    "koraci": [
+      "Sprovesti najmanje pet do deset strukturiranih intervjua sa korisnicima pre razmatranja rešenja",
+      "Analizirati podatke o ponašanju korisnika da se pronađu mesta zastoja i trenja",
+      "Pregledati tikete podrške i komentare da se uoče ponavljajuće teme",
+      "Mapirati celokupno korisničko iskustvo da se vidi gde korisnici odustaju ili improvizuju",
+      "Sažeti nalaze u jasnu tvrdnju o problemu potkrepljenu dokazima",
+      "Podeliti sirove nalaze sa dizajnom, inženjeringom i rukovodstvom, ne samo zaključke"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Procena prilike i prioritizacija",
+    "koraci": [
+      "Napisati procenu prilike pre nego što se uopšte razgovara o rešenju",
+      "Uskladiti se sa rukovodstvom o strateškoj vrednosti i raspoloživim resursima",
+      "Dobiti grubu procenu napora od inženjeringa bez detaljnog planiranja",
+      "Oceniti inicijativu RICE metodom ili sličnim okvirom u odnosu na postojeći roadmap",
+      "Doneti jasnu preporuku: graditi, dalje istraživati, odložiti ili odbaciti, uz obrazloženje"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Definisanje zahteva i priprema za razvoj",
+    "koraci": [
+      "Pisati dokument zahteva zajedno sa inženjerima i dizajnerima od samog početka",
+      "Napisati najavu lansiranja i očekivana pitanja korisnika pre definisanja zahteva",
+      "Identifikovati sve međutimske zavisnosti i voditi evidenciju o njima",
+      "Održati vežbu unapred zamišljenog neuspeha sa timom da se predvide rizici",
+      "Zaključati obim rada i dobiti pisanu saglasnost svih zainteresovanih strana pre početka razvoja"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Vođenje lansiranja i merenje uspeha",
+    "koraci": [
+      "Koordinirati lansiranje sa marketingom, prodajom i podrškom unapred, ne na dan lansiranja",
+      "Definisati strategiju uvođenja kroz feature flagove, faze ili testiranje",
+      "Napisati plan za povlačenje funkcionalnosti pre aktiviranja",
+      "Pratiti ključne metrike svakodnevno tokom prve dve nedelje po lansiranju",
+      "Proveriti rezultate u odnosu na ciljeve nakon 30, 60 i 90 dana",
+      "Napisati retrospektivu lansiranja i proslediti nalaze nazad u proces otkrivanja"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-manager.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Prioritizacija funkcionalnosti po RICE i Value/Effort modelu",
+    "koraci": [
+      "Proceni domet, uticaj, poverenje i napor za svaku stavku backloga",
+      "Izračunaj RICE skor i rangiraj stavke po prioritetu",
+      "Mapiraj stavke na matricu vrednost naspram napora radi brzog izdvajanja prioriteta",
+      "Primeni Kano model da razlikuješ osnovne, performansne i oduševljujuće funkcionalnosti",
+      "Validiraj rezultate sa statističkom proverom pre finalne odluke"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-sprint-prioritizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Planiranje sprinta i definisanje cilja",
+    "koraci": [
+      "Pregledaj i doteraj backlog pre planiranja, proveravajući kriterijume prihvatanja",
+      "Proceni kapacitet tima uzimajući u obzir odsustva i sastanke",
+      "Definiši jasan i merljiv cilj sprinta",
+      "Izaberi priče u skladu sa kapacitetom uz rezervu za nepredviđeno",
+      "Razloži priče na zadatke sa procenama i dodeli ih prema veštinama",
+      "Obezbedi saglasnost tima oko obaveza i rokova"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-sprint-prioritizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Upravljanje zavisnostima i rizicima isporuke",
+    "koraci": [
+      "Identifikuj zavisnosti između timova i mapiraj kritičan put",
+      "Proceni verovatnoću i uticaj svakog rizika kroz matricu rizika",
+      "Pripremi plan B i alternativne pristupe za ključne rizike",
+      "Uspostavi sistem ranog upozorenja na osnovu metrika",
+      "Komuniciraj rizike transparentno sa zainteresovanim stranama"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-sprint-prioritizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Analiza brzine tima i planiranje kapaciteta",
+    "koraci": [
+      "Prikupi istorijske podatke o brzini tima kroz više sprintova",
+      "Prilagodi kapacitet za odsustva, obuke i dodatne obaveze",
+      "Primeni rezervu za neizvesnost prilikom planiranja obima rada",
+      "Prati trendove i identifikuj uska grla u procesu",
+      "Predlozi konkretne korake za poboljšanje predvidljivosti isporuke"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-sprint-prioritizer.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Identifikacija trendova i slabih signala",
+    "koraci": [
+      "Prikuplja signale iz velikog broja izvora putem automatizovanog praćenja",
+      "Prepoznaje obrasce i anomalije statističkom analizom podataka",
+      "Analizira kontekst, pokretače i prepreke trenda",
+      "Procenjuje uticaj na tržište i poslovanje",
+      "Validira nalaze upoređivanjem sa mišljenjima stručnjaka",
+      "Formuliše konkretne preporuke za proizvodnu strategiju"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-trend-researcher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.9
+  },
+  {
+    "ime": "Konkurentska analiza i mapiranje tržišta",
+    "koraci": [
+      "Poredi direktne konkurente po funkcijama, ceni i pozicioniranju",
+      "Prati indirektne konkurente i alternativna rešenja",
+      "Prati nove igrače, startape i pretnje disrupcije",
+      "Identifikuje tehnološke partnere i prilike za saradnju",
+      "Kreira vizuelne mape konkurentskog pejzaža sa praznim prostorima za ulazak"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-trend-researcher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Procena veličine tržišta i segmentacija",
+    "koraci": [
+      "Izračunava ukupno, dostupno i ostvarivo tržište (TAM, SAM, SOM)",
+      "Segmentira tržište po demografskim, psihografskim i bihevioralnim kriterijumima",
+      "Analizira istorijske trendove rasta i ključne pokretače",
+      "Pravi projekcije rasta uz procenu rizika i scenarija"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-trend-researcher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.85
+  },
+  {
+    "ime": "Izveštavanje i prezentacija uvida",
+    "koraci": [
+      "Sastavlja kratke izveštaje o trendovima sa ključnim zaključcima",
+      "Priprema detaljne procene poslovnih prilika sa planom ulaska na tržište",
+      "Kreira prezentacije i radionice za strateško odlučivanje",
+      "Postavlja kontrolne table za praćenje u realnom vremenu sa automatskim upozorenjima"
+    ],
+    "napomene": "Destilovano iz agency-agents/product/product-trend-researcher.md (MIT) — naš opis postupka, ne prepis.",
+    "pouzdanost": 0.8
+  }
+]
