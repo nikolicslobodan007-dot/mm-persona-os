@@ -40,6 +40,8 @@ DEPARTMENTS: tuple[tuple[str, str, str], ...] = (
      "Pravila platformi, AI oznake, incidenti i provera pre objave."),
     ("RAZVOJ", "Razvoj i održavanje sistema",
      "Kod, testovi, puštanje i održavanje same korporacije (ADR-0034)."),
+    ("BEZBEDNOST", "Bezbednost",
+     "Ovlašćeno testiranje sopstvenih sistema i zaštita podataka (ADR-0035)."),
 )
 
 #: (code, sektor, naziv, nivo, specijalnost, odgovara, poslovi, koliko ljudi)
@@ -119,6 +121,18 @@ POSITIONS: tuple[tuple[str, str, str, str, str, str | None, list[str], int], ...
     ("RAZ-BIB", "RAZVOJ", "Bibliotekar koda", L.MEDIOR, "zavisnosti i licence",
      "SEF-RAZ", ["prati licence i bezbednosne zakrpe zavisnosti",
                  "odbija zavisnost bez licence (ADR-0032)"], 1),
+    ("SEF-BEZ", "BEZBEDNOST", "Šef bezbednosti", L.HEAD, "vođenje bezbednosti",
+     "DIR-00", ["određuje opseg testiranja (samo naši sistemi)",
+                "prijavljuje rizik upravi"], 1),
+    ("BEZ-RED", "BEZBEDNOST", "Red team", L.SENIOR, "simulacija napada",
+     "SEF-BEZ", ["simulira napad u opsegu i piše nalaz",
+                 "nikad van opsega ni protiv tuđih sistema"], 2),
+    ("BEZ-PEN", "BEZBEDNOST", "Pentester", L.MEDIOR, "testiranje bezbednosti",
+     "SEF-BEZ", ["testira naše sisteme i piše nalaz sa dokazom",
+                 "testira i prijavi, ne naoružava"], 5),
+    ("BEZ-AUD", "BEZBEDNOST", "Bezbednosni auditor", L.MEDIOR, "audit i forenzika",
+     "SEF-BEZ", ["proverava politike, pristupe i privatnost",
+                 "analizira incidente uz audit trag"], 3),
 )
 
 #: Modelovani dosije referentne persone (ADR-0017). Izmišljeno i dosledno.
