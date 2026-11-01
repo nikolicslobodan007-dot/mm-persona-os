@@ -22,7 +22,7 @@ from common import enums as E
 L = E.OrgLevel
 
 #: Gornji kapacitet po nivou (piramida: puno izvršilaca, malo šefova).
-_KAPACITET = {L.HEAD: 2, L.SENIOR: 20, L.MEDIOR: 80}
+_KAPACITET = {L.HEAD: 1, L.SENIOR: 20, L.MEDIOR: 80}
 
 #: (code, ime, čemu služi)
 DEPARTMENTS: tuple[tuple[str, str, str], ...] = (
