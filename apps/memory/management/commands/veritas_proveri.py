@@ -60,6 +60,10 @@ class Command(BaseCommand):
                 f"  ose: pouzdanost {z['pouzdanost']} · blizina {z['blizina']} · "
                 f"potkrepljenost {z['potkrepljenost']} · nezavisnost {z['nezavisnost']} · "
                 f"stabilnost {z['stabilnost']} → ukupno {z['ukupno']}")
+        if r.get("sporno_tumacenje"):
+            self.stdout.write(self.style.WARNING(
+                f"  napomena: tumačenje sporno ({r['sporno_tumacenje']} izvor/a) — "
+                "potvrđeno da je IZREČENO, značenje osporeno."))
 
     def _dohvati(self, url: str, suvo: bool):
         if suvo:
