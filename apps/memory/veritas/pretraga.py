@@ -42,8 +42,9 @@ def pretrazi(upit: str, maks: int = 5, *, kljuc: str | None = None) -> list[dict
     kljuc = kljuc or _kljuc()
     if not kljuc:
         raise RuntimeError("Nema BRAVE_SEARCH_API_KEY (dodaj u .env na serveru).")
-    q = urllib.parse.urlencode({"q": upit, "count": max(1, min(maks, 20)),
-                                "search_lang": "sr", "country": "RS"})
+    # bez search_lang/country — Brave ne prima sve kodove (RS/sr → 422);
+    # srpski pojmovi u upitu ionako vuku srpske izvore.
+    q = urllib.parse.urlencode({"q": upit, "count": max(1, min(maks, 20))})
     req = urllib.request.Request(
         f"{_ENDPOINT}?{q}",
         headers={"Accept": "application/json", "X-Subscription-Token": kljuc,
