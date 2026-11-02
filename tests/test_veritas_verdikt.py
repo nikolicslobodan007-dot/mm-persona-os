@@ -31,6 +31,17 @@ class TestVerdikt:
         r = verdikt.oceni_tvrdnju("T", [self._izvor("tabloid", verdikt.POTVRDJUJE)])
         assert r["verdikt"] == "NEDOVOLJNO"
 
+
+    def test_sporno_tumacenje_i_dalje_potvrdjuje_izreceno(self):
+        # „izvučeno iz konteksta" potvrđuje da je izrečeno, spori značenje
+        izvori = [self._izvor("svedok", verdikt.POTVRDJUJE),
+                  self._izvor("redakcija", verdikt.POTVRDJUJE, 1),
+                  self._izvor("redakcija", verdikt.SPORNO, 2)]
+        r = verdikt.oceni_tvrdnju("T", izvori)
+        assert r["verdikt"] == "POTVRĐENO"
+        assert r["protivrecnih"] == 0
+        assert r["sporno_tumacenje"] == 1
+
     def test_bez_izvora_nedovoljno(self):
         r = verdikt.oceni_tvrdnju("T", [])
         assert r["verdikt"] == "NEDOVOLJNO"
