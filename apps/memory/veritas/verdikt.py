@@ -29,12 +29,14 @@ _PREDIKAT = "veritas.ocena"
 
 # vrsta izvora → source_kind (ulaz u blizinu iz pouzdanosti)
 _VRSTA_KIND = {
-    "svedok": "first_party_user_input",   # ljudski očevidac — blizina 0.90
+    "svedok": "first_party_user_input",         # očevidac uživo — blizina 0.90
+    "svedok_snimak": "first_party_user_input",  # gledao snimak — blizina 0.90, niži trust
     "redakcija": "public_web_source",
     "web": "public_web_source",
     "tabloid": "public_web_source",
 }
-_PODRAZUMEVANI_TRUST = {"svedok": 0.9, "redakcija": 0.7, "web": 0.5, "tabloid": 0.3}
+_PODRAZUMEVANI_TRUST = {"svedok": 0.9, "svedok_snimak": 0.75,
+                        "redakcija": 0.7, "web": 0.5, "tabloid": 0.3}
 
 
 def _kljuc(tvrdnja: str) -> str:
@@ -72,10 +74,12 @@ def oceni_tvrdnju(tvrdnja: str, izvori: list[dict]) -> dict:
     """`izvori`: [{vrsta, stav, trust?, id?}]. Vrati verdikt + ose + brojeve."""
     kljuc = _kljuc(tvrdnja)
     sporno = sum(1 for iz in izvori if iz.get("stav") == SPORNO)
+    svedok_uzivo = any(iz.get("vrsta") == "svedok" for iz in izvori)
     facts = [_fact(kljuc, iz, i) for i, iz in enumerate(izvori)]
     if not facts:
         return {"verdikt": "NEDOVOLJNO", "ose": None, "izvori": 0,
-                "saglasnih": 0, "protivrecnih": 0, "sporno_tumacenje": 0}
+                "saglasnih": 0, "protivrecnih": 0, "sporno_tumacenje": 0,
+                "svedok_uzivo": False}
     saglasni = [f for f in facts if f.vrednost == POTVRDJUJE]
     protivrecni = [f for f in facts if f.vrednost == OPONIRA]
     # tv = najjači saglasni (svedok pa po trust-u); ako nema saglasnih, prvi protivrečni
@@ -88,4 +92,4 @@ def oceni_tvrdnju(tvrdnja: str, izvori: list[dict]) -> dict:
     verdikt = _verdikt(len(saglasni), len(protivrecni), ose["ukupno"])
     return {"verdikt": verdikt, "ose": ose, "izvori": len(facts),
             "saglasnih": len(saglasni), "protivrecnih": len(protivrecni),
-            "sporno_tumacenje": sporno}
+            "sporno_tumacenje": sporno, "svedok_uzivo": svedok_uzivo}

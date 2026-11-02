@@ -42,6 +42,15 @@ class TestVerdikt:
         assert r["protivrecnih"] == 0
         assert r["sporno_tumacenje"] == 1
 
+
+    def test_svedok_snimak_nizi_od_uzivo(self):
+        uzivo = verdikt.oceni_tvrdnju("T", [self._izvor("svedok", verdikt.POTVRDJUJE)])
+        snimak = verdikt.oceni_tvrdnju(
+            "T", [self._izvor("svedok_snimak", verdikt.POTVRDJUJE)])
+        assert snimak["ose"]["ukupno"] < uzivo["ose"]["ukupno"]
+        assert uzivo["svedok_uzivo"] is True
+        assert snimak["svedok_uzivo"] is False
+
     def test_bez_izvora_nedovoljno(self):
         r = verdikt.oceni_tvrdnju("T", [])
         assert r["verdikt"] == "NEDOVOLJNO"
