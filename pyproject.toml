@@ -28,6 +28,10 @@ dependencies = [
     # rekonstrukcija reči iz charbox koordinata, presedan Grinder). PDFium je
     # BSD-3, vezivanja Apache-2.0 — nije ZARAZNA (ADR-0079).
     "pypdfium2>=5,<6",
+    # ADR-0125: Veritas skida audio klipa (yt-dlp) i svodi ga (ffmpeg) pre
+    # transkripcije. yt-dlp je NAMERNO van constraints.txt — ekstraktori
+    # platformi trule iz nedelje u nedelju, pa mora da pliva na najnoviju.
+    "yt-dlp>=2025.1",
 ]
 
 [project.optional-dependencies]
