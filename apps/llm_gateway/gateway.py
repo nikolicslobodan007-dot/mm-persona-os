@@ -131,9 +131,16 @@ def _external_allowed(route: LLMRoute, persona=None) -> str | None:
 # ---------------------------------------------------------------- provajderi
 
 
+# Cloudflare ispred nekih provajdera (Groq) odbija podrazumevani urllib UA
+# sa 403 (greška 1010 — „browser signature ban”). Šaljemo realan UA.
+_HTTP_UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+
+
 def _post_json(url: str, headers: dict, body: dict, timeout: int) -> dict:
-    req = urllib.request.Request(url, data=json.dumps(body).encode(), method="POST",
-                                 headers={"Content-Type": "application/json", **headers})
+    req = urllib.request.Request(
+        url, data=json.dumps(body).encode(), method="POST",
+        headers={"Content-Type": "application/json", "User-Agent": _HTTP_UA, **headers})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310
             return json.loads(r.read().decode())
@@ -163,7 +170,8 @@ def _post_multipart(url: str, headers: dict, fields: dict, files: dict, timeout:
     telo = b"".join(delovi)
     req = urllib.request.Request(
         url, data=telo, method="POST",
-        headers={"Content-Type": f"multipart/form-data; boundary={granica}", **headers})
+        headers={"Content-Type": f"multipart/form-data; boundary={granica}",
+                 "User-Agent": _HTTP_UA, **headers})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310
             return json.loads(r.read().decode())
