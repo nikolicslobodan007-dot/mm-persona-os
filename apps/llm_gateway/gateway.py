@@ -143,6 +143,36 @@ def _post_json(url: str, headers: dict, body: dict, timeout: int) -> dict:
         raise LLMError("NETWORK", str(e)[:300]) from e
 
 
+def _post_multipart(url: str, headers: dict, fields: dict, files: dict, timeout: int) -> dict:
+    """POST multipart/form-data (audio transkripcija). `files`: ime -> (naziv, bajtovi, mime)."""
+    import uuid
+
+    granica = "----mmpersonaos" + uuid.uuid4().hex
+    delovi: list[bytes] = []
+    for ime, vrednost in fields.items():
+        delovi.append(
+            (f'--{granica}\r\nContent-Disposition: form-data; name="{ime}"\r\n\r\n'
+             f"{vrednost}\r\n").encode())
+    for ime, (naziv, bajtovi, mime) in files.items():
+        delovi.append(
+            (f'--{granica}\r\nContent-Disposition: form-data; name="{ime}"; '
+             f'filename="{naziv}"\r\nContent-Type: {mime}\r\n\r\n').encode())
+        delovi.append(bajtovi)
+        delovi.append(b"\r\n")
+    delovi.append(f"--{granica}--\r\n".encode())
+    telo = b"".join(delovi)
+    req = urllib.request.Request(
+        url, data=telo, method="POST",
+        headers={"Content-Type": f"multipart/form-data; boundary={granica}", **headers})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310
+            return json.loads(r.read().decode())
+    except urllib.error.HTTPError as e:
+        raise LLMError(f"HTTP_{e.code}", e.read().decode(errors="replace")[:300]) from e
+    except (urllib.error.URLError, TimeoutError, OSError) as e:
+        raise LLMError("NETWORK", str(e)[:300]) from e
+
+
 def persona_env_name(provider: str, persona) -> str | None:
     """Ime promenljive za ključ jedne persone: `ANTHROPIC_API_KEY` → `ANTHROPIC_API_KEY_P00001`.
 
@@ -468,7 +498,47 @@ def transcribe(asset, *, persona=None, run=None, context_pack=None,
 
 
 def _call_external_audio(route: LLMRoute, asset, persona=None) -> tuple[str, int, int, str]:
-    """Poziv provajdera za transkripciju. Nema generičkog oblika kao za tekst —
-    svaki provajder zvuka ima svoj ugovor, pa se dodaje kad prva ruta za
-    TRANSCRIBE bude izmerena i upisana (ADR-0078 §5)."""
-    raise LLMError("UNSUPPORTED_PROVIDER", route.provider)
+    """Poziv provajdera za transkripciju (ADR-0078 §5, ADR-0125).
+
+    Prvi ugovor: Groq Whisper — OpenAI-kompatibilan `audio/transcriptions`
+    endpoint, multipart (`file` + `model`[, `language`]). Ulaz je audio iz
+    skladišta (MediaAsset.storage_key), izlaz transkript. Trošak nije po tokenu
+    nego po trajanju: vraćamo trajanje u sekundama kao `tin` (0 `tout`), pa ruta
+    cenu računa po `input_price_micro_eur_per_1k` kao „po 1000 sekundi”.
+    """
+    from apps.runtime.transport import CredentialMissing, resolve_secret
+    from apps.visuals import storage
+
+    ref, _izvor = credential_ref(route.provider, persona)
+    if ref is None:
+        raise LLMError("NO_PERSONA_KEY", persona.public_id if persona else "")
+    try:
+        key = resolve_secret(ref).strip()
+    except CredentialMissing as e:
+        raise LLMError("CREDENTIAL_MISSING", str(e)) from e
+
+    if not route.is_openai_compatible:
+        raise LLMError("UNSUPPORTED_PROVIDER", route.provider)
+    base = route.base_url or getattr(settings, "LLM_BASE_URLS", {}).get(route.provider)
+    if not base:
+        raise LLMError("NO_BASE_URL", route.provider)
+
+    try:
+        podaci = storage.get(asset.storage_key)
+    except Exception as e:  # noqa: BLE001 — storage ima svoju hijerarhiju grešaka
+        raise LLMError("STORAGE_READ", str(e)[:200]) from e
+
+    polja = {"model": route.model_key, "response_format": "json"}
+    jezik = (route.quota_json or {}).get("language")
+    if jezik:
+        polja["language"] = jezik
+    naziv = "klip" + storage.ALLOWED_MIME.get(asset.mime_type, ".bin")
+    data = _post_multipart(
+        f"{base.rstrip('/')}/audio/transcriptions",
+        {"Authorization": f"Bearer {key}"},
+        polja,
+        {"file": (naziv, podaci, asset.mime_type)},
+        route.timeout_seconds)
+    tekst = data.get("text", "") if isinstance(data, dict) else ""
+    sekunde = round((asset.duration_ms or 0) / 1000)
+    return (tekst, sekunde, 0, "stop")

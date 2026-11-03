@@ -28,6 +28,16 @@ ALLOWED_MIME = {
     "application/pdf": ".pdf",
     "text/html": ".html",
     "text/plain": ".txt",
+    # ADR-0125 — Veritas skida audio klipa radi transkripcije (Groq Whisper).
+    # Isto skladište, ista provera; AssetKind.AUDIO, ključ pod "veritas/klip/".
+    "audio/mpeg": ".mp3",
+    "audio/mp4": ".m4a",
+    "audio/aac": ".aac",
+    "audio/ogg": ".ogg",
+    "audio/webm": ".webm",
+    "audio/wav": ".wav",
+    "audio/x-wav": ".wav",
+    "audio/flac": ".flac",
 }
 
 
