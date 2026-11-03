@@ -83,7 +83,10 @@ class TestTranscribe:
         """Spoljna ruta uključena i ključ u okruženju — poziv pada na
         UNSUPPORTED_PROVIDER iz `_call_external_audio`, a `transcribe` to
         pretvara u LLM_EXTERNAL_DISABLED čija poruka nosi UNSUPPORTED_PROVIDER.
-        Ni tada nema izmišljenog teksta."""
+        Ni tada nema izmišljenog teksta.
+
+        Od ADR-0125 `_call_external_audio` ume OpenAI-kompatibilan audio
+        (Groq Whisper), pa „nepodržan” znači ruta koja NIJE openai-kompatibilna."""
         settings.LLM_EXTERNAL_ENABLED = True
         route = LLMRoute.objects.create(
             purpose=E.LLMPurpose.TRANSCRIBE.value,
@@ -91,6 +94,7 @@ class TestTranscribe:
             provider="anthropic",
             model_key="whisper-ish",
             priority=1,
+            is_openai_compatible=False,
             data_training_allowed=True,
         )
         monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-123")
