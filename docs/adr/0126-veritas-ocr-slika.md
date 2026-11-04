@@ -15,11 +15,16 @@ Besplatno, offline (ADR-0009), bez ključa, nula LLM troška za ekstrakciju. Jez
 `srp_latn+srp+eng` (latinica + ćirilica + engleski), uz rezervu na podrazumevani
 jezik ako neki model nije prisutan.
 
+**Pretprocesiranje (obavezno):** beli tekst na obojenoj podlozi (cest meme) daje
+prazan OCR na sirovoj slici. Zato probamo vise varijanti (sivi ton + prag/invert)
+i uzmemo onu sa najvise teksta: radi i za taman-na-svetlom i za svetao-na-boji.
+Dokazano na memeu sa belim tekstom na crvenoj podlozi: sirovo = prazno, prag+invert = pun tekst.
+
 Zašto ne vision LLM (ADR-0118): za jasne memeove Tesseract je dovoljan i besplatan;
 vision ostaje kao moguća nadogradnja za loše/fotografisane slike. OCR je čist
 EXTRACT korak — razumevanje (ironija, implikacije) radi `nalaz`, kao i do sada.
 
-**2. Tok (Slice 3.1).** `veritas_slika --url <URL>` → `slika.procitaj`:
+**2. Tok (Slice 3.1).** `veritas_slika --url <URL>` ILI `--fajl <putanja>` (realni slucaj: screenshot) → `slika.procitaj`:
 skine sliku (UA zbog Cloudflare-a — ADR-0125 lekcija; SSRF brana preko Libri
 `uvoz_web.proveri_bezbedan`) → Tesseract izvuče tekst → MediaAsset (kind=PHOTO,
 ključ `veritas/slika/<sha>.<ext>`, isto skladište ADR-0018) → `izlaz` izvuče
@@ -37,5 +42,5 @@ nalaze i opc. donese verdikt (`--proveri`).
 
 ## Rizik
 - Loš kvalitet/rukopis/fotka → slab OCR; tada je vision LLM (ADR-0118) nadogradnja.
-- `tesseract-ocr-srp` latinicu (`srp_latn`) pokriva zavisno od distribucije; ako
-  latinica slabo ide, dodaje se `tesseract-ocr-script-latn`.
+- Srpski modeli (`srp` + `srp_latn`) se povlace DIREKTNO u tessdata u Dockerfile-u
+  (apt `tesseract-ocr-srp` ne nosi uvek `srp_latn`); build pada glasno ako download padne.
