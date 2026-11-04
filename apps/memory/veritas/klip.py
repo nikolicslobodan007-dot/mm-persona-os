@@ -107,7 +107,7 @@ def _primer_suvo(url: str) -> dict:
     return {
         "transkript": ("Ovo je probni transkript u suvom režimu. Građani treba da "
                        "znaju da je sve pod kontrolom i da nema razloga za brigu."),
-        "izvor_url": izvor,
+        "izvor_url": url,
         "trajanje_ms": 12000,
         "asset_id": None,
         "provider": "suvo",
@@ -164,7 +164,7 @@ def transkribuj(izvor: str, *, persona=None, suvo: bool = False, je_fajl: bool =
     g = gateway.transcribe(asset, persona=persona)
     return {
         "transkript": g.text,
-        "izvor_url": url,
+        "izvor_url": izvor,
         "trajanje_ms": trajanje_ms,
         "asset_id": asset.public_id,
         "provider": g.provider,
