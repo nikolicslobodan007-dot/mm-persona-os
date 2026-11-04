@@ -13,3 +13,6 @@ media/
 
 # privremeni paketi iz Cowork sesije
 *.tar.gz
+
+# tajne van git-a (npr. YouTube kolačići za yt-dlp)
+secrets/

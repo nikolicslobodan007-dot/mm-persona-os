@@ -82,3 +82,17 @@ class TestPostMultipart:
         assert b'name="model"' in uhvaceno["telo"]
         assert b'filename="a.mp3"' in uhvaceno["telo"]
         assert b"BYTES" in uhvaceno["telo"]
+
+
+class TestCookies:
+    def test_bez_fajla_prazno(self, monkeypatch, tmp_path):
+        from apps.memory.veritas import klip
+        monkeypatch.setenv("YT_COOKIES_FILE", str(tmp_path / "nema.txt"))
+        assert klip._cookies_args() == []
+
+    def test_sa_fajlom(self, monkeypatch, tmp_path):
+        from apps.memory.veritas import klip
+        f = tmp_path / "c.txt"
+        f.write_text("cookie")
+        monkeypatch.setenv("YT_COOKIES_FILE", str(f))
+        assert klip._cookies_args() == ["--cookies", str(f)]
