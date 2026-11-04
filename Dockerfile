@@ -20,6 +20,11 @@ RUN apt-get update \
 # tessdata. Build ima otvoren internet; padne li preuzimanje, build pada glasno.
 RUN python -c "import urllib.request, glob, os; d=os.path.dirname(glob.glob('/usr/share/tesseract-ocr/*/tessdata/eng.traineddata')[0]); [urllib.request.urlretrieve('https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/'+l+'.traineddata', os.path.join(d, l+'.traineddata')) for l in ('srp','srp_latn')]"
 
+# ADR-0128 — Deno za yt-dlp n-challenge (YouTube). Bez JS runtime-a yt-dlp ne
+# reši n-zagonetku pa YouTube vrati samo storyboard sličice, bez audija.
+# Solver skripte yt-dlp povuče sam u radu (mreža je dozvoljena).
+RUN python -c "import urllib.request,zipfile,io,os; z=urllib.request.urlopen('https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip').read(); zipfile.ZipFile(io.BytesIO(z)).extractall('/usr/local/bin'); os.chmod('/usr/local/bin/deno', 0o755)"
+
 COPY pyproject.toml constraints.txt ./
 # Bez rezervnog spiska: ako instalacija zavisnosti ne uspe, build mora da padne
 # glasno, a ne da tiho napravi image bez polovine paketa.

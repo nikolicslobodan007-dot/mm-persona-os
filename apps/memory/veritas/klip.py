@@ -64,6 +64,24 @@ def _cookies_args() -> list[str]:
     return ["--cookies", put] if put and os.path.isfile(put) else []
 
 
+def _konvertuj(ulaz: str, radni: str) -> tuple[str, int]:
+    """Svedi dati audio/video fajl na 16 kHz mono mp3 (Whisper ulaz). (putanja, trajanje_ms)."""
+    izlaz = os.path.join(radni, "audio.mp3")
+    try:
+        subprocess.run(
+            [_alat("ffmpeg"), "-y", "-i", ulaz, "-ar", "16000", "-ac", "1",
+             "-b:a", "48k", izlaz],
+            capture_output=True, text=True, timeout=600, check=True)
+    except subprocess.SubprocessError as e:
+        raise KlipGreska("PRETVARANJE_PALO", str(e)[:300]) from e
+    vel = os.path.getsize(izlaz)
+    if vel > _MAKS_BAJTOVA:
+        raise KlipGreska(
+            "AUDIO_PREVELIK",
+            f"{vel // (1024 * 1024)} MB > {_MAKS_BAJTOVA // (1024 * 1024)} MB — klip je predug")
+    return izlaz, _trajanje_ms(izlaz)
+
+
 def _skini_audio(url: str, radni: str) -> tuple[str, int]:
     """Skine audio sa URL-a i svede ga na 16 kHz mono mp3. Vrati (putanja, trajanje_ms)."""
     if not url.startswith(_DOZVOLJENE_SEME):
@@ -82,29 +100,14 @@ def _skini_audio(url: str, radni: str) -> tuple[str, int]:
     skinuti = [f for f in os.listdir(radni) if f.startswith("sirovo.")]
     if not skinuti:
         raise KlipGreska("NEMA_AUDIJA", url[:80])
-    ulaz = os.path.join(radni, skinuti[0])
-    izlaz = os.path.join(radni, "audio.mp3")
-    try:
-        subprocess.run(
-            [_alat("ffmpeg"), "-y", "-i", ulaz, "-ar", "16000", "-ac", "1",
-             "-b:a", "48k", izlaz],
-            capture_output=True, text=True, timeout=600, check=True)
-    except subprocess.SubprocessError as e:
-        raise KlipGreska("PRETVARANJE_PALO", str(e)[:300]) from e
-
-    vel = os.path.getsize(izlaz)
-    if vel > _MAKS_BAJTOVA:
-        raise KlipGreska(
-            "AUDIO_PREVELIK",
-            f"{vel // (1024 * 1024)} MB > {_MAKS_BAJTOVA // (1024 * 1024)} MB — klip je predug")
-    return izlaz, _trajanje_ms(izlaz)
+    return _konvertuj(os.path.join(radni, skinuti[0]), radni)
 
 
 def _primer_suvo(url: str) -> dict:
     return {
         "transkript": ("Ovo je probni transkript u suvom režimu. Građani treba da "
                        "znaju da je sve pod kontrolom i da nema razloga za brigu."),
-        "izvor_url": url,
+        "izvor_url": izvor,
         "trajanje_ms": 12000,
         "asset_id": None,
         "provider": "suvo",
@@ -113,13 +116,14 @@ def _primer_suvo(url: str) -> dict:
     }
 
 
-def transkribuj(url: str, *, persona=None, suvo: bool = False) -> dict:
-    """URL → transkript. Vraća dict sa transkriptom, izvorom i merom troška.
+def transkribuj(izvor: str, *, persona=None, suvo: bool = False, je_fajl: bool = False) -> dict:
+    """URL ili lokalni fajl → transkript. Vraća dict sa transkriptom, izvorom i cenom.
 
-    Bez `suvo`: skine audio, upiše `MediaAsset`, pozove Gateway (Groq Whisper).
+    `je_fajl=True`: `izvor` je lokalni audio/video fajl (ne skida se) — ffmpeg ga
+    svede i preda Whisper-u. Korisno kad YouTube blokira skidanje sa servera.
     """
     if suvo:
-        return _primer_suvo(url)
+        return _primer_suvo(izvor)
 
     from apps.llm_gateway import gateway
     from apps.visuals import storage
@@ -128,7 +132,12 @@ def transkribuj(url: str, *, persona=None, suvo: bool = False) -> dict:
 
     radni = tempfile.mkdtemp(prefix="veritas-klip-")
     try:
-        put_audio, trajanje_ms = _skini_audio(url, radni)
+        if je_fajl:
+            if not os.path.isfile(izvor):
+                raise KlipGreska("NEMA_FAJLA", izvor[:120])
+            put_audio, trajanje_ms = _konvertuj(izvor, radni)
+        else:
+            put_audio, trajanje_ms = _skini_audio(izvor, radni)
         with open(put_audio, "rb") as fh:
             podaci = fh.read()
     finally:

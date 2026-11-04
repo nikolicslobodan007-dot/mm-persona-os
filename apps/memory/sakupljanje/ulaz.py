@@ -38,8 +38,8 @@ def procitaj(vrsta: str, vrednost: str, *, suvo: bool = False) -> dict:
         from apps.memory.veritas import slika
         r = slika.procitaj(vrednost, suvo=suvo, je_fajl=(vrsta == "fajl"))
         return {"tekst": r["tekst"], "naslov": vrednost, "izvor": vrednost, "vrsta": vrsta}
-    if vrsta == "klip":
+    if vrsta in ("klip", "klip_fajl"):
         from apps.memory.veritas import klip
-        r = klip.transkribuj(vrednost, suvo=suvo)
-        return {"tekst": r["transkript"], "naslov": vrednost, "izvor": vrednost, "vrsta": "klip"}
+        r = klip.transkribuj(vrednost, suvo=suvo, je_fajl=(vrsta == "klip_fajl"))
+        return {"tekst": r["transkript"], "naslov": vrednost, "izvor": vrednost, "vrsta": vrsta}
     raise UlazGreska(f"nepoznata vrsta ulaza: {vrsta}")
