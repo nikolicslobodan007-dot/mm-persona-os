@@ -1,9 +1,13 @@
 """manage.py harvest_agency — destiluje agency-agents .md definicije u srpske veštine.
 
 Čita .md definicije specijalista (npr. korpus/izvori/agency-agents-security/*.md),
-svaku provuče kroz F7 Gateway (purpose EXTRACT) i izvuče do N veština u našem formatu
-{ime, koraci, napomene, pouzdanost} — na srpskom (latinica), NAŠ opis postupka, ne prepis.
-Rezultat upisuje u korpus/vestine/<izlaz>.json i ispisuje cenu (tokeni, €¢) po fajlu i zbir.
+svaku provuče kroz destilator (F7 Gateway, purpose EXTRACT) i izvuče do N veština
+u našem formatu {ime, koraci, napomene, pouzdanost} — na srpskom (latinica), NAŠ
+opis postupka, ne prepis. Rezultat upisuje u korpus/vestine/<izlaz>.json i ispisuje
+cenu (tokeni, €¢) po fajlu i zbir.
+
+Jezgro destilacije živi u `apps.memory.sakupljanje.destilator` (deli ga sakupljač
+`sakupi`); ovde ostaje čitanje .md (frontmatter) i upis u korpus.
 
 Primeri:
   python manage.py harvest_agency --divizija security
@@ -11,10 +15,6 @@ Primeri:
   python manage.py harvest_agency --izvor-dir korpus/izvori/agency-agents-security \
       --izlaz korpus/vestine/agency-agents-security.json --maks-po-fajlu 4
   python manage.py harvest_agency --divizija security --suvo   # bez troška (lažni LLM)
-
-`--suvo` koristi ugrađeni lažni LLM (nula poziva, nula para) — za probu toka i CI.
-Pravi rad zove Gateway, pa staje pod njegove dozvole/rutu/zapis (ADR-0086).
-Ako fajl da 0 veština, pokušava još jednom (LLM varira) pre nego što odustane.
 """
 
 from __future__ import annotations
@@ -27,34 +27,7 @@ import re
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-_CIRILICA = re.compile(r"[Ѐ-ӿ]")
-_MAKS_DUZINA_KORAKA = 320  # duži „korak" je verovatno prepis, ne naš sažetak
-
-_SISTEM = (
-    "Ti si precizan bibliotekar veština u srpskoj AI korporaciji. Iz opisa jednog "
-    "specijaliste izvlačiš konkretne, primenljive radne postupke. Vraćaš ISKLJUČIVO "
-    "traženi JSON niz, na srpskom (latinica sa dijakritikom), bez ijedne reči van JSON-a."
-)
-
-
-def _prompt(naslov: str, opis: str, telo: str, maks: int) -> str:
-    return (
-        f"Specijalista: {naslov}\n"
-        f"Kratak opis: {opis}\n\n"
-        "Iz sledećeg opisa izvuci najviše "
-        f"{maks} konkretne veštine (radna postupka) koje agent može da primeni.\n"
-        "Za svaku veštinu vrati objekat sa poljima:\n"
-        '  "ime": kratak naslov veštine na srpskom (latinica),\n'
-        '  "koraci": niz od 2 do 6 kratkih koraka, svaki jedna rečenica, NAŠIM rečima '
-        "(sažetak postupka, NE prepis originala),\n"
-        '  "pouzdanost": broj između 0 i 1.\n'
-        "Pravila: sve na srpskom latinicom; bez ćirilice; bez engleskih rečenica; "
-        "koraci kratki i jasni; ne prepisuj rečenice iz originala već ih sažmi svojim rečima. "
-        "Vrati ISKLJUČIVO JSON niz tih objekata, ništa drugo.\n\n"
-        "--- OPIS ---\n"
-        f"{telo}\n"
-        "--- KRAJ ---"
-    )
+from apps.memory.sakupljanje import destilator
 
 
 def _sk_frontmatter(tekst: str) -> tuple[str, str, str]:
@@ -70,58 +43,6 @@ def _sk_frontmatter(tekst: str) -> tuple[str, str, str]:
             elif red.lower().startswith("description:"):
                 desc = red.split(":", 1)[1].strip().strip('"')
     return name, desc, telo.strip()
-
-
-def _parsiraj(sirovo: str, izvor_opis: str, maks: int) -> list[dict]:
-    s = sirovo.strip()
-    if s.startswith("```"):
-        s = re.sub(r"^```[a-zA-Z]*\s*", "", s)
-        s = re.sub(r"\s*```$", "", s).strip()
-    i, j = s.find("["), s.rfind("]")
-    if i == -1 or j == -1:
-        return []
-    try:
-        podaci = json.loads(s[i:j + 1])
-    except json.JSONDecodeError:
-        return []
-    out: list[dict] = []
-    nap = f"Destilovano iz agency-agents/{izvor_opis} (MIT) — naš opis postupka, ne prepis."
-    for v in podaci:
-        if not isinstance(v, dict):
-            continue
-        ime = str(v.get("ime", "")).strip()
-        koraci = [str(k).strip() for k in v.get("koraci", []) if str(k).strip()]
-        if not ime or len(koraci) < 2:
-            continue
-        if _CIRILICA.search(ime) or any(_CIRILICA.search(k) for k in koraci):
-            continue
-        if any(len(k) > _MAKS_DUZINA_KORAKA for k in koraci):
-            continue
-        try:
-            pouzdanost = float(v.get("pouzdanost", 0.7))
-        except (TypeError, ValueError):
-            pouzdanost = 0.7
-        pouzdanost = min(max(pouzdanost, 0.0), 1.0)
-        out.append({"ime": ime, "koraci": koraci[:6], "napomene": nap,
-                    "pouzdanost": round(pouzdanost, 2)})
-        if len(out) >= maks:
-            break
-    return out
-
-
-def _lazni_llm(_sistem, prompt):
-    """Suvi režim: deterministički odgovor, nula poziva ka Gateway-u."""
-    naslov = "Primer veštine iz opisa"
-    m = re.search(r"Specijalista:\s*(.+)", prompt)
-    if m:
-        naslov = "Osnovni postupak — " + m.group(1).strip()[:40]
-    return json.dumps([{
-        "ime": naslov,
-        "koraci": ["Pročitaj zahtev i razdvoji šta je hitno od šta je složeno.",
-                   "Primeni pravilo struke i zabeleži šta si uradio.",
-                   "Proveri rezultat pre nego što ga predaš dalje."],
-        "pouzdanost": 0.6,
-    }], ensure_ascii=False)
 
 
 class Command(BaseCommand):
@@ -140,9 +61,9 @@ class Command(BaseCommand):
         baza = getattr(settings, "BASE_DIR", os.getcwd())
         maks = o["maks_po_fajlu"]
         suvo = o.get("suvo")
-        llm = self._napravi_llm(suvo)
+        llm = destilator.napravi_llm(suvo)
 
-        poslovi = self._poslovi(baza, o)  # [(izvor_abs, izlaz_abs, div_ime), ...]
+        poslovi = self._poslovi(baza, o)
 
         uk_vest = uk_ul = uk_iz = uk_cena = 0
         for izvor_abs, izlaz_abs, div_ime in poslovi:
@@ -161,19 +82,6 @@ class Command(BaseCommand):
                 self.stdout.write(
                     f"CENA UKUPNO: ulaz {uk_ul} tok, izlaz {uk_iz} tok, "
                     f"{uk_cena}¢ ({uk_cena / 100:.2f} €).")
-
-    def _napravi_llm(self, suvo):
-        if suvo:
-            return _lazni_llm
-        from apps.llm_gateway import gateway
-        from common import enums as E
-
-        def llm(sistem, prompt):
-            g = gateway.generate(E.LLMPurpose.EXTRACT, sistem, prompt)
-            llm.last = g  # type: ignore[attr-defined]
-            return g.text
-        llm.last = None  # type: ignore[attr-defined]
-        return llm
 
     def _poslovi(self, baza, o):
         if o.get("sve"):
@@ -214,23 +122,17 @@ class Command(BaseCommand):
         for f in fajlovi:
             tekst = open(os.path.join(izvor_abs, f), encoding="utf-8").read()
             name, desc, telo = _sk_frontmatter(tekst)
-            prompt = _prompt(name or f, desc, telo, maks)
-            izvor_opis = f"{div_ime}/{f}"
-            vestine, g = self._jedan(llm, prompt, izvor_opis, maks, suvo)
-            ul, iz, cena = self._tokeni(g)
-            label = f"[{g.provider}/{g.model}]" if g is not None else "[suvo]"
-            if not vestine and not suvo:  # retry jednom — LLM varira
-                vestine, g2 = self._jedan(llm, prompt, izvor_opis, maks, suvo)
-                u2, i2, c2 = self._tokeni(g2)
-                ul, iz, cena = ul + u2, iz + i2, cena + c2
-                if g2 is not None:
-                    label = f"[{g2.provider}/{g2.model}]"
-            sve.extend(vestine)
-            zbir_ul += ul
-            zbir_iz += iz
-            zbir_cena += cena
-            dij = "  [suvo]" if suvo else f"  {label} ul {ul} / izl {iz} tok · {cena}¢"
-            self.stdout.write(f"{f:48} → {len(vestine)} veština{dij}")
+            nap = (f"Destilovano iz agency-agents/{div_ime}/{f} (MIT) — "
+                   "naš opis postupka, ne prepis.")
+            r = destilator.destiluj(telo, naslov=name or f, opis=desc, napomena=nap,
+                                    maks=maks, llm=llm, suvo=suvo)
+            sve.extend(r["vestine"])
+            zbir_ul += r["ul"]
+            zbir_iz += r["iz"]
+            zbir_cena += r["cena"]
+            dij = "  [suvo]" if suvo else (
+                f"  [{r['etiketa']}] ul {r['ul']} / izl {r['iz']} tok · {r['cena']}¢")
+            self.stdout.write(f"{f:48} → {len(r['vestine'])} veština{dij}")
 
         os.makedirs(os.path.dirname(izlaz_abs), exist_ok=True)
         with open(izlaz_abs, "w", encoding="utf-8") as fh:
@@ -242,13 +144,3 @@ class Command(BaseCommand):
                 f"CENA: ulaz {zbir_ul} tok, izlaz {zbir_iz} tok, {zbir_cena}¢ "
                 f"({zbir_cena / 100:.2f} €) za {len(fajlovi)} definicija.")
         return len(sve), zbir_ul, zbir_iz, zbir_cena
-
-    def _tokeni(self, g):
-        if g is None:
-            return 0, 0, 0
-        return (g.input_tokens or 0), (g.output_tokens or 0), (g.amount_eur_cents or 0)
-
-    def _jedan(self, llm, prompt, izvor_opis, maks, suvo):
-        sirovo = llm(_SISTEM, prompt)
-        g = None if suvo else getattr(llm, "last", None)
-        return _parsiraj(sirovo, izvor_opis, maks), g
