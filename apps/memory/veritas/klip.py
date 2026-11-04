@@ -49,6 +49,21 @@ def _trajanje_ms(put_fajla: str) -> int:
         return 0
 
 
+def _cookies_args() -> list[str]:
+    """yt-dlp `--cookies <fajl>` ako postoji — YouTube sa servera traži autentifikaciju
+    („Sign in to confirm you're not a bot"). Putanja: env YT_COOKIES_FILE ili
+    <BASE_DIR>/secrets/yt-cookies.txt. Fajl je van git-a (.gitignore `secrets/`);
+    korisnik ga izveze iz browsera (gde je ulogovan) i stavi na server."""
+    put = os.environ.get("YT_COOKIES_FILE", "").strip()
+    if not put:
+        try:
+            from django.conf import settings
+            put = os.path.join(getattr(settings, "BASE_DIR", ""), "secrets", "yt-cookies.txt")
+        except Exception:  # noqa: BLE001 — bez Django konteksta nema podrazumevane putanje
+            put = ""
+    return ["--cookies", put] if put and os.path.isfile(put) else []
+
+
 def _skini_audio(url: str, radni: str) -> tuple[str, int]:
     """Skine audio sa URL-a i svede ga na 16 kHz mono mp3. Vrati (putanja, trajanje_ms)."""
     if not url.startswith(_DOZVOLJENE_SEME):
@@ -57,7 +72,7 @@ def _skini_audio(url: str, radni: str) -> tuple[str, int]:
     try:
         subprocess.run(
             [_alat("yt-dlp"), "-x", "--no-playlist", "--no-warnings",
-             "-o", sirovi, url],
+             *_cookies_args(), "-o", sirovi, url],
             capture_output=True, text=True, timeout=600, check=True)
     except subprocess.TimeoutExpired as e:
         raise KlipGreska("SKIDANJE_ISTEKLO", url[:80]) from e
