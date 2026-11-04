@@ -32,6 +32,10 @@ dependencies = [
     # transkripcije. yt-dlp je NAMERNO van constraints.txt — ekstraktori
     # platformi trule iz nedelje u nedelju, pa mora da pliva na najnoviju.
     "yt-dlp>=2025.1",
+    # ADR-0126: Veritas čita tekst sa slike (meme/screenshot) — Tesseract OCR
+    # (sistemski paketi u Dockerfile-u) + tanak Python omotač i Pillow za sliku.
+    "pytesseract>=0.3.10",
+    "pillow>=10.0",
 ]
 
 [project.optional-dependencies]
