@@ -26,7 +26,8 @@ from apps.memory.sakupljanje import destilator, ulaz
 
 _MAKS_TEKST = 12000  # ulaz u LLM — duže se seče (cena/tokeni)
 
-_ULAZI = (("url", "web"), ("slika", "slika"), ("fajl", "fajl"), ("klip_url", "klip"))
+_ULAZI = (("url", "web"), ("slika", "slika"), ("fajl", "fajl"),
+          ("klip_url", "klip"), ("klip_fajl", "klip_fajl"))
 
 
 class Command(BaseCommand):
@@ -37,6 +38,8 @@ class Command(BaseCommand):
         p.add_argument("--slika", help="URL slike (OCR).")
         p.add_argument("--fajl", help="Putanja do lokalne slike (OCR).")
         p.add_argument("--klip-url", help="URL videa/audija (YouTube…, ASR).")
+        p.add_argument("--klip-fajl",
+                       help="Putanja do lokalnog video/audio fajla (ručno skinut YT).")
         p.add_argument("--maks", type=int, default=8, help="Najviše veština.")
         p.add_argument("--izlaz", help="Upiši veštine u ovaj .json (za kasniji `vestina` uvoz).")
         p.add_argument("--suvo", action="store_true", help="Bez mreže i troška (proba).")
@@ -44,7 +47,8 @@ class Command(BaseCommand):
     def handle(self, *args, **o):
         dati = [(arg, vrsta) for arg, vrsta in _ULAZI if o.get(arg)]
         if len(dati) != 1:
-            raise CommandError("Daj TAČNO jedan ulaz: --url, --slika, --fajl ILI --klip-url.")
+            raise CommandError(
+                "Daj TAČNO jedan ulaz: --url, --slika, --fajl, --klip-url ILI --klip-fajl.")
         arg, vrsta = dati[0]
         vrednost = o[arg]
 

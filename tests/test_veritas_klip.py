@@ -96,3 +96,12 @@ class TestCookies:
         f.write_text("cookie")
         monkeypatch.setenv("YT_COOKIES_FILE", str(f))
         assert klip._cookies_args() == ["--cookies", str(f)]
+
+
+class TestFajl:
+    def test_je_fajl_nema_fajla(self):
+        import pytest
+
+        from apps.memory.veritas import klip
+        with pytest.raises(klip.KlipGreska):
+            klip.transkribuj("/ne/postoji/x.mp4", je_fajl=True)

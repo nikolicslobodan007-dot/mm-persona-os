@@ -47,6 +47,10 @@ class TestUlaz:
         r = ulaz.procitaj("klip", "https://youtu.be/x", suvo=True)
         assert r["vrsta"] == "klip" and r["tekst"].strip()
 
+    def test_klip_fajl_suvo(self):
+        r = ulaz.procitaj("klip_fajl", "/x/y.mp4", suvo=True)
+        assert r["vrsta"] == "klip_fajl" and r["tekst"].strip()
+
     def test_nepoznata_vrsta(self):
         import pytest
         with pytest.raises(ulaz.UlazGreska):
