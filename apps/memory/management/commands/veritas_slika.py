@@ -1,18 +1,19 @@
-"""manage.py veritas_slika — URL slike → OCR → nalazi (→ verdikt). Slice 3.1.
+"""manage.py veritas_slika — URL/fajl slike → OCR → nalazi (→ verdikt). Slice 3.1.
 
-    veritas_slika --url https://...                 # OCR tekst + nalazi (tri sloja)
-    veritas_slika --url https://... --proveri        # + verdikt za svaku tvrdnju
-    veritas_slika --url https://... --suvo           # bez mreže i troška
+    veritas_slika --url https://...                  # slika sa veba
+    veritas_slika --fajl /putanja/do/slike.jpg       # lokalna slika (screenshot)
+    veritas_slika --url ... --proveri --maks-tvrdnji 2
+    veritas_slika --url ... --suvo                    # bez mreže i troška
 
-Za memeove/screenshotove sa ugoranim tekstom: Tesseract izvuče tekst, pa isti
-`izlaz` kao `veritas_klip` izvuče nalaze (doslovno / implicirano / tehnika) i
-opc. donese verdikt. Sarkazam/ironija se vide kad doslovno i implicirano idu
-u suprotnim smerovima.
+Za memeove/screenshotove sa ugoranim tekstom: Tesseract izvuče tekst (uz
+pretprocesiranje za beli tekst na boji), pa isti `izlaz` kao `veritas_klip`
+izvuče nalaze (doslovno / implicirano / tehnika) i opc. donese verdikt.
+Daj TAČNO jedan ulaz: `--url` ILI `--fajl`.
 """
 
 from __future__ import annotations
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from apps.memory.veritas import izlaz, slika
 
@@ -21,7 +22,8 @@ class Command(BaseCommand):
     help = "Veritas: pročita tekst sa slike (OCR), izvuče nalaze i (opc.) donese verdikt."
 
     def add_arguments(self, p):
-        p.add_argument("--url", required=True, help="URL slike (meme, screenshot, foto…).")
+        p.add_argument("--url", help="URL slike (meme, screenshot, foto…).")
+        p.add_argument("--fajl", help="Putanja do lokalne slike (umesto --url).")
         p.add_argument("--maks-nalaza", type=int, default=6, help="Najviše izdvojenih nalaza.")
         p.add_argument("--proveri", action="store_true",
                        help="Za svaku tvrdnju donesi verdikt (pretraga + izvori).")
@@ -32,8 +34,13 @@ class Command(BaseCommand):
         p.add_argument("--suvo", action="store_true", help="Bez mreže i troška (proba).")
 
     def handle(self, *args, **o):
+        if bool(o.get("url")) == bool(o.get("fajl")):
+            raise CommandError("Daj TAČNO jedan ulaz: --url ILI --fajl.")
+        izvor = o.get("fajl") or o.get("url")
+        je_fajl = bool(o.get("fajl"))
+
         try:
-            rez = slika.procitaj(o["url"], suvo=o["suvo"])
+            rez = slika.procitaj(izvor, suvo=o["suvo"], je_fajl=je_fajl)
         except slika.SlikaGreska as e:
             self.stderr.write(self.style.ERROR(f"slika pala: {e}"))
             return

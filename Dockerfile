@@ -12,8 +12,13 @@ WORKDIR /app
 # radnog primerka i polazista racuna `git diff`. Svoj differ ne pisemo.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends build-essential libpq-dev git \
- ffmpeg tesseract-ocr tesseract-ocr-srp \
+ ffmpeg tesseract-ocr \
  && rm -rf /var/lib/apt/lists/*
+
+# ADR-0126 — srpski OCR modeli (latinica + ćirilica). apt `tesseract-ocr-srp`
+# ne nosi uvek `srp_latn`, a memeovi su latinica; zato ih povlačimo direktno u
+# tessdata. Build ima otvoren internet; padne li preuzimanje, build pada glasno.
+RUN python -c "import urllib.request, glob, os; d=os.path.dirname(glob.glob('/usr/share/tesseract-ocr/*/tessdata/eng.traineddata')[0]); [urllib.request.urlretrieve('https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/'+l+'.traineddata', os.path.join(d, l+'.traineddata')) for l in ('srp','srp_latn')]"
 
 COPY pyproject.toml constraints.txt ./
 # Bez rezervnog spiska: ako instalacija zavisnosti ne uspe, build mora da padne
