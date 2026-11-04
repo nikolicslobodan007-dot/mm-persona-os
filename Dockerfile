@@ -12,7 +12,7 @@ WORKDIR /app
 # radnog primerka i polazista racuna `git diff`. Svoj differ ne pisemo.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends build-essential libpq-dev git \
- ffmpeg \
+ ffmpeg tesseract-ocr tesseract-ocr-srp \
  && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml constraints.txt ./
