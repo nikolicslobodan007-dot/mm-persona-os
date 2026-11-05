@@ -105,3 +105,6 @@ class TestFajl:
         from apps.memory.veritas import klip
         with pytest.raises(klip.KlipGreska):
             klip.transkribuj("/ne/postoji/x.mp4", je_fajl=True)
+
+    def test_frejmovi_ocr_bogus_vraca_prazno(self, tmp_path):
+        assert klip._frejmovi_ocr("/ne/postoji/x.mp4", str(tmp_path)) == ""

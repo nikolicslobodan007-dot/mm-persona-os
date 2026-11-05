@@ -103,6 +103,38 @@ def _skini_audio(url: str, radni: str) -> tuple[str, int]:
     return _konvertuj(os.path.join(radni, skinuti[0]), radni)
 
 
+def _frejmovi_ocr(video: str, radni: str, *, interval: int = 3, maks: int = 15) -> str:
+    """Izvuci frejmove (ffmpeg) i OCR-uj tekst sa ekrana: kod, slajd, UI.
+
+    Vizuelni tutorijali (kod/UI uz muziku, bez govora) ASR ne cuje — vestina je
+    na ekranu. Uzmemo frejm na ~`interval` s (do `maks`), Tesseract procita, pa
+    spojimo jedinstvene redove. Best-effort: ako padne, vrati prazno (ostaje ASR).
+    """
+    cilj = os.path.join(radni, "frejm-%03d.png")
+    try:
+        subprocess.run(
+            [_alat("ffmpeg"), "-y", "-i", video, "-vf", f"fps=1/{interval}",
+             "-frames:v", str(maks), cilj],
+            capture_output=True, text=True, timeout=300, check=True)
+    except (subprocess.SubprocessError, KlipGreska):
+        return ""
+
+    from apps.memory.veritas import slika
+
+    vidjeno: list[str] = []
+    for ime in sorted(f for f in os.listdir(radni) if f.startswith("frejm-")):
+        try:
+            with open(os.path.join(radni, ime), "rb") as fh:
+                tekst, _ = slika._ocr(fh.read())
+        except (slika.SlikaGreska, OSError):
+            continue
+        for red in tekst.splitlines():
+            r = red.strip()
+            if len(r) >= 3 and r not in vidjeno:
+                vidjeno.append(r)
+    return "\n".join(vidjeno)
+
+
 def _primer_suvo(url: str) -> dict:
     return {
         "transkript": ("Ovo je probni transkript u suvom režimu. Građani treba da "
@@ -136,8 +168,10 @@ def transkribuj(izvor: str, *, persona=None, suvo: bool = False, je_fajl: bool =
             if not os.path.isfile(izvor):
                 raise KlipGreska("NEMA_FAJLA", izvor[:120])
             put_audio, trajanje_ms = _konvertuj(izvor, radni)
+            ekran = _frejmovi_ocr(izvor, radni)
         else:
             put_audio, trajanje_ms = _skini_audio(izvor, radni)
+            ekran = ""
         with open(put_audio, "rb") as fh:
             podaci = fh.read()
     finally:
@@ -162,8 +196,11 @@ def transkribuj(izvor: str, *, persona=None, suvo: bool = False, je_fajl: bool =
     )
 
     g = gateway.transcribe(asset, persona=persona)
+    transkript = g.text
+    if ekran:
+        transkript = f"{transkript}\n\n[TEKST SA EKRANA]\n{ekran}"
     return {
-        "transkript": g.text,
+        "transkript": transkript,
         "izvor_url": izvor,
         "trajanje_ms": trajanje_ms,
         "asset_id": asset.public_id,
