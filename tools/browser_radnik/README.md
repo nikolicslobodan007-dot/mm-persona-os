@@ -23,11 +23,22 @@ Danas živi na PC-u. Kad farma servera proradi, seli se tamo nepromenjen.
 Otvori se browser — prijaviš se na Facebook (i YouTube ako hoćeš), vratiš se u
 terminal i pritisneš Enter. Prijava se pamti u `.profil/`.
 
-## Upotreba
+## Jedan snimak
 
     python radnik.py uzmi "https://www.facebook.com/reel/..."            # samo skine u ./preuzeto/
     python radnik.py uzmi "https://www.facebook.com/reel/..." --posalji  # + server + sakupi
-    python radnik.py uzmi "<URL>" --maks 8 --posalji                     # najviše 8 veština
+
+## Cela kolekcija / kanal / stranica
+
+Daš jedan link (sačuvana kolekcija, stranica ili kanal). Radnik sam proskroluje,
+nabroji sve snimke i svaki provuče:
+
+    python radnik.py kolekcija "<URL>"                       # nabroji i skine (do 10)
+    python radnik.py kolekcija "<URL>" --najvise 3           # probaj na 3
+    python radnik.py kolekcija "<URL>" --najvise 20 --posalji  # svih 20 + sakupi
+
+`--najvise` ograničava broj snimaka; `--maks` broj veština po snimku. Snimci koji
+su već u `./preuzeto/` se preskaču, pa možeš bezbedno da pokreneš ponovo.
 
 ## Server (po potrebi menja preko promenljivih okruženja)
 
