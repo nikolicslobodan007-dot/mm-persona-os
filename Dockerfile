@@ -49,4 +49,11 @@ RUN python -c "from fastembed import TextEmbedding; TextEmbedding('sentence-tran
 RUN python -m venv /opt/aider \
  && /opt/aider/bin/pip install --no-cache-dir aider-chat==0.86.2
 
+# Lokalni Whisper (ASR bez spoljnog provajdera) u izolovanom venv-u — kao aider.
+# faster-whisper nosi ctranslate2/av/onnxruntime; u svom kavezu ne dira app ni
+# constraints.txt. Model se peče u sliku, pa runtime radi bez mreže.
+RUN python -m venv /opt/whisper \
+ && /opt/whisper/bin/pip install --no-cache-dir faster-whisper==1.0.3
+RUN /opt/whisper/bin/python -c "from faster_whisper import WhisperModel; WhisperModel('small', device='cpu', compute_type='int8', download_root='/opt/whisper-models')"
+
 COPY . .

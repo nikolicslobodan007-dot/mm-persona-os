@@ -41,6 +41,7 @@ from common import enums as E
 
 LOCAL_PROVIDER = "local"
 LOCAL_MODEL = "template-v1"
+LOCAL_ASR_PROVIDER = "local_whisper"  # lokalni Whisper (faster-whisper), bez mreže
 
 # ADR-0088 — detalj greske ide u dnevnik, nikada u bazu. `LLMError.detail`
 # nosi ispis tudjeg pokretaca (ADR-0086); u `fallbacks` i `PromptRecord`
@@ -482,12 +483,17 @@ def transcribe(asset, *, persona=None, run=None, context_pack=None,
 
     for route in spoljne_rute:
         t0 = time.monotonic()
-        why = _external_allowed(route, persona)
-        if why:
-            fallbacks.append(f"{route.provider}/{route.model_key}:{why}")
-            continue
+        lokalni = route.provider == LOCAL_ASR_PROVIDER
+        if not lokalni:
+            why = _external_allowed(route, persona)
+            if why:
+                fallbacks.append(f"{route.provider}/{route.model_key}:{why}")
+                continue
         try:
-            text, tin, tout, finish = _call_external_audio(route, asset, persona)
+            if lokalni:
+                text, tin, tout, finish = _transcribe_lokalno(route, asset)
+            else:
+                text, tin, tout, finish = _call_external_audio(route, asset, persona)
             if not text.strip():
                 raise LLMError("EMPTY_RESPONSE")
         except LLMError as e:
@@ -499,10 +505,28 @@ def transcribe(asset, *, persona=None, run=None, context_pack=None,
         cents = _cost_cents(route, tin, tout)
         rec = _record(route, purpose, system, prompt_marker, text, persona, run,
                       context_pack, now, t0, finish=finish, tin=tin, tout=tout, cents=cents,
-                      external=True)
+                      external=not lokalni)
         return Generation(text.strip(), route.provider, route.model_key, rec, tin, tout,
                           cents, fallbacks)
     raise LLMError("LLM_EXTERNAL_DISABLED", "; ".join(fallbacks))
+
+
+def _transcribe_lokalno(route: LLMRoute, asset) -> tuple[str, int, int, str]:
+    """Lokalni Whisper (izolovan venv) — bez mreže, bez ključa, bez troška."""
+    from apps.llm_gateway import whisper_local
+    from apps.visuals import storage
+
+    try:
+        podaci = storage.get(asset.storage_key)
+    except Exception as e:  # noqa: BLE001 — storage ima svoju hijerarhiju grešaka
+        raise LLMError("STORAGE_READ", str(e)[:200]) from e
+    try:
+        tekst = whisper_local.transkribuj(
+            podaci, model=route.model_key, jezik=(route.quota_json or {}).get("language"))
+    except Exception as e:  # noqa: BLE001 — lokalni ASR padne → greška, pa fallback
+        raise LLMError("WHISPER_LOKALNI", str(e)[:300]) from e
+    sekunde = round((asset.duration_ms or 0) / 1000)
+    return (tekst, sekunde, 0, "stop")
 
 
 def _call_external_audio(route: LLMRoute, asset, persona=None) -> tuple[str, int, int, str]:
