@@ -108,3 +108,6 @@ class TestFajl:
 
     def test_frejmovi_ocr_bogus_vraca_prazno(self, tmp_path):
         assert klip._frejmovi_ocr("/ne/postoji/x.mp4", str(tmp_path)) == ""
+
+    def test_frejmovi_vizija_bogus_vraca_prazno(self, tmp_path):
+        assert klip._frejmovi_vizija("/ne/postoji/x.mp4", str(tmp_path)) == ""

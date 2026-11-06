@@ -135,6 +135,64 @@ def _frejmovi_ocr(video: str, radni: str, *, interval: int = 3, maks: int = 15) 
     return "\n".join(vidjeno)
 
 
+_VIZIJA_SISTEM = (
+    "Gledaš frejmove iz video tutorijala. Ispiši DOSLOVNO sav tekst, kod i korake "
+    "koji se vide na ekranu: komande, nazive alata, delove koda, liste koraka. Na "
+    "kraju jednom rečenicom reci šta tutorijal demonstrira. Ne izmišljaj; prazan "
+    "frejm preskoči."
+)
+
+
+def _frejmovi_vizija(video: str, radni: str, *, persona=None, maks: int = 5) -> str:
+    """Nekoliko frejmova → multimodalni model (gateway, ADR-0118) čita ekran.
+
+    Robusnije od Tesseract-a za sitan/stilizovan tekst u videu (kod, UI, slajdovi).
+    Best-effort: ako ffmpeg padne, spoljni model nije dostupan ili poziv padne —
+    vrati prazno, pa pozivalac padne na Tesseract OCR.
+    """
+    cilj = os.path.join(radni, "vframe-%03d.png")
+    try:
+        subprocess.run(
+            [_alat("ffmpeg"), "-y", "-i", video, "-vf", "fps=1/4",
+             "-frames:v", str(maks), cilj],
+            capture_output=True, text=True, timeout=300, check=True)
+    except (subprocess.SubprocessError, KlipGreska):
+        return ""
+
+    from apps.llm_gateway import gateway
+    from apps.visuals import storage
+    from apps.visuals.models import MediaAsset
+    from common import enums as E
+
+    media = []
+    for ime in sorted(f for f in os.listdir(radni) if f.startswith("vframe-")):
+        try:
+            with open(os.path.join(radni, ime), "rb") as fh:
+                podaci = fh.read()
+        except OSError:
+            continue
+        sha = hashlib.sha256(podaci).hexdigest()
+        kljuc = f"veritas/frejm/{sha[:32]}.png"
+        storage.put(podaci, key=kljuc, mime="image/png")
+        asset, _ = MediaAsset.objects.get_or_create(
+            storage_key=kljuc,
+            defaults={"public_id": f"FRM-{sha[:12]}", "kind": E.AssetKind.PHOTO.value,
+                      "mime_type": "image/png", "sha256": sha, "origin": "system"})
+        media.append({"asset": asset})
+    if not media:
+        return ""
+    try:
+        g = gateway.generate(
+            E.LLMPurpose.EXTRACT, _VIZIJA_SISTEM,
+            "Pročitaj ekran sa priloženih frejmova i ispiši kako je traženo.",
+            persona=persona, media=media)
+    except Exception:  # noqa: BLE001 — vizija je best-effort
+        return ""
+    if g.provider == "local":
+        return ""
+    return g.text.strip()
+
+
 def _primer_suvo(url: str) -> dict:
     return {
         "transkript": ("Ovo je probni transkript u suvom režimu. Građani treba da "
@@ -168,7 +226,9 @@ def transkribuj(izvor: str, *, persona=None, suvo: bool = False, je_fajl: bool =
             if not os.path.isfile(izvor):
                 raise KlipGreska("NEMA_FAJLA", izvor[:120])
             put_audio, trajanje_ms = _konvertuj(izvor, radni)
-            ekran = _frejmovi_ocr(izvor, radni)
+            ekran = _frejmovi_vizija(izvor, radni, persona=persona)
+            if not ekran:
+                ekran = _frejmovi_ocr(izvor, radni)
         else:
             put_audio, trajanje_ms = _skini_audio(izvor, radni)
             ekran = ""
