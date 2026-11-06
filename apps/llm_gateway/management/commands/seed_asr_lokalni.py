@@ -19,9 +19,9 @@ class Command(BaseCommand):
         ruta, napravljeno = LLMRoute.objects.update_or_create(
             purpose=E.LLMPurpose.TRANSCRIBE.value,
             provider="local_whisper",
-            model_key="small",
+            model_key="base",
             defaults={
-                "name": "Lokalni Whisper (faster-whisper small)",
+                "name": "Lokalni Whisper (faster-whisper base)",
                 "priority": 0,
                 "is_enabled": True,
                 "is_openai_compatible": False,
