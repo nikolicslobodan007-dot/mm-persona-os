@@ -255,16 +255,27 @@ def transkribuj(izvor: str, *, persona=None, suvo: bool = False, je_fajl: bool =
         },
     )
 
-    g = gateway.transcribe(asset, persona=persona)
-    transkript = g.text
+    try:
+        g = gateway.transcribe(asset, persona=persona)
+        asr, provider, model, cena = g.text, g.provider, g.model, g.amount_eur_cents or 0
+    except gateway.LLMError as e:
+        # ASR pao (npr. provajder ograničen). Vizuelni tutorijal ne mora da ima
+        # govor — ako imamo tekst sa ekrana, radimo samo s njim; inače dalje greška.
+        if not ekran:
+            raise
+        asr, provider, model, cena = "", "asr_pao", e.code, 0
+
+    delovi = []
+    if asr.strip():
+        delovi.append(asr)
     if ekran:
-        transkript = f"{transkript}\n\n[TEKST SA EKRANA]\n{ekran}"
+        delovi.append(f"[TEKST SA EKRANA]\n{ekran}")
     return {
-        "transkript": transkript,
+        "transkript": "\n\n".join(delovi),
         "izvor_url": izvor,
         "trajanje_ms": trajanje_ms,
         "asset_id": asset.public_id,
-        "provider": g.provider,
-        "model": g.model,
-        "cena_centi": g.amount_eur_cents or 0,
+        "provider": provider,
+        "model": model,
+        "cena_centi": cena,
     }
