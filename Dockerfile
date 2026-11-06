@@ -54,6 +54,6 @@ RUN python -m venv /opt/aider \
 # constraints.txt. Model se peče u sliku, pa runtime radi bez mreže.
 RUN python -m venv /opt/whisper \
  && /opt/whisper/bin/pip install --no-cache-dir faster-whisper==1.0.3 requests
-RUN /opt/whisper/bin/python -c "from faster_whisper import WhisperModel; WhisperModel('small', device='cpu', compute_type='int8', download_root='/opt/whisper-models')"
+RUN /opt/whisper/bin/python -c "from faster_whisper import WhisperModel; WhisperModel('base', device='cpu', compute_type='int8', download_root='/opt/whisper-models')"
 
 COPY . .
