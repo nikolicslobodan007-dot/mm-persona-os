@@ -23,7 +23,8 @@ def test_3d_requires_console_session_and_totp(mila):
     session.save()
     response = client.get(url)
     assert response.status_code == 200
-    assert b"office-3d.js" in response.content
+    assert b"office-3d-three.js" in response.content
+    assert b"office-3d-f3a.js" not in response.content
     assert b"office-3d.css" in response.content
     assert "script-src 'self'" in response["Content-Security-Policy"]
     assert response["Cache-Control"] == "no-store"
