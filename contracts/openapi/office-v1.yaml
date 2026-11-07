@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Web Korporacija — Virtual Office read-only bridge
-  version: 1.2.0
+  version: 1.3.0
   description: |
     Formalizacija Claudeove Integracione beleške Virtual Office v1.2, §8.
     **LOCKED/APPROVED ugovor (22.10.2026), potvrđen sa Claudeom. Nije implementiran niti spojen u main.**
@@ -205,6 +205,10 @@ components:
     DisclosureMode:
       type: string
       enum: [ALWAYS_VISIBLE, PROFILE_ONLY, ON_REQUEST]
+    Gender:
+      type: string
+      description: Rodni izgled sintetičke persone (ADR-0129).
+      enum: [FEMALE, MALE, UNSPECIFIED]
     PlanStatus:
       type: string
       enum: [DRAFT, ACTIVE, COMPLETED, SUPERSEDED, ABANDONED, EXPIRED]
@@ -275,7 +279,7 @@ components:
     AgentListItem:
       type: object
       additionalProperties: false
-      required: [public_id, display_name, persona_type, status, runtime_environment, trust_level, disclosure_mode, primary_locale, department, position, portrait_url]
+      required: [public_id, display_name, persona_type, status, runtime_environment, trust_level, disclosure_mode, primary_locale, department, position, gender, portrait_url]
       properties:
         public_id: {$ref: '#/components/schemas/PublicId'}
         display_name: {type: string}
@@ -289,6 +293,7 @@ components:
           anyOf: [{$ref: '#/components/schemas/DepartmentBrief'}, {type: 'null'}]
         position:
           anyOf: [{$ref: '#/components/schemas/PositionBrief'}, {type: 'null'}]
+        gender: {$ref: '#/components/schemas/Gender'}
         portrait_url:
           anyOf:
             - type: string
@@ -354,7 +359,7 @@ components:
     AgentDetail:
       type: object
       additionalProperties: false
-      required: [public_id, display_name, persona_type, status, runtime_environment, trust_level, disclosure_mode, disclosure_required, primary_locale, timezone, activated_at, department, position, portrait_url, occupation, active_plan, active_step]
+      required: [public_id, display_name, persona_type, status, runtime_environment, trust_level, disclosure_mode, disclosure_required, primary_locale, timezone, activated_at, department, position, gender, portrait_url, occupation, active_plan, active_step]
       properties:
         public_id: {$ref: '#/components/schemas/PublicId'}
         display_name: {type: string}
@@ -369,6 +374,7 @@ components:
         activated_at: {anyOf: [{$ref: '#/components/schemas/DateTimeUTC'}, {type: 'null'}]}
         department: {anyOf: [{$ref: '#/components/schemas/DepartmentDetail'}, {type: 'null'}]}
         position: {anyOf: [{$ref: '#/components/schemas/PositionDetail'}, {type: 'null'}]}
+        gender: {$ref: '#/components/schemas/Gender'}
         portrait_url:
           anyOf:
             - type: string

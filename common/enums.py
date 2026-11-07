@@ -17,6 +17,7 @@ __all__ = [
     "RuntimeEnvironment",
     "PersonaType",
     "DisclosureMode",
+    "Gender",
     "PolicyEffect",
     "RiskClass",
     "Zone",
@@ -110,6 +111,18 @@ class DisclosureMode(CanonEnum):
 DISCLOSURE_ALWAYS_REQUIRED: frozenset[PersonaType] = frozenset(
     {PersonaType.AI_CREATOR, PersonaType.AI_EXPERT, PersonaType.BRAND_AGENT}
 )
+
+
+class Gender(CanonEnum):
+    """Rodni izgled sintetičke persone — za 3D avatara i doslednost slike (ADR-0129).
+
+    Nije podatak o stvarnoj osobi: persone su izmišljene (Canon §9.4, §17).
+    UNSPECIFIED kad opis ne daje jasan rod.
+    """
+
+    FEMALE = "FEMALE"
+    MALE = "MALE"
+    UNSPECIFIED = "UNSPECIFIED"
 
 
 # ---------------------------------------------------------------- §3.5–3.7

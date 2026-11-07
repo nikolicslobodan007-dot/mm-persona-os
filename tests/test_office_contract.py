@@ -8,7 +8,7 @@ import yaml
 def test_office_contract_locked_goal_excerpt_null_only():
     path = Path(__file__).resolve().parents[1] / "contracts/openapi/office-v1.yaml"
     spec = yaml.safe_load(path.read_text(encoding="utf-8"))
-    assert spec["info"]["version"] == "1.2.0"
+    assert spec["info"]["version"] == "1.3.0"
     assert spec["components"]["schemas"]["ActivePlan"]["properties"]["goal_excerpt"][
         "type"
     ] == "null"
@@ -20,3 +20,10 @@ def test_office_contract_locked_goal_excerpt_null_only():
         "/console/office/portraits/{public_id}",
     }
     assert all(list(item) == ["get"] for item in spec["paths"].values())
+    assert spec["components"]["schemas"]["Gender"]["enum"] == [
+        "FEMALE", "MALE", "UNSPECIFIED",
+    ]
+    for schema in ("AgentListItem", "AgentDetail"):
+        node = spec["components"]["schemas"][schema]
+        assert "gender" in node["properties"]
+        assert "gender" in node["required"]
