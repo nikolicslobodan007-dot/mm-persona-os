@@ -133,6 +133,15 @@ def _image_profile(personas):
     return result
 
 
+def _gender_map(personas):
+    """One query for synthetic gender; only the structured value, never prompts."""
+    ids = [p.pk for p in personas]
+    rows = VisualProfile.objects.filter(persona_id__in=ids).values_list(
+        "persona_id", "gender"
+    )
+    return {pid: (g or E.Gender.UNSPECIFIED.value) for pid, g in rows}
+
+
 def _primary_assignments(personas):
     """Query current *primary* assignments, without exposing internals."""
     ids = [p.pk for p in personas]
@@ -145,7 +154,7 @@ def _primary_assignments(personas):
     return {a.persona_id: a for a in items}
 
 
-def _list_item(persona, assignment, has_portrait):
+def _list_item(persona, assignment, has_portrait, gender):
     position = assignment.position if assignment else None
     department = position.department if position else None
     return {
@@ -165,6 +174,7 @@ def _list_item(persona, assignment, has_portrait):
             {"code": position.code, "title": position.title}
             if position else None
         ),
+        "gender": gender,
         "portrait_url": (
             f"/console/office/portraits/{persona.public_id}" if has_portrait else None
         ),
@@ -231,13 +241,22 @@ def office_agents(request):
     batch = batch[:limit]
     assignments = _primary_assignments(batch)
     portraits = _image_profile(batch)
+    genders = _gender_map(batch)
     next_cursor = (
         _next_cursor(request, "agents", filters, limit, last_key=batch[-1].public_id)
         if more and batch
         else None
     )
     return _reply({
-        "items": [_list_item(p, assignments.get(p.pk), portraits.get(p.pk, False)) for p in batch],
+        "items": [
+            _list_item(
+                p,
+                assignments.get(p.pk),
+                portraits.get(p.pk, False),
+                genders.get(p.pk, E.Gender.UNSPECIFIED.value),
+            )
+            for p in batch
+        ],
         "next_cursor": next_cursor,
     })
 
@@ -252,7 +271,8 @@ def office_agent(request, public_id):
         return _error(E.ErrorCode.NOT_FOUND, "Agent ne postoji.")
     a = _primary_assignments([p]).get(p.pk)
     v = _image_profile([p])
-    result = _list_item(p, a, v.get(p.pk, False))
+    g = _gender_map([p])
+    result = _list_item(p, a, v.get(p.pk, False), g.get(p.pk, E.Gender.UNSPECIFIED.value))
     dep = a.position.department if a else None
     pos = a.position if a else None
     result["department"] = (

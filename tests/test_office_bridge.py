@@ -154,3 +154,23 @@ def test_events_exclude_actor_ref_payload_and_db_id(mila, office_client):
         "occurred_at", "severity", "event_key", "persona_public_id", "actor_role"
     }
     assert "private" not in r.content.decode()
+
+
+def test_gender_exposed_in_agents(mila, office_client):
+    VisualProfile.objects.update_or_create(
+        persona=mila, defaults={"style_prompt": "", "gender": E.Gender.FEMALE.value}
+    )
+    listed = office_client.get("/console/office/api/v1/agents").json()["items"]
+    item = next(x for x in listed if x["public_id"] == mila.public_id)
+    assert item["gender"] == E.Gender.FEMALE.value
+    detail = office_client.get(
+        f"/console/office/api/v1/agents/{mila.public_id}"
+    ).json()
+    assert detail["gender"] == E.Gender.FEMALE.value
+
+
+def test_gender_defaults_unspecified_without_visual_profile(mila, office_client):
+    _person("P-00077")
+    listed = office_client.get("/console/office/api/v1/agents").json()["items"]
+    item = next(x for x in listed if x["public_id"] == "P-00077")
+    assert item["gender"] == E.Gender.UNSPECIFIED.value

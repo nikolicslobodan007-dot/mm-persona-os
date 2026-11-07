@@ -62,6 +62,13 @@ class VisualProfile(models.Model):
     hair = models.CharField(max_length=120, blank=True)
     eyes = models.CharField(max_length=80, blank=True)
     wardrobe_style = models.CharField(max_length=160, blank=True)
+    gender = models.CharField(
+        max_length=16,
+        choices=E.Gender.choices(),
+        default=E.Gender.UNSPECIFIED.value,
+        blank=True,
+        help_text="Rodni izgled sintetičke persone; bira 3D avatara (ADR-0129).",
+    )
     brand_palette = JSON_DICT()
     reference_asset = models.ForeignKey(
         MediaAsset,
