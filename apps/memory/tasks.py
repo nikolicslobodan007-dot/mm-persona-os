@@ -70,5 +70,8 @@ def github_signals_dnevno(najvise: int = 10, min_zvezdica: int = 50) -> str:
                  min_zvezdica=min_zvezdica, stdout=out)
     izvestaj = out.getvalue()
     logger.info("github_signals_dnevno:\n%s", izvestaj[-1500:])
+    preg = StringIO()
+    call_command("signali", pregled=True, stdout=preg)
+    logger.info("github_signals stanje:\n%s", preg.getvalue()[-1500:])
     redovi = izvestaj.strip().splitlines()
     return redovi[-1] if redovi else "nema izveštaja"

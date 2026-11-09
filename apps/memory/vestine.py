@@ -158,6 +158,31 @@ def uvezi(
     return broj
 
 
+def reklasifikuj(*, naslov_izvora: str, license_box: E.LicenseBox,
+                 license_note: str = "", actor: str) -> bool:
+    """Promeni kutiju licence postojećeg izvora posle ljudskog pregleda.
+
+    Ne dira veštine — menja samo `license_box`/`license_note` na `KnowledgeSource`
+    (ista polja koja čovek donosi, ADR-0095). Time non-SLOBODNA veštine postaju
+    upotrebljive (ili obrnuto). Vraća True ako je izvor nađen. ADR-0074: kutiju
+    bira čovek; `actor` ide u audit.
+    """
+    box = E.LicenseBox(license_box)
+    if box == E.LicenseBox.SLOBODNA and not license_note.strip():
+        raise ValueError("ADR-0059: SLOBODNA kutija mora da imenuje licencu.")
+    try:
+        izvor = KnowledgeSource.objects.get(title=naslov_izvora, persona=None)
+    except KnowledgeSource.DoesNotExist:
+        return False
+    izvor.license_box = box.value
+    izvor.license_note = license_note.strip()
+    izvor.save(update_fields=["license_box", "license_note"])
+    audit.record("memory.vestina.reclassified",
+                 details={"izvor": naslov_izvora, "actor": actor,
+                          "license_box": box.value})
+    return True
+
+
 def tekst_za_embedding(subject: str, object_json: dict) -> str:
     """Tekst veštine za semantički vektor (ADR-0120): ime + čemu služi + koraci.
 
