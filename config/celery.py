@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 
 from celery import Celery
+from celery.schedules import crontab
 from kombu import Queue
 
 from common.enums import QueueName
@@ -32,6 +33,7 @@ app.conf.task_routes = {
     "content.draft_for_run": {"queue": QueueName.PERSONA_SCHEDULED.value},
     "runtime.reap_leases": {"queue": QueueName.MAINTENANCE.value},
     "runtime.reconcile": {"queue": QueueName.MAINTENANCE.value},
+    "memory.github_signals_dnevno": {"queue": QueueName.MAINTENANCE.value},
 }
 app.conf.task_default_queue = QueueName.MAINTENANCE.value
 
@@ -83,5 +85,12 @@ app.conf.beat_schedule = {
         "task": "runtime.reconcile",
         "schedule": 60.0,
         "options": {"queue": QueueName.MAINTENANCE.value, "expires": 50},
+    },
+    # GitHub Signals autopilot — jednom dnevno 10 novih repoa (sakupi + auto-uvoz
+    # SLOBODNA; NEPOZNATA/ZARAZNA zabeleženo, NEupotrebljivo do pregleda).
+    "github-signals-dnevno": {
+        "task": "memory.github_signals_dnevno",
+        "schedule": crontab(hour=5, minute=17),
+        "options": {"queue": QueueName.MAINTENANCE.value},
     },
 }

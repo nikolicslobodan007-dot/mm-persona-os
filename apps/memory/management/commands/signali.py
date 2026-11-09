@@ -112,6 +112,32 @@ def _uvezeni_slugovi(prefiks: str = "GitHub Signals: ") -> set[str]:
     return out
 
 
+def _auto_uvoz(izlaz_abs: str, izlaz_dir: str, actor: str = "user:slobodan") -> dict:
+    """Uvezi sabrane JSON-ove u bazu sa pravom kutijom (ADR-0059).
+
+    SLOBODNA → upotrebljivo; NEPOZNATA/ZARAZNA/ZABRANJENA → zabeleženo ali
+    NEupotrebljivo (sistem pušta samo SLOBODNA). Beleženje svih spречava da
+    dnevni „top N" ostane zaglavljen na istim repoima i da se ponovo plaća.
+    `actor` je `user:slobodan` — njegova stajaća odluka za auto-uvoz.
+    """
+    from django.core.management import call_command
+    stats = {"repoa": 0, "SLOBODNA": 0, "NEPOZNATA": 0, "ZARAZNA": 0, "ZABRANJENA": 0}
+    if not os.path.isdir(izlaz_abs):
+        return stats
+    for f in sorted(x for x in os.listdir(izlaz_abs) if x.endswith(".json")):
+        owner, _, repo = f[:-5].partition("__")
+        if not repo:
+            continue
+        slug = f"{owner}/{repo}"
+        box, naziv = _spdx_u_kutiju(_github_licenca(owner, repo))
+        call_command("vestina", datoteka=os.path.join(izlaz_dir, f),
+                     izvor=f"GitHub Signals: {slug}", uri=f"https://github.com/{slug}",
+                     licenca=box, naziv_licence=naziv, actor=actor)
+        stats["repoa"] += 1
+        stats[box] = stats.get(box, 0) + 1
+    return stats
+
+
 _SLOBODNE = frozenset({
     "MIT", "APACHE-2.0", "BSD-2-CLAUSE", "BSD-3-CLAUSE", "BSD-3-CLAUSE-CLEAR",
     "ISC", "0BSD", "UNLICENSE", "ZLIB",
@@ -189,8 +215,14 @@ class Command(BaseCommand):
                        help="--sakupi/--licence: folder sa rezultatima po repou.")
         p.add_argument("--skripta", nargs="?", const=SKRIPTA_DEFAULT, default="",
                        help="--licence: upiši vestina komande u pokretljiv .sh skript.")
+        p.add_argument("--auto", action="store_true",
+                       help="sakupi + auto-uvoz (SLOBODNA upotrebljivo, ostalo zabeleženo).")
+        p.add_argument("--actor", default="user:slobodan",
+                       help="--auto: actor uvoza (stajaća odluka vlasnika).")
 
     def handle(self, *args, **o):
+        if o.get("auto"):
+            return self._auto(o)
         if o.get("sakupi"):
             return self._sakupi(o)
         if o.get("licence"):
@@ -308,6 +340,18 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"\nUpisana skripta uvoza ({len(komande)} komandi) → {rel}. "
             f"Pregledaj pa: bash {rel}"))
+
+    def _auto(self, o):
+        self._sakupi(o)
+        baza = getattr(settings, "BASE_DIR", os.getcwd())
+        izlaz_dir = o["izlaz_dir"]
+        izlaz_abs = izlaz_dir if os.path.isabs(izlaz_dir) else os.path.join(baza, izlaz_dir)
+        stats = _auto_uvoz(izlaz_abs, izlaz_dir, actor=o["actor"])
+        self.stdout.write(self.style.SUCCESS(
+            f"\nAUTO-UVOZ: {stats['repoa']} repoa — "
+            f"{stats['SLOBODNA']} SLOBODNA (upotrebljivo), "
+            f"{stats['repoa'] - stats['SLOBODNA']} ostalo (zabeleženo, čeka pregled)."))
+        return None
 
     def _ucitaj(self, o) -> str:
         if o.get("csv_fajl"):

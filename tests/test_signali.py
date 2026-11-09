@@ -151,3 +151,23 @@ class TestLicenca:
         assert "set -euo pipefail" in tekst
         assert "manage.py vestina" in tekst
         assert "--actor user:slobodan" in tekst
+
+
+class TestAutoUvoz:
+    def test_ruta_po_kutiji(self, tmp_path, monkeypatch):
+        (tmp_path / "a__free.json").write_text("[]", encoding="utf-8")
+        (tmp_path / "b__unknown.json").write_text("[]", encoding="utf-8")
+        licence = {"a/free": "MIT", "b/unknown": ""}
+        monkeypatch.setattr(signali, "_github_licenca",
+                            lambda o, r: licence[f"{o}/{r}"])
+        pozivi = []
+        from django.core import management
+        monkeypatch.setattr(management, "call_command",
+                            lambda *a, **k: pozivi.append((a, k)))
+        stats = signali._auto_uvoz(str(tmp_path), str(tmp_path))
+        assert stats["repoa"] == 2
+        assert stats["SLOBODNA"] == 1 and stats["NEPOZNATA"] == 1
+        licence_args = [k.get("licenca") for _, k in pozivi]
+        assert "SLOBODNA" in licence_args and "NEPOZNATA" in licence_args
+        actor_args = {k.get("actor") for _, k in pozivi}
+        assert actor_args == {"user:slobodan"}
