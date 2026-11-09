@@ -6,12 +6,15 @@
     sakupi --klip-url https://youtu.be/...   # YouTube/video (ASR) → veštine
     sakupi --url ... --izlaz korpus/vestine/sakupljeno-X.json   # upiši JSON za uvoz
     sakupi --url ... --suvo                   # bez mreže i troška
+    sakupi --klip-fajl ... --bez-filtera      # destiluj bez pokazivač pre-filtera
 
 Ingest je isti kao Veritas (web/OCR/ASR), ali se iz teksta vade primenljivi
-postupci, ne tvrdnje. Rezultat je u formatu korpusa {ime, koraci, napomene,
-pouzdanost}. Uvoz u bazu znanja je zaseban korak (`vestina`), gde se određuje
-LICENCA — sakupljač je NE pogađa (ADR-0059: podrazumevano NEPOZNATA).
-Daj TAČNO jedan ulaz.
+postupci, ne tvrdnje. Pre destilacije ide POKAZIVAČ PRE-FILTER (deterministički,
+bez LLM-a): reklama/prazno se preskače (bez troška), a klip koji samo pokazuje na
+resurs (link) se prati — destiluje se resurs, ne reklama. Rezultat je u formatu
+korpusa {ime, koraci, napomene, pouzdanost}. Uvoz u bazu znanja je zaseban korak
+(`vestina`), gde se određuje LICENCA — sakupljač je NE pogađa (ADR-0059:
+podrazumevano NEPOZNATA). Daj TAČNO jedan ulaz.
 """
 
 from __future__ import annotations
@@ -23,11 +26,24 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.memory.sakupljanje import destilator, ulaz
+from apps.memory.veritas import pokazivac
 
 _MAKS_TEKST = 12000  # ulaz u LLM — duže se seče (cena/tokeni)
 
 _ULAZI = (("url", "web"), ("slika", "slika"), ("fajl", "fajl"),
           ("klip_url", "klip"), ("klip_fajl", "klip_fajl"))
+
+
+def _url_iz_pokazivaca(pokazivaci):
+    """Prvi link-pokazivač → normalizovan http(s) URL (ili None)."""
+    for p in pokazivaci:
+        if p["vrsta"] == "url":
+            return p["vrednost"]
+        if p["vrsta"] == "www":
+            return "https://" + p["vrednost"]
+        if p["vrsta"] == "github":
+            return "https://github.com/" + p["vrednost"]
+    return None
 
 
 class Command(BaseCommand):
@@ -43,6 +59,8 @@ class Command(BaseCommand):
         p.add_argument("--maks", type=int, default=8, help="Najviše veština.")
         p.add_argument("--izlaz", help="Upiši veštine u ovaj .json (za kasniji `vestina` uvoz).")
         p.add_argument("--suvo", action="store_true", help="Bez mreže i troška (proba).")
+        p.add_argument("--bez-filtera", action="store_true",
+                       help="Preskoči pokazivač pre-filter (destiluj svaki ulaz).")
 
     def handle(self, *args, **o):
         dati = [(arg, vrsta) for arg, vrsta in _ULAZI if o.get(arg)]
@@ -62,6 +80,13 @@ class Command(BaseCommand):
         if not tekst:
             self.stdout.write("Prazan tekst iz izvora — nema šta da se destiluje.")
             return
+
+        # --- Pokazivač pre-filter (deterministički, bez LLM-a) ---
+        if not o.get("bez_filtera"):
+            izvor, tekst = self._pre_filter(izvor, tekst, o)
+            if tekst is None:
+                return
+
         self.stdout.write(self.style.MIGRATE_HEADING(
             f"# izvor [{izvor['vrsta']}]: {izvor['naslov'][:80]} ({len(tekst)} znakova teksta)"))
 
@@ -81,6 +106,42 @@ class Command(BaseCommand):
 
         if o.get("izlaz") and vestine:
             self._upisi(o["izlaz"], vestine, izvor["izvor"])
+
+    def _pre_filter(self, izvor, tekst, o):
+        """Pokazivač-detektor pre destilacije. Vraća (izvor, tekst) ili (izvor, None) za preskok.
+
+        - preskoci / trazi_izvor → ne troši LLM (None);
+        - prati_pokazivac → dohvati link pa destiluj resurs (zameni izvor/tekst);
+        - analiziraj → nastavi sa originalnim tekstom.
+        """
+        odluka = pokazivac.analiziraj(tekst)
+        self.stdout.write(f"# pokazivač: {odluka['preporuka']} — {odluka['obrazlozenje']}")
+
+        if odluka["preporuka"] == "preskoci":
+            self.stdout.write("Preskačem — nema sadržaja za veštinu (reklama/prazno).")
+            return izvor, None
+
+        if odluka["preporuka"] == "trazi_izvor":
+            self.stdout.write(
+                "Preskačem — pokazivač bez linka (pretraga izvora još nije uključena). "
+                "Dodaj --bez-filtera da ipak destiluješ.")
+            return izvor, None
+
+        if odluka["preporuka"] == "prati_pokazivac":
+            url = _url_iz_pokazivaca(odluka["pokazivaci"])
+            if url:
+                self.stdout.write(f"# pratim pokazivač → {url}")
+                try:
+                    izvor2 = ulaz.procitaj("web", url, suvo=o["suvo"])
+                except ulaz.UlazGreska as e:
+                    self.stdout.write(f"Pokazivač nedostupan ({e}) — destilujem originalni tekst.")
+                    return izvor, tekst
+                tekst2 = (izvor2["tekst"] or "").strip()
+                if tekst2:
+                    return izvor2, tekst2
+                self.stdout.write("Resurs prazan — destilujem originalni tekst.")
+
+        return izvor, tekst
 
     def _upisi(self, izlaz, vestine, izvor_uri):
         baza = getattr(settings, "BASE_DIR", os.getcwd())
