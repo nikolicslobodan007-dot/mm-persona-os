@@ -204,3 +204,23 @@ class TestPregledIReklasifikacija:
         with pytest.raises(CommandError):
             call_command("signali", "--reklasifikuj", "GitHub Signals: a/b",
                          "--actor", "user:slobodan")
+
+
+class TestTeme:
+    def test_teme_iz(self):
+        assert signali._teme_iz({"teme": "AI Agent, Video,"}) == ("ai agent", "video")
+        assert signali._teme_iz({"teme": ""}) == ()
+        assert signali._teme_iz({}) == ()
+
+    def test_filtriraj_po_temama(self):
+        redovi = [
+            {"slug": "a/x", "zvezdica": 50, "kljucne_reci": "ai agents, mcp"},
+            {"slug": "b/y", "zvezdica": 40, "kljucne_reci": "cooking, recipes"},
+            {"slug": "c/z", "zvezdica": 30, "kljucne_reci": ""},
+        ]
+        k = signali._filtriraj(redovi, 20, teme=("agent", "video"))
+        assert [r["slug"] for r in k] == ["a/x"]
+
+    def test_filtriraj_bez_tema_ne_filtrira(self):
+        redovi = [{"slug": "b/y", "zvezdica": 40, "kljucne_reci": "cooking"}]
+        assert len(signali._filtriraj(redovi, 20)) == 1

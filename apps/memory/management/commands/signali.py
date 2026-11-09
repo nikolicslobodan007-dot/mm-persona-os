@@ -33,6 +33,9 @@ from django.core.management.base import BaseCommand, CommandError
 CSV_URL = "https://githubsignals.io/export.csv"
 IZLAZ_DIR = "korpus/vestine/github-signals"
 SKRIPTA_DEFAULT = "korpus/vestine/github-signals/_uvoz.sh"
+#: Podrazumevane teme = Slobodanovi domeni (Persona OS/PickStar/MercatoMaster/farma).
+TEME_PODRAZUMEVANE = ("ai agent", "agent", "llm", "mcp", "automation", "browser",
+                      "scrap", "video", "marketing", "crm", "rag", "self-host")
 
 
 def _ceo_broj(s: str) -> int:
@@ -61,16 +64,31 @@ def _parsiraj(csv_tekst: str) -> list[dict]:
     return redovi
 
 
-def _filtriraj(redovi: list[dict], min_zvezdica: int) -> list[dict]:
-    """Prag zvezdica + dedup po slug-u (prvi pobedi) + sort opadajuće po zvezdicama."""
+def _filtriraj(redovi: list[dict], min_zvezdica: int,
+               teme: tuple[str, ...] = ()) -> list[dict]:
+    """Prag zvezdica + (opc.) filter po temama + dedup po slug-u + sort opadajuće.
+
+    `teme` se poredi kao podniz (case-insensitive) sa `repo_keywords`; prazno =
+    bez filtera. Repo bez ključnih reči ispada kad je filter po temama uključen.
+    """
     vidjeno: set[str] = set()
     izlaz: list[dict] = []
     for r in sorted(redovi, key=lambda x: x["zvezdica"], reverse=True):
         if r["zvezdica"] < min_zvezdica or r["slug"] in vidjeno:
             continue
+        if teme and not any(t in r["kljucne_reci"].lower() for t in teme):
+            continue
         vidjeno.add(r["slug"])
         izlaz.append(r)
     return izlaz
+
+
+def _teme_iz(o) -> tuple[str, ...]:
+    """CSV string `--teme` → tuple malih slova; prazno → bez filtera."""
+    sirovo = (o.get("teme") or "").strip()
+    if not sirovo:
+        return ()
+    return tuple(t.strip().lower() for t in sirovo.split(",") if t.strip())
 
 
 def _komande(r: dict) -> list[str]:
@@ -206,6 +224,8 @@ class Command(BaseCommand):
         p.add_argument("--csv-url", default=CSV_URL, help="URL CSV izvoza.")
         p.add_argument("--csv-fajl", help="Lokalni CSV umesto mreže (za test/offline).")
         p.add_argument("--min-zvezdica", type=int, default=20, help="Prag broja zvezdica.")
+        p.add_argument("--teme", default=",".join(TEME_PODRAZUMEVANE),
+                       help="Filter po repo_keywords (CSV). Prazno (--teme \"\") = sve teme.")
         p.add_argument("--maks", type=int, default=50,
                        help="--lista: najviše kandidata za ispis.")
         p.add_argument("--najvise", type=int, default=0,
@@ -244,12 +264,14 @@ class Command(BaseCommand):
         raise CommandError("Daj --lista, --sakupi ILI --licence.")
 
     def _lista(self, o):
+        teme = _teme_iz(o)
         svi = _parsiraj(self._ucitaj(o))
-        kandidati = _filtriraj(svi, o["min_zvezdica"])
+        kandidati = _filtriraj(svi, o["min_zvezdica"], teme)
 
+        opis_tema = f"; teme: {', '.join(teme)}" if teme else "; sve teme"
         self.stdout.write(self.style.MIGRATE_HEADING(
             f"# GitHub Signals: {len(svi)} redova, "
-            f"{len(kandidati)} kandidata (≥ {o['min_zvezdica']} zvezdica)"))
+            f"{len(kandidati)} kandidata (≥ {o['min_zvezdica']}★{opis_tema})"))
 
         jutjub = 0
         for r in kandidati[:o["maks"]]:
@@ -273,7 +295,7 @@ class Command(BaseCommand):
         izlaz_abs = izlaz_dir if os.path.isabs(izlaz_dir) else os.path.join(baza, izlaz_dir)
         os.makedirs(izlaz_abs, exist_ok=True)
 
-        kandidati = _filtriraj(_parsiraj(self._ucitaj(o)), o["min_zvezdica"])
+        kandidati = _filtriraj(_parsiraj(self._ucitaj(o)), o["min_zvezdica"], _teme_iz(o))
         uvezeni = _uvezeni_slugovi()
         za_obradu = _za_obradu(kandidati, izlaz_abs, najvise, uvezeni)
 
