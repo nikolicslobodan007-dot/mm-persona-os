@@ -67,7 +67,7 @@ class TestKomanda:
         p.write_text(_CSV, encoding="utf-8")
         out = StringIO()
         call_command("signali", "--lista", "--csv-fajl", str(p),
-                     "--min-zvezdica", "20", stdout=out)
+                     "--min-zvezdica", "20", "--teme", "", stdout=out)
         s = out.getvalue()
         assert "a/alpha" in s and "b/beta" in s
         assert "c/gamma" not in s
