@@ -98,3 +98,36 @@ class TestSakupiGate:
         from django.core.management.base import CommandError
         with pytest.raises(CommandError):
             call_command("signali", "--sakupi")
+
+
+class TestLicenca:
+    def test_spdx_u_kutiju(self):
+        assert signali._spdx_u_kutiju("MIT") == ("SLOBODNA", "MIT")
+        assert signali._spdx_u_kutiju("Apache-2.0") == ("SLOBODNA", "Apache-2.0")
+        assert signali._spdx_u_kutiju("GPL-3.0") == ("ZARAZNA", "")
+        assert signali._spdx_u_kutiju("MPL-2.0") == ("ZARAZNA", "")
+        assert signali._spdx_u_kutiju("CC-BY-NC-4.0") == ("ZABRANJENA", "")
+        assert signali._spdx_u_kutiju("NOASSERTION") == ("NEPOZNATA", "")
+        assert signali._spdx_u_kutiju("") == ("NEPOZNATA", "")
+
+    def test_vestina_komanda(self):
+        k = signali._vestina_komanda("p.json", "GitHub Signals: o/r",
+                                     "https://github.com/o/r", "SLOBODNA", "MIT")
+        assert "--licenca SLOBODNA" in k
+        assert '--naziv-licence "MIT"' in k
+        assert "--actor user:slobodan" in k
+
+    def test_vestina_komanda_bez_naziva(self):
+        k = signali._vestina_komanda("p", "i", "u", "NEPOZNATA", "")
+        assert "--licenca NEPOZNATA" in k and "--naziv-licence" not in k
+
+    def test_licence_emituje_komande(self, tmp_path, monkeypatch):
+        (tmp_path / "janestreet__agent_skills.json").write_text("[]", encoding="utf-8")
+        monkeypatch.setattr(signali, "_github_licenca", lambda o, r: "MIT")
+        out = StringIO()
+        call_command("signali", "--licence", "--izlaz-dir", str(tmp_path), stdout=out)
+        s = out.getvalue()
+        assert "janestreet/agent_skills" in s
+        assert "SLOBODNA" in s
+        assert "manage.py vestina" in s
+        assert "--actor user:slobodan" in s
