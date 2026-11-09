@@ -71,3 +71,30 @@ class TestKomanda:
         s = out.getvalue()
         assert "a/alpha" in s and "b/beta" in s
         assert "c/gamma" not in s
+
+
+class TestPutanjaIObrada:
+    def test_putanja(self):
+        assert signali._putanja("/d", "a/alpha") == "/d/a__alpha.json"
+
+    def test_za_obradu_preskace_postojece_i_kapira(self, tmp_path):
+        (tmp_path / "a__alpha.json").write_text("[]", encoding="utf-8")
+        kandidati = [
+            {"slug": "a/alpha", "repo_url": "u1", "zvezdica": 9},
+            {"slug": "b/beta", "repo_url": "u2", "zvezdica": 8},
+            {"slug": "c/gamma", "repo_url": "u3", "zvezdica": 7},
+        ]
+        zo = signali._za_obradu(kandidati, str(tmp_path), 2)
+        assert [r["slug"] for r, _ in zo] == ["b/beta", "c/gamma"]
+
+    def test_za_obradu_kapira_na_najvise(self, tmp_path):
+        kandidati = [{"slug": f"o/r{i}", "repo_url": "u", "zvezdica": 1} for i in range(5)]
+        assert len(signali._za_obradu(kandidati, str(tmp_path), 1)) == 1
+
+
+class TestSakupiGate:
+    def test_bez_najvise_pada(self):
+        import pytest
+        from django.core.management.base import CommandError
+        with pytest.raises(CommandError):
+            call_command("signali", "--sakupi")
