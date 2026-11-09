@@ -84,16 +84,30 @@ def _putanja(izlaz_dir: str, slug: str) -> str:
     return os.path.join(izlaz_dir, slug.replace("/", "__") + ".json")
 
 
-def _za_obradu(kandidati: list[dict], izlaz_dir: str, najvise: int) -> list[tuple[dict, str]]:
-    """Prvih `najvise` kandidata čiji izlazni fajl još ne postoji (dedup po fajlu)."""
+def _za_obradu(kandidati: list[dict], izlaz_dir: str, najvise: int,
+               uvezeni: frozenset[str] | set[str] = frozenset()) -> list[tuple[dict, str]]:
+    """Prvih `najvise` kandidata koji nisu ni u bazi (`uvezeni`) ni kao fajl (dedup)."""
     out: list[tuple[dict, str]] = []
     for r in kandidati:
+        if r["slug"] in uvezeni:
+            continue
         put = _putanja(izlaz_dir, r["slug"])
         if os.path.exists(put):
             continue
         out.append((r, put))
         if len(out) >= najvise:
             break
+    return out
+
+
+def _uvezeni_slugovi(prefiks: str = "GitHub Signals: ") -> set[str]:
+    """Slugovi repoa već uvezenih u bazu (KnowledgeSource title '<prefiks><slug>')."""
+    from apps.memory.models import KnowledgeSource
+    out: set[str] = set()
+    for t in (KnowledgeSource.objects
+              .filter(title__startswith=prefiks)
+              .values_list("title", flat=True)):
+        out.add(t[len(prefiks):].strip())
     return out
 
 
@@ -210,11 +224,13 @@ class Command(BaseCommand):
         os.makedirs(izlaz_abs, exist_ok=True)
 
         kandidati = _filtriraj(_parsiraj(self._ucitaj(o)), o["min_zvezdica"])
-        za_obradu = _za_obradu(kandidati, izlaz_abs, najvise)
+        uvezeni = _uvezeni_slugovi()
+        za_obradu = _za_obradu(kandidati, izlaz_abs, najvise, uvezeni)
 
         self.stdout.write(self.style.MIGRATE_HEADING(
             f"# sakupi: {len(za_obradu)} novih repoa "
-            f"(od {len(kandidati)} kandidata ≥ {o['min_zvezdica']}★)"))
+            f"(od {len(kandidati)} kandidata ≥ {o['min_zvezdica']}★; "
+            f"{len(uvezeni)} već u bazi)"))
         if not za_obradu:
             self.stdout.write("Nema novih repoa (svi već obrađeni).")
             return
