@@ -171,3 +171,36 @@ class TestAutoUvoz:
         assert "SLOBODNA" in licence_args and "NEPOZNATA" in licence_args
         actor_args = {k.get("actor") for _, k in pozivi}
         assert actor_args == {"user:slobodan"}
+
+
+class TestPregledIReklasifikacija:
+    def test_pregled_sumira_i_lista_pending(self, monkeypatch):
+        from apps.memory import vestine
+        redovi = [
+            {"subject": "s1", "izvor": "GitHub Signals: a/free",
+             "licenca": "SLOBODNA", "aktivan": True},
+            {"subject": "s2", "izvor": "GitHub Signals: b/unk",
+             "licenca": "NEPOZNATA", "aktivan": True},
+        ]
+        monkeypatch.setattr(vestine, "spisak", lambda **k: redovi)
+        out = StringIO()
+        call_command("signali", "--pregled", stdout=out)
+        s = out.getvalue()
+        assert "SLOBODNA" in s and "NEPOZNATA" in s
+        assert "upotrebljivo" in s and "čeka pregled" in s
+        assert "b/unk" in s  # non-SLOBODNA ide u listu za pregled
+        assert "a/free" not in s  # SLOBODNA se ne stavlja u pending
+
+    def test_reklasifikuj_trazi_user_actor(self):
+        import pytest
+        from django.core.management.base import CommandError
+        with pytest.raises(CommandError):
+            call_command("signali", "--reklasifikuj", "GitHub Signals: a/b",
+                         "--licenca", "SLOBODNA", "--actor", "service:x")
+
+    def test_reklasifikuj_trazi_licencu(self):
+        import pytest
+        from django.core.management.base import CommandError
+        with pytest.raises(CommandError):
+            call_command("signali", "--reklasifikuj", "GitHub Signals: a/b",
+                         "--actor", "user:slobodan")

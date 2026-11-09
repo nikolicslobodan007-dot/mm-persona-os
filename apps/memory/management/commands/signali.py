@@ -23,6 +23,7 @@ import json
 import os
 import time
 import urllib.request
+from collections import defaultdict
 from urllib.parse import quote
 
 from django.conf import settings
@@ -218,9 +219,20 @@ class Command(BaseCommand):
         p.add_argument("--auto", action="store_true",
                        help="sakupi + auto-uvoz (SLOBODNA upotrebljivo, ostalo zabeleženo).")
         p.add_argument("--actor", default="user:slobodan",
-                       help="--auto: actor uvoza (stajaća odluka vlasnika).")
+                       help="--auto/--reklasifikuj: actor (ADR-0074).")
+        p.add_argument("--pregled", action="store_true",
+                       help="Izveštaj: stanje u bazi + non-SLOBODNA za pregled.")
+        p.add_argument("--reklasifikuj", default="",
+                       help="Naslov izvora čiju kutiju licence menjaš (posle pregleda).")
+        p.add_argument("--licenca", default="", help="--reklasifikuj: nova kutija licence.")
+        p.add_argument("--naziv-licence", default="",
+                       help="--reklasifikuj: naziv licence (obavezno za SLOBODNA).")
 
     def handle(self, *args, **o):
+        if o.get("reklasifikuj"):
+            return self._reklasifikuj(o)
+        if o.get("pregled"):
+            return self._pregled(o)
         if o.get("auto"):
             return self._auto(o)
         if o.get("sakupi"):
@@ -352,6 +364,57 @@ class Command(BaseCommand):
             f"{stats['SLOBODNA']} SLOBODNA (upotrebljivo), "
             f"{stats['repoa'] - stats['SLOBODNA']} ostalo (zabeleženo, čeka pregled)."))
         return None
+
+    def _pregled(self, o):
+        from apps.memory.vestine import spisak
+        redovi = spisak(izvor="GitHub Signals")
+        if not redovi:
+            self.stdout.write("Nema GitHub Signals veština u bazi.")
+            return
+        po_izvoru: dict = {}
+        vest_kut: dict = defaultdict(int)
+        for r in redovi:
+            po_izvoru[r["izvor"]] = r["licenca"]
+            vest_kut[r["licenca"]] += 1
+        izv_kut: dict = defaultdict(int)
+        for b in po_izvoru.values():
+            izv_kut[b] += 1
+        self.stdout.write(self.style.MIGRATE_HEADING(
+            f"# GitHub Signals u bazi: {len(po_izvoru)} repoa, {len(redovi)} veština"))
+        for b in ("SLOBODNA", "NEPOZNATA", "ZARAZNA", "ZABRANJENA"):
+            if izv_kut.get(b):
+                ozn = "upotrebljivo" if b == "SLOBODNA" else "čeka pregled"
+                self.stdout.write(
+                    f"  {b}: {izv_kut[b]} repoa, {vest_kut[b]} veština ({ozn})")
+        pending = sorted(n for n, b in po_izvoru.items() if b != "SLOBODNA")
+        if pending:
+            self.stdout.write(self.style.MIGRATE_HEADING("\n# Za pregled (non-SLOBODNA):"))
+            for naslov in pending:
+                slug = naslov.replace("GitHub Signals: ", "", 1)
+                self.stdout.write(f"- {slug}  → https://github.com/{slug}")
+                self.stdout.write(
+                    f'    ako je slobodna: signali --reklasifikuj "{naslov}" '
+                    f"--licenca SLOBODNA --naziv-licence <SPDX>")
+
+    def _reklasifikuj(self, o):
+        from api.context import bind
+        from apps.memory import vestine
+        actor = o["actor"]
+        if not actor.startswith("user:"):
+            raise CommandError("ADR-0074: --actor mora da počne sa 'user:'.")
+        if not o["licenca"]:
+            raise CommandError("--reklasifikuj traži --licenca <kutija>.")
+        with bind(actor_id=actor):
+            try:
+                promenjen = vestine.reklasifikuj(
+                    naslov_izvora=o["reklasifikuj"], license_box=o["licenca"],
+                    license_note=o["naziv_licence"], actor=actor)
+            except ValueError as e:
+                raise CommandError(str(e)) from e
+        if not promenjen:
+            raise CommandError(f"Izvor nije nađen: {o['reklasifikuj']}")
+        self.stdout.write(self.style.SUCCESS(
+            f"Reklasifikovano: {o['reklasifikuj']} → {o['licenca']}"))
 
     def _ucitaj(self, o) -> str:
         if o.get("csv_fajl"):
