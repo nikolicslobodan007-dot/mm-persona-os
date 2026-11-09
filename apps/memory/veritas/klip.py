@@ -49,6 +49,17 @@ def _trajanje_ms(put_fajla: str) -> int:
         return 0
 
 
+def _vf_preko_klipa(video: str, maks: int) -> str:
+    """ffmpeg -vf koji `maks` frejmova rasporedi PREKO CELOG klipa.
+
+    Ranije: prvih ~20 s (fps=1/4). Ali kod/UI u rilsovima cesto dodje kasnije,
+    pa smo ga promasivali (intro != sadrzaj). Sad fps = maks/trajanje → frejmovi
+    pokriju ceo klip; `-frames:v maks` i dalje kapira broj (kratak klip)."""
+    sek = max(_trajanje_ms(video) / 1000.0, 1.0)
+    fps = min(max(maks / sek, 0.02), 2.0)
+    return f"fps={fps:.4f}"
+
+
 def _cookies_args() -> list[str]:
     """yt-dlp `--cookies <fajl>` ako postoji — YouTube sa servera traži autentifikaciju
     („Sign in to confirm you're not a bot"). Putanja: env YT_COOKIES_FILE ili
@@ -103,17 +114,17 @@ def _skini_audio(url: str, radni: str) -> tuple[str, int]:
     return _konvertuj(os.path.join(radni, skinuti[0]), radni)
 
 
-def _frejmovi_ocr(video: str, radni: str, *, interval: int = 3, maks: int = 15) -> str:
+def _frejmovi_ocr(video: str, radni: str, *, maks: int = 15) -> str:
     """Izvuci frejmove (ffmpeg) i OCR-uj tekst sa ekrana: kod, slajd, UI.
 
     Vizuelni tutorijali (kod/UI uz muziku, bez govora) ASR ne cuje — vestina je
-    na ekranu. Uzmemo frejm na ~`interval` s (do `maks`), Tesseract procita, pa
+    na ekranu. Uzmemo `maks` frejmova rasporedjenih preko celog klipa, Tesseract
     spojimo jedinstvene redove. Best-effort: ako padne, vrati prazno (ostaje ASR).
     """
     cilj = os.path.join(radni, "frejm-%03d.png")
     try:
         subprocess.run(
-            [_alat("ffmpeg"), "-y", "-i", video, "-vf", f"fps=1/{interval}",
+            [_alat("ffmpeg"), "-y", "-i", video, "-vf", _vf_preko_klipa(video, maks),
              "-frames:v", str(maks), cilj],
             capture_output=True, text=True, timeout=300, check=True)
     except (subprocess.SubprocessError, KlipGreska):
@@ -136,10 +147,10 @@ def _frejmovi_ocr(video: str, radni: str, *, interval: int = 3, maks: int = 15) 
 
 
 _VIZIJA_SISTEM = (
-    "Gledaš frejmove iz video tutorijala. Ispiši DOSLOVNO sav tekst, kod i korake "
-    "koji se vide na ekranu: komande, nazive alata, delove koda, liste koraka. Na "
-    "kraju jednom rečenicom reci šta tutorijal demonstrira. Ne izmišljaj; prazan "
-    "frejm preskoči."
+    "Gledaš frejmove iz videa. Prepiši DOSLOVNO sav tekst, kod i korake koji se "
+    "vide na ekranu: komande, nazive alata, delove koda, liste koraka. Frejm bez "
+    "teksta/koda preskoči. Ako NIJEDAN frejm nema tekst, kod ni korake, vrati "
+    "TAČNO praznu poruku (ništa) — ne opisuj scenu i ne izmišljaj."
 )
 
 
@@ -153,7 +164,7 @@ def _frejmovi_vizija(video: str, radni: str, *, persona=None, maks: int = 5) -> 
     cilj = os.path.join(radni, "vframe-%03d.png")
     try:
         subprocess.run(
-            [_alat("ffmpeg"), "-y", "-i", video, "-vf", "fps=1/4",
+            [_alat("ffmpeg"), "-y", "-i", video, "-vf", _vf_preko_klipa(video, maks),
              "-frames:v", str(maks), cilj],
             capture_output=True, text=True, timeout=300, check=True)
     except (subprocess.SubprocessError, KlipGreska):
