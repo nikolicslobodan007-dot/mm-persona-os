@@ -45,3 +45,16 @@ su već u `./preuzeto/` se preskaču, pa možeš bezbedno da pokreneš ponovo.
     RADNIK_SERVER=mm@49.12.77.226
     RADNIK_REMOTE_REPO=~/apps/mm-persona-os
     RADNIK_REMOTE_SECRETS=~/apps/mm-persona-os/secrets
+
+## Agentov profil (svoj FB nalog)
+
+Svaka komanda prima `--profil <ime>` da agent radi iz SVOG naloga umesto podrazumevanog:
+
+```
+python radnik.py prijava   --profil mila          # jednokratna prijava agentovog FB naloga (2FA)
+python radnik.py kolekcija "<URL kanala/kolekcije>" --profil mila --najvise 3 --posalji
+```
+
+- Sesija se pamti odvojeno u `.profil/<ime>/`, preuzimanja u `preuzeto/<ime>/` (oba u `.gitignore`).
+- Bez `--profil` ostaje zatečeni profil (`.profil/`) — ništa se ne menja.
+- Nalog i prijavu pravi/obavlja čovek (kredencijali), kao i do sada. Kanale agent prati ručno u FB-u.
