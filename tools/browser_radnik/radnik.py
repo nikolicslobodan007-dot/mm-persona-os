@@ -158,6 +158,10 @@ def _jedan(page: Page, url: str, maks: int, posalji: bool) -> bool:
     ime = _ime_fajla(url)
     cilj = PREUZETO / ime
     if cilj.exists():
+        if posalji:
+            print(f"  vec imam, saljem na server: {ime}")
+            _posalji_i_sakupi(cilj, ime, maks)
+            return True
         print(f"  preskacem (vec imam): {ime}")
         return False
     video_url = _izvuci(page, url)
