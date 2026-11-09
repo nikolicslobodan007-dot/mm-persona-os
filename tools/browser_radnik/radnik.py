@@ -50,9 +50,24 @@ OVDE = Path(__file__).resolve().parent
 PROFIL = OVDE / ".profil"
 PREUZETO = OVDE / "preuzeto"
 
+
+def _postavi_profil(ime: str) -> None:
+    """Bira profil (agentov FB nalog). Prazno = podrazumevani (zateceni) profil."""
+    global PROFIL, PREUZETO
+    ime = (ime or "").strip()
+    if not ime:
+        return
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", ime):
+        sys.exit("Ime profila sme da ima samo slova, cifre, _ i - .")
+    PROFIL = OVDE / ".profil" / ime
+    PREUZETO = OVDE / "preuzeto" / ime
+    print(f"Profil (agentov nalog): {ime}")
+
 SERVER = os.environ.get("RADNIK_SERVER", "mm@49.12.77.226")
 REMOTE_REPO = os.environ.get("RADNIK_REMOTE_REPO", "~/apps/mm-persona-os")
 REMOTE_SECRETS = os.environ.get("RADNIK_REMOTE_SECRETS", "~/apps/mm-persona-os/secrets")
+COMPOSE_ARGS = os.environ.get(
+    "RADNIK_COMPOSE_ARGS", "-f docker-compose.prod.yml --env-file .env.prod")
 
 _KLJUCEVI = ("progressive_url", "browser_native_hd_url", "browser_native_sd_url")
 
@@ -129,9 +144,12 @@ def _posalji_i_sakupi(lokalni: Path, ime: str, maks: int) -> None:
     if poslato.returncode != 0:
         print("  scp nije uspeo, preskacem sakupljac.")
         return
+    # /app/secrets je imenovani volumen u prod-u, pa fajl ide u kontejner preko `cp`.
+    dc = f"docker compose {COMPOSE_ARGS}".strip()
     cmd = (
-        f"cd {REMOTE_REPO} && docker compose exec -T web "
-        f'python manage.py sakupi --klip-fajl "/app/secrets/{ime}" --maks {maks}'
+        f"cd {REMOTE_REPO} && "
+        f'{dc} cp "secrets/{ime}" web:/app/secrets/{ime} && '
+        f'{dc} exec -T web python manage.py sakupi --klip-fajl "/app/secrets/{ime}" --maks {maks}'
     )
     subprocess.run(["ssh", SERVER, cmd])
 
@@ -198,7 +216,7 @@ def _graphql_idevi(page: Page, url: str, najvise: int) -> list[str]:
 
 
 def prijava() -> None:
-    PROFIL.mkdir(exist_ok=True)
+    PROFIL.mkdir(parents=True, exist_ok=True)
     print("Otvaram browser. Prijavi se na Facebook (i YouTube ako hoces).")
     with sync_playwright() as p:
         ctx, page = _otvori(p)
@@ -210,7 +228,7 @@ def prijava() -> None:
 
 def uzmi(url: str, maks: int, posalji: bool) -> None:
     _proveri_prijavu()
-    PREUZETO.mkdir(exist_ok=True)
+    PREUZETO.mkdir(parents=True, exist_ok=True)
     print(f"Otvaram: {url}")
     with sync_playwright() as p:
         ctx, page = _otvori(p)
@@ -224,7 +242,7 @@ def uzmi(url: str, maks: int, posalji: bool) -> None:
 
 def kolekcija(url: str, najvise: int, maks: int, posalji: bool) -> None:
     _proveri_prijavu()
-    PREUZETO.mkdir(exist_ok=True)
+    PREUZETO.mkdir(parents=True, exist_ok=True)
     print(f"Nabrajam snimke sa: {url}")
     broj = 0
     with sync_playwright() as p:
@@ -249,17 +267,21 @@ def kolekcija(url: str, najvise: int, maks: int, posalji: bool) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description="Browser radnik — video u sakupljac")
     sub = ap.add_subparsers(dest="komanda", required=True)
-    sub.add_parser("prijava", help="jednokratna rucna prijava")
+    pp = sub.add_parser("prijava", help="jednokratna rucna prijava")
+    pp.add_argument("--profil", default="", help="ime agentovog profila (svoj FB nalog)")
     u = sub.add_parser("uzmi", help="jedan snimak sa URL-a")
     u.add_argument("url")
     u.add_argument("--maks", type=int, default=6)
     u.add_argument("--posalji", action="store_true", help="scp na server + sakupi")
+    u.add_argument("--profil", default="", help="ime agentovog profila (svoj FB nalog)")
     k = sub.add_parser("kolekcija", help="svi snimci sa kolekcije/stranice")
     k.add_argument("url")
     k.add_argument("--najvise", type=int, default=10)
     k.add_argument("--maks", type=int, default=6)
     k.add_argument("--posalji", action="store_true", help="scp na server + sakupi")
+    k.add_argument("--profil", default="", help="ime agentovog profila (svoj FB nalog)")
     a = ap.parse_args()
+    _postavi_profil(getattr(a, "profil", ""))
     if a.komanda == "prijava":
         prijava()
     elif a.komanda == "uzmi":
