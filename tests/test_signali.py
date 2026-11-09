@@ -91,6 +91,14 @@ class TestPutanjaIObrada:
         kandidati = [{"slug": f"o/r{i}", "repo_url": "u", "zvezdica": 1} for i in range(5)]
         assert len(signali._za_obradu(kandidati, str(tmp_path), 1)) == 1
 
+    def test_za_obradu_preskace_vec_uvezene(self, tmp_path):
+        kandidati = [
+            {"slug": "a/alpha", "repo_url": "u", "zvezdica": 9},
+            {"slug": "b/beta", "repo_url": "u", "zvezdica": 8},
+        ]
+        zo = signali._za_obradu(kandidati, str(tmp_path), 5, uvezeni={"a/alpha"})
+        assert [r["slug"] for r, _ in zo] == ["b/beta"]
+
 
 class TestSakupiGate:
     def test_bez_najvise_pada(self):
