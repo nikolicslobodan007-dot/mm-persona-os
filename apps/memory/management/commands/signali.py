@@ -31,6 +31,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 CSV_URL = "https://githubsignals.io/export.csv"
 IZLAZ_DIR = "korpus/vestine/github-signals"
+SKRIPTA_DEFAULT = "korpus/vestine/github-signals/_uvoz.sh"
 
 
 def _ceo_broj(s: str) -> int:
@@ -125,6 +126,9 @@ def _github_licenca(owner: str, repo: str) -> str:
         "User-Agent": "mm-persona-os-sakupljac",
         "Accept": "application/vnd.github+json",
     })
+    tok = os.environ.get("GITHUB_TOKEN", "").strip()
+    if tok:
+        req.add_header("Authorization", f"Bearer {tok}")
     try:
         with urllib.request.urlopen(req, timeout=15) as r:  # noqa: S310 — fiksni host
             podaci = json.loads(r.read(1_000_000).decode("utf-8", "replace"))
@@ -182,7 +186,9 @@ class Command(BaseCommand):
         p.add_argument("--maks-vestina", type=int, default=8,
                        help="--sakupi: najviše veština po repou.")
         p.add_argument("--izlaz-dir", default=IZLAZ_DIR,
-                       help="--sakupi: folder za rezultate po repou.")
+                       help="--sakupi/--licence: folder sa rezultatima po repou.")
+        p.add_argument("--skripta", nargs="?", const=SKRIPTA_DEFAULT, default="",
+                       help="--licence: upiši vestina komande u pokretljiv .sh skript.")
 
     def handle(self, *args, **o):
         if o.get("sakupi"):
@@ -262,6 +268,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.MIGRATE_HEADING(
             f"# licence: {len(fajlovi)} repoa u {izlaz_dir}/"))
+        komande: list[str] = []
         for f in fajlovi:
             owner, _, repo = f[:-5].partition("__")
             if not repo:
@@ -271,13 +278,36 @@ class Command(BaseCommand):
             box, naziv = _spdx_u_kutiju(_github_licenca(owner, repo))
             self.stdout.write(f"\n- {slug}  → {box}" + (f" ({naziv})" if naziv else ""))
             put = os.path.join(izlaz_dir, f)
-            self.stdout.write("    " + _vestina_komanda(
-                put, f"GitHub Signals: {slug}", repo_url, box, naziv))
+            kom = _vestina_komanda(put, f"GitHub Signals: {slug}", repo_url, box, naziv)
+            self.stdout.write("    " + kom)
+            komande.append(kom)
             time.sleep(0.5)
+
+        if o.get("skripta") and komande:
+            self._upisi_skriptu(baza, o["skripta"], komande)
 
         self.stdout.write(self.style.SUCCESS(
             "\nPregledaj kutije pa pokreni vestina komande sam (ADR-0074). "
             "SLOBODNA sme u klijentske projekte; ostalo se čuva uz zabeleženu kutiju."))
+
+    def _upisi_skriptu(self, baza, skripta, komande):
+        put = skripta if os.path.isabs(skripta) else os.path.join(baza, skripta)
+        os.makedirs(os.path.dirname(put) or ".", exist_ok=True)
+        telo = (
+            "#!/usr/bin/env bash\n"
+            "# Uvoz veština iz GitHub Signals u bazu znanja (ADR-0074: pokreće čovek).\n"
+            "# Pregledaj pa pokreni UNUTAR web kontejnera, iz /app:\n"
+            "#   bash " + skripta + "\n"
+            "set -euo pipefail\n\n"
+            + "\n".join(komande) + "\n"
+        )
+        with open(put, "w", encoding="utf-8") as fh:
+            fh.write(telo)
+        os.chmod(put, 0o755)
+        rel = os.path.relpath(put, baza)
+        self.stdout.write(self.style.SUCCESS(
+            f"\nUpisana skripta uvoza ({len(komande)} komandi) → {rel}. "
+            f"Pregledaj pa: bash {rel}"))
 
     def _ucitaj(self, o) -> str:
         if o.get("csv_fajl"):

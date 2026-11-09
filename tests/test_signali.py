@@ -139,3 +139,15 @@ class TestLicenca:
         assert "SLOBODNA" in s
         assert "manage.py vestina" in s
         assert "--actor user:slobodan" in s
+
+    def test_licence_skripta(self, tmp_path, monkeypatch):
+        (tmp_path / "o__r.json").write_text("[]", encoding="utf-8")
+        monkeypatch.setattr(signali, "_github_licenca", lambda o, r: "MIT")
+        skripta = tmp_path / "uvoz.sh"
+        call_command("signali", "--licence", "--izlaz-dir", str(tmp_path),
+                     "--skripta", str(skripta), stdout=StringIO())
+        tekst = skripta.read_text(encoding="utf-8")
+        assert tekst.startswith("#!/usr/bin/env bash")
+        assert "set -euo pipefail" in tekst
+        assert "manage.py vestina" in tekst
+        assert "--actor user:slobodan" in tekst
