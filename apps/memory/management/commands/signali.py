@@ -19,8 +19,11 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import os
 import time
+import urllib.request
+from urllib.parse import quote
 
 from django.conf import settings
 from django.core.management import call_command
@@ -94,6 +97,58 @@ def _za_obradu(kandidati: list[dict], izlaz_dir: str, najvise: int) -> list[tupl
     return out
 
 
+_SLOBODNE = frozenset({
+    "MIT", "APACHE-2.0", "BSD-2-CLAUSE", "BSD-3-CLAUSE", "BSD-3-CLAUSE-CLEAR",
+    "ISC", "0BSD", "UNLICENSE", "ZLIB",
+})
+_ZARAZNE = ("GPL-", "AGPL-", "LGPL-", "SSPL-", "BUSL-", "MPL-", "EPL-", "OSL-", "CDDL-")
+
+
+def _github_licenca(owner: str, repo: str) -> str:
+    """Repoova DEKLARISANA SPDX licenca (GitHub API). '' ako nema/greška/limit."""
+    url = f"https://api.github.com/repos/{quote(owner, safe='')}/{quote(repo, safe='')}"
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "mm-persona-os-sakupljac",
+        "Accept": "application/vnd.github+json",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:  # noqa: S310 — fiksni host
+            podaci = json.loads(r.read(1_000_000).decode("utf-8", "replace"))
+    except Exception:  # noqa: BLE001 — API greška/limit → nepoznata licenca
+        return ""
+    lic = (podaci or {}).get("license") or {}
+    return (lic.get("spdx_id") or "").strip()
+
+
+def _spdx_u_kutiju(spdx: str) -> tuple[str, str]:
+    """SPDX id → (kutija, naziv). Nepoznato/prazno → NEPOZNATA (nema dozvole)."""
+    s = (spdx or "").strip().upper()
+    if not s or s in ("NOASSERTION", "OTHER"):
+        return "NEPOZNATA", ""
+    if s in _SLOBODNE:
+        return "SLOBODNA", spdx.strip()
+    if s.startswith(_ZARAZNE):
+        return "ZARAZNA", ""
+    if "-NC" in s or s.startswith("CC-BY-NC"):
+        return "ZABRANJENA", ""
+    return "NEPOZNATA", ""
+
+
+def _vestina_komanda(put: str, izvor: str, repo_url: str, box: str, naziv: str) -> str:
+    """Gotova `vestina` komanda za uvoz jednog repo-JSON-a (čovek je pokreće)."""
+    delovi = [
+        "python manage.py vestina",
+        f'--datoteka "{put}"',
+        f'--izvor "{izvor}"',
+        f'--uri "{repo_url}"',
+        f"--licenca {box}",
+    ]
+    if naziv:
+        delovi.append(f'--naziv-licence "{naziv}"')
+    delovi.append("--actor user:slobodan")
+    return " ".join(delovi)
+
+
 class Command(BaseCommand):
     help = "GitHub Signals izvor: nabroji (--lista) ili saberi (--sakupi) kandidate."
 
@@ -101,6 +156,8 @@ class Command(BaseCommand):
         p.add_argument("--lista", action="store_true", help="Nabroji kandidate (bez troška).")
         p.add_argument("--sakupi", action="store_true",
                        help="Pozovi sakupi po kandidatu (troši LLM; traži --najvise).")
+        p.add_argument("--licence", action="store_true",
+                       help="Za sabrane JSON-ove: pročitaj SPDX licencu i emituj vestina komande.")
         p.add_argument("--csv-url", default=CSV_URL, help="URL CSV izvoza.")
         p.add_argument("--csv-fajl", help="Lokalni CSV umesto mreže (za test/offline).")
         p.add_argument("--min-zvezdica", type=int, default=20, help="Prag broja zvezdica.")
@@ -116,9 +173,11 @@ class Command(BaseCommand):
     def handle(self, *args, **o):
         if o.get("sakupi"):
             return self._sakupi(o)
+        if o.get("licence"):
+            return self._licence(o)
         if o.get("lista"):
             return self._lista(o)
-        raise CommandError("Daj --lista ILI --sakupi.")
+        raise CommandError("Daj --lista, --sakupi ILI --licence.")
 
     def _lista(self, o):
         svi = _parsiraj(self._ucitaj(o))
@@ -173,6 +232,36 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(
             f"\nObrađeno {obradjeno}/{len(za_obradu)} repoa → {izlaz_dir}/"))
+
+    def _licence(self, o):
+        baza = getattr(settings, "BASE_DIR", os.getcwd())
+        izlaz_dir = o["izlaz_dir"]
+        izlaz_abs = izlaz_dir if os.path.isabs(izlaz_dir) else os.path.join(baza, izlaz_dir)
+        if not os.path.isdir(izlaz_abs):
+            raise CommandError(f"Nema foldera: {izlaz_abs} (prvo --sakupi).")
+        fajlovi = sorted(f for f in os.listdir(izlaz_abs) if f.endswith(".json"))
+        if not fajlovi:
+            self.stdout.write("Nema sabranih JSON-ova (prvo pokreni --sakupi).")
+            return
+
+        self.stdout.write(self.style.MIGRATE_HEADING(
+            f"# licence: {len(fajlovi)} repoa u {izlaz_dir}/"))
+        for f in fajlovi:
+            owner, _, repo = f[:-5].partition("__")
+            if not repo:
+                continue
+            slug = f"{owner}/{repo}"
+            repo_url = f"https://github.com/{slug}"
+            box, naziv = _spdx_u_kutiju(_github_licenca(owner, repo))
+            self.stdout.write(f"\n- {slug}  → {box}" + (f" ({naziv})" if naziv else ""))
+            put = os.path.join(izlaz_dir, f)
+            self.stdout.write("    " + _vestina_komanda(
+                put, f"GitHub Signals: {slug}", repo_url, box, naziv))
+            time.sleep(0.5)
+
+        self.stdout.write(self.style.SUCCESS(
+            "\nPregledaj kutije pa pokreni vestina komande sam (ADR-0074). "
+            "SLOBODNA sme u klijentske projekte; ostalo se čuva uz zabeleženu kutiju."))
 
     def _ucitaj(self, o) -> str:
         if o.get("csv_fajl"):
