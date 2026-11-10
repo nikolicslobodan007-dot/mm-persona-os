@@ -20,6 +20,13 @@ def test_registar_i_nadji():
     assert set(zadaci.ZADACI) >= {"objava", "battlecard", "outreach", "plan-naloga"}
 
 
+def test_izlaz_budzet_za_duze_vrste():
+    # duže content vrste imaju veći izlazni budžet od objave (koja je podrazumevano)
+    assert zadaci.nadji("dubinski-clanak").izlaz_tokena == 1600
+    assert zadaci.nadji("newsletter").izlaz_tokena == 1400
+    assert zadaci.nadji("objava").izlaz_tokena is None
+
+
 def test_nepoznata_vrsta():
     with pytest.raises(KeyError):
         zadaci.nadji("nepostoji")
