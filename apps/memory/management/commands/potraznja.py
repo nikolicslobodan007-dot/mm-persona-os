@@ -17,6 +17,16 @@ from apps.memory import context
 from apps.personas.models import Persona
 
 
+def _praznina(n: int, d: float | None, prag: float) -> bool:
+    """Praznina = NEMA nijednog pokrića za temu: ni veštine u diviziji (n==0),
+    ni semantički bliske (d >= prag, ili model offline). Dovoljno je jedno
+    pokriće da tema ne bude praznina — zato `sales` sa 36 veština nije praznina
+    ni kad je gola reč „Prodaja" semantički taman iznad praga."""
+    pokriva_divizija = n > 0
+    pokriva_semantika = d is not None and d < prag
+    return not (pokriva_divizija or pokriva_semantika)
+
+
 class Command(BaseCommand):
     help = "Izmeri prazninu u znanju persone po nišama; predloži teme za ulov."
 
@@ -52,13 +62,11 @@ class Command(BaseCommand):
         for slug, naziv, tez in sorted(teme, key=lambda x: -x[2]):
             d = context.najbliza_distanca(naziv)
             n = context.broj_u_diviziji(slug)
-            if d is None:
-                gap = n == 0
-                status = "? model offline" + ("" if n else " · nema veštine u diviziji")
-            else:
-                gap = d >= prag
-                status = f"{'PRAZNINA' if gap else 'OK'} (najbliža {d:.3f})"
-            self.stdout.write(f"- {naziv:<16} tež {tez:.2f} · u domenu {n:>3} · {status}")
+            gap = _praznina(n, d, prag)
+            oznaka = "PRAZNINA" if gap else "OK"
+            blizina = "model offline" if d is None else f"najbliža {d:.3f}"
+            self.stdout.write(
+                f"- {naziv:<16} tež {tez:.2f} · u domenu {n:>3} · {oznaka} ({blizina})")
             if gap:
                 praznine.append(slug)
 

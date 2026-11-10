@@ -136,3 +136,16 @@ def test_najbliza_distanca_offline_vraca_none(monkeypatch):
 
     monkeypatch.setattr(embeddings, "embed_semanticki", pukni)
     assert context.najbliza_distanca("bilo šta") is None
+
+
+def test_praznina_logika():
+    from apps.memory.management.commands.potraznja import _praznina
+    # pokriveno divizijom (sales: 36 veština) — NIJE praznina ni uz golu reč
+    assert _praznina(36, 0.482, 0.45) is False
+    # pokriveno semantički (AI: nema divizije, ali najbliža 0.398 < prag)
+    assert _praznina(0, 0.398, 0.45) is False
+    # ni divizije ni bliske veštine → praznina (B2B: 0.664)
+    assert _praznina(0, 0.664, 0.45) is True
+    # model offline: odlučuje samo divizija
+    assert _praznina(0, None, 0.45) is True
+    assert _praznina(5, None, 0.45) is False
