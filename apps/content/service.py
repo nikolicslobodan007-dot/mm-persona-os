@@ -24,6 +24,7 @@ from django.utils import timezone
 from api import audit
 from api.context import current
 from apps.channels.models import ChannelAccount
+from apps.content import zadaci as _zadaci
 from apps.content.models import ContentIdea, ContentItem, Publication
 from apps.llm_gateway import gateway
 from apps.memory import context as memory_context
@@ -34,7 +35,6 @@ from apps.policy import guards
 from apps.policy import service as policy
 from apps.runtime.adapters.social import similarity
 from common import enums as E
-from apps.content import zadaci as _zadaci
 from common import ids as I
 
 CS = E.ContentStatus
