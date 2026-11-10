@@ -18,9 +18,12 @@ NAJBLIŽE SLOBODNA veštine (ADR-0120 vektori). Ako je iznad praga (`--prag`,
 podrazumevano 0.45) — tema je **praznina**, i komanda ispiše spreman
 `signali --teme "<niša>"` upit.
 
-- Semantika je primarni signal (radi i za niše bez divizije, npr. `ai`, `b2b`);
-  broj veština u diviziji ide kao dodatni kontekst i kao fallback kad je model
-  offline (praznina = nijedna veština u diviziji).
+- **Praznina = NEMA nijednog pokrića.** Dva ravnopravna signala: veština u
+  diviziji persone (`broj_u_diviziji`) i semantička blizina (`najbliza_distanca`).
+  Dovoljno je JEDNO pokriće da tema ne bude praznina — zato `sales` sa 36 veština
+  nije praznina ni kad je gola reč „Prodaja" semantički taman iznad praga.
+  Semantika pokriva niše bez divizije (`ai`); divizija pokriva kad je gola reč
+  slab upit. Model offline → odlučuje samo divizija.
 - **Komanda samo ČITA.** Ne vadi, ne uvozi, ne radi spoljašnju akciju. Uvoz
   sakupljenog i dalje pokreće čovek (`--actor user:`, ADR-0074) — potražnja mu
   samo donese spisak šta vredi uloviti.
