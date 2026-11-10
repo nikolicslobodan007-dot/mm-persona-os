@@ -7,6 +7,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from apps.content import zadaci
+from tests.conftest import requires_db
 
 
 def test_registar_i_nadji():
@@ -34,3 +35,25 @@ def test_agent_zadatak_nepoznata_vrsta():
     with pytest.raises(CommandError):
         call_command("agent_zadatak", "--vrsta", "nema", "--ulaz", "X",
                      "--actor", "user:qa")
+
+
+@requires_db
+@pytest.mark.django_db
+def test_content_vrsta_pravi_contentitem(mila):
+    from api.context import bind
+    from apps.content import service, zadaci
+
+    with bind(actor_id="user:qa"):
+        clanak = service.draft(mila, topic="AI u B2B prodaji",
+                               vrsta=zadaci.nadji("dubinski-clanak"))
+    assert clanak.format == "article" and clanak.body
+
+    with bind(actor_id="user:qa"):
+        nit = service.draft(mila, topic="Produktivnost u malim timovima",
+                            vrsta=zadaci.nadji("nit"))
+    assert nit.format == "thread"
+
+    # unazad kompatibilno: bez vrste → kratka objava (POST)
+    with bind(actor_id="user:qa"):
+        obj = service.draft(mila, topic="Brojke u prodaji")
+    assert obj.format == "post"

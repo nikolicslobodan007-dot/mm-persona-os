@@ -34,6 +34,7 @@ from apps.policy import guards
 from apps.policy import service as policy
 from apps.runtime.adapters.social import similarity
 from common import enums as E
+from apps.content import zadaci as _zadaci
 from common import ids as I
 
 CS = E.ContentStatus
@@ -154,7 +155,8 @@ QUOTABLE_MEMORY = frozenset({E.MemoryType.SEMANTIC.value, E.MemoryType.CONTENT.v
 
 def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
           angle: str = "", body: str | None = None,
-          fmt: E.ContentFormat = E.ContentFormat.POST, run: AgentRun | None = None,
+          fmt: E.ContentFormat = E.ContentFormat.POST,
+          vrsta: _zadaci.Zadatak | None = None, run: AgentRun | None = None,
           media: list[dict] | None = None,
           now: datetime | None = None) -> ContentItem:
     """Pravi nacrt. Tekst iz modela prolazi iste tvrde zabrane kao i objava."""
@@ -167,8 +169,9 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
         run = run or operator_run(persona, now)
         provenance, gen, pack, quotable = E.Provenance.USER_PROVIDED, None, None, []
         if body is None:
+            upit = vrsta.upit.format(ulaz=topic) if vrsta else topic
             pack = memory_context.build(persona, run, E.RetrievalProfile.CONTENT_CREATION,
-                                        query=topic, now=now)
+                                        query=upit, now=now)
             quotable = [sc for sc in pack.items
                         if sc.memory.memory_type in QUOTABLE_MEMORY][:2]
             facts = [sc.memory.content if len(sc.memory.content) < 200 else sc.memory.title
@@ -178,15 +181,19 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
 
             rules = prompt_section(persona)
             who = org_section(persona, now=now)
+            zadatak_tekst = (
+                vrsta.uputstvo.format(ulaz=topic) if vrsta
+                else f"Napiši kratku objavu na temu: {topic}."
+                + (f" Ugao: {angle}." if angle else ""))
             gen = gateway.generate(
                 E.LLMPurpose.CONTENT_DRAFT, _system_prompt(persona),
                 (f"{who}\n\n" if who else "") + f"{pack.text}\n\n"
                 + (f"{rules}\n\n" if rules else "")
-                + f"## zadatak\nNapiši kratku objavu na temu: {topic}."
-                + (f" Ugao: {angle}." if angle else ""),
+                + f"## zadatak\n{zadatak_tekst}",
                 persona=persona, run=run, context_pack=pack.record, now=now,
                 media=media,
                 brief={"topic": topic, "angle": angle, "facts": facts,
+                       "vrsta": vrsta.kljuc if vrsta else "objava",
                        "language": persona.primary_locale})
             body, provenance = gen.text, E.Provenance.GENERATED
             if gen.provider != gateway.LOCAL_PROVIDER:
@@ -209,8 +216,9 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
         # uz nacrt da bi ga urednik video, sa odrednicom i brojem tačke.
         from apps.content import recnik
 
+        fmt_final = vrsta.format if vrsta else fmt
         item = ContentItem.objects.create(
-            persona=persona, idea=idea, format=fmt.value, title=topic[:220], body=body,
+            persona=persona, idea=idea, format=fmt_final.value, title=topic[:220], body=body,
             language=persona.primary_locale, status=status.value, content_hash=_hash(body),
             provenance=provenance.value, disclosure_included=disclose, run=run,
             status_reason=reason, pravopis=recnik.nalaz_za_zapis(body),
