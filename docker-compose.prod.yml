@@ -67,6 +67,7 @@ services:
 
   web:
     build: .
+    image: mm-persona-os:latest
     restart: unless-stopped
     # Jedan red namerno: YAML `>` zadrzava prelome kod uvucenijih nastavaka,
     # pa bi gunicorn dobio nula zastavica i vezao se na 127.0.0.1.
@@ -82,7 +83,7 @@ services:
       redis: {condition: service_healthy}
 
   beat:
-    build: .
+    image: mm-persona-os:latest
     restart: unless-stopped
     # Canon §11.1 — beat na 30 s.
     command: celery -A config.celery beat --loglevel=INFO
@@ -93,7 +94,7 @@ services:
       web: {condition: service_started}
 
   worker_core:
-    build: .
+    image: mm-persona-os:latest
     restart: unless-stopped
     # Canon §11.3 — domen bira queue, prioritet je atribut poruke.
     command: >
@@ -107,7 +108,7 @@ services:
       redis: {condition: service_healthy}
 
   worker_browser:
-    build: .
+    image: mm-persona-os:latest
     restart: unless-stopped
     # Canon §12.2 — jedinica je browser kontekst, najviše 4 po worker procesu.
     # Chromium curi memoriju kroz duge sesije; max-tasks-per-child je nizak namerno.
@@ -123,7 +124,7 @@ services:
       redis: {condition: service_healthy}
 
   worker_channel:
-    build: .
+    image: mm-persona-os:latest
     restart: unless-stopped
     command: >
       celery -A config.celery worker --loglevel=INFO
