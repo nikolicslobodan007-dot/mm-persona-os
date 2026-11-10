@@ -297,6 +297,45 @@ def _promovisi_domen(persona, poredak: list) -> list:
     return sorted(poredak, key=lambda f: -tezine.get(_divizija_vestine(f), 0.0))
 
 
+def najbliza_distanca(query: str) -> float | None:
+    """ADR-0131 (stavka 1) — kosinusna razdaljina NAJBLIŽE SLOBODNA veštine
+    zadatku (ADR-0120 infrastruktura). Vraća None kad model nije dostupan ili
+    kad nema vektora — pozivalac tada odlučuje po drugom signalu (broj u
+    diviziji). Čita, ništa ne menja."""
+    from pgvector.django import CosineDistance
+
+    from apps.memory.models import KnowledgeEmbedding
+    try:
+        qv = embeddings.embed_semanticki(query)
+    except Exception as e:  # noqa: BLE001 — model nedostupan (offline)
+        log.warning("najbliza_distanca: embed pao: %s", e)
+        return None
+    eligible = list(
+        KnowledgeFact.objects
+        .filter(predicate=VESTINA_PREDIKAT, source__is_active=True,
+                source__license_box=E.LicenseBox.SLOBODNA.value)
+        .values_list("id", flat=True))
+    if not eligible:
+        return None
+    mk = embeddings.vestina_model_key()
+    d = (KnowledgeEmbedding.objects
+         .filter(model_key=mk, fact_id__in=eligible)
+         .annotate(dist=CosineDistance("embedding", qv))
+         .order_by("dist").values_list("dist", flat=True).first())
+    return float(d) if d is not None else None
+
+
+def broj_u_diviziji(divizija: str) -> int:
+    """Koliko SLOBODNA veština pripada datoj diviziji korpusa (ADR-0131).
+    Prazna divizija (izvori bez divizije, npr. GitHub Signals) se ne broji."""
+    if not divizija:
+        return 0
+    base = (KnowledgeFact.objects
+            .filter(predicate=VESTINA_PREDIKAT, source__is_active=True,
+                    source__license_box=E.LicenseBox.SLOBODNA.value))
+    return sum(1 for f in base if _divizija_vestine(f) == divizija)
+
+
 def _rangiraj_vestine(persona, query: str, sektor: str) -> list:
     """Redosled veština za paket: semantički (ADR-0120) kad ima upita i modela,
     inače leksički po sektoru (ADR-0101). Na vrh oba poretka ide promocija po

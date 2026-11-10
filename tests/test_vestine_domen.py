@@ -100,3 +100,39 @@ def test_nisa_persone_dize_prodajnu_vestinu(mila, monkeypatch):
     # bez persone (bez niša) → čist kosinus: eng prvi (no-op fallback)
     bez = [f.subject for f in context._rangiraj_vestine(None, "treba mi zadatak alfa", "")]
     assert bez.index("eng-vestina") < bez.index("sales-vestina")
+
+
+@requires_db
+@pytest.mark.django_db
+def test_najbliza_distanca_i_broj_u_diviziji(monkeypatch):
+    monkeypatch.setattr(embeddings, "embed_semanticki", _laz_vektor)
+    uvezi(naslov_izvora="agency-agents – sales (destilovano)",
+          uri="https://example.com/s", license_box=E.LicenseBox.SLOBODNA,
+          license_note="MIT", actor="user:qa",
+          vestine=[Vestina(
+              ime="s1", koraci=["uradi alfa"], pouzdanost=0.9,
+              napomene="Destilovano iz agency-agents/sales/a.md (MIT)")])
+    uvezi(naslov_izvora="agency-agents – engineering (destilovano)",
+          uri="https://example.com/e", license_box=E.LicenseBox.SLOBODNA,
+          license_note="MIT", actor="user:qa",
+          vestine=[Vestina(
+              ime="e1", koraci=["uradi beta"], pouzdanost=0.9,
+              napomene="Destilovano iz agency-agents/engineering/b.md (MIT)")])
+
+    # tema sa markerom `alfa` → s1 ima identičan vektor → najbliža ~0
+    d = context.najbliza_distanca("treba mi alfa")
+    assert d is not None and d < 0.01
+    assert context.broj_u_diviziji("sales") == 1
+    assert context.broj_u_diviziji("engineering") == 1
+    assert context.broj_u_diviziji("marketing") == 0  # prazno = praznina
+    assert context.broj_u_diviziji("") == 0
+
+
+@requires_db
+@pytest.mark.django_db
+def test_najbliza_distanca_offline_vraca_none(monkeypatch):
+    def pukni(text, *, model=None):
+        raise RuntimeError("offline")
+
+    monkeypatch.setattr(embeddings, "embed_semanticki", pukni)
+    assert context.najbliza_distanca("bilo šta") is None
