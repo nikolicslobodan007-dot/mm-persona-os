@@ -33,6 +33,7 @@ import hashlib
 import logging
 import math
 import pathlib
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -254,9 +255,52 @@ def _semanticki_rang(query: str, base: list):
     return facts
 
 
+#: ADR-0131 — divizija korpusa iz koga je veština destilovana, pročitana iz
+#: SIROVE napomene („Destilovano iz agency-agents/<div>/…"). Prazno za izvore
+#: koji nisu po diviziji (npr. GitHub Signals: „Sakupljeno iz web: …"), pa oni
+#: ne dobijaju podsticaj domena i ostaju po semantici/leksici.
+_DIVIZIJA_RE = re.compile(r"agency-agents/([a-z0-9-]+)/")
+
+
+def _divizija_vestine(fact: KnowledgeFact) -> str:
+    m = _DIVIZIJA_RE.search(str(fact.object_json.get("napomene") or ""))
+    return m.group(1) if m else ""
+
+
+def _persona_divizije(persona) -> dict[str, float]:
+    """ADR-0131 — niše persone kao {slug: težina} (kategorija `niche`). Rečnik
+    niša poklapa rečnik divizija korpusa (`sales`, `marketing`, `engineering`…),
+    oba su engleski ključevi, pa nema srpsko-engleskog jaza. Niša „sales 0.7"
+    diže veštine iz divizije sales. Niše bez odgovarajuće divizije (`ai`, `b2b`)
+    ne diraju poredak — i to je namera: generička „ai" niša ne sme da gura sve
+    veštine o AI u gornji sloj. Bez persone/niša → prazno (no-op)."""
+    if persona is None:
+        return {}
+    return {
+        link.tag.slug: float(link.weight)
+        for link in persona.tag_links.filter(
+            tag__category="niche").select_related("tag")
+    }
+
+
+def _promovisi_domen(persona, poredak: list) -> list:
+    """ADR-0131 — stabilno podigni veštine čija divizija poklapa nišu persone,
+    POVRH semantičkog/leksičkog poretka. Jača niša ide pre slabije; unutar iste
+    težine redosled ostaje onakav kakav je ušao (kosinus/leksika), jer je
+    `sorted` stabilan. Veštine bez poklapanja imaju težinu 0 i ostaju na kraju,
+    u zatečenom redosledu. Bez niša — ništa se ne menja, pa stari testovi i
+    persone bez niša rade kao pre. Ovim prodajni zadatak dovlači prodajne
+    veštine u sloj „U celini", a meta-veštine o AI padaju u indeks."""
+    tezine = _persona_divizije(persona)
+    if not tezine:
+        return poredak
+    return sorted(poredak, key=lambda f: -tezine.get(_divizija_vestine(f), 0.0))
+
+
 def _rangiraj_vestine(persona, query: str, sektor: str) -> list:
     """Redosled veština za paket: semantički (ADR-0120) kad ima upita i modela,
-    inače leksički po sektoru (ADR-0101)."""
+    inače leksički po sektoru (ADR-0101). Na vrh oba poretka ide promocija po
+    domenu persone (ADR-0131), da se pravi sektor ne zadrži u repu."""
     base = list(
         KnowledgeFact.objects
         .filter(predicate=VESTINA_PREDIKAT, source__is_active=True,
@@ -265,9 +309,10 @@ def _rangiraj_vestine(persona, query: str, sektor: str) -> list:
     if query.strip():
         sem = _semanticki_rang(query, base)
         if sem is not None:
-            return sem
+            return _promovisi_domen(persona, sem)
     upit = embeddings.stems(query) if query.strip() else set()
-    return sorted(base, key=lambda f: _vestina_kljuc(f, upit, sektor))
+    leks = sorted(base, key=lambda f: _vestina_kljuc(f, upit, sektor))
+    return _promovisi_domen(persona, leks)
 
 
 
