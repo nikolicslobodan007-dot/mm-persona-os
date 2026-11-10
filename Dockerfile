@@ -34,6 +34,17 @@ COPY pyproject.toml constraints.txt ./
 # a da to niko nije odlucio.
 RUN pip install -e ".[dev]" -c constraints.txt
 
+# Canon §12.1 — Playwright je browser engine (F6 browser-worker `transport._browser`
+# i Browser Gateway `sakupljanje.brauzer`). Do sada NIJE bio u slici, pa browser
+# render nije mogao da radi. Verzija zakucana (ADR-0083; `browser` extra nije u
+# constraints-u). `--with-deps chromium` povlači OS zavisnosti + sam Chromium —
+# lokalni FALLBACK; primarni put je Lightpanda pool preko CDP (ADR-0130, nacrt
+# lightpanda-browser-pool-farma). Chromium binarni ne troši RAM dok se ne pokrene
+# (worker_browser je concurrency=1); tešku navigaciju preuzima farma.
+RUN pip install --no-cache-dir "playwright==1.47.0" \
+ && playwright install --with-deps chromium \
+ && rm -rf /var/lib/apt/lists/*
+
 # ADR-0120 — pečemo višejezični model veština u sliku, u isti keš koji
 # `FASTEMBED_CACHE` pokazuje, da pogon radi BEZ mreže (ADR-0009) i da
 # prvi uvoz ne čeka preuzimanje. Build se radi na serveru (otvoren
