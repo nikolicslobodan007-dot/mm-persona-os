@@ -191,7 +191,7 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
                 + (f"{rules}\n\n" if rules else "")
                 + f"## zadatak\n{zadatak_tekst}",
                 persona=persona, run=run, context_pack=pack.record, now=now,
-                media=media,
+                media=media, max_output=(vrsta.izlaz_tokena if vrsta else None),
                 brief={"topic": topic, "angle": angle, "facts": facts,
                        "vrsta": vrsta.kljuc if vrsta else "objava",
                        "language": persona.primary_locale})

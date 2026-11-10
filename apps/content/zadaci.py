@@ -33,6 +33,8 @@ class Zadatak:
     uputstvo: str
     format: E.ContentFormat = E.ContentFormat.POST
     interni: bool = False
+    #: izlazni token-budžet za Gateway; None → podrazumevano (800, za objavu).
+    izlaz_tokena: int | None = None
 
 
 ZADACI: dict[str, Zadatak] = {
@@ -49,28 +51,28 @@ ZADACI: dict[str, Zadatak] = {
         uputstvo=("Napiši dubinski članak o temi: {ulaz}. Jasna teza, 3–4 odeljka "
                   "sa podnaslovima, svaka ključna tvrdnja sa proverljivim izvorom; "
                   "zaključak sa jednim konkretnim savetom. Bez praznog hvalospeva."),
-        format=E.ContentFormat.ARTICLE),
+        format=E.ContentFormat.ARTICLE, izlaz_tokena=1600),
     "nit": Zadatak(
         "nit", "Nit / carousel",
         upit="{ulaz}",
         uputstvo=("Napravi nit (thread) o temi: {ulaz}. 5–7 delova; prvi je kuka, "
                   "svaki deo samostalan i kratak, poslednji poziv na razmišljanje. "
                   "Bez hashtag-ova."),
-        format=E.ContentFormat.THREAD),
+        format=E.ContentFormat.THREAD, izlaz_tokena=1100),
     "newsletter": Zadatak(
         "newsletter", "Newsletter izdanje",
         upit="{ulaz}",
         uputstvo=("Napravi newsletter izdanje na temu: {ulaz}. 3–4 kratke stavke, "
                   "svaka: šta se desilo + zašto je važno + izvor. Uvodna rečenica "
                   "i jedna misao za kraj."),
-        format=E.ContentFormat.NEWSLETTER),
+        format=E.ContentFormat.NEWSLETTER, izlaz_tokena=1400),
     "video-scenario": Zadatak(
         "video-scenario", "Video scenario",
         upit="{ulaz}",
         uputstvo=("Napiši scenario za kratak video o temi: {ulaz}. Kuka (prvih 5 "
                   "sekundi), 3 poente sa primerom, poziv na kraju. Označi [KADAR] "
                   "i [TEKST NA EKRANU]."),
-        format=E.ContentFormat.VIDEO_SCRIPT),
+        format=E.ContentFormat.VIDEO_SCRIPT, izlaz_tokena=1100),
     # -------- INTERNI: radni artefakt, ne objavljuje se (showcase) --------
     "battlecard": Zadatak(
         "battlecard", "Konkurentski battlecard",

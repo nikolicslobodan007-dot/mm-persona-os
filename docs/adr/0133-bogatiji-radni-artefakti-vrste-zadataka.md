@@ -32,6 +32,8 @@ kaže šta da napravi (`{ulaz}` = tema/konkurent/prospekt). Dve staze:
 `draft` je proširen unazad kompatibilno: `vrsta=None` → staro ponašanje (kratka
 objava, POST). Kad je `vrsta` data, koristi njen upit/uputstvo/format.
 
+**Izlazni budžet po vrsti.** `Zadatak.izlaz_tokena` kaže Gateway-u koliko izlaznih tokena sme (prosleđeno kao `max_output` kroz `generate`). Podrazumevano (800, za objavu) seklo je duži članak usred rečenice; zato članak=1600, newsletter=1400, nit/video=1100. `None` → podrazumevano.
+
 ## Posledica
 - `agent_zadatak --vrsta dubinski-clanak --ulaz "AI u B2B prodaji"` → pravi i čuva
   ContentItem (ARTICLE) kroz živ Gateway, sa Milinom disciplinom izvora.

@@ -281,7 +281,8 @@ def _vizuelni_blokovi(media, cap: str):
 
 
 def _call_external(route: LLMRoute, system: str, prompt: str,
-                   persona=None, media=None) -> tuple[str, int, int, str]:
+                   persona=None, media=None,
+                   max_output: int | None = None) -> tuple[str, int, int, str]:
     from apps.runtime.transport import CredentialMissing, resolve_secret
 
     ref, source = credential_ref(route.provider, persona)
@@ -295,7 +296,7 @@ def _call_external(route: LLMRoute, system: str, prompt: str,
         from apps.llm_gateway import secrets as agent_secrets
 
         agent_secrets.touch(persona, route.provider)
-    max_out = route.max_output_tokens or 800
+    max_out = max_output or route.max_output_tokens or 800
     if route.provider == "anthropic":
         base = route.base_url or getattr(settings, "LLM_BASE_URLS", {}).get(
             "anthropic", "https://api.anthropic.com")
@@ -353,6 +354,7 @@ def _cost_cents(route: LLMRoute, tin: int, tout: int) -> int:
 
 def generate(purpose: E.LLMPurpose, system: str, prompt: str, *, persona=None, run=None,
              context_pack=None, brief: dict | None = None, media=None,
+             max_output: int | None = None,
              now: datetime | None = None, only: LLMRoute | None = None,
              pozivalac: Callable[[LLMRoute], tuple[str, int, int, str]] | None = None,
              ) -> Generation:
@@ -385,7 +387,7 @@ def generate(purpose: E.LLMPurpose, system: str, prompt: str, *, persona=None, r
                 text, tin, tout, finish = pozivalac(route)
             elif external:
                 text, tin, tout, finish = _call_external(route, system, prompt, persona,
-                                                         media=media)
+                                                         media=media, max_output=max_output)
             else:
                 lokalni_prompt = prompt + _media_note(media)
                 text = local.compose(purpose, brief or {}, lokalni_prompt)
