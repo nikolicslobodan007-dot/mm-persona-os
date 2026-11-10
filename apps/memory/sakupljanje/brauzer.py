@@ -1,20 +1,23 @@
-"""Browser Task Gateway (skelet) — render stranice (JS) preko Playwright-a.
+"""Browser Task Gateway (skelet) — JS render preko Lightpanda pool-a, HTTP fallback.
 
-Canon §12.1: engine je Playwright i SAMO Playwright. Lightpanda se NE uvodi kao
-drugi engine, nego kao CDP backend na koji se Playwright kači
-(`connect_over_cdp`) umesto da lokalno diže Chromium — ista Playwright mašina,
-samo lakši browser (na farmi, preko Tailscale-a). Ako CDP nije podešen ili
-padne → fallback na lokalni Chromium (`launch`), pa render NE zavisi od farme.
+Canon §12.1: engine je Playwright. Lightpanda nije drugi engine, nego CDP backend
+na koji se Playwright kači (`connect_over_cdp`) umesto lokalnog Chromium-a — ista
+Playwright mašina, lakši browser (farma, preko Tailscale-a). `connect_over_cdp`
+traži SAMO playwright paket, ne lokalni Chromium binarni.
 
-Env: `LIGHTPANDA_CDP = ws://<tailscale-ip>:9222` (prazno → uvek lokalni Chromium).
+Engine izbor:
+  - `LIGHTPANDA_CDP` podešen → Lightpanda pool (JS render) → engine "lightpanda";
+  - pool nedostupan ILI prazno → fallback plain-HTTP (`uvoz_web.preuzmi`, BEZ JS)
+    → engine "http". Na napregnutom serveru NE dižemo lokalni Chromium; težak JS
+    render je na farmi, a fallback je lagan.
 
-SSRF/robots brane se dele sa `apps.libri.uvoz_web` (ista pravila kao plain HTTP
-ingest). Vraća sirov HTML (render); parsiranje u čist tekst radi pozivalac
-(`uvoz_web.naslov_i_blokovi`).
+SSRF/robots: CDP put proverava sam (Playwright ne); HTTP fallback ide kroz
+`uvoz_web.preuzmi` koji nosi svoje SSRF/robots/cap brane.
 
-NAPOMENA: skelet za Lightpanda pilot — JOŠ nije uvezan u `ulaz._web` ni u runtime
-`transport`. Wiring i konačno mesto (verovatno runtime F6) posle merenja na farmi.
-Vidi `claude/nacrt-09-11-lightpanda-browser-pool-farma.md`.
+Env: `LIGHTPANDA_CDP = ws://<tailscale-ip>:9222` (prazno → odmah HTTP fallback).
+
+NAPOMENA: skelet za Lightpanda pilot — JOŠ nije uvezan u `ulaz._web`. Wiring posle
+merenja na farmi. Vidi `claude/nacrt-09-11-lightpanda-browser-pool-farma.md`.
 """
 
 from __future__ import annotations
@@ -27,23 +30,16 @@ class BrauzerGreska(Exception):
 
 
 def cdp_iz_okruzenja() -> str:
-    """CDP endpoint Lightpanda pool-a iz env-a; prazno = lokalni Chromium."""
+    """CDP endpoint Lightpanda pool-a iz env-a; prazno = odmah HTTP fallback."""
     return os.environ.get("LIGHTPANDA_CDP", "").strip()
 
 
-def _otvori(p, cdp: str):
-    """Playwright browser: CDP (Lightpanda pool) ako je `cdp` zadat, inače lokalni Chromium."""
-    if cdp:
-        return p.chromium.connect_over_cdp(cdp)
-    return p.chromium.launch(headless=True)
-
-
-def _render_jednom(url: str, cdp: str, ua: str, timeout: float) -> dict:
-    """Jedan pokušaj rendera datim engine-om (CDP ili lokalni). Diže izuzetak na grešku."""
+def _render_cdp(url: str, cdp: str, ua: str, timeout: float) -> dict:
+    """JS render preko Lightpanda pool-a (Playwright `connect_over_cdp`). Diže na grešku."""
     from playwright.sync_api import sync_playwright
 
     with sync_playwright() as p:
-        browser = _otvori(p, cdp)
+        browser = p.chromium.connect_over_cdp(cdp)
         try:
             ctx = browser.new_context(
                 user_agent=ua, locale="sr-RS",
@@ -57,31 +53,32 @@ def _render_jednom(url: str, cdp: str, ua: str, timeout: float) -> dict:
 
 
 def render(url: str, *, suvo: bool = False, timeout: float = 20.0) -> dict:
-    """Render stranice → {tekst(sirov HTML), naslov, izvor, engine}. SSRF/robots brane.
+    """Stranica → {tekst(HTML), naslov, izvor, engine}. Lightpanda pool → HTTP fallback.
 
-    Pokušaj Lightpanda pool (CDP) ako je `LIGHTPANDA_CDP` podešen; na grešku
-    fallback lokalni Chromium. `engine` kaže šta je stvarno upotrebljeno
-    ('lightpanda' | 'chromium' | 'suvo').
+    `engine`: 'lightpanda' (JS, pool) | 'http' (plain, bez JS) | 'suvo'.
     """
     if suvo:
         return {"tekst": "<html>Suvi render (bez mreže).</html>", "naslov": url,
                 "izvor": url, "engine": "suvo"}
 
     from apps.libri import uvoz_web
-    uvoz_web.proveri_bezbedan(url)
-    ua = uvoz_web._ua()
-    if not uvoz_web._robots_dozvoljava(url, ua):
-        raise BrauzerGreska("robots.txt zabranjuje čitanje ovog URL-a.")
 
     cdp = cdp_iz_okruzenja()
-    pokusaji = ([("lightpanda", cdp)] if cdp else []) + [("chromium", "")]
-    greske: list[str] = []
-    for engine, c in pokusaji:
+    if cdp:
+        uvoz_web.proveri_bezbedan(url)
+        ua = uvoz_web._ua()
+        if not uvoz_web._robots_dozvoljava(url, ua):
+            raise BrauzerGreska("robots.txt zabranjuje čitanje ovog URL-a.")
         try:
-            r = _render_jednom(url, c, ua, timeout)
-        except Exception as e:  # noqa: BLE001 — probaj sledeći engine (fallback)
-            greske.append(f"{engine}: {str(e)[:120]}")
-            continue
-        return {"tekst": r["html"], "naslov": r["naslov"] or url,
-                "izvor": url, "engine": engine}
-    raise BrauzerGreska("render nije uspeo: " + " | ".join(greske))
+            r = _render_cdp(url, cdp, ua, timeout)
+            return {"tekst": r["html"], "naslov": r["naslov"] or url,
+                    "izvor": url, "engine": "lightpanda"}
+        except Exception:  # noqa: BLE001 — pool nedostupan → degradiraj na HTTP
+            pass
+
+    # Fallback: plain HTTP (preuzmi nosi SSRF/robots/cap brane). Bez JS.
+    try:
+        html = uvoz_web.preuzmi(url)
+    except Exception as e:  # noqa: BLE001 — mreža/robots/cap
+        raise BrauzerGreska(f"render nije uspeo (HTTP): {e}") from e
+    return {"tekst": html, "naslov": url, "izvor": url, "engine": "http"}
