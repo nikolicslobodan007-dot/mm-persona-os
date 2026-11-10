@@ -2,38 +2,40 @@
 
 - **Status:** prihvaćen (10.11.2026.)
 - **Povod:** Persona je do sada pravila samo kratku objavu (`service.draft`,
-  hardkodirano „Napiši kratku objavu"). A u veštinama već ima znanje za prave
-  radne artefakte (battlecard, outreach sekvenca, plan naloga). Treba joj dati
-  da ih napravi — bez novog motora.
+  hardkodirano „Napiši kratku objavu"). A u veštinama već ima znanje za bogatije
+  artefakte. Živa proba battlecard-a potvrdila je i disciplinu: Mila je ODBILA da
+  pravi battlecard sa izmišljenim brojkama (ADR-0033 + dosije firme: nemamo
+  proizvod ni kupce) — dokaz da mehanizam vuče pravu veštinu i da agent poštuje
+  „što nije izmereno nije tvrdnja". Ali i pouka: **sales-ops artefakti ne pašu
+  Milinoj ulozi** (ona je content creator; firma nema pipeline). Zato joj dajemo
+  CONTENT vrste koje može da ukoreni u javne izvore.
 - **Prethodi:** ADR-0131 (promocija po domenu), ADR-0096/0112 (veštine u
-  kontekstu), ADR-0074 (actor user:)
-- **Menja:** nova `apps/content/zadaci.py` (registar vrsta), nova komanda
-  `apps/content/management/commands/agent_zadatak.py`, testovi.
+  kontekstu), ADR-0033 (merenje), ADR-0074 (actor user:)
+- **Menja:** nova `apps/content/zadaci.py` (registar), `apps/content/service.py`
+  (`draft` prima `vrsta`), nova komanda `agent_zadatak.py`, testovi.
 
 ## Odluka
 
-**Vrsta zadatka = (`upit`, `uputstvo`).** Registar `ZADACI` drži nekoliko vrsta;
-svaka kaže kojim UPITOM se sastavlja kontekst (da ADR-0131 digne baš pravu
-veštinu u sloj „U celini (sa koracima)") i koje UPUTSTVO ide modelu (`{ulaz}` =
-konkretan unos: konkurent, prospekt, nalog, tema).
+**Vrsta zadatka = (`upit`, `uputstvo`, `format`, `interni`).** Registar `ZADACI`;
+`upit` sastavlja kontekst (ADR-0131 digne pravu veštinu sa koracima), `uputstvo`
+kaže šta da napravi (`{ulaz}` = tema/konkurent/prospekt). Dve staze:
 
-Artefakt nastaje kroz **isti** `context.build` + `gateway.generate` kao objava —
-nema novog motora. Lepa posledica ADR-0131: upit vrste (npr. „konkurentski
-battlecard") dovuče tu veštinu sa koracima, pa agent IZVRŠAVA njene korake za
-konkretan ulaz, ne izmišlja format.
+1. **CONTENT vrste** (objava→POST, dubinski-clanak→ARTICLE, nit→THREAD,
+   newsletter→NEWSLETTER, video-scenario→VIDEO_SCRIPT) — javni sadržaj. Idu kroz
+   **postojeći `service.draft`** (`draft(..., vrsta=z)`), pa se ČUVAJU kao
+   `ContentItem` sa svim kapijama (zabrane, disclosure, repeticija, pravopis).
+   Nema novog modela — poklapaju se sa `ContentFormat`.
+2. **INTERNI artefakti** (battlecard, outreach, plan-naloga) — radni dokument koji
+   se NE objavljuje na kanal. Zasad showcase: `agent_zadatak` ih ISPISUJE, ne čuva.
+   Model `Artefakt` + pregled su sledeći sloj.
 
-Prve vrste: `objava`, `battlecard`, `outreach`, `plan-naloga`.
-
-## Obim — showcase-first
-
-`agent_zadatak` je showcase sloj: **ispisuje** artefakt, NE čuva. Razlog: javni
-`ContentFormat` (POST/ARTICLE…) ne opisuje INTERNI radni artefakt (battlecard se
-ne objavljuje na kanal, nema disclosure/repetition/pravopis mašineriju). Model
-`Artefakt` + pregled su sledeći sloj, tek pošto vidimo izlaze — isto kako je
-`potraznja` prvo bila samo-čitanje (ADR-0132).
+`draft` je proširen unazad kompatibilno: `vrsta=None` → staro ponašanje (kratka
+objava, POST). Kad je `vrsta` data, koristi njen upit/uputstvo/format.
 
 ## Posledica
-- `agent_zadatak --vrsta battlecard --ulaz "Konkurent: X"` → bogat artefakt kroz
-  živ Gateway, koji vuče ICP/battlecard veštine sa koracima.
-- Sledeći sloj: persistencija (model + pregled), pa uvezivanje u planer/raspored
-  (da agent sam bira vrstu po zadatku iz reda), pa — stavka 3 — prva prava akcija.
+- `agent_zadatak --vrsta dubinski-clanak --ulaz "AI u B2B prodaji"` → pravi i čuva
+  ContentItem (ARTICLE) kroz živ Gateway, sa Milinom disciplinom izvora.
+- `agent_zadatak --vrsta battlecard --ulaz "..."` → showcase (radiće za agenta sa
+  stvarnim pipeline-om i izvorom; za Milu/firmu bez proizvoda nema osnovu).
+- Sledeći sloj: model `Artefakt` za interne; pa planer da agent sam bira vrstu po
+  zadatku; pa — stavka 3 — prva prava akcija.
