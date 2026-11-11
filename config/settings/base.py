@@ -194,6 +194,14 @@ GLOBAL_PUBLIC_READS_ENABLED = os.environ.get(
     "GLOBAL_PUBLIC_READS_ENABLED", "false"
 ).lower() == "true"
 
+# ADR-0138 — hirurška dozvola za spoljne EFEKTE. Lista unosa
+# `persona_public_id|channel_type:handle|action_type` (`*` = bilo šta), zarezom.
+# PRAZNA = bez ograničenja (globalni prekidač je jedini uslov, kao do sada).
+# NEPRAZNA = spoljni efekat ide SAMO za navedene (persona, kanal, tip). Za prvu
+# pravu akciju: popuni JEDNIM unosom PA upali prekidač — izlazi samo to. Čitanja
+# (READ_ACTION_TYPES) su izuzeta od ove liste (svoj, uži prekidač).
+EXTERNAL_ACTIONS_ALLOWLIST = os.environ.get("EXTERNAL_ACTIONS_ALLOWLIST", "")
+
 # ---------------------------------------------------------------- F6 (ADR-0008)
 # Canon §12.8 t.1 — hladna pošta NIKADA sa ovih domena ni njihovih poddomena.
 PRIMARY_COMPANY_DOMAINS = [
