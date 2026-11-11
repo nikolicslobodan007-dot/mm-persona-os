@@ -98,3 +98,34 @@ def test_handler_bez_naloga_podrazumevani_sazetak(monkeypatch):
                            plan=SimpleNamespace(persona=persona, run=None))
     steps._sazetak(step, {})
     assert "kratak sažetak" in zabelezeno["prompt"]
+
+
+def test_handler_ubacuje_dosije_firme(monkeypatch):
+    # ADR-0143 — web.sazetak dobija dosije firme da „korisno za WK" bude uzemljeno.
+    from apps.memory import context as mem_context
+    monkeypatch.setattr(ulaz, "procitaj",
+                        lambda vrsta, url: {"tekst": "Tekst o alatu.",
+                                            "naslov": "Alat", "izvor": url})
+    monkeypatch.setattr(content_service, "_system_prompt", lambda p: "sys")
+    monkeypatch.setattr(mem_context, "_dosije_firme", lambda: "DOSIJE-WK-MARKER")
+    zabelezeno = {}
+
+    def _fake(*a, **kw):
+        zabelezeno["prompt"] = a[2]
+        return SimpleNamespace(text="ok")
+
+    monkeypatch.setattr(gateway, "generate", _fake)
+    persona = SimpleNamespace(primary_locale="sr-Latn")
+    step = SimpleNamespace(
+        input_json={"url": "https://x/repo", "tema": "Da li je korisno za WK?"},
+        plan=SimpleNamespace(persona=persona, run=None))
+    steps._sazetak(step, {})
+    assert "DOSIJE-WK-MARKER" in zabelezeno["prompt"]  # dosije firme u promptu
+    assert "korisno za WK" in zabelezeno["prompt"]      # nalog (ugao) u promptu
+
+
+def test_kucna_pravila_postoje():
+    # Opcija 1 — pisac ne potpisuje imenom; opšta znanja nisu praksa firme.
+    kp = content_service.KUCNA_PRAVILA
+    assert "ne potpisuj" in kp
+    assert "praksu ove firme" in kp

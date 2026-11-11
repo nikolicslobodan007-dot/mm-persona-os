@@ -18,6 +18,7 @@ def _sazetak(step: plans.PlanStep, state: dict) -> plans.Outcome:
     """URL iz koraka → pročitaj stranicu/repo → kratak tačan sažetak (iz teksta)."""
     from apps.content.service import _system_prompt
     from apps.llm_gateway import gateway
+    from apps.memory.context import _dosije_firme
     from apps.memory.sakupljanje import ulaz
     from common import enums as E
 
@@ -42,9 +43,13 @@ def _sazetak(step: plans.PlanStep, state: dict) -> plans.Outcome:
     zadatak = (spec.get("tema") or "").strip() or (
         "Napiši kratak sažetak: šta je ovo, čemu služi, ključne stvari i ko "
         "stoji iza toga.")
+    # ADR-0143 — dosije firme ide u prompt da „korisno za WK" bude procenjeno
+    # sa kontekstom šta je WK; činjenice o firmi ostaju iz dosijea.
+    dosije = _dosije_firme()
     gen = gateway.generate(
         E.LLMPurpose.CONTENT_DRAFT, _system_prompt(persona),
-        f"Pročitaj tekst sa {url} i uradi zadatak: \u201e{zadatak}\u201c.\n"
+        (f"{dosije}\n\n---\n\n" if dosije else "")
+        + f"Pročitaj tekst sa {url} i uradi zadatak: \u201e{zadatak}\u201c.\n"
         f"Piši na srpskom (latinica), kratko i tačno. Činjenice o izvoru uzimaj "
         f"isključivo iz teksta — ne izmišljaj; ako neka činjenica ne piše, reci "
         f"da je u izvoru nema. Zaključke i procene koje zadatak traži slobodno "
