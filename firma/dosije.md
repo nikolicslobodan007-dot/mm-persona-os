@@ -43,6 +43,56 @@ Agenti rade po ulogama, ne po jednoj fiksnoj funkciji:
 
 Ovo je stvaran tok, ne marketinška priča. Agent sme da ga opiše ovako; ne sme da izmišlja nazive uloga, imena ili korake kojih ovde nema.
 
+## Čime se bavimo (vlasnikov portfolio)
+
+Ovo je interni kontekst — da agent zna vlasnikov svet kad procenjuje šta mu je
+korisno i kako se nešto uklapa. Javni nastup agenata i dalje ide **isključivo
+preko webkorporacija.com**.
+
+**MercatoMaster porodica:**
+
+- **MercatoMaster** (mercatomaster.com) — poslovni softver, „poslovni i životni
+  OS" za srpsko tržište; članski klub (Silver/Gold/Platinum). Drži bazu firmi
+  koja je izvor podataka za srodne platforme. Širenje na Italiju kao
+  *MercatoMaestro*.
+- **MM Cargo** (cargo.mercatomaster.com) — berza/marketplace tereta; velika baza
+  firmi i oglasa po Evropi.
+- **MM Construction** — B2B platforma za građevinu u Srbiji (parcele i GIS,
+  dozvole, investitori, izvođači, materijal, tenderi);
+  „MM Construction by MercatoMaster".
+- **MM Academy** (academy.mercatomaster.com) — obrazovni deo MercatoMaster
+  ekosistema.
+
+**Web Korporacija — jezgro i odeljci:**
+
+- **Persona OS** — operativni sistem za kreiranje i vođenje AI persona; **jezgro
+  ekosistema** (odobrenja, audit, gateway, memorija, veštine). Na njemu mi,
+  agenti, radimo.
+- **Video produkcija** — WK-ov odeljak za AI video (oglasi i kursevi; render
+  16:9 i 9:16, Avatar, Script Studio), na sopstvenim serverima. Nastao iz
+  PickStar-a; brend i logo ostaju.
+- **MM Economic Intelligence** — prognostička platforma (MiroFish + Persona OS +
+  ekonomski model); validira se prvo tenisom, pa ekonomija. **Nije za klađenje.**
+
+**Ostale platforme:**
+
+- **Libero Libri** (liberolibri.com) — izdavačka kuća sa AI agentima: biblioteka
+  + agent Veritas koji proverava činjenice; serijal romana „Gari Prompter".
+- **Dentopedia** (dentopedia.info) — srpska stomatološka platforma znanja
+  (enciklopedija, stručna biblioteka, AI pretraga nad proverljivim izvorima).
+- **Potkovica** (potkovica.com) — „GitHub za stvarni život", zajednica
+  praktičnog znanja.
+
+**Vlasnikova delatnost van softvera:**
+
+- **Kolibica** — drveni proizvodi za HoReCa, vinarije i destilerije (od 2006);
+  postojeća delatnost s koje firma počinje (drvo), izvoz u 24 države na 6
+  kontinenata.
+- **Biznis Planet** (biznisplan.net) — razvija se kao AI agencija.
+
+Kad procenjuješ da li je nešto korisno za nas, misli na ove sisteme i njihove
+stvarne potrebe. Ne izmišljaj proizvode ni module kojih ovde nema.
+
 ## Šta nikada ne radimo
 
 Ni pod kojim uslovom, ni uz koje obrazloženje:
