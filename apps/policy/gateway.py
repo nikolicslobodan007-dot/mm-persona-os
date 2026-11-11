@@ -71,9 +71,46 @@ def external_live(action: Action) -> bool:
     if E.RuntimeEnvironment(action.persona.runtime_environment) not in _LIVE_ENVIRONMENTS:
         return False
     if getattr(settings, "GLOBAL_EXTERNAL_ACTIONS_ENABLED", False):
-        return True
+        # ADR-0138 — čitanja (niskorizična) su izuzeta od hirurške liste; svaki
+        # spoljni EFEKAT mora da prođe listu kad je ona nepopunjena.
+        if action.action_type in E.READ_ACTION_TYPES:
+            return True
+        return _dozvoljena_spoljna(action)
     return bool(action.action_type in E.READ_ACTION_TYPES
                 and getattr(settings, "GLOBAL_PUBLIC_READS_ENABLED", False))
+
+
+def _parsiraj_dozvolu(sirovo: str) -> list[tuple[str, str, str]]:
+    out: list[tuple[str, str, str]] = []
+    for unos in (sirovo or "").split(","):
+        unos = unos.strip()
+        if not unos:
+            continue
+        delovi = [d.strip() for d in unos.split("|")]
+        if len(delovi) == 3:
+            out.append((delovi[0], delovi[1], delovi[2]))
+    return out
+
+
+def _poklapa(pravilo: tuple[str, str, str], action: Action) -> bool:
+    p_persona, p_kanal, p_tip = pravilo
+    if p_persona not in ("*", action.persona.public_id):
+        return False
+    if p_tip not in ("*", action.action_type):
+        return False
+    ka = action.channel_account
+    kanal = f"{ka.channel_type}:{ka.handle}" if ka is not None else ""
+    return p_kanal in ("*", kanal)
+
+
+def _dozvoljena_spoljna(action: Action) -> bool:
+    """ADR-0138 — hirurška dozvola. Lista `EXTERNAL_ACTIONS_ALLOWLIST`, kad je
+    NEPRAZNA, ograničava spoljni efekat na tačno navedene (persona, kanal, tip).
+    Prazna lista → True (globalni prekidač je jedini uslov, nepromenjeno)."""
+    lista = _parsiraj_dozvolu(getattr(settings, "EXTERNAL_ACTIONS_ALLOWLIST", ""))
+    if not lista:
+        return True
+    return any(_poklapa(p, action) for p in lista)
 
 
 def authorize(action: Action, *, now: datetime | None = None) -> dict[str, Any]:
