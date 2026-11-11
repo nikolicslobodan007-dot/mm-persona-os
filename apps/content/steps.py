@@ -49,9 +49,15 @@ def _draft(step: plans.PlanStep, state: dict) -> plans.Outcome:
     if not tema.strip():
         return plans.Failed("Korak nema temu.")
     media = _ucitaj_media(spec.get("media"))
+    # ADR-0142 — format pisanja (dubinski-clanak, nit, newsletter, video-scenario)
+    # nosi svoj budžet izlaza i strukturu; bez njega ostaje podrazumevana objava.
+    from apps.content import zadaci as _zadaci
+    zad = _zadaci.ZADACI.get((spec.get("vrsta") or "").strip())
+    if zad is not None and zad.interni:
+        zad = None
     try:
-        item = content.draft(step.plan.persona, topic=tema, run=step.plan.run,
-                             media=media)
+        item = content.draft(step.plan.persona, topic=tema, vrsta=zad,
+                             run=step.plan.run, media=media)
     except content.ContentError as e:
         return plans.Failed(str(e)[:300])
     if item.status != E.ContentStatus.DRAFT.value:
