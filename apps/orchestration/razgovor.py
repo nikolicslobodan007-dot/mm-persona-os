@@ -85,7 +85,7 @@ ODLUKA_SYSTEM = (
     "Odgovaraš ISKLJUČIVO jednim JSON objektom, bez teksta oko njega:\n"
     '{"sektor": "<šifra>", "nalog": "<šta tačno treba uraditi>", '
     '"pitanje": "<jedno pitanje ili prazno>", '
-    '"vrsta": "objava ili prepis-videa", "url": "<link videa ili prazno>"}\n'
+    '"vrsta": "objava, prepis-videa ili sazetak-weba", "url": "<link ili prazno>"}\n'
     "Pravila: ako postavljaš pitanje, `nalog` ostaje prazan i obrnuto. "
     "Pitaj samo kad bez odgovora posao ne može da se uradi — ne pitaj za "
     "sitnice koje možeš sama da odlučiš. `nalog` piši kao uputstvo "
@@ -96,7 +96,10 @@ ODLUKA_SYSTEM = (
     "Reference poput „ovaj video“ ili „taj link“ razreši iz razgovora.\n"
     "Ako vlasnik traži prepis, titlove ili transkript videa, ili da "
     "„pogledaš video“, a u razgovoru postoji link videa — stavi vrsta "
-    "\"prepis-videa\" i url na taj link. Inače vrsta \"objava\", url prazno."
+    "\"prepis-videa\" i url na taj link.\n"
+    "Ako vlasnik da link stranice ili GitHub repozitorijuma i traži da ga "
+    "pregledaš, sažmeš, ili pita šta je to — stavi vrsta \"sazetak-weba\" i "
+    "url na taj link. Inače vrsta \"objava\", url prazno."
 )
 
 #: Koliko dugačko sme da bude ono što direktor vrati.
@@ -128,7 +131,7 @@ def _procitaj_odluku(tekst: str, dozvoljeni: set[str]) -> dict:
         "sektor": sektor if sektor in dozvoljeni else "",
         "nalog": str(sirovo.get("nalog", "")).strip()[:MAX_NALOG],
         "pitanje": str(sirovo.get("pitanje", "")).strip()[:MAX_PITANJE],
-        "vrsta": vrsta if vrsta in ("objava", "prepis-videa") else "objava",
+        "vrsta": vrsta if vrsta in ("objava", "prepis-videa", "sazetak-weba") else "objava",
         "url": str(sirovo.get("url", "")).strip()[:500],
     }
 
@@ -232,6 +235,12 @@ def _koraci(tema: str, sef: Persona, izvrsilac: Persona | None,
         posao = {"handler": "klip.prepis", "description": "Prepiši video",
                  "input": {"url": url, "tema": tema}}
         return _delegiraj(tema, sef, izvrsilac, [posao])
+    if vrsta == "sazetak-weba" and url:
+        # ADR-0139 — „pregledaj link i sažmi" ide na web.sazetak (čita
+        # stranicu/repo), ne na generički content.draft.
+        posao = {"handler": "web.sazetak", "description": "Pročitaj i sažmi",
+                 "input": {"url": url, "tema": tema}}
+        return _delegiraj(tema, sef, izvrsilac, [posao])
     media_spec = [{"id": m["asset"].public_id, "naziv": m.get("naziv", "")}
                   for m in (media or []) if m.get("asset") is not None]
     if izvrsilac is None:
@@ -293,6 +302,30 @@ def _tekst_nacrta(nacrt: dict) -> str:
     return plans.shorten(_bez_potpisa(telo), MAX_PRIKAZ)
 
 
+def _ishod_sazetak(plan: AgentPlan, sef: Persona, izvrsilac: Persona | None,
+                   sazetak: dict) -> dict:
+    """Ishod kad je posao bio sažetak sa weba (ADR-0139). Sažetak ide kao nacrt."""
+    from common import enums as E
+
+    ko = (izvrsilac or sef).display_name
+    izvor = sazetak.get("izvor", "")
+    d = {"plan": plan.public_id, "sef": sef.display_name, "izvrsilac": ko, "item": ""}
+    if plan.status == E.PlanStatus.COMPLETED.value:
+        tekst = (sazetak.get("sazetak") or "").strip()
+        if not tekst:
+            return d | {"stanje": "nejasno", "nacrt": "",
+                        "glava": (f"Stranica je obrađena preko {sef.display_name}, ali "
+                                  "sažetak nije stigao do mene.")}
+        glava = f"Sažetak gotov. Zadala sam {sef.display_name}, uradio {ko}."
+        if izvor:
+            glava += f" Izvor: {izvor}."
+        return d | {"stanje": "uradjeno", "nacrt": tekst, "glava": glava}
+    razlog = plans.failure_reason(plan) or plan.status
+    return d | {"stanje": "stalo", "razlog": razlog,
+                "glava": (f"Sažetak nije urađen. Zadala sam {sef.display_name}, a posao "
+                          f"je stao: {razlog}. Plan: {plan.public_id}.")}
+
+
 def _ishod_prepis(plan: AgentPlan, sef: Persona, izvrsilac: Persona | None,
                   prepis: dict) -> dict:
     """Ishod kad je posao bio prepis videa (ADR-0136). Transkript ide kao nacrt."""
@@ -328,6 +361,10 @@ def _ishod(plan: AgentPlan, sef: Persona, izvrsilac: Persona | None) -> dict:
     prepis = plans.output_in_chain(plan, "klip.prepis") or {}
     if prepis:
         return _ishod_prepis(plan, sef, izvrsilac, prepis)
+
+    sazetak = plans.output_in_chain(plan, "web.sazetak") or {}
+    if sazetak:
+        return _ishod_sazetak(plan, sef, izvrsilac, sazetak)
 
     nacrt = plans.output_in_chain(plan, "content.draft") or {}
     d: dict = {"plan": plan.public_id, "nacrt": _tekst_nacrta(nacrt),
