@@ -85,7 +85,7 @@ ODLUKA_SYSTEM = (
     "Odgovaraš ISKLJUČIVO jednim JSON objektom, bez teksta oko njega:\n"
     '{"sektor": "<šifra>", "nalog": "<šta tačno treba uraditi>", '
     '"pitanje": "<jedno pitanje ili prazno>", '
-    '"vrsta": "objava, prepis-videa ili sazetak-weba", "url": "<link ili prazno>"}\n'
+    '"vrsta": "<format pisanja ili tip>", "url": "<link ili prazno>"}\n'
     "Pravila: ako postavljaš pitanje, `nalog` ostaje prazan i obrnuto. "
     "Pitaj samo kad bez odgovora posao ne može da se uradi — ne pitaj za "
     "sitnice koje možeš sama da odlučiš. `nalog` piši kao uputstvo "
@@ -99,7 +99,11 @@ ODLUKA_SYSTEM = (
     "\"prepis-videa\" i url na taj link.\n"
     "Ako vlasnik da link stranice ili GitHub repozitorijuma i traži da ga "
     "pregledaš, sažmeš, ili pita šta je to — stavi vrsta \"sazetak-weba\" i "
-    "url na taj link. Inače vrsta \"objava\", url prazno."
+    "url na taj link.\n"
+    "Za PISANJE biraj format: dug članak, analiza ili „dubinski“ tekst → "
+    "\"dubinski-clanak\"; nit, thread ili carousel → \"nit\"; newsletter "
+    "ili bilten → \"newsletter\"; scenario za video → \"video-scenario\"; "
+    "kratka objava → \"objava\". Inače vrsta \"objava\", url prazno."
 )
 
 #: Koliko dugačko sme da bude ono što direktor vrati.
@@ -107,6 +111,17 @@ MAX_NALOG = 600
 MAX_PITANJE = 300
 
 _JSON = re.compile(r"\{.*\}", re.S)
+
+
+def _content_formati() -> set[str]:
+    """Ključevi javnih (ne-internih) formata pisanja iz ZADACI (ADR-0133)."""
+    from apps.content import zadaci as _zadaci
+    return {k for k, z in _zadaci.ZADACI.items() if not z.interni}
+
+
+def _dozvoljene_vrste() -> set[str]:
+    """Dozvoljene `vrsta` vrednosti: formati pisanja + task-tipovi."""
+    return _content_formati() | {"prepis-videa", "sazetak-weba"}
 
 
 def _procitaj_odluku(tekst: str, dozvoljeni: set[str]) -> dict:
@@ -131,7 +146,7 @@ def _procitaj_odluku(tekst: str, dozvoljeni: set[str]) -> dict:
         "sektor": sektor if sektor in dozvoljeni else "",
         "nalog": str(sirovo.get("nalog", "")).strip()[:MAX_NALOG],
         "pitanje": str(sirovo.get("pitanje", "")).strip()[:MAX_PITANJE],
-        "vrsta": vrsta if vrsta in ("objava", "prepis-videa", "sazetak-weba") else "objava",
+        "vrsta": vrsta if vrsta in _dozvoljene_vrste() else "objava",
         "url": str(sirovo.get("url", "")).strip()[:500],
     }
 
@@ -243,9 +258,12 @@ def _koraci(tema: str, sef: Persona, izvrsilac: Persona | None,
         return _delegiraj(tema, sef, izvrsilac, [posao])
     media_spec = [{"id": m["asset"].public_id, "naziv": m.get("naziv", "")}
                   for m in (media or []) if m.get("asset") is not None]
+    draft_input = {"tema": tema, "media": media_spec}
+    if vrsta in _content_formati() and vrsta != "objava":
+        draft_input["vrsta"] = vrsta  # ADR-0142 — format nosi budžet+strukturu
     if izvrsilac is None:
         unutra = [{"handler": "content.draft", "description": "Napiši nacrt",
-                   "input": {"tema": tema, "media": media_spec}}]
+                   "input": dict(draft_input)}]
     else:
         unutra = [
             {"handler": "org.delegate",
@@ -253,7 +271,7 @@ def _koraci(tema: str, sef: Persona, izvrsilac: Persona | None,
              "input": {"to": izvrsilac.public_id, "goal": tema,
                        "steps": [{"handler": "content.draft",
                                   "description": "Napiši nacrt",
-                                  "input": {"tema": tema, "media": media_spec}}]}},
+                                  "input": dict(draft_input)}]}},
             # ADR-0108 — šef ne preuzima nepročitano. Korak je njegov posao,
             # pa ga izvršava on, svojim poverenjem, u svom planu.
             {"handler": "content.review",
