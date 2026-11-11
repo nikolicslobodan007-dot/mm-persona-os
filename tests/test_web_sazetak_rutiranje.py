@@ -57,3 +57,44 @@ def test_handler_sazima(monkeypatch):
     assert out.output["sazetak"] == "Insomnia je API klijent."
     assert out.output["izvor"] == "https://x/repo"
     assert out.output["naslov"] == "Insomnia"
+
+
+def test_handler_ugao_nalog_ulazi_u_prompt(monkeypatch):
+    # ADR-0140 — direktorov nalog (ugao) mora da uđe u prompt, ne fiksni sažetak.
+    monkeypatch.setattr(ulaz, "procitaj",
+                        lambda vrsta, url: {"tekst": "Tekst o alatu.",
+                                            "naslov": "Alat", "izvor": url})
+    monkeypatch.setattr(content_service, "_system_prompt", lambda p: "sys")
+    zabelezeno = {}
+
+    def _fake(*a, **kw):
+        zabelezeno["prompt"] = a[2]
+        return SimpleNamespace(text="ok")
+
+    monkeypatch.setattr(gateway, "generate", _fake)
+    persona = SimpleNamespace(primary_locale="sr-Latn")
+    step = SimpleNamespace(
+        input_json={"url": "https://x/repo",
+                    "tema": "Proceni kako bismo ovo koristili u Web Korporaciji"},
+        plan=SimpleNamespace(persona=persona, run=None))
+    steps._sazetak(step, {})
+    assert "Web Korporaciji" in zabelezeno["prompt"]
+    assert "## tekst" in zabelezeno["prompt"]
+
+
+def test_handler_bez_naloga_podrazumevani_sazetak(monkeypatch):
+    monkeypatch.setattr(ulaz, "procitaj",
+                        lambda vrsta, url: {"tekst": "Tekst.", "naslov": "X", "izvor": url})
+    monkeypatch.setattr(content_service, "_system_prompt", lambda p: "sys")
+    zabelezeno = {}
+
+    def _fake(*a, **kw):
+        zabelezeno["prompt"] = a[2]
+        return SimpleNamespace(text="ok")
+
+    monkeypatch.setattr(gateway, "generate", _fake)
+    persona = SimpleNamespace(primary_locale="sr-Latn")
+    step = SimpleNamespace(input_json={"url": "https://x/repo"},
+                           plan=SimpleNamespace(persona=persona, run=None))
+    steps._sazetak(step, {})
+    assert "kratak sažetak" in zabelezeno["prompt"]

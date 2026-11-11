@@ -35,11 +35,20 @@ def _sazetak(step: plans.PlanStep, state: dict) -> plans.Outcome:
 
     persona = step.plan.persona
     naslov = r.get("naslov", url)
+    # ADR-0140 — handler odgovara na direktorov NALOG (ugao), ne fiksni sažetak.
+    # Tako isti alat ume i čist sažetak i „kako bismo ovo mi koristili", zavisno
+    # od pitanja. Činjenice ostaju iz teksta; zaključke koje nalog traži sme da
+    # izvede. Bez naloga pada na podrazumevani sažetak.
+    zadatak = (spec.get("tema") or "").strip() or (
+        "Napiši kratak sažetak: šta je ovo, čemu služi, ključne stvari i ko "
+        "stoji iza toga.")
     gen = gateway.generate(
         E.LLMPurpose.CONTENT_DRAFT, _system_prompt(persona),
-        f"Pročitaj tekst sa {url} i napiši kratak, tačan sažetak na srpskom "
-        f"(latinica): šta je ovo, čemu služi, ključne stvari i ko stoji iza toga. "
-        f"Samo iz teksta — bez izmišljanja; ako nečega nema, ne navodi.\n\n"
+        f"Pročitaj tekst sa {url} i uradi zadatak: \u201e{zadatak}\u201c.\n"
+        f"Piši na srpskom (latinica), kratko i tačno. Činjenice o izvoru uzimaj "
+        f"isključivo iz teksta — ne izmišljaj; ako neka činjenica ne piše, reci "
+        f"da je u izvoru nema. Zaključke i procene koje zadatak traži slobodno "
+        f"izvedi iz tih činjenica.\n\n"
         f"## tekst\n{tekst[:MAKS_ULAZ]}",
         persona=persona, run=step.plan.run, max_output=800,
         brief={"tema": naslov, "language": persona.primary_locale})
