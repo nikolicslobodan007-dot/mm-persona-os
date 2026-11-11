@@ -88,7 +88,11 @@ ODLUKA_SYSTEM = (
     "Pravila: ako postavljaš pitanje, `nalog` ostaje prazan i obrnuto. "
     "Pitaj samo kad bez odgovora posao ne može da se uradi — ne pitaj za "
     "sitnice koje možeš sama da odlučiš. `nalog` piši kao uputstvo "
-    "izvršiocu, u jednoj do tri rečenice, na srpskom."
+    "izvršiocu, u jednoj do tri rečenice, na srpskom.\n"
+    "Dobijaš i dosadašnji razgovor: ako je vlasnik već dao link, "
+    "temu ili odgovorio na ranije pitanje, koristi to i NE pitaj "
+    "ponovo — napravi nalog i razumno pretpostavi sitne detalje. "
+    "Reference poput „ovaj video“ ili „taj link“ razreši iz razgovora."
 )
 
 #: Koliko dugačko sme da bude ono što direktor vrati.
@@ -122,7 +126,25 @@ def _procitaj_odluku(tekst: str, dozvoljeni: set[str]) -> dict:
     }
 
 
-def razmisli(direktor, telo: str, *, run=None, media=None) -> dict:
+def _istorija_niti(razgovor, *, osim=None, najvise: int = 10) -> str:
+    """Poslednjih nekoliko poruka niti kao kontekst za procenu (ADR-0106).
+    Bez nje direktor procenjuje svaku poruku izolovano i vrti u krug: „reši
+    ovaj video" ne može da razreši link iz ranije poruke."""
+    poruke = list(razgovor.poruke.order_by("-created_at")[: najvise + 1])
+    poruke.reverse()
+    redovi = []
+    for p in poruke:
+        if osim is not None and p.id == osim:
+            continue
+        telo = (p.telo or "").strip()
+        if not telo:
+            continue
+        ko = "Vlasnik" if p.autor == Poruka.OD_COVEKA else "Direktor"
+        redovi.append(f"{ko}: {telo[:300]}")
+    return "\n".join(redovi[-najvise:])
+
+
+def razmisli(direktor, telo: str, *, istorija: str = "", run=None, media=None) -> dict:
     """Direktorova procena poruke: koji sektor, koji nalog, ili koje pitanje.
 
     Nikad ne podiže grešku: ako model nije dostupan ili vrati nešto što nije
@@ -138,7 +160,8 @@ def razmisli(direktor, telo: str, *, run=None, media=None) -> dict:
     # izmišljala kupce i usluge kojih nema.
     dosije = _dosije_firme()
     prompt = ((f"{dosije}\n\n---\n\n" if dosije else "")
-              + f"Sektori: {spisak}.\n\nPoruka vlasnika:\n{telo[:MAX_TELO]}")
+              + (f"Dosadašnji razgovor:\n{istorija}\n\n---\n\n" if istorija else "")
+              + f"Sektori: {spisak}.\n\nNajnovija poruka vlasnika:\n{telo[:MAX_TELO]}")
     try:
         gen = gateway.generate(E.LLMPurpose.PLANNING, ODLUKA_SYSTEM, prompt,
                                persona=direktor, run=run, media=media,
@@ -328,7 +351,8 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str,
 
     # ADR-0106 — direktor prvo procenjuje. Ako model nije dostupan, procena
     # je prazna i sve ide kao pre (ADR-0105): tabela reči i doslovna tema.
-    odluka = razmisli(direktor, materijal, media=media)
+    istorija = _istorija_niti(razgovor, osim=covek.id)
+    odluka = razmisli(direktor, materijal, istorija=istorija, media=media)
     if odluka.get("pitanje") and not odluka.get("nalog"):
         audit.record("razgovor.pitanje", persona=direktor,
                      details={"razgovor": str(razgovor.id), "actor": actor})
