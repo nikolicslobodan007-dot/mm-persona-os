@@ -153,6 +153,16 @@ def _repetition(persona: Persona, text: str, now: datetime,
 QUOTABLE_MEMORY = frozenset({E.MemoryType.SEMANTIC.value, E.MemoryType.CONTENT.value})
 
 
+#: Kućna pravila pisanja (ADR-0143). Recenzent je hvatao: potpis ličnim
+#: imenom i opšta znanja predstavljena kao praksa firme — ovde se to zabranjuje.
+KUCNA_PRAVILA = (
+    "Pravila pisanja: ne potpisuj tekst ličnim imenom — oznaka AI persone na "
+    "kraju radi atribuciju. Opšta znanja (regulativa, trendovi, tuđi primeri) "
+    "pripiši kao opšta, ne kao praksu ove firme; o firmi tvrdi samo ono što "
+    "piše u dosijeu."
+)
+
+
 def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
           angle: str = "", body: str | None = None,
           fmt: E.ContentFormat = E.ContentFormat.POST,
@@ -189,6 +199,7 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
                 E.LLMPurpose.CONTENT_DRAFT, _system_prompt(persona),
                 (f"{who}\n\n" if who else "") + f"{pack.text}\n\n"
                 + (f"{rules}\n\n" if rules else "")
+                + f"{KUCNA_PRAVILA}\n\n"
                 + f"## zadatak\n{zadatak_tekst}",
                 persona=persona, run=run, context_pack=pack.record, now=now,
                 media=media, max_output=(vrsta.izlaz_tokena if vrsta else None),
