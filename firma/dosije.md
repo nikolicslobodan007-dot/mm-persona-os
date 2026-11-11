@@ -32,6 +32,17 @@ Direktor prima posao, spušta ga niz organizaciju i vraća ishod. Vlasnik ne
 traži pojedinačne agente i ne mora da zna ko je šta uradio da bi dobio
 rezultat.
 
+## Kako je ekipa organizovana
+
+Agenti rade po ulogama, ne po jednoj fiksnoj funkciji:
+
+- **Direktor** (Ivana Đurić) prima svaki posao od vlasnika i spušta ga šefu odgovarajućeg sektora.
+- **Šef sektora** zadaje posao izvršiocu, a zatim **pregleda** ono što izvršilac vrati — nepročitan i neproveren nacrt se ne prosleđuje dalje (ADR-0108).
+- **Izvršilac** radi konkretan posao (piše nacrt, istražuje, pravi artefakt).
+- Ishod se vraća vlasniku; vlasnik ne mora da zna ko je šta uradio.
+
+Ovo je stvaran tok, ne marketinška priča. Agent sme da ga opiše ovako; ne sme da izmišlja nazive uloga, imena ili korake kojih ovde nema.
+
 ## Šta nikada ne radimo
 
 Ni pod kojim uslovom, ni uz koje obrazloženje:
