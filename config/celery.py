@@ -6,6 +6,7 @@ import os
 
 from celery import Celery
 from celery.schedules import crontab
+from django.conf import settings
 from kombu import Queue
 
 from common.enums import QueueName
@@ -34,6 +35,10 @@ app.conf.task_routes = {
     "runtime.reap_leases": {"queue": QueueName.MAINTENANCE.value},
     "runtime.reconcile": {"queue": QueueName.MAINTENANCE.value},
     "memory.github_signals_dnevno": {"queue": QueueName.MAINTENANCE.value},
+    # ADR-0134 — Telegram: poll je transport (mail), odgovor je
+    # interaktivni posao persone (čovek ↔ direktor).
+    "channels.telegram_poll": {"queue": QueueName.MAIL.value},
+    "channels.telegram_odgovori": {"queue": QueueName.PERSONA_INTERACTIVE.value},
 }
 app.conf.task_default_queue = QueueName.MAINTENANCE.value
 
@@ -94,3 +99,13 @@ app.conf.beat_schedule = {
         "options": {"queue": QueueName.MAINTENANCE.value},
     },
 }
+
+
+# ADR-0134 — Telegram poll se zakazuje SAMO kad je uključen. Uspavan dok nema
+# tokena/allowliste, pa ni beat ne troši na no-op. Uključenje = env + restart.
+if getattr(settings, "TELEGRAM_ENABLED", False):
+    app.conf.beat_schedule["telegram-poll"] = {
+        "task": "channels.telegram_poll",
+        "schedule": 5.0,
+        "options": {"queue": QueueName.MAIL.value, "expires": 8},
+    }

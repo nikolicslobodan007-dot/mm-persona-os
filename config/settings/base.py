@@ -241,6 +241,14 @@ MAILBOX_PASSWORD_CREDENTIAL = "env:MAILBOX_PASSWORD_SECRET"
 #: 200 MB → 100 agenata; pre stotog treba podići kvotu domena u Mailcow-u.
 MAILBOX_QUOTA_MB = int(os.environ.get("MAILBOX_QUOTA_MB", "200"))
 MAIL_BODY_RETENTION_DAYS = int(os.environ.get("MAIL_BODY_RETENTION_DAYS", "90"))
+
+# ADR-0134 — Telegram kao druga ulazna vrata firme (čovek ↔ direktor). Uspavan
+# dok se izričito ne upali, da se ništa ne dešava bez tokena i allowliste.
+TELEGRAM_ENABLED = os.environ.get("TELEGRAM_ENABLED", "false").lower() == "true"
+TELEGRAM_TOKEN_CREDENTIAL = "env:TELEGRAM_BOT_TOKEN"
+#: Zarezom razdvojeni Telegram ID-evi kojima bot SME da odgovara (allowlist).
+#: Svaki drugi ID se tiho ignoriše. Prazno = bot ne odgovara nikome.
+TELEGRAM_ALLOWED_IDS = os.environ.get("TELEGRAM_ALLOWED_IDS", "")
 #: ADR-0016 — nacrt odgovora na pristiglu poštu (uvek uz odobrenje).
 MAIL_AUTOREPLY = os.environ.get("MAIL_AUTOREPLY", "true").lower() == "true"
 MAIL_REPLIES_PER_DAY = int(os.environ.get("MAIL_REPLIES_PER_DAY", "5"))
