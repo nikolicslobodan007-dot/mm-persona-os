@@ -65,9 +65,21 @@ def github_signals_dnevno(najvise: int = 10, min_zvezdica: int = 50) -> str:
 
     from django.core.management import call_command
 
+    # ADR-0137 — demand-driven: dnevni ulov ide ka prazninama ekipe (potraznja),
+    # a ne samo po fiksnoj listi. Union sa podrazumevanim temama → nikad ne skida
+    # manje nego do sada; praznine koje izvor ne pokriva tiho ne daju ništa.
+    from apps.memory.management.commands.potraznja import praznine_ekipe
+    from apps.memory.management.commands.signali import TEME_PODRAZUMEVANE
+
+    praznine = praznine_ekipe()
+    teme = ",".join(sorted(set(TEME_PODRAZUMEVANE) | {p["slug"] for p in praznine}))
+    if praznine:
+        logger.info("github_signals praznine ekipe (demand): %s",
+                    ", ".join(f"{p['naziv']}~{p['najbliza']}" for p in praznine[:15]))
+
     out = StringIO()
     call_command("signali", auto=True, najvise=najvise,
-                 min_zvezdica=min_zvezdica, stdout=out)
+                 min_zvezdica=min_zvezdica, teme=teme, stdout=out)
     izvestaj = out.getvalue()
     logger.info("github_signals_dnevno:\n%s", izvestaj[-1500:])
     preg = StringIO()
