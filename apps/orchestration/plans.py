@@ -94,7 +94,7 @@ _HANDLERS: dict[str, Handler] = {}
 #: (worker koji je poštu primio), a padao u drugom (web koji nastavlja posle
 #: odobrenja). Nalaz od 24.09.
 HANDLER_MODULES = ("apps.channels.reply", "apps.content.steps",
-                   "apps.memory.veritas.steps")
+                   "apps.memory.veritas.steps", "apps.memory.sakupljanje.steps")
 
 
 def load_handlers() -> None:
