@@ -27,6 +27,26 @@ def _praznina(n: int, d: float | None, prag: float) -> bool:
     return not (pokriva_divizija or pokriva_semantika)
 
 
+def praznine_ekipe(prag: float = 0.45, najvise: int = 20) -> list[dict]:
+    """ADR-0137 — praznine znanja CELE ekipe: distinct niše svih persona, one
+    bez pokrića (demand za ulov). Vraća [{slug, naziv, najbliza, u_domenu}],
+    od najveće razdaljine ka manjoj. Čita, ništa ne menja. Mera je po distinct
+    niši (ne po persona×niša), pa je jeftino i kad ekipa naraste."""
+    from apps.personas.models import PersonaTagLink
+
+    nise = (PersonaTagLink.objects
+            .filter(tag__category="niche")
+            .values_list("tag__slug", "tag__name").distinct())
+    out: list[dict] = []
+    for slug, naziv in nise:
+        d = context.najbliza_distanca(naziv)
+        n = context.broj_u_diviziji(slug)
+        if _praznina(n, d, prag):
+            out.append({"slug": slug, "naziv": naziv, "najbliza": d, "u_domenu": n})
+    out.sort(key=lambda g: -(g["najbliza"] if g["najbliza"] is not None else 2.0))
+    return out[:najvise]
+
+
 class Command(BaseCommand):
     help = "Izmeri prazninu u znanju persone po nišama; predloži teme za ulov."
 
