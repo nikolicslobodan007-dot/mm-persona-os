@@ -93,7 +93,8 @@ _HANDLERS: dict[str, Handler] = {}
 #: tek kad se njegov modul uveze, pa bi inače isti plan radio u jednom procesu
 #: (worker koji je poštu primio), a padao u drugom (web koji nastavlja posle
 #: odobrenja). Nalaz od 24.09.
-HANDLER_MODULES = ("apps.channels.reply", "apps.content.steps")
+HANDLER_MODULES = ("apps.channels.reply", "apps.content.steps",
+                   "apps.memory.veritas.steps")
 
 
 def load_handlers() -> None:

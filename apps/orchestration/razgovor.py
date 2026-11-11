@@ -84,7 +84,8 @@ ODLUKA_SYSTEM = (
     "postaviš jedno pitanje ako poruka ne može da se izvrši kako jeste.\n"
     "Odgovaraš ISKLJUČIVO jednim JSON objektom, bez teksta oko njega:\n"
     '{"sektor": "<šifra>", "nalog": "<šta tačno treba uraditi>", '
-    '"pitanje": "<jedno pitanje ili prazno>"}\n'
+    '"pitanje": "<jedno pitanje ili prazno>", '
+    '"vrsta": "objava ili prepis-videa", "url": "<link videa ili prazno>"}\n'
     "Pravila: ako postavljaš pitanje, `nalog` ostaje prazan i obrnuto. "
     "Pitaj samo kad bez odgovora posao ne može da se uradi — ne pitaj za "
     "sitnice koje možeš sama da odlučiš. `nalog` piši kao uputstvo "
@@ -92,7 +93,10 @@ ODLUKA_SYSTEM = (
     "Dobijaš i dosadašnji razgovor: ako je vlasnik već dao link, "
     "temu ili odgovorio na ranije pitanje, koristi to i NE pitaj "
     "ponovo — napravi nalog i razumno pretpostavi sitne detalje. "
-    "Reference poput „ovaj video“ ili „taj link“ razreši iz razgovora."
+    "Reference poput „ovaj video“ ili „taj link“ razreši iz razgovora.\n"
+    "Ako vlasnik traži prepis, titlove ili transkript videa, ili da "
+    "„pogledaš video“, a u razgovoru postoji link videa — stavi vrsta "
+    "\"prepis-videa\" i url na taj link. Inače vrsta \"objava\", url prazno."
 )
 
 #: Koliko dugačko sme da bude ono što direktor vrati.
@@ -119,10 +123,13 @@ def _procitaj_odluku(tekst: str, dozvoljeni: set[str]) -> dict:
     if not isinstance(sirovo, dict):
         return {}
     sektor = str(sirovo.get("sektor", "")).strip().upper()
+    vrsta = str(sirovo.get("vrsta", "")).strip().lower()
     return {
         "sektor": sektor if sektor in dozvoljeni else "",
         "nalog": str(sirovo.get("nalog", "")).strip()[:MAX_NALOG],
         "pitanje": str(sirovo.get("pitanje", "")).strip()[:MAX_PITANJE],
+        "vrsta": vrsta if vrsta in ("objava", "prepis-videa") else "objava",
+        "url": str(sirovo.get("url", "")).strip()[:500],
     }
 
 
@@ -197,13 +204,34 @@ def _izvrsilac(sef: Persona) -> Persona | None:
     return ljudi[0] if ljudi else None
 
 
+def _delegiraj(tema, sef, izvrsilac, unutra: list[dict]) -> list[dict]:
+    """Omotač: direktor zadaje šefu (koji po potrebi zadaje izvršiocu), pa javi."""
+    koraci = unutra if izvrsilac is None else [{
+        "handler": "org.delegate",
+        "description": f"Zadaj: {izvrsilac.display_name}",
+        "input": {"to": izvrsilac.public_id, "goal": tema, "steps": unutra}}]
+    return [
+        {"handler": "org.delegate", "description": f"Zadaj: {sef.display_name}",
+         "input": {"to": sef.public_id, "goal": tema, "steps": koraci}},
+        {"handler": "plan.note", "description": "Javi čoveku ishod",
+         "input": {"note": f"Posao vođen preko {sef.public_id}."}},
+    ]
+
+
 def _koraci(tema: str, sef: Persona, izvrsilac: Persona | None,
-            media: list[dict] | None = None) -> list[dict]:
+            media: list[dict] | None = None, *, vrsta: str = "objava",
+            url: str = "") -> list[dict]:
     """Koraci direktorovog plana: zadaj šefu, pa preuzmi gotov posao.
 
     `media` (slike/PDF) putuje kao `public_id` asseta u ulazu `content.draft`
     koraka (ADR-0118); učitava se tek kad pisac zove model.
     """
+    if vrsta == "prepis-videa" and url:
+        # ADR-0136 — zadatak „prepiši video" ide na ASR (klip.prepis),
+        # ne na generički content.draft.
+        posao = {"handler": "klip.prepis", "description": "Prepiši video",
+                 "input": {"url": url, "tema": tema}}
+        return _delegiraj(tema, sef, izvrsilac, [posao])
     media_spec = [{"id": m["asset"].public_id, "naziv": m.get("naziv", "")}
                   for m in (media or []) if m.get("asset") is not None]
     if izvrsilac is None:
@@ -265,6 +293,30 @@ def _tekst_nacrta(nacrt: dict) -> str:
     return plans.shorten(_bez_potpisa(telo), MAX_PRIKAZ)
 
 
+def _ishod_prepis(plan: AgentPlan, sef: Persona, izvrsilac: Persona | None,
+                  prepis: dict) -> dict:
+    """Ishod kad je posao bio prepis videa (ADR-0136). Transkript ide kao nacrt."""
+    from common import enums as E
+
+    ko = (izvrsilac or sef).display_name
+    izvor = prepis.get("izvor", "")
+    d = {"plan": plan.public_id, "sef": sef.display_name, "izvrsilac": ko, "item": ""}
+    if plan.status == E.PlanStatus.COMPLETED.value:
+        transkript = (prepis.get("transkript") or "").strip()
+        if not transkript:
+            return d | {"stanje": "nejasno", "nacrt": "",
+                        "glava": (f"Video je obrađen preko {sef.display_name}, ali "
+                                  "prepis nije stigao do mene.")}
+        glava = f"Prepis gotov. Zadala sam {sef.display_name}, uradio {ko}."
+        if izvor:
+            glava += f" Izvor: {izvor}."
+        return d | {"stanje": "uradjeno", "nacrt": transkript, "glava": glava}
+    razlog = plans.failure_reason(plan) or plan.status
+    return d | {"stanje": "stalo", "razlog": razlog,
+                "glava": (f"Prepis nije urađen. Zadala sam {sef.display_name}, a posao "
+                          f"je stao: {razlog}. Plan: {plan.public_id}.")}
+
+
 def _ishod(plan: AgentPlan, sef: Persona, izvrsilac: Persona | None) -> dict:
     """Ishod lanca, razložen na delove. ADR-0110.
 
@@ -272,6 +324,10 @@ def _ishod(plan: AgentPlan, sef: Persona, izvrsilac: Persona | None) -> dict:
     (`delovi`), pa poruka u niti i tekst u bazi ne mogu da se raziđu.
     """
     from common import enums as E
+
+    prepis = plans.output_in_chain(plan, "klip.prepis") or {}
+    if prepis:
+        return _ishod_prepis(plan, sef, izvrsilac, prepis)
 
     nacrt = plans.output_in_chain(plan, "content.draft") or {}
     d: dict = {"plan": plan.public_id, "nacrt": _tekst_nacrta(nacrt),
@@ -382,8 +438,11 @@ def posalji(razgovor: Razgovor, telo: str, *, actor: str,
         raise RazgovorError(zasto)
     izvrsilac = _izvrsilac(sef)
 
-    plan = plans.start(direktor, tema[:2000], _koraci(tema, sef, izvrsilac, media),
-                       actor=actor)
+    plan = plans.start(
+        direktor, tema[:2000],
+        _koraci(tema, sef, izvrsilac, media,
+                vrsta=odluka.get("vrsta", "objava"), url=odluka.get("url", "")),
+        actor=actor)
     audit.record("razgovor.zadato", persona=direktor,
                  details={"razgovor": str(razgovor.id), "plan": plan.public_id,
                           "sektor": kod, "umesto": rezerva, "sef": sef.public_id,
