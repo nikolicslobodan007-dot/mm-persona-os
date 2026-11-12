@@ -227,7 +227,8 @@ CONTENT_ASYNC = False
 # Spoljni LLM samo uz izričito uključivanje; bez toga radi lokalni šablon.
 LLM_EXTERNAL_ENABLED = os.environ.get("LLM_EXTERNAL_ENABLED", "false").lower() == "true"
 # provider → credential_ref (env:/file:). Tajna nikad u bazi.
-LLM_CREDENTIALS = {"anthropic": "env:ANTHROPIC_API_KEY", "groq": "env:GROQ_API_KEY"}
+LLM_CREDENTIALS = {"anthropic": "env:ANTHROPIC_API_KEY", "groq": "env:GROQ_API_KEY",
+                   "openrouter": "env:OPENROUTER_API_KEY"}
 #: Gde žive ključevi agenata unetih kroz konzolu (ADR-0026). Fajlovi 0600, van
 #: baze i van slike; direktorijum je docker volume, ne tmpfs.
 AGENT_SECRETS_DIR = os.environ.get("AGENT_SECRETS_DIR", "/secrets")
@@ -261,7 +262,10 @@ TELEGRAM_ALLOWED_IDS = os.environ.get("TELEGRAM_ALLOWED_IDS", "")
 MAIL_AUTOREPLY = os.environ.get("MAIL_AUTOREPLY", "true").lower() == "true"
 MAIL_REPLIES_PER_DAY = int(os.environ.get("MAIL_REPLIES_PER_DAY", "5"))
 MAIL_REPLY_MAX_AGE_HOURS = int(os.environ.get("MAIL_REPLY_MAX_AGE_HOURS", "72"))
-LLM_BASE_URLS: dict[str, str] = {}
+LLM_BASE_URLS: dict[str, str] = {
+    "openrouter": "https://openrouter.ai/api/v1",
+    "groq": "https://api.groq.com/openai/v1",
+}
 
 # ---------------------------------------------------------------- ADR-0018 — lik agenta
 #: Slike agenata. Dok je isključeno, ništa se ne generiše i ništa se ne plaća.
