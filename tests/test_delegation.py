@@ -305,3 +305,46 @@ def test_rejected_draft_is_not_reported_as_done(ekipa):
     assert "REPETITION" in drugi.steps.get(sequence=1).output_json["reason"]
     sefov = AgentPlan.objects.filter(persona=mila).order_by("-created_at").first()
     assert sefov.status == PS.ABANDONED           # i šef vidi da posao nije obavljen
+
+
+def test_revise_loop_prolazi_posle_jedne_ispravke(ekipa, monkeypatch):
+    """ADR-0144 — odbijen nacrt sa primedbom se jednom ispravi, pa prođe."""
+    from apps.content import pregled
+    mila, jovan, _ = ekipa
+    pozivi = {"n": 0}
+
+    def oceni(sef, nalog, nacrt, *, run=None):
+        pozivi["n"] += 1
+        if pozivi["n"] == 1:
+            return pregled.Ishod(False, "Dodaj izvor za tvrdnju.", True)
+        return pregled.Ishod(True, "", True)
+
+    monkeypatch.setattr(pregled, "oceni", oceni)
+    with bind(actor_id="user:slobodan"):
+        call_command("plan", "--persona", "P-00001", "--zadaj", "P-00002",
+                     "--tema", "Rokovi isporuke u B2B", stdout=io.StringIO())
+    sefov = AgentPlan.objects.get(persona=mila)
+    assert sefov.status == PS.COMPLETED
+    recenzija = sefov.steps.get(sequence=2).output_json
+    assert recenzija.get("revidiran") is True
+    assert pozivi["n"] == 2  # prvi pregled + pregled posle ispravke
+
+
+def test_revise_loop_staje_posle_jedne(ekipa, monkeypatch):
+    """ADR-0144 — ako i posle ispravke pada, posao staje sa finalnom primedbom."""
+    from apps.content import pregled
+    mila, jovan, _ = ekipa
+    pozivi = {"n": 0}
+
+    def oceni(sef, nalog, nacrt, *, run=None):
+        pozivi["n"] += 1
+        return pregled.Ishod(False, "I dalje tanko.", True)
+
+    monkeypatch.setattr(pregled, "oceni", oceni)
+    with bind(actor_id="user:slobodan"):
+        call_command("plan", "--persona", "P-00001", "--zadaj", "P-00002",
+                     "--tema", "Rokovi isporuke u B2B", stdout=io.StringIO())
+    sefov = AgentPlan.objects.get(persona=mila)
+    assert sefov.status == PS.ABANDONED
+    assert "tanko" in sefov.steps.get(sequence=2).output_json["reason"]
+    assert pozivi["n"] == 2  # pregled + ponovni pregled posle ispravke, pa staje

@@ -167,8 +167,8 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
           angle: str = "", body: str | None = None,
           fmt: E.ContentFormat = E.ContentFormat.POST,
           vrsta: _zadaci.Zadatak | None = None, run: AgentRun | None = None,
-          media: list[dict] | None = None,
-          now: datetime | None = None) -> ContentItem:
+          media: list[dict] | None = None, revizija_od: str = "",
+          primedba: str = "", now: datetime | None = None) -> ContentItem:
     """Pravi nacrt. Tekst iz modela prolazi iste tvrde zabrane kao i objava."""
     now = now or timezone.now()
     if idea is not None:
@@ -191,10 +191,18 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
 
             rules = prompt_section(persona)
             who = org_section(persona, now=now)
-            zadatak_tekst = (
-                vrsta.uputstvo.format(ulaz=topic) if vrsta
-                else f"Napiši kratku objavu na temu: {topic}."
-                + (f" Ugao: {angle}." if angle else ""))
+            if revizija_od and primedba:
+                zadatak_tekst = (
+                    "Revidiraj svoj nacrt tako da rešiš urednikovu primedbu, a "
+                    "zadržiš ono što je dobro. Ne kreni iz početka — ispravi "
+                    "tačno ono na šta primedba ukazuje.\n\n"
+                    f"## primedba urednika\n{primedba}\n\n"
+                    f"## tvoj nacrt\n{revizija_od}")
+            elif vrsta:
+                zadatak_tekst = vrsta.uputstvo.format(ulaz=topic)
+            else:
+                zadatak_tekst = (f"Napiši kratku objavu na temu: {topic}."
+                                 + (f" Ugao: {angle}." if angle else ""))
             gen = gateway.generate(
                 E.LLMPurpose.CONTENT_DRAFT, _system_prompt(persona),
                 (f"{who}\n\n" if who else "") + f"{pack.text}\n\n"
@@ -217,7 +225,7 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
         hits = guards.prohibitions("channel.post.create", {"text": body}, "")
         if hits:
             status, reason = CS.REJECTED, f"HARD_PROHIBITION:{hits[0]}"
-        elif (dup := _repetition(persona, body, now)) is not None:
+        elif not revizija_od and (dup := _repetition(persona, body, now)) is not None:
             status, reason = CS.REJECTED, "REPETITION"
             audit.record("content.item.repetition", persona=persona,
                          details={"similar_to": str(dup.id)})
@@ -243,6 +251,18 @@ def draft(persona: Persona, *, topic: str = "", idea: ContentIdea | None = None,
                               "reason": reason, "provider": gen.provider if gen else "user",
                               "fallbacks": gen.fallbacks if gen else []})
     return item
+
+
+def revise(persona: Persona, *, original: str, primedba: str, topic: str = "",
+           vrsta: _zadaci.Zadatak | None = None, run: AgentRun | None = None,
+           now: datetime | None = None) -> ContentItem:
+    """ADR-0144 — izvršilac revidira svoj nacrt po urednikovoj primedbi.
+
+    Isti put kao `draft`, ali prompt je „ispravi ovo" umesto „napiši novo", i
+    provera ponavljanja se preskače jer revizija NAMERNO liči na original.
+    """
+    return draft(persona, topic=topic, vrsta=vrsta, run=run, now=now,
+                 revizija_od=original, primedba=primedba)
 
 
 # ---------------------------------------------------------------- objava

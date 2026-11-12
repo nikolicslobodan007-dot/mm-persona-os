@@ -141,6 +141,24 @@ def _pregled(step: plans.PlanStep, state: dict) -> plans.Outcome:
     if ishod.trazi_vlasnika:
         from apps.orchestration.razgovor import PITANJE_VLASNIKU
         return plans.Failed(PITANJE_VLASNIKU + plans.shorten(ishod.pitanje, 300))
+    # ADR-0144 — petlja ispravke: jedna ispravka pa ponovni pregled, pa tek
+    # onda „nije urađeno". Izvršilac (autor nacrta) revidira, šef opet sudi.
+    if ishod.primedba and item.persona_id:
+        from apps.content import zadaci
+        zad = next((z for z in zadaci.ZADACI.values()
+                    if not z.interni and z.format.value == item.format), None)
+        revidiran = content.revise(item.persona, original=item.body or "",
+                                   primedba=ishod.primedba, topic=nalog,
+                                   vrsta=zad, run=step.plan.run)
+        if revidiran.status == E.ContentStatus.DRAFT.value:
+            sud2 = pregled.oceni(step.plan.persona, nalog, revidiran.body or "",
+                                 run=step.plan.run)
+            if sud2.prihvacen:
+                return plans.Done({"prihvacen": True, "primedba": sud2.primedba,
+                                   "presudio": True, "item": str(revidiran.id),
+                                   "pregledao": step.plan.persona.public_id,
+                                   "revidiran": True})
+            ishod, item = sud2, revidiran
     return plans.Failed(plans.shorten(
         f"{step.plan.persona.display_name} vraća nacrt: {ishod.primedba}", 700))
 
