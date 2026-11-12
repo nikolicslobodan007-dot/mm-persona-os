@@ -385,8 +385,11 @@ def _ishod(plan: AgentPlan, sef: Persona, izvrsilac: Persona | None) -> dict:
         return _ishod_sazetak(plan, sef, izvrsilac, sazetak)
 
     nacrt = plans.output_in_chain(plan, "content.draft") or {}
-    d: dict = {"plan": plan.public_id, "nacrt": _tekst_nacrta(nacrt),
-               "item": str(nacrt.get("item") or ""), "sef": sef.display_name,
+    # ADR-0144 — ako je recenzija vratila (revidiran) nacrt, on je konačan.
+    pregled_out = plans.output_in_chain(plan, "content.review") or {}
+    konacan = pregled_out if pregled_out.get("item") else nacrt
+    d: dict = {"plan": plan.public_id, "nacrt": _tekst_nacrta(konacan),
+               "item": str(konacan.get("item") or ""), "sef": sef.display_name,
                "izvrsilac": (izvrsilac or sef).display_name}
 
     if plan.status == E.PlanStatus.COMPLETED.value:

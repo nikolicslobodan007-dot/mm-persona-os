@@ -378,6 +378,13 @@ def build(persona, run, profile: E.RetrievalProfile, *, query: str = "",
         keep = max(0, len(query) - (fixed - budget) * 4)
         sections["task_goal"] = query[:keep]
         fixed = tokens(render(sections)) + 8
+    # ADR-0145 — i firma (dosije) mora da stane u plafon: token_count je TVRD
+    # plafon. U produkciji je budžet velik (npr. RESEARCH 9500) pa se ovo ne
+    # dešava; na vrlo uskom plafonu se dosije skraćuje umesto da ga probije.
+    while fixed > budget and sections["firma"]:
+        f = sections["firma"]
+        sections["firma"] = f[:max(0, len(f) - max(40, (fixed - budget) * 4))].rstrip()
+        fixed = tokens(render(sections)) + 8
     room = max(0, min(E.PROFILE_MEMORY_TOKENS[profile], budget - fixed))
 
     candidates = retrieval.retrieve(persona, query, profile, now=now, memory_types=memory_types)
