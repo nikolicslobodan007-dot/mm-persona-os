@@ -61,7 +61,12 @@ def _mozda_dokument(chat_id, odgovor) -> None:
     from common import enums as E
 
     dugi = {E.ContentFormat.ARTICLE.value, E.ContentFormat.NEWSLETTER.value}
-    kljuc = (getattr(odgovor, "delovi", None) or {}).get("item")
+    delovi = getattr(odgovor, "delovi", None) or {}
+    # PDF ide SAMO kad je posao prošao (ADR-0147/0148). Odbijen/zastao nacrt se
+    # ne šalje kao uredan fajl — to bi obmanulo („nije urađeno" pa PDF).
+    if delovi.get("stanje") != "uradjeno":
+        return
+    kljuc = delovi.get("item")
     if not kljuc:
         return
     item = ContentItem.objects.filter(pk=kljuc).first()

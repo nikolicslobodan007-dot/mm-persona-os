@@ -210,14 +210,15 @@ class TestFormatiranje:
 
     def test_blokovi_prepoznaje_podnaslove(self):
         from apps.content.dokument import _blokovi
-        telo = ("Teza je ovde, duža rečenica koja objašnjava.\n\n"
-                "Organizacija i odgovornost\nTelo odeljka je ovde.\n\n"
+        telo = ("Teza je ovde, duža rečenica koja objašnjava stvari.\n\n"
+                "Organizacija i odgovornost\n\n"
+                "Telo odeljka je ovde, puna rečenica.\n\n"
                 "— Mila · AI persona")
         b = _blokovi(telo)
-        assert ("h", "Organizacija i odgovornost") in b
-        assert ("p", "Telo odeljka je ovde.") in b
+        assert ("h", "Organizacija i odgovornost") in b  # samostalna linija
+        assert ("p", "Telo odeljka je ovde, puna rečenica.") in b
         assert ("p", "— Mila · AI persona") in b  # disclosure NIJE podnaslov
-        assert ("p", "Teza je ovde, duža rečenica koja objašnjava.") in b
+        assert ("p", "Teza je ovde, duža rečenica koja objašnjava stvari.") in b
 
     def test_blokovi_markdown_naslov(self):
         from apps.content.dokument import _blokovi
