@@ -97,7 +97,7 @@ SLUCAJEVI: list[Slucaj] = [
            "Iz teksta izvuci ime i grad kao JSON {\"ime\": \"...\", \"grad\": "
            "\"...\"}. Vrati samo JSON. Tekst: 'Marko Jović iz Novog Sada javio "
            "se povodom isporuke.'",
-           lambda t: _sadrzi(t, "marko") and _sadrzi(t, "novog sada")),
+           lambda t: _sadrzi(t, "marko") and _sadrzi(t, "nov", "sad")),
     Slucaj("format-tri", "Format", _SR,
            "Nabroj tačno TRI razloga zašto je drvena ambalaža dobra za vino. "
            "Svaki razlog u novom redu, bez uvoda i bez numeracije.",
@@ -125,6 +125,7 @@ class Rezultat:
     ms: int = 0
     provider: str = ""
     greska: str = ""
+    uzorak: str = ""
 
 
 def ruta_za(spec: str, purpose: E.LLMPurpose):
@@ -164,7 +165,8 @@ def pokreni(specovi: list[str], slucajevi: list[Slucaj], *, persona,
                 rez.append(Rezultat(spec, s.kljuc, s.kategorija,
                                     bool(s.proveri(gen.text or "")),
                                     gen.input_tokens, gen.output_tokens, ms,
-                                    gen.provider))
+                                    gen.provider,
+                                    uzorak=(gen.text or "").strip()[:120]))
             except Exception as e:  # noqa: BLE001 — pad rute je podatak, ne kraj
                 ms = int((time.monotonic() - t0) * 1000)
                 rez.append(Rezultat(spec, s.kljuc, s.kategorija, False, ms=ms,

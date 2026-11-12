@@ -27,6 +27,8 @@ class Command(BaseCommand):
         p.add_argument("--persona", default="P-00003",
                        help="Persona čiji se ključ koristi (podrazumevano P-00003).")
         p.add_argument("--actor", default="user:slobodan")
+        p.add_argument("--detaljno", action="store_true",
+                       help="Ispiši po slučaju: PROŠAO/PAO + isečak izlaza.")
 
     def handle(self, *args, **o):
         if not o["actor"].startswith("user:"):
@@ -72,6 +74,14 @@ class Command(BaseCommand):
                 if pk:
                     delovi.append(f"{k} {pk[0]}/{pk[1]}")
             self.stdout.write(f"  {spec}: " + " · ".join(delovi))
+
+        if o["detaljno"]:
+            self.stdout.write(self.style.MIGRATE_HEADING("\nPo slučaju:"))
+            for r in rez:
+                oznaka = "PROŠAO" if r.uspeh else "PAO"
+                rep = r.greska or r.uzorak.replace("\n", " ")
+                self.stdout.write(f"  [{oznaka:6}] {r.spec} · {r.kljuc} "
+                                  f"({r.kategorija}) — {rep}")
 
         self.stdout.write(self.style.MIGRATE_HEADING("\nNapomena:"))
         self.stdout.write("  Cena iz realnih cenovnika (12.11.2026). Nepoznat model "
