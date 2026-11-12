@@ -17,6 +17,7 @@ import json
 import logging
 import urllib.parse
 import urllib.request
+import uuid
 
 from django.conf import settings
 
@@ -73,6 +74,38 @@ def posalji_poruku(chat_id, tekst: str) -> None:
     if not token:
         return
     _api(token, "sendMessage", {"chat_id": chat_id, "text": (tekst or "")[:MAX_PORUKA]})
+
+
+def posalji_dokument(chat_id, podaci: bytes, naziv: str, opis: str = "") -> None:
+    """ADR-0147 — pošalji fajl (PDF) na Telegram preko sendDocument (multipart).
+
+    Mreža/Telegram pad se guta (kao i kod poruke): fajl je dodatak, ne sme da
+    obori odgovor koji je već poslat kao tekst.
+    """
+    token = _token()
+    if not token or not podaci:
+        return
+    granica = "----mmwk" + uuid.uuid4().hex
+    delovi: list[bytes] = []
+    for ime, vrednost in (("chat_id", str(chat_id)), ("caption", (opis or "")[:1000])):
+        delovi.append(
+            (f'--{granica}\r\nContent-Disposition: form-data; name="{ime}"'
+             f'\r\n\r\n{vrednost}\r\n').encode())
+    delovi.append(
+        (f'--{granica}\r\nContent-Disposition: form-data; name="document"; '
+         f'filename="{naziv}"\r\nContent-Type: application/pdf\r\n\r\n').encode()
+        + podaci + b"\r\n")
+    delovi.append(f"--{granica}--\r\n".encode())
+    telo = b"".join(delovi)
+    url = API.format(token=token, metod="sendDocument")
+    req = urllib.request.Request(
+        url, data=telo, method="POST",
+        headers={"Content-Type": f"multipart/form-data; boundary={granica}"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:  # noqa: S310
+            json.loads(r.read().decode())
+    except Exception as e:  # noqa: BLE001 — fajl je dodatak, ne ruši odgovor
+        log.warning("telegram sendDocument pao: %s", e)
 
 
 def nit_za(actor: str):
