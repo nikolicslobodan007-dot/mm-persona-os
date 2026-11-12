@@ -10,9 +10,12 @@ WORKDIR /app
 # ADR-0087 — `git` je ovde zato sto zakrpu pravi on. Izvestaj pokretaca
 # (ADR-0086) nosi tokene i cenu, ali ne i izmenjene fajlove; razliku izmedju
 # radnog primerka i polazista racuna `git diff`. Svoj differ ne pisemo.
+# ADR-0146 — LibreOffice headless za izvoz dokumenata (dokument.py, ADR-0103):
+# jedan motor daje PDF i Word (writer) i Excel (calc) iz postojećeg koda; bez
+# njega su radili samo odt/html/txt. --no-install-recommends drži sliku manjom.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends build-essential libpq-dev git \
- ffmpeg tesseract-ocr \
+ ffmpeg tesseract-ocr libreoffice-writer libreoffice-calc \
  && rm -rf /var/lib/apt/lists/*
 
 # ADR-0126 — srpski OCR modeli (latinica + ćirilica). apt `tesseract-ocr-srp`
