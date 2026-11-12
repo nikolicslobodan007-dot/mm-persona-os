@@ -38,6 +38,9 @@ CENE_USD_1M: dict[str, tuple[float, float]] = {
     "google:gemini-3.8-flash": (0.75, 3.75),
     "google:gemini-4-argon": (2.00, 10.00),
     "meta:llama-4-scout": (0.10, 0.30),
+    "meta:llama-4-maverick": (0.27, 0.85),
+    "xai:grok-4.7": (2.00, 6.00),
+    "xai:grok-4.1-fast": (0.20, 0.50),
 }
 
 
