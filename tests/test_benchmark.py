@@ -141,3 +141,17 @@ def test_slucajevi_imaju_proveru_i_jedinstvene_kljuceve():
     for s in B.SLUCAJEVI:
         assert callable(s.proveri)
         assert s.system and s.prompt
+
+
+def _slucaj(kljuc):
+    return next(s for s in B.SLUCAJEVI if s.kljuc == kljuc)
+
+
+def test_ekstrakcija_prihvata_nominativ_i_genitiv():
+    pr = _slucaj("ekstrakcija").proveri
+    # ispravna ekstrakcija daje nominativ grada
+    assert pr('{"ime": "Marko Jović", "grad": "Novi Sad"}') is True
+    # doslovno prepisan genitiv iz teksta takođe prolazi
+    assert pr('{"ime": "Marko Jović", "grad": "Novog Sada"}') is True
+    # fali grad → pad
+    assert pr('{"ime": "Marko Jović"}') is False
