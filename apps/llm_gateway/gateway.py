@@ -336,7 +336,7 @@ def _call_external(route: LLMRoute, system: str, prompt: str,
                           route.timeout_seconds)
         choice = (data.get("choices") or [{}])[0]
         u = data.get("usage") or {}
-        return ((choice.get("message") or {}).get("content", ""),
+        return ((choice.get("message") or {}).get("content") or "",
                 int(u.get("prompt_tokens", 0)), int(u.get("completion_tokens", 0)),
                 str(choice.get("finish_reason", "")))
     raise LLMError("UNSUPPORTED_PROVIDER", route.provider)
@@ -404,8 +404,8 @@ def generate(purpose: E.LLMPurpose, system: str, prompt: str, *, persona=None, r
         cents = _cost_cents(route, tin, tout) if external else 0
         rec = _record(route, purpose, system, prompt, text, persona, run, context_pack, now,
                       t0, finish=finish, tin=tin, tout=tout, cents=cents, external=external)
-        return Generation(text.strip(), route.provider, route.model_key, rec, tin, tout, cents,
-                          fallbacks)
+        return Generation((text or "").strip(), route.provider, route.model_key,
+                          rec, tin, tout, cents, fallbacks)
     raise LLMError("NO_ROUTE", "; ".join(fallbacks))
 
 
@@ -508,7 +508,7 @@ def transcribe(asset, *, persona=None, run=None, context_pack=None,
         rec = _record(route, purpose, system, prompt_marker, text, persona, run,
                       context_pack, now, t0, finish=finish, tin=tin, tout=tout, cents=cents,
                       external=not lokalni)
-        return Generation(text.strip(), route.provider, route.model_key, rec, tin, tout,
+        return Generation((text or "").strip(), route.provider, route.model_key, rec, tin, tout,
                           cents, fallbacks)
     raise LLMError("LLM_EXTERNAL_DISABLED", "; ".join(fallbacks))
 

@@ -148,7 +148,11 @@ def ruta_za(spec: str, purpose: E.LLMPurpose):
 
 def pokreni(specovi: list[str], slucajevi: list[Slucaj], *, persona,
            purpose: E.LLMPurpose = E.LLMPurpose.CONTENT_DRAFT,
-           now: datetime | None = None) -> list[Rezultat]:
+           now: datetime | None = None, pokusaji: int = 3,
+           pauza: float = 0.0) -> list[Rezultat]:
+    """Za svaku rutu pusti slučajeve kroz gateway. Na 429 (rate-limit) ponovi
+    do `pokusaji` puta sa rastućom pauzom; `pauza` je razmak između svih poziva
+    (da besplatni nivoi ne throttluju). Pad rute je podatak, ne kraj."""
     from apps.content.service import operator_run
     from apps.llm_gateway import gateway
 
@@ -159,19 +163,31 @@ def pokreni(specovi: list[str], slucajevi: list[Slucaj], *, persona,
         run = operator_run(persona, now)
         for s in slucajevi:
             t0 = time.monotonic()
-            try:
-                gen = gateway.generate(purpose, s.system, s.prompt,
-                                       persona=persona, run=run, only=ruta)
-                ms = int((time.monotonic() - t0) * 1000)
+            gen, greska = None, ""
+            for i in range(max(1, pokusaji)):
+                try:
+                    gen = gateway.generate(purpose, s.system, s.prompt,
+                                           persona=persona, run=run, only=ruta)
+                    greska = ""
+                    break
+                except Exception as e:  # noqa: BLE001 — pad rute je podatak
+                    gen, greska = None, f"{type(e).__name__}: {e}"[:80]
+                    if "429" in str(e) and i < pokusaji - 1:
+                        time.sleep(4 * (i + 1))
+                        continue
+                    break
+            ms = int((time.monotonic() - t0) * 1000)
+            if gen is not None and not greska:
                 rez.append(Rezultat(spec, s.kljuc, s.kategorija,
                                     bool(s.proveri(gen.text or "")),
                                     gen.input_tokens, gen.output_tokens, ms,
                                     gen.provider,
                                     uzorak=(gen.text or "").strip()[:120]))
-            except Exception as e:  # noqa: BLE001 — pad rute je podatak, ne kraj
-                ms = int((time.monotonic() - t0) * 1000)
+            else:
                 rez.append(Rezultat(spec, s.kljuc, s.kategorija, False, ms=ms,
-                                    greska=f"{type(e).__name__}: {e}"[:80]))
+                                    greska=greska))
+            if pauza:
+                time.sleep(pauza)
     return rez
 
 

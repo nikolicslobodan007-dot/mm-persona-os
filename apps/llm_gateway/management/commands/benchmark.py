@@ -29,6 +29,10 @@ class Command(BaseCommand):
         p.add_argument("--actor", default="user:slobodan")
         p.add_argument("--detaljno", action="store_true",
                        help="Ispiši po slučaju: PROŠAO/PAO + isečak izlaza.")
+        p.add_argument("--pauza", type=float, default=0.0,
+                       help="Pauza (s) između poziva — pomaže kod free rate-limita.")
+        p.add_argument("--pokusaji", type=int, default=3,
+                       help="Broj pokušaja po slučaju na 429 (rate-limit).")
 
     def handle(self, *args, **o):
         if not o["actor"].startswith("user:"):
@@ -42,7 +46,8 @@ class Command(BaseCommand):
             raise CommandError(f"Nema persone: {o['persona']}") from e
 
         with bind(actor_id=o["actor"]):
-            rez = benchmark.pokreni(specovi, benchmark.SLUCAJEVI, persona=persona)
+            rez = benchmark.pokreni(specovi, benchmark.SLUCAJEVI, persona=persona,
+                                    pauza=o["pauza"], pokusaji=o["pokusaji"])
         zbir = benchmark.zbir(rez)
 
         n_sluc = len(benchmark.SLUCAJEVI)
