@@ -30,6 +30,7 @@ vrata.
 from __future__ import annotations
 
 import os
+import re
 import tempfile
 
 from api import audit
@@ -76,16 +77,61 @@ def _biblioteka():
     return lo_dokument, lo_pisac, lo_izvoz
 
 
+#: ADR-0148 — naslov je često sirov nalog („Napiši dubinski članak … o …");
+#: skida se instrukcioni uvod da u dokumentu stoji čist naslov teme.
+_UVOD = re.compile(r"^(napi[\u0161s]i|napisati|napravi|sastavi|izradi|pripremi)"
+                   r"\b.*?\bo\s+", re.IGNORECASE)
+
+
+def _cist_naslov(sirov: str) -> str:
+    """Od sirovog naloga napravi kratak, čitljiv naslov dokumenta (ADR-0148)."""
+    t = (sirov or "").strip()
+    m = _UVOD.search(t)
+    if m:
+        t = t[m.end():]
+    # Jezgro teme: iseci na prvom zarezu, zagradi ili „oslanjajući".
+    t = re.split(r"[,(]|\boslanjaj", t, maxsplit=1)[0].strip(" .:-\u2014\t").strip()
+    if not t:
+        t = (sirov or "dokument").strip()
+    return (t[0].upper() + t[1:] if t else t)[:120]
+
+
+def _blokovi(telo: str) -> list[tuple[str, str]]:
+    """Telo → lista (vrsta, tekst): „h" za podnaslov, „p" za pasus (ADR-0148).
+
+    Kratka samostalna linija bez završne interpunkcije, sa telom posle, je
+    podnaslov; sve ostalo je pasus. `##` markdown se takođe prepoznaje.
+    """
+    out: list[tuple[str, str]] = []
+    for blok in (telo or "").split("\n\n"):
+        blok = blok.strip()
+        if not blok:
+            continue
+        prva, _, ostatak = blok.partition("\n")
+        prva, ostatak = prva.strip(), ostatak.strip()
+        podnaslov = (ostatak and len(prva) <= 70
+                     and not prva.endswith((".", "!", "?", ":", "\u201c"))
+                     and not prva.startswith(("\u2014", "- ", "* ")))
+        if podnaslov or prva.startswith("#"):
+            out.append(("h", prva.lstrip("# ").strip()))
+            if ostatak:
+                out.append(("p", ostatak))
+        else:
+            out.append(("p", blok))
+    return out
+
+
 def _projekat(item, lo_dokument, lo_pisac) -> dict:
-    """Naslov je naslov, prazan red deli pasuse. Ništa pametnije zasad."""
-    projekat = lo_dokument.create_document(
-        doc_type="writer", name=(item.title or "dokument")[:60])
-    if item.title:
-        lo_pisac.add_heading(projekat, text=item.title, level=1)
-    for pasus in (item.body or "").split("\n\n"):
-        pasus = pasus.strip()
-        if pasus:
-            lo_pisac.add_paragraph(projekat, text=pasus)
+    """Čist naslov (heading 1), podnaslovi (heading 2), pasusi (ADR-0148)."""
+    naslov = _cist_naslov(item.title)
+    projekat = lo_dokument.create_document(doc_type="writer", name=naslov[:60])
+    if naslov:
+        lo_pisac.add_heading(projekat, text=naslov, level=1)
+    for vrsta, tekst in _blokovi(item.body or ""):
+        if vrsta == "h":
+            lo_pisac.add_heading(projekat, text=tekst, level=2)
+        else:
+            lo_pisac.add_paragraph(projekat, text=tekst)
     return projekat
 
 

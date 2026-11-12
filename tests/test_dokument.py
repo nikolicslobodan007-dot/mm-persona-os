@@ -191,3 +191,34 @@ class TestKonzola:
         r = self._konzola(sef).get(f"/console/assets/{a.public_id}")
         assert r.status_code == 200
         assert "Content-Disposition" not in r
+
+
+class TestFormatiranje:
+    """ADR-0148 — čist naslov + stilizovani podnaslovi u dokumentu."""
+
+    def test_cist_naslov_skida_instrukciju(self):
+        from apps.content.dokument import _cist_naslov
+        nalog = ("Napisati dubinski članak na srpskom (latinica) o prednostima i "
+                 "rizicima vođenja firme, oslanjajući se na iskustvo")
+        n = _cist_naslov(nalog)
+        assert n.startswith("Prednostima i rizicima")
+        assert "Napisati" not in n and "oslanjaj" not in n
+
+    def test_cist_naslov_cuva_kratak(self):
+        from apps.content.dokument import _cist_naslov
+        assert _cist_naslov("Rokovi isporuke u B2B") == "Rokovi isporuke u B2B"
+
+    def test_blokovi_prepoznaje_podnaslove(self):
+        from apps.content.dokument import _blokovi
+        telo = ("Teza je ovde, duža rečenica koja objašnjava.\n\n"
+                "Organizacija i odgovornost\nTelo odeljka je ovde.\n\n"
+                "— Mila · AI persona")
+        b = _blokovi(telo)
+        assert ("h", "Organizacija i odgovornost") in b
+        assert ("p", "Telo odeljka je ovde.") in b
+        assert ("p", "— Mila · AI persona") in b  # disclosure NIJE podnaslov
+        assert ("p", "Teza je ovde, duža rečenica koja objašnjava.") in b
+
+    def test_blokovi_markdown_naslov(self):
+        from apps.content.dokument import _blokovi
+        assert ("h", "Zaključak") in _blokovi("## Zaključak\nKraj teksta.")
