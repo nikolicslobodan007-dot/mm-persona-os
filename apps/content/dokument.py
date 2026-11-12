@@ -107,15 +107,15 @@ def _blokovi(telo: str) -> list[tuple[str, str]]:
         blok = blok.strip()
         if not blok:
             continue
-        prva, _, ostatak = blok.partition("\n")
-        prva, ostatak = prva.strip(), ostatak.strip()
-        podnaslov = (ostatak and len(prva) <= 70
-                     and not prva.endswith((".", "!", "?", ":", "\u201c"))
-                     and not prva.startswith(("\u2014", "- ", "* ")))
-        if podnaslov or prva.startswith("#"):
+        if blok.startswith("#"):  # markdown podnaslov (+ eventualno telo u bloku)
+            prva, _, ostatak = blok.partition("\n")
             out.append(("h", prva.lstrip("# ").strip()))
-            if ostatak:
-                out.append(("p", ostatak))
+            if ostatak.strip():
+                out.append(("p", ostatak.strip()))
+        elif ("\n" not in blok and len(blok) <= 70
+              and not blok.endswith((".", "!", "?", ":", "\u201c"))
+              and not blok.startswith(("\u2014", "- ", "* "))):
+            out.append(("h", blok))  # samostalna kratka linija = podnaslov
         else:
             out.append(("p", blok))
     return out

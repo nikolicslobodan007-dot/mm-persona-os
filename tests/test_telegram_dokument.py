@@ -63,5 +63,17 @@ def test_mozda_dokument_kratak_format_ne_ide(monkeypatch):
             first=lambda: SimpleNamespace(format="post", title="x")))
     monkeypatch.setattr(telegram, "posalji_dokument",
                         lambda *a, **k: poslato.__setitem__("n", 1))
-    tasks._mozda_dokument(123, SimpleNamespace(delovi={"item": "abc"}))
+    tasks._mozda_dokument(
+        123, SimpleNamespace(delovi={"stanje": "uradjeno", "item": "abc"}))
     assert poslato["n"] == 0  # objava (post) ne ide kao PDF
+
+
+def test_mozda_dokument_neuspeh_ne_salje(monkeypatch):
+    from apps.channels import tasks, telegram
+    poslato = {"n": 0}
+    monkeypatch.setattr(telegram, "posalji_dokument",
+                        lambda *a, **k: poslato.__setitem__("n", 1))
+    # stanje "stalo" (odbijen/zastao nacrt) → PDF se NE šalje iako ima item
+    tasks._mozda_dokument(
+        123, SimpleNamespace(delovi={"stanje": "stalo", "item": "abc"}))
+    assert poslato["n"] == 0
