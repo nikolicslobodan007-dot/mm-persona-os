@@ -33,6 +33,9 @@ class Command(BaseCommand):
                        help="Pauza (s) između poziva — pomaže kod free rate-limita.")
         p.add_argument("--pokusaji", type=int, default=3,
                        help="Broj pokušaja po slučaju na 429 (rate-limit).")
+        p.add_argument("--sudija", default="",
+                       help="Ruta modela-sudije (npr. anthropic:claude-sonnet-5): "
+                            "ocenjuje jezik po Pravopisu, ne samo dijakritike.")
 
     def handle(self, *args, **o):
         if not o["actor"].startswith("user:"):
@@ -47,7 +50,8 @@ class Command(BaseCommand):
 
         with bind(actor_id=o["actor"]):
             rez = benchmark.pokreni(specovi, benchmark.SLUCAJEVI, persona=persona,
-                                    pauza=o["pauza"], pokusaji=o["pokusaji"])
+                                    pauza=o["pauza"], pokusaji=o["pokusaji"],
+                                    sudija=o["sudija"])
         zbir = benchmark.zbir(rez)
 
         n_sluc = len(benchmark.SLUCAJEVI)
@@ -85,9 +89,14 @@ class Command(BaseCommand):
             for r in rez:
                 oznaka = "PROŠAO" if r.uspeh else "PAO"
                 rep = r.greska or r.uzorak.replace("\n", " ")
+                if r.sud:
+                    rep += f"  [sudija: {r.sud}]"
                 self.stdout.write(f"  [{oznaka:6}] {r.spec} · {r.kljuc} "
                                   f"({r.kategorija}) — {rep}")
 
         self.stdout.write(self.style.MIGRATE_HEADING("\nNapomena:"))
-        self.stdout.write("  Cena iz realnih cenovnika (12.11.2026). Nepoznat model "
-                          "→ cena 0. Provera je deterministička (bez sudije).")
+        sudija_ime = o["sudija"]
+        sudija_tekst = (f"Jezik ocenjuje sudija {sudija_ime} po Pravopisu."
+                        if sudija_ime else "Provera je deterministička (bez sudije).")
+        self.stdout.write("  Cena iz realnih cenovnika (12.11.2026). Nepoznat "
+                          f"model → cena 0. {sudija_tekst}")
