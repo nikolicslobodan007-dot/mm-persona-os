@@ -125,6 +125,9 @@ class TestRuteAgenta:
 
     def test_route_without_a_key_is_skipped(self, mila, jeftini, settings, tajne):
         settings.LLM_EXTERNAL_ENABLED = True
+        # openrouter sada ima zajednički ključ (ADR-0151); „bez ključa po personi"
+        # obara rutu samo kad je ključ po personi obavezan (inače padne na zajednički).
+        settings.LLM_REQUIRE_PERSONA_KEY = True
         assert gateway._external_allowed(jeftini, mila) == "NO_PERSONA_KEY"
         with bind(actor_id="user:boss"):
             agent_secrets.set_key(mila, "openrouter", KLJUC, actor="user:boss")
