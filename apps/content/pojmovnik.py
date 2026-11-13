@@ -14,6 +14,7 @@ preko SVIH domena — domen je polje, ne zaseban izvor istine (ADR-0033).
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from django.db import transaction
@@ -130,12 +131,46 @@ def _rangiraj_pojmove(upit: str) -> list[KnowledgeFact]:
     return sorted(base, key=kljuc)
 
 
+def _egzaktni(upit: str) -> list[KnowledgeFact]:
+    """Termini (ili sinonimi) koji se DOSLOVNO javljaju kao reč u upitu/tekstu.
+
+    Za sudiju presudno: ako izlaz koristi „buke", sudija mora da dobije baš taj
+    termin — semantika nad jednom rečju to ne garantuje, egzaktno poklapanje da.
+    """
+    t = (upit or "").lower()
+    out: list[KnowledgeFact] = []
+    seen: set[int] = set()
+    qs = KnowledgeFact.objects.filter(
+        persona__isnull=True, predicate=PREDIKAT_POJMA, source__is_active=True)
+    for f in qs:
+        oj = f.object_json or {}
+        for k in [oj.get("termin", ""), *(oj.get("sinonimi") or [])]:
+            k = (k or "").lower().strip()
+            if k and re.search(r"\b" + re.escape(k) + r"\b", t):
+                if f.id not in seen:
+                    out.append(f)
+                    seen.add(f.id)
+                break
+    return out
+
+
 def trazi_pojmove(upit: str, *, granica: int = 5) -> list[dict]:
-    """Termini najbliži upitu po smislu. Prvih `granica`. Prazan upit → prazno."""
+    """Termini relevantni za upit. Prazan upit → prazno.
+
+    Prvo EGZAKTNI (termin/sinonim se doslovno javlja u tekstu) — to je ono što
+    sudiji treba; pa SEMANTIČKI (po smislu, ADR-0120) da se dopuni do `granica`.
+    """
     if not upit.strip():
         return []
-    poredak = _rangiraj_pojmove(upit)[:max(0, granica)]
-    return [{"subject": f.subject, **(f.object_json or {})} for f in poredak]
+    poredak = _egzaktni(upit)
+    vidjeni = {f.id for f in poredak}
+    for f in _rangiraj_pojmove(upit):
+        if len(poredak) >= granica:
+            break
+        if f.id not in vidjeni:
+            poredak.append(f)
+            vidjeni.add(f.id)
+    return [{"subject": f.subject, **(f.object_json or {})} for f in poredak[:granica]]
 
 
 def pojmovi_dostupni() -> bool:
