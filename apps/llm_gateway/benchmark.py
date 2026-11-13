@@ -147,6 +147,11 @@ def ruta_za(spec: str, purpose: E.LLMPurpose):
     return ruta
 
 
+#: Prolazne greške koje vredi ponoviti: rate-limit, preopterećenje, timeout.
+_PROLAZNE = ("429", "500", "502", "503", "504", "timed out", "timeout",
+             "NETWORK", "UNAVAILABLE")
+
+
 def pokreni(specovi: list[str], slucajevi: list[Slucaj], *, persona,
            purpose: E.LLMPurpose = E.LLMPurpose.CONTENT_DRAFT,
            now: datetime | None = None, pokusaji: int = 3,
@@ -173,7 +178,7 @@ def pokreni(specovi: list[str], slucajevi: list[Slucaj], *, persona,
                     break
                 except Exception as e:  # noqa: BLE001 — pad rute je podatak
                     gen, greska = None, f"{type(e).__name__}: {e}"[:80]
-                    if "429" in str(e) and i < pokusaji - 1:
+                    if any(m in str(e) for m in _PROLAZNE) and i < pokusaji - 1:
                         time.sleep(4 * (i + 1))
                         continue
                     break
