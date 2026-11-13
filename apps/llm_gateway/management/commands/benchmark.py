@@ -36,6 +36,8 @@ class Command(BaseCommand):
         p.add_argument("--sudija", default="",
                        help="Ruta modela-sudije (npr. anthropic:claude-sonnet-5): "
                             "ocenjuje jezik po Pravopisu, ne samo dijakritike.")
+        p.add_argument("--sudija-obara", action="store_true",
+                       help="Sudija OBARA rezultat (podrazumevano samo označava).")
 
     def handle(self, *args, **o):
         if not o["actor"].startswith("user:"):
@@ -51,7 +53,8 @@ class Command(BaseCommand):
         with bind(actor_id=o["actor"]):
             rez = benchmark.pokreni(specovi, benchmark.SLUCAJEVI, persona=persona,
                                     pauza=o["pauza"], pokusaji=o["pokusaji"],
-                                    sudija=o["sudija"])
+                                    sudija=o["sudija"],
+                                    sudija_obara=o["sudija_obara"])
         zbir = benchmark.zbir(rez)
 
         n_sluc = len(benchmark.SLUCAJEVI)
@@ -89,14 +92,19 @@ class Command(BaseCommand):
             for r in rez:
                 oznaka = "PROŠAO" if r.uspeh else "PAO"
                 rep = r.greska or r.uzorak.replace("\n", " ")
-                if r.sud:
-                    rep += f"  [sudija: {r.sud}]"
+                if r.sud_ok is not None:
+                    oznaka_s = "OK" if r.sud_ok else "SPORNO"
+                    rep += f"  [sudija {oznaka_s}: {r.sud}]"
                 self.stdout.write(f"  [{oznaka:6}] {r.spec} · {r.kljuc} "
                                   f"({r.kategorija}) — {rep}")
 
         self.stdout.write(self.style.MIGRATE_HEADING("\nNapomena:"))
         sudija_ime = o["sudija"]
-        sudija_tekst = (f"Jezik ocenjuje sudija {sudija_ime} po Pravopisu."
-                        if sudija_ime else "Provera je deterministička (bez sudije).")
+        if sudija_ime:
+            rezim = "OBARA" if o["sudija_obara"] else "savetodavno (označava, ne obara)"
+            sudija_tekst = (f"Sudija {sudija_ime} ocenjuje jezik po Pravopisu — "
+                            f"{rezim}. Sudija ume da pogreši na domenskim terminima.")
+        else:
+            sudija_tekst = "Provera je deterministička (bez sudije)."
         self.stdout.write("  Cena iz realnih cenovnika (12.11.2026). Nepoznat "
                           f"model → cena 0. {sudija_tekst}")
