@@ -1,0 +1,50 @@
+{"termin": "berba", "domen": "vino", "definicija": "ubiranje zrelog grožđa", "sinonimi": [], "izvor": ""}
+{"termin": "sorta", "domen": "vino", "definicija": "vrsta (kultivar) vinove loze (prokupac, tamjanika, smederevka)", "sinonimi": ["kultivar"], "izvor": ""}
+{"termin": "čokot", "domen": "vino", "definicija": "pojedinačni grm vinove loze", "sinonimi": [], "izvor": ""}
+{"termin": "grozd", "domen": "vino", "definicija": "plod vinove loze — bobice na peteljci", "sinonimi": [], "izvor": ""}
+{"termin": "rezidba", "domen": "vino", "definicija": "orezivanje loze radi roda i kvaliteta", "sinonimi": ["rez"], "izvor": ""}
+{"termin": "rod", "domen": "vino", "definicija": "količina grožđa po čokotu ili hektaru", "sinonimi": ["prinos"], "izvor": ""}
+{"termin": "tehnološka zrelost", "domen": "vino", "definicija": "stepen sazrelosti grožđa za berbu", "sinonimi": [], "izvor": ""}
+{"termin": "mošt", "domen": "vino", "definicija": "isceđen sok od grožđa pre i tokom vrenja", "sinonimi": ["šira"], "izvor": ""}
+{"termin": "maceracija", "domen": "vino", "definicija": "kontakt soka sa pokožicom radi ekstrakcije boje, tanina i arome", "sinonimi": [], "izvor": ""}
+{"termin": "fermentacija", "domen": "vino", "definicija": "pretvaranje šećera u alkohol dejstvom kvasca", "sinonimi": ["vrenje"], "izvor": ""}
+{"termin": "malolaktička fermentacija", "domen": "vino", "definicija": "pretvaranje jabučne u mlečnu kiselinu — daje mekše vino", "sinonimi": [], "izvor": ""}
+{"termin": "tanini", "domen": "vino", "definicija": "jedinjenja iz pokožice, semenki, peteljke i drveta bačve; daju trpkost i strukturu", "sinonimi": [], "izvor": ""}
+{"termin": "sumporisanje", "domen": "vino", "definicija": "dodavanje sumpor-dioksida (SO2) radi zaštite i konzervacije", "sinonimi": [], "izvor": ""}
+{"termin": "bistrenje", "domen": "vino", "definicija": "uklanjanje čestica radi bistrine vina", "sinonimi": [], "izvor": ""}
+{"termin": "talog", "domen": "vino", "definicija": "sediment koji se izdvaja u sudu", "sinonimi": [], "izvor": ""}
+{"termin": "odležavanje", "domen": "vino", "definicija": "čuvanje vina (u bačvi ili boci) radi razvoja ukusa", "sinonimi": ["sazrevanje"], "izvor": ""}
+{"termin": "barik", "domen": "vino", "definicija": "hrastova bačva zapremine oko 225 l za odležavanje", "sinonimi": ["bačva"], "izvor": ""}
+{"termin": "kupaža", "domen": "vino", "definicija": "mešanje vina ili sorti radi finalnog ukusa", "sinonimi": ["asamblaža"], "izvor": ""}
+{"termin": "vinifikacija", "domen": "vino", "definicija": "ceo proces prerade grožđa u vino", "sinonimi": [], "izvor": ""}
+{"termin": "komina", "domen": "vino", "definicija": "čvrsti ostatak grožđa (pokožica, semenke, peteljke) posle ceđenja", "sinonimi": ["džibra"], "izvor": ""}
+{"termin": "buke", "domen": "vino", "definicija": "razvijena aroma i miris vina koji nastaje sazrevanjem", "sinonimi": [], "izvor": ""}
+{"termin": "aroma", "domen": "vino", "definicija": "mirisni utisak vina (primarna, sekundarna, tercijarna)", "sinonimi": [], "izvor": ""}
+{"termin": "nos", "domen": "vino", "definicija": "ukupni miris vina (degustacioni termin)", "sinonimi": [], "izvor": ""}
+{"termin": "telo", "domen": "vino", "definicija": "utisak punoće i težine vina u ustima", "sinonimi": ["punoća"], "izvor": ""}
+{"termin": "trpkost", "domen": "vino", "definicija": "osećaj stezanja u ustima od tanina", "sinonimi": ["astringencija"], "izvor": ""}
+{"termin": "završnica", "domen": "vino", "definicija": "koliko ukus vina traje posle gutljaja", "sinonimi": ["dužina"], "izvor": ""}
+{"termin": "somelije", "domen": "vino", "definicija": "stručnjak za vina i njihovo služenje", "sinonimi": ["sommelier"], "izvor": ""}
+{"termin": "dekantiranje", "domen": "vino", "definicija": "pretakanje vina radi aeracije i odvajanja taloga", "sinonimi": [], "izvor": ""}
+{"termin": "kljuk", "domen": "rakija", "definicija": "izmuljano voće pripremljeno za vrenje", "sinonimi": [], "izvor": ""}
+{"termin": "džibra", "domen": "rakija", "definicija": "prevreli voćni kljuk spreman za pečenje", "sinonimi": ["komina"], "izvor": ""}
+{"termin": "vrenje", "domen": "rakija", "definicija": "pretvaranje voćnog šećera u alkohol", "sinonimi": ["fermentacija"], "izvor": ""}
+{"termin": "pečenje rakije", "domen": "rakija", "definicija": "proces destilacije rakije", "sinonimi": [], "izvor": ""}
+{"termin": "destilacija", "domen": "rakija", "definicija": "odvajanje alkohola od džibre isparavanjem i kondenzacijom", "sinonimi": [], "izvor": ""}
+{"termin": "prepek", "domen": "rakija", "definicija": "druga (ponovna) destilacija radi veće jačine i čistoće", "sinonimi": [], "izvor": ""}
+{"termin": "meka rakija", "domen": "rakija", "definicija": "proizvod prve destilacije, niže jačine", "sinonimi": ["meko"], "izvor": ""}
+{"termin": "prepečenica", "domen": "rakija", "definicija": "proizvod druge destilacije, jača i čistija", "sinonimi": ["ljuta rakija"], "izvor": ""}
+{"termin": "prvenac", "domen": "rakija", "definicija": "prva frakcija destilata (bogata metanolom), odvaja se", "sinonimi": ["glava"], "izvor": ""}
+{"termin": "srce", "domen": "rakija", "definicija": "srednja, najkvalitetnija frakcija destilata koja se zadržava", "sinonimi": [], "izvor": ""}
+{"termin": "patoka", "domen": "rakija", "definicija": "poslednja, slabija frakcija destilata koja se odvaja", "sinonimi": ["rep"], "izvor": ""}
+{"termin": "kazan", "domen": "rakija", "definicija": "sud (aparat) za destilaciju", "sinonimi": ["alambik"], "izvor": ""}
+{"termin": "lula", "domen": "rakija", "definicija": "cev kroz koju para izlazi iz kazana", "sinonimi": [], "izvor": ""}
+{"termin": "hladnjak", "domen": "rakija", "definicija": "deo u kome se para hladi i vraća u tečnost", "sinonimi": ["kondenzator"], "izvor": ""}
+{"termin": "šljivovica", "domen": "rakija", "definicija": "rakija od šljive", "sinonimi": [], "izvor": ""}
+{"termin": "komovica", "domen": "rakija", "definicija": "rakija od komine (džibre grožđa)", "sinonimi": [], "izvor": ""}
+{"termin": "lozovača", "domen": "rakija", "definicija": "rakija od grožđa", "sinonimi": ["loza"], "izvor": ""}
+{"termin": "kajsijevača", "domen": "rakija", "definicija": "rakija od kajsije", "sinonimi": [], "izvor": ""}
+{"termin": "viljamovka", "domen": "rakija", "definicija": "rakija od kruške viljamovke", "sinonimi": [], "izvor": ""}
+{"termin": "travarica", "domen": "rakija", "definicija": "rakija sa travama ili biljem", "sinonimi": [], "izvor": ""}
+{"termin": "alkoholna jakost", "domen": "rakija", "definicija": "udeo alkohola izražen u zapreminskim procentima (vol%)", "sinonimi": [], "izvor": ""}
+{"termin": "gradi", "domen": "rakija", "definicija": "narodski izraz za jačinu rakije (npr. „50 gradi“)", "sinonimi": ["stepeni"], "izvor": ""}
