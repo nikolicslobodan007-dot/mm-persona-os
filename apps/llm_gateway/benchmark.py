@@ -42,6 +42,7 @@ CENE_USD_1M: dict[str, tuple[float, float]] = {
     "xai:grok-4.7": (2.00, 6.00),
     "xai:grok-4.1-fast": (0.20, 0.50),
     "openrouter:qwen/qwen3.7-flash": (0.03, 0.13),
+    "google:gemini-flash-latest": (0.75, 3.75),
 }
 
 
