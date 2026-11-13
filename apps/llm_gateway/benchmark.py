@@ -184,6 +184,28 @@ def _pravopis_blok(izlaz: str) -> str:
             + "\n".join(redovi) + "\n\n")
 
 
+def _strucni_blok(izlaz: str) -> str:
+    """Relevantni stručni termini (pojmovnik, ADR-0154) kao referenca sudiji.
+    Best-effort: ako pojmovnik nije uvezen ili pretraga padne, vraća prazno.
+    Sprečava da sudija obori tačan domenski termin (npr. „buke" je vinski)."""
+    try:
+        from apps.content import pojmovnik
+        if not pojmovnik.pojmovi_dostupni():
+            return ""
+        termini = pojmovnik.trazi_pojmove(izlaz, granica=5)
+    except Exception:  # noqa: BLE001 — termini su pomoć, ne uslov
+        return ""
+    if not termini:
+        return ""
+    redovi = []
+    for t in termini:
+        syn = f" (= {', '.join(t['sinonimi'])})" if t.get("sinonimi") else ""
+        redovi.append(f"- {t.get('termin', '')}{syn} [{t.get('domen', '')}]: "
+                      f"{(t.get('definicija') or '')[:160]}")
+    return ("Stručni termini (važeći, NE ispravljati ih kao greške):\n"
+            + "\n".join(redovi) + "\n\n")
+
+
 def _parsiraj_sud(tekst: str) -> tuple[bool, str]:
     m = re.search(r"\{.*\}", tekst or "", re.DOTALL)
     if not m:
@@ -201,7 +223,7 @@ def oceni_sudijom(izlaz: str, kriterijum: str, *, persona, run, sudija_ruta,
     Vraća (prolaz, razlog). Pad sudije NE obara slučaj — vraća (True, 'sudija pao')."""
     from apps.llm_gateway import gateway
 
-    prompt = (f"Kriterijum: {kriterijum}\n\n{_pravopis_blok(izlaz)}"
+    prompt = (f"Kriterijum: {kriterijum}\n\n{_pravopis_blok(izlaz)}{_strucni_blok(izlaz)}"
               f"Tekst za ocenu:\n\"\"\"\n{izlaz}\n\"\"\"\n\n"
               "Vrati samo JSON {\"prolaz\": true/false, \"razlog\": \"kratko\"}.")
     try:
