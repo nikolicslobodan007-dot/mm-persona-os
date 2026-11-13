@@ -60,6 +60,7 @@ class Slucaj:
     system: str
     prompt: str
     proveri: Callable[[str], bool]
+    sudija: str = ""
 
 
 def _json_tip(tekst: str, dozvoljeni: set[str]) -> bool:
@@ -103,10 +104,15 @@ SLUCAJEVI: list[Slucaj] = [
     Slucaj("format-tri", "Format", _SR,
            "Nabroj tačno TRI razloga zašto je drvena ambalaža dobra za vino. "
            "Svaki razlog u novom redu, bez uvoda i bez numeracije.",
-           _tacno_tri_reda),
+           _tacno_tri_reda,
+           sudija="Tri razloga na ispravnom, prirodnom standardnom srpskom; "
+                  "bez izmišljenih ili nestandardnih reči."),
     Slucaj("srpski", "Srpski jezik", _SR,
            "Napiši jednu rečenicu o jesenjoj berbi grožđa.",
-           _ima_dijakritiku),
+           _ima_dijakritiku,
+           sudija="Jedna rečenica na standardnom srpskom o jesenjoj berbi "
+                  "grožđa: gramatički i pravopisno ispravna, prirodna, bez "
+                  "izmišljenih ili nestandardnih reči."),
     Slucaj("rezon", "Rezonovanje", _SR,
            "Imamo 12 vinarija, svaka naruči po 8 gajbi. Koliko gajbi ukupno? "
            "Vrati samo broj.",
@@ -128,6 +134,7 @@ class Rezultat:
     provider: str = ""
     greska: str = ""
     uzorak: str = ""
+    sud: str = ""
 
 
 def ruta_za(spec: str, purpose: E.LLMPurpose):
@@ -151,11 +158,63 @@ def ruta_za(spec: str, purpose: E.LLMPurpose):
 _PROLAZNE = ("429", "500", "502", "503", "504", "timed out", "timeout",
              "NETWORK", "UNAVAILABLE")
 
+JUDGE_SYSTEM = (
+    "Ti si strog lektor standardnog srpskog jezika (latinica, sa dijakriticima). "
+    "Ocenjuješ da li tekst zadovoljava dati kriterijum. Budi strog: izmišljena ili "
+    "nestandardna reč, gramatička ili pravopisna greška znače pad. Odgovaraj "
+    "isključivo kratkim JSON-om.")
+
+
+def _pravopis_blok(izlaz: str) -> str:
+    """Relevantna pravila Pravopisa za dati tekst (ADR-0120) — referenca sudiji.
+    Best-effort: ako pravila nisu uvezena ili pretraga padne, vraća prazno."""
+    try:
+        from apps.content import recnik
+        if not recnik.pravila_dostupna():
+            return ""
+        pravila = recnik.trazi_pravila(izlaz, granica=4)
+    except Exception:  # noqa: BLE001 — pravila su pomoć, ne uslov
+        return ""
+    if not pravila:
+        return ""
+    redovi = [f"- т.{p.get('tacka', '?')} {p.get('sekcija', '')}: "
+              f"{(p.get('tekst') or '').replace(chr(10), ' ')[:220]}" for p in pravila]
+    return ("Reference iz Pravopisa srpskoga jezika (Matica srpska):\n"
+            + "\n".join(redovi) + "\n\n")
+
+
+def _parsiraj_sud(tekst: str) -> tuple[bool, str]:
+    m = re.search(r"\{.*\}", tekst or "", re.DOTALL)
+    if not m:
+        return False, ("sudija: nevažeći odgovor: " + (tekst or "")[:60])
+    try:
+        d = json.loads(m.group(0))
+    except Exception:  # noqa: BLE001
+        return False, ("sudija: nevažeći JSON: " + (tekst or "")[:60])
+    return bool(d.get("prolaz")), str(d.get("razlog", ""))[:120]
+
+
+def oceni_sudijom(izlaz: str, kriterijum: str, *, persona, run, sudija_ruta,
+                  purpose: E.LLMPurpose = E.LLMPurpose.CONTENT_DRAFT) -> tuple[bool, str]:
+    """Oceni izlaz jačim modelom-sudijom, ukorenjeno u Pravopis (ADR-0055/0120).
+    Vraća (prolaz, razlog). Pad sudije NE obara slučaj — vraća (True, 'sudija pao')."""
+    from apps.llm_gateway import gateway
+
+    prompt = (f"Kriterijum: {kriterijum}\n\n{_pravopis_blok(izlaz)}"
+              f"Tekst za ocenu:\n\"\"\"\n{izlaz}\n\"\"\"\n\n"
+              "Vrati samo JSON {\"prolaz\": true/false, \"razlog\": \"kratko\"}.")
+    try:
+        gen = gateway.generate(purpose, JUDGE_SYSTEM, prompt,
+                               persona=persona, run=run, only=sudija_ruta)
+    except Exception as e:  # noqa: BLE001 — pad sudije ne obara slučaj
+        return True, f"sudija pao: {type(e).__name__}"[:80]
+    return _parsiraj_sud(gen.text or "")
+
 
 def pokreni(specovi: list[str], slucajevi: list[Slucaj], *, persona,
            purpose: E.LLMPurpose = E.LLMPurpose.CONTENT_DRAFT,
            now: datetime | None = None, pokusaji: int = 3,
-           pauza: float = 0.0) -> list[Rezultat]:
+           pauza: float = 0.0, sudija: str = "") -> list[Rezultat]:
     """Za svaku rutu pusti slučajeve kroz gateway. Na 429 (rate-limit) ponovi
     do `pokusaji` puta sa rastućom pauzom; `pauza` je razmak između svih poziva
     (da besplatni nivoi ne throttluju). Pad rute je podatak, ne kraj."""
@@ -163,6 +222,7 @@ def pokreni(specovi: list[str], slucajevi: list[Slucaj], *, persona,
     from apps.llm_gateway import gateway
 
     now = now or timezone.now()
+    sudija_ruta = ruta_za(sudija, purpose) if sudija else None
     rez: list[Rezultat] = []
     for spec in specovi:
         ruta = ruta_za(spec, purpose)
@@ -184,11 +244,18 @@ def pokreni(specovi: list[str], slucajevi: list[Slucaj], *, persona,
                     break
             ms = int((time.monotonic() - t0) * 1000)
             if gen is not None and not greska:
-                rez.append(Rezultat(spec, s.kljuc, s.kategorija,
-                                    bool(s.proveri(gen.text or "")),
+                tekst = gen.text or ""
+                ok = bool(s.proveri(tekst))
+                sud = ""
+                if ok and sudija_ruta is not None and s.sudija:
+                    ok_s, sud = oceni_sudijom(tekst, s.sudija, persona=persona,
+                                              run=run, sudija_ruta=sudija_ruta,
+                                              purpose=purpose)
+                    ok = ok and ok_s
+                rez.append(Rezultat(spec, s.kljuc, s.kategorija, ok,
                                     gen.input_tokens, gen.output_tokens, ms,
                                     gen.provider,
-                                    uzorak=(gen.text or "").strip()[:120]))
+                                    uzorak=tekst.strip()[:120], sud=sud))
             else:
                 rez.append(Rezultat(spec, s.kljuc, s.kategorija, False, ms=ms,
                                     greska=greska))

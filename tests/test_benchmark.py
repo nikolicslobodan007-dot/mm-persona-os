@@ -155,3 +155,35 @@ def test_ekstrakcija_prihvata_nominativ_i_genitiv():
     assert pr('{"ime": "Marko Jović", "grad": "Novog Sada"}') is True
     # fali grad → pad
     assert pr('{"ime": "Marko Jović"}') is False
+
+
+def test_parsiraj_sud_prolaz():
+    assert B._parsiraj_sud('{"prolaz": true, "razlog": "ok"}') == (True, "ok")
+
+
+def test_parsiraj_sud_pad_sa_razlogom():
+    prolaz, razlog = B._parsiraj_sud('{"prolaz": false, "razlog": "vinedari nije reč"}')
+    assert prolaz is False
+    assert "vinedari" in razlog
+
+
+def test_parsiraj_sud_vadi_iz_sireg_teksta():
+    assert B._parsiraj_sud('Evo ocene: {"prolaz": true} .')[0] is True
+
+
+def test_parsiraj_sud_bez_jsona_je_pad():
+    prolaz, razlog = B._parsiraj_sud("nema ovde ništa")
+    assert prolaz is False
+    assert "nevažeći" in razlog
+
+
+def test_parsiraj_sud_pokvaren_json_je_pad():
+    prolaz, razlog = B._parsiraj_sud('{prolaz: da}')
+    assert prolaz is False
+    assert "nevažeći" in razlog
+
+
+def test_slucajevi_sa_sudijom_imaju_kriterijum():
+    # srpski i format-tri treba da nose kriterijum za sudiju
+    sa_sudijom = {s.kljuc for s in B.SLUCAJEVI if s.sudija}
+    assert "srpski" in sa_sudijom
