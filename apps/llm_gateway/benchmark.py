@@ -135,6 +135,7 @@ class Rezultat:
     greska: str = ""
     uzorak: str = ""
     sud: str = ""
+    sud_ok: bool | None = None
 
 
 def ruta_za(spec: str, purpose: E.LLMPurpose):
@@ -191,7 +192,7 @@ def _parsiraj_sud(tekst: str) -> tuple[bool, str]:
         d = json.loads(m.group(0))
     except Exception:  # noqa: BLE001
         return False, ("sudija: nevažeći JSON: " + (tekst or "")[:60])
-    return bool(d.get("prolaz")), str(d.get("razlog", ""))[:120]
+    return bool(d.get("prolaz")), str(d.get("razlog", ""))[:200]
 
 
 def oceni_sudijom(izlaz: str, kriterijum: str, *, persona, run, sudija_ruta,
@@ -214,7 +215,8 @@ def oceni_sudijom(izlaz: str, kriterijum: str, *, persona, run, sudija_ruta,
 def pokreni(specovi: list[str], slucajevi: list[Slucaj], *, persona,
            purpose: E.LLMPurpose = E.LLMPurpose.CONTENT_DRAFT,
            now: datetime | None = None, pokusaji: int = 3,
-           pauza: float = 0.0, sudija: str = "") -> list[Rezultat]:
+           pauza: float = 0.0, sudija: str = "",
+           sudija_obara: bool = False) -> list[Rezultat]:
     """Za svaku rutu pusti slučajeve kroz gateway. Na 429 (rate-limit) ponovi
     do `pokusaji` puta sa rastućom pauzom; `pauza` je razmak između svih poziva
     (da besplatni nivoi ne throttluju). Pad rute je podatak, ne kraj."""
@@ -246,16 +248,17 @@ def pokreni(specovi: list[str], slucajevi: list[Slucaj], *, persona,
             if gen is not None and not greska:
                 tekst = gen.text or ""
                 ok = bool(s.proveri(tekst))
-                sud = ""
+                sud, sud_ok = "", None
                 if ok and sudija_ruta is not None and s.sudija:
-                    ok_s, sud = oceni_sudijom(tekst, s.sudija, persona=persona,
-                                              run=run, sudija_ruta=sudija_ruta,
-                                              purpose=purpose)
-                    ok = ok and ok_s
+                    sud_ok, sud = oceni_sudijom(tekst, s.sudija, persona=persona,
+                                                run=run, sudija_ruta=sudija_ruta,
+                                                purpose=purpose)
+                    if sudija_obara:
+                        ok = ok and sud_ok
                 rez.append(Rezultat(spec, s.kljuc, s.kategorija, ok,
                                     gen.input_tokens, gen.output_tokens, ms,
-                                    gen.provider,
-                                    uzorak=tekst.strip()[:120], sud=sud))
+                                    gen.provider, uzorak=tekst.strip()[:120],
+                                    sud=sud, sud_ok=sud_ok))
             else:
                 rez.append(Rezultat(spec, s.kljuc, s.kategorija, False, ms=ms,
                                     greska=greska))
