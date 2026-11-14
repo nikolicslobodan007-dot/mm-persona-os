@@ -29,7 +29,8 @@ def _sazetak(step: plans.PlanStep, state: dict) -> plans.Outcome:
     try:
         r = ulaz.procitaj("web", url)
     except Exception as e:  # noqa: BLE001 — mreža/robots/SSRF: korak staje čisto
-        return plans.Failed(f"Nije učitano: {type(e).__name__}"[:200])
+        razlog = str(e) or type(e).__name__
+        return plans.Failed(f"Nije učitano: {razlog}"[:200])
     tekst = (r.get("tekst") or "").strip()
     if not tekst:
         return plans.Failed("Stranica učitana, ali bez upotrebljivog teksta.")
