@@ -31,3 +31,22 @@ def test_samo_tekst_nema_slike():
 
 def test_prazna_poruka_nema_slike():
     assert telegram._slika_iz({}) is None
+
+
+def test_slikovni_prilog_dedup_iste_slike(mila, monkeypatch):
+    """Ista slika poslata dvaput = isti asset (dedup), bez IntegrityError (crash)."""
+    from apps.channels import tasks
+    from apps.visuals import storage
+
+    skladiste: dict = {}
+
+    def _put(podaci, *, key, mime):
+        skladiste[key] = podaci
+
+    monkeypatch.setattr(storage, "put", _put)
+    monkeypatch.setattr(telegram, "preuzmi_sliku",
+                        lambda fid, hint="": (b"PNGDATA", "image/png", "slika.png"))
+    m1, _ = tasks._slikovni_prilog(mila, "file1", "", "user:slobodan")
+    m2, _ = tasks._slikovni_prilog(mila, "file1", "", "user:slobodan")
+    assert m1 and m2
+    assert m1[0]["asset"].public_id == m2[0]["asset"].public_id  # isti asset, ne duplikat

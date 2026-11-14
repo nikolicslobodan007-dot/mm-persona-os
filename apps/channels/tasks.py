@@ -74,13 +74,17 @@ def _slikovni_prilog(direktor, foto_file_id, foto_mime, actor):
         digest = storage.sha256(podaci)
         kljuc = storage.key_for(direktor.public_id, digest, mime)
         storage.put(podaci, key=kljuc, mime=mime)
-        asset = MediaAsset.objects.create(
-            public_id=I.media_asset_public_id(direktor.public_id,
-                                              next_sequence(direktor)),
-            persona=direktor, kind=E.AssetKind.PHOTO.value, storage_key=kljuc,
-            mime_type=mime, sha256=digest, origin="user_owned",
-            rights_note=f"Telegram prilog; primila {direktor.public_id}; akter {actor}.")
-    except storage.StorageError as e:
+        # Ista slika poslata ponovo = isti (sadržajni) ključ: iskoristi postojeći
+        # asset, ne pravi duplikat (UNIQUE storage_key bi oborio ceo odgovor). ADR-0118.
+        asset = MediaAsset.objects.filter(storage_key=kljuc).first()
+        if asset is None:
+            asset = MediaAsset.objects.create(
+                public_id=I.media_asset_public_id(direktor.public_id,
+                                                  next_sequence(direktor)),
+                persona=direktor, kind=E.AssetKind.PHOTO.value, storage_key=kljuc,
+                mime_type=mime, sha256=digest, origin="user_owned",
+                rights_note=f"Telegram prilog; primila {direktor.public_id}; akter {actor}.")
+    except Exception as e:  # noqa: BLE001 — slika je dodatak, ne ruši odgovor
         logging.getLogger(__name__).warning("telegram slika nije sačuvana: %s", e)
         return [], []
     media = [{"asset": asset, "naziv": naziv, "mime": mime}]
