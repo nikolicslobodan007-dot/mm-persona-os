@@ -29,6 +29,12 @@ API = "https://api.telegram.org/bot{token}/{metod}"
 OFFSET_KEY = "telegram:offset"
 LOCK_KEY = "telegram:poll:lock"
 MAX_PORUKA = 4000
+MAX_SLIKA = 5_000_000  # 5 MB — slika sa Telegrama (ADR-0118)
+FILE_API = "https://api.telegram.org/file/bot{token}/{path}"
+_SLIKA_EKST_MIME = {".png": "image/png", ".webp": "image/webp",
+                    ".gif": "image/gif", ".jpg": "image/jpeg",
+                    ".jpeg": "image/jpeg"}
+_SLIKA_MIME = set(_SLIKA_EKST_MIME.values())
 
 
 def omogucen() -> bool:
@@ -108,6 +114,54 @@ def posalji_dokument(chat_id, podaci: bytes, naziv: str, opis: str = "") -> None
         log.warning("telegram sendDocument pao: %s", e)
 
 
+def _slika_iz(msg: dict) -> tuple[str, str] | None:
+    """(file_id, mime) najveće slike u poruci, ili None.
+
+    Telegram slika stiže kao `photo` (lista veličina — zadnja je najveća, uvek
+    JPEG) ili kao `document` sa image/* mime-om. Ostalo (video, zvuk) — ne ovde.
+    """
+    foto = msg.get("photo") or []
+    if foto:
+        return str(foto[-1].get("file_id") or ""), "image/jpeg"
+    dok = msg.get("document") or {}
+    mime = (dok.get("mime_type") or "").split(";")[0].strip().lower()
+    if dok.get("file_id") and mime in _SLIKA_MIME:
+        return str(dok["file_id"]), mime
+    return None
+
+
+def preuzmi_sliku(file_id: str, mime_hint: str = "") -> tuple[bytes, str, str] | None:
+    """Skini sliku sa Telegrama: (bajtovi, mime, naziv) ili None.
+
+    Dva koraka: `getFile` daje `file_path`, pa download sa file-API-ja. Granica
+    5 MB (ADR-0118); mreža/pad se guta (vraća None) — ne ruši odgovor.
+    """
+    import os
+
+    token = _token()
+    if not token or not file_id:
+        return None
+    info = _api(token, "getFile", {"file_id": file_id})
+    put = (info.get("result") or {}).get("file_path") or ""
+    if not put:
+        return None
+    url = FILE_API.format(token=token, path=put)
+    try:
+        with urllib.request.urlopen(url, timeout=30) as r:  # noqa: S310
+            podaci = r.read(MAX_SLIKA + 1)
+    except Exception as e:  # noqa: BLE001 — slika je dodatak, ne ruši odgovor
+        log.warning("telegram download slike pao: %s", e)
+        return None
+    if not podaci or len(podaci) > MAX_SLIKA:
+        return None
+    naziv = (put.rsplit("/", 1)[-1] or "slika")[:120]
+    ekst = os.path.splitext(naziv)[1].lower()
+    mime = mime_hint or _SLIKA_EKST_MIME.get(ekst, "image/jpeg")
+    if mime not in _SLIKA_MIME:
+        mime = "image/jpeg"
+    return podaci, mime, naziv
+
+
 def nit_za(actor: str):
     """Najnovija nit vlasnika ili nova sa DIR-00 direktorom (kao konzola)."""
     from apps.orchestration.models import Razgovor
@@ -152,12 +206,15 @@ def obradi_batch() -> dict:
             offset = max(offset, int(u["update_id"]) + 1)
             msg = u.get("message") or u.get("edited_message") or {}
             chat_id = (msg.get("chat") or {}).get("id")
-            telo = (msg.get("text") or "").strip()
+            telo = (msg.get("text") or msg.get("caption") or "").strip()
+            slika = _slika_iz(msg)  # (file_id, mime) ili None (ADR-0118)
             actor = actor_za(chat_id)
-            if not actor or not telo:
-                continue  # nepoznat ID ili bez teksta → tiho preskoči
+            if not actor or (not telo and slika is None):
+                continue  # nepoznat ID ili prazna poruka (ni teksta ni slike)
             posalji_poruku(chat_id, "Primila sam, radim na tome…")
-            telegram_odgovori.delay(chat_id, telo, actor)
+            telegram_odgovori.delay(chat_id, telo, actor,
+                                    slika[0] if slika else None,
+                                    slika[1] if slika else "")
             zakazano += 1
         r.set(OFFSET_KEY, offset)
         return {"procitano": len(updates), "zakazano": zakazano}

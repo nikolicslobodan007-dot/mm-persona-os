@@ -57,7 +57,28 @@ def test_obradi_batch_allowlist(settings, monkeypatch):
     rez = telegram.obradi_batch()
     assert rez == {"procitano": 2, "zakazano": 1}
     # samo dozvoljeni ID je zakazan; nedozvoljeni tiho preskočen
-    assert zakazano == [(111, "zdravo", "user:slobodan")]
+    assert zakazano == [(111, "zdravo", "user:slobodan", None, "")]
     assert fake.get(telegram.OFFSET_KEY) == 12  # max(update_id)+1
     assert any(cid == 111 for cid, _ in poslato)      # ack dozvoljenom
     assert not any(cid == 999 for cid, _ in poslato)  # ne nedozvoljenom
+
+
+def test_obradi_batch_slika_salje_file_id(settings, monkeypatch):
+    """Slika (ADR-0158): caption je telo, najveći photo → (file_id, image/jpeg)."""
+    settings.TELEGRAM_ENABLED = True
+    settings.TELEGRAM_ALLOWED_IDS = "111"
+    monkeypatch.setattr(telegram, "_token", lambda: "T")
+    fake = _FakeRedis()
+    monkeypatch.setattr(telegram, "_redis", lambda: fake)
+    monkeypatch.setattr(telegram, "posalji_poruku", lambda cid, t: None)
+    zakazano: list = []
+    monkeypatch.setattr(tasks.telegram_odgovori, "delay", lambda *a: zakazano.append(a))
+    updates = {"result": [
+        {"update_id": 20, "message": {
+            "chat": {"id": 111}, "caption": "Šta je ovo?",
+            "photo": [{"file_id": "mala"}, {"file_id": "velika"}]}},
+    ]}
+    monkeypatch.setattr(telegram, "_api",
+                        lambda tok, m, p, timeout=10: updates if m == "getUpdates" else {})
+    telegram.obradi_batch()
+    assert zakazano == [(111, "Šta je ovo?", "user:slobodan", "velika", "image/jpeg")]

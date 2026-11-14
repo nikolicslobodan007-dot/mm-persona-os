@@ -25,9 +25,12 @@ def telegram_poll() -> dict:
 
 
 @app.task(name="channels.telegram_odgovori")
-def telegram_odgovori(chat_id, telo: str, actor: str) -> dict:
-    """ADR-0134 — jedna čovekova Telegram poruka → posao → Ivanin odgovor nazad.
-    Ceo lanac ide kroz `razgovor.posalji()`, pod proverenim `actor`-om."""
+def telegram_odgovori(chat_id, telo: str, actor: str,
+                      foto_file_id: str | None = None, foto_mime: str = "") -> dict:
+    """ADR-0134/0118 — čovekova Telegram poruka (tekst i/ili slika) → posao →
+    Ivanin odgovor nazad. Ceo lanac ide kroz `razgovor.posalji()`, pod proverenim
+    `actor`-om. Slika (ako je ima) se skine, sačuva kao MediaAsset i prosledi kao
+    vizuelni prilog (ADR-0118) — isto kao prilog iz konzole."""
     from apps.channels import telegram
     from apps.orchestration import razgovor as nit_servis
 
@@ -35,15 +38,54 @@ def telegram_odgovori(chat_id, telo: str, actor: str) -> dict:
     if nit is None:
         telegram.posalji_poruku(chat_id, "Nema direktora (DIR-00) — javi Slobodanu.")
         return {"nit": False}
+    media, prilozi = _slikovni_prilog(nit.persona, foto_file_id, foto_mime, actor)
     try:
         with bind(actor_id=actor):
-            odgovor = nit_servis.posalji(nit, telo, actor=actor)
+            odgovor = nit_servis.posalji(nit, telo, actor=actor,
+                                         prilozi=prilozi, media=media)
         telegram.posalji_poruku(chat_id, odgovor.telo)
         _mozda_dokument(chat_id, odgovor)
-        return {"ok": True, "poruka": str(odgovor.id)}
+        return {"ok": True, "poruka": str(odgovor.id), "slika": bool(media)}
     except nit_servis.RazgovorError as e:
         telegram.posalji_poruku(chat_id, f"Nisam mogla: {e}")
         return {"greska": str(e)}
+
+
+def _slikovni_prilog(direktor, foto_file_id, foto_mime, actor):
+    """Skine Telegram sliku i sačuva je kao MediaAsset (ADR-0118), isto kao
+    konzola (`_obradi_priloge`). Vraća (media, prilozi); prazno kad slike nema
+    ili skidanje padne — odgovor tada ide samo na tekst (ne ruši se)."""
+    if not foto_file_id:
+        return [], []
+    import logging
+
+    from apps.channels import telegram
+    from apps.content.dokument import next_sequence
+    from apps.visuals import storage
+    from apps.visuals.models import MediaAsset
+    from common import enums as E
+    from common import ids as I
+
+    skinuto = telegram.preuzmi_sliku(foto_file_id, foto_mime)
+    if skinuto is None:
+        return [], []
+    podaci, mime, naziv = skinuto
+    try:
+        digest = storage.sha256(podaci)
+        kljuc = storage.key_for(direktor.public_id, digest, mime)
+        storage.put(podaci, key=kljuc, mime=mime)
+        asset = MediaAsset.objects.create(
+            public_id=I.media_asset_public_id(direktor.public_id,
+                                              next_sequence(direktor)),
+            persona=direktor, kind=E.AssetKind.PHOTO.value, storage_key=kljuc,
+            mime_type=mime, sha256=digest, origin="user_owned",
+            rights_note=f"Telegram prilog; primila {direktor.public_id}; akter {actor}.")
+    except storage.StorageError as e:
+        logging.getLogger(__name__).warning("telegram slika nije sačuvana: %s", e)
+        return [], []
+    media = [{"asset": asset, "naziv": naziv, "mime": mime}]
+    prilozi = [{"vrsta": "fajl", "naziv": naziv, "asset": asset}]
+    return media, prilozi
 
 
 def _mozda_dokument(chat_id, odgovor) -> None:
