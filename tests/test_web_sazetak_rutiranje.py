@@ -129,3 +129,15 @@ def test_kucna_pravila_postoje():
     kp = content_service.KUCNA_PRAVILA
     assert "ne potpisuj" in kp
     assert "praksu ove firme" in kp
+
+
+def test_handler_pad_fetcha_pokazuje_razlog(monkeypatch):
+    """Greška mora da kaže ZAŠTO (web: …), ne samo ime klase (UlazGreska)."""
+    def pukni(vrsta, url):
+        raise ulaz.UlazGreska("web: HTTP 403 (robots)")
+    monkeypatch.setattr(ulaz, "procitaj", pukni)
+    step = SimpleNamespace(input_json={"url": "https://x/repo"},
+                           plan=SimpleNamespace(persona=None))
+    rez = steps._sazetak(step, {})
+    assert isinstance(rez, plans.Failed)
+    assert "web: HTTP 403" in rez.reason  # razlog vidljiv, ne samo „UlazGreska"
